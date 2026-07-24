@@ -1,0 +1,36 @@
+/* 0000A778 7C0802A6 */ mflr r0
+/* 0000A77C 3CE00000 */ lis r7, lbl_000147F8@ha
+/* 0000A780 90010004 */ stw r0, 4(r1)
+/* 0000A784 9421FFD0 */ stwu r1, -0x30(r1)
+/* 0000A788 93E1002C */ stw r31, 0x2c(r1)
+/* 0000A78C 93C10028 */ stw r30, 0x28(r1)
+/* 0000A790 93A10024 */ stw r29, 0x24(r1)
+/* 0000A794 7CDD3378 */ mr r29, r6
+/* 0000A798 93810020 */ stw r28, 0x20(r1)
+/* 0000A79C 7CBC2B78 */ mr r28, r5
+/* 0000A7A0 C0040000 */ lfs f0, 0(r4)
+/* 0000A7A4 C8270000 */ lfd f1, lbl_000147F8@l(r7)
+/* 0000A7A8 FC010032 */ fmul f0, f1, f0
+/* 0000A7AC FC00001E */ fctiwz f0, f0
+/* 0000A7B0 D8010018 */ stfd f0, 0x18(r1)
+/* 0000A7B4 83C1001C */ lwz r30, 0x1c(r1)
+/* 0000A7B8 4BFF59A9 */ bl u_play_sound_1_dupe
+/* 0000A7BC 3BE30000 */ addi r31, r3, 0
+/* 0000A7C0 5463043E */ clrlwi r3, r3, 0x10
+/* 0000A7C4 389C0064 */ addi r4, r28, 0x64
+/* 0000A7C8 4BFF5999 */ bl SoundVol
+/* 0000A7CC 389E0000 */ addi r4, r30, 0
+/* 0000A7D0 57E3043E */ clrlwi r3, r31, 0x10
+/* 0000A7D4 38A0FFC1 */ li r5, -63
+/* 0000A7D8 4BFF5989 */ bl SoundPan
+/* 0000A7DC 57E3043E */ clrlwi r3, r31, 0x10
+/* 0000A7E0 389D0000 */ addi r4, r29, 0
+/* 0000A7E4 4BFF597D */ bl SoundPitch
+/* 0000A7E8 80010034 */ lwz r0, 0x34(r1)
+/* 0000A7EC 83E1002C */ lwz r31, 0x2c(r1)
+/* 0000A7F0 83C10028 */ lwz r30, 0x28(r1)
+/* 0000A7F4 7C0803A6 */ mtlr r0
+/* 0000A7F8 83A10024 */ lwz r29, 0x24(r1)
+/* 0000A7FC 83810020 */ lwz r28, 0x20(r1)
+/* 0000A800 38210030 */ addi r1, r1, 0x30
+/* 0000A804 4E800020 */ blr 

@@ -421,6 +421,8 @@ ALL_RELS += mkbe.rel_mini_race.rel
 # mkbe.rel_mini_bowling.rel sources
 SOURCES := \
 	src/mini_bowling.c \
+	src/mini_bowling_2.c \
+	src/mini_bowling_3.c \
 	asm/mini_bowling.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)

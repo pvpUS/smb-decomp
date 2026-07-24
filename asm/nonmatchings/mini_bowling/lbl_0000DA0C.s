@@ -1,0 +1,60 @@
+/* 0000DA0C 7C0802A6 */ mflr r0
+/* 0000DA10 3CC00000 */ lis r6, lbl_00014D90@ha
+/* 0000DA14 90010004 */ stw r0, 4(r1)
+/* 0000DA18 9421FFC0 */ stwu r1, -0x40(r1)
+/* 0000DA1C BF61002C */ stmw r27, 0x2c(r1)
+/* 0000DA20 7C9C2378 */ mr r28, r4
+/* 0000DA24 7C7B1B78 */ mr r27, r3
+/* 0000DA28 83C40048 */ lwz r30, 0x48(r4)
+/* 0000DA2C A8A40010 */ lha r5, 0x10(r4)
+/* 0000DA30 3C800000 */ lis r4, lbl_00014D90@ha
+/* 0000DA34 6FC08000 */ xoris r0, r30, 0x8000
+/* 0000DA38 C8660000 */ lfd f3, lbl_00014D90@l(r6)
+/* 0000DA3C 7FA5F050 */ subf r29, r5, r30
+/* 0000DA40 9001001C */ stw r0, 0x1c(r1)
+/* 0000DA44 57A07820 */ slwi r0, r29, 0xf
+/* 0000DA48 6C058000 */ xoris r5, r0, 0x8000
+/* 0000DA4C C8240000 */ lfd f1, lbl_00014D90@l(r4)
+/* 0000DA50 90A10024 */ stw r5, 0x24(r1)
+/* 0000DA54 3C004330 */ lis r0, 0x4330
+/* 0000DA58 90010020 */ stw r0, 0x20(r1)
+/* 0000DA5C 3CA00000 */ lis r5, lbl_00014D70@ha
+/* 0000DA60 3BE50000 */ addi r31, r5, lbl_00014D70@l
+/* 0000DA64 90010018 */ stw r0, 0x18(r1)
+/* 0000DA68 C8410020 */ lfd f2, 0x20(r1)
+/* 0000DA6C C8010018 */ lfd f0, 0x18(r1)
+/* 0000DA70 EC421828 */ fsubs f2, f2, f3
+/* 0000DA74 EC000828 */ fsubs f0, f0, f1
+/* 0000DA78 EC020024 */ fdivs f0, f2, f0
+/* 0000DA7C FC00001E */ fctiwz f0, f0
+/* 0000DA80 D8010010 */ stfd f0, 0x10(r1)
+/* 0000DA84 80610014 */ lwz r3, 0x14(r1)
+/* 0000DA88 4BFF26D9 */ bl mathutil_sin
+/* 0000DA8C 7FC00E70 */ srawi r0, r30, 1
+/* 0000DA90 D03C006C */ stfs f1, 0x6c(r28)
+/* 0000DA94 7C000194 */ addze r0, r0
+/* 0000DA98 7C1D0000 */ cmpw r29, r0
+/* 0000DA9C 40810024 */ ble lbl_0000DAC0
+/* 0000DAA0 C81F0048 */ lfd f0, 0x48(r31)
+/* 0000DAA4 C85F0040 */ lfd f2, 0x40(r31)
+/* 0000DAA8 FC000072 */ fmul f0, f0, f1
+/* 0000DAAC C83F0038 */ lfd f1, 0x38(r31)
+/* 0000DAB0 FC020028 */ fsub f0, f2, f0
+/* 0000DAB4 FC010032 */ fmul f0, f1, f0
+/* 0000DAB8 FC000018 */ frsp f0, f0
+/* 0000DABC D01C0040 */ stfs f0, 0x40(r28)
+lbl_0000DAC0:
+/* 0000DAC0 A87C0010 */ lha r3, 0x10(r28)
+/* 0000DAC4 3803FFFF */ addi r0, r3, -1
+/* 0000DAC8 B01C0010 */ sth r0, 0x10(r28)
+/* 0000DACC A81C0010 */ lha r0, 0x10(r28)
+/* 0000DAD0 2C000000 */ cmpwi r0, 0
+/* 0000DAD4 4181000C */ bgt lbl_0000DAE0
+/* 0000DAD8 38000000 */ li r0, 0
+/* 0000DADC 981B0000 */ stb r0, 0(r27)
+lbl_0000DAE0:
+/* 0000DAE0 BB61002C */ lmw r27, 0x2c(r1)
+/* 0000DAE4 80010044 */ lwz r0, 0x44(r1)
+/* 0000DAE8 38210040 */ addi r1, r1, 0x40
+/* 0000DAEC 7C0803A6 */ mtlr r0
+/* 0000DAF0 4E800020 */ blr 

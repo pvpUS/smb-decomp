@@ -1,0 +1,107 @@
+/* 0000DBB8 7C0802A6 */ mflr r0
+/* 0000DBBC 90010004 */ stw r0, 4(r1)
+/* 0000DBC0 9421FFD0 */ stwu r1, -0x30(r1)
+/* 0000DBC4 93E1002C */ stw r31, 0x2c(r1)
+/* 0000DBC8 7C9F2378 */ mr r31, r4
+/* 0000DBCC 93C10028 */ stw r30, 0x28(r1)
+/* 0000DBD0 3BC30000 */ addi r30, r3, 0
+/* 0000DBD4 93A10024 */ stw r29, 0x24(r1)
+/* 0000DBD8 A8A40010 */ lha r5, 0x10(r4)
+/* 0000DBDC 3C800000 */ lis r4, lbl_00014D70@ha
+/* 0000DBE0 801F0048 */ lwz r0, 0x48(r31)
+/* 0000DBE4 3BA40000 */ addi r29, r4, lbl_00014D70@l
+/* 0000DBE8 7CC50050 */ subf r6, r5, r0
+/* 0000DBEC 2C06001E */ cmpwi r6, 0x1e
+/* 0000DBF0 40800064 */ bge lbl_0000DC54
+/* 0000DBF4 6CC08000 */ xoris r0, r6, 0x8000
+/* 0000DBF8 C85D0010 */ lfd f2, 0x10(r29)
+/* 0000DBFC 9001001C */ stw r0, 0x1c(r1)
+/* 0000DC00 3C804330 */ lis r4, 0x4330
+/* 0000DC04 3C600000 */ lis r3, lbl_00014D90@ha
+/* 0000DC08 90810018 */ stw r4, 0x18(r1)
+/* 0000DC0C 2006001E */ subfic r0, r6, 0x1e
+/* 0000DC10 C8230000 */ lfd f1, lbl_00014D90@l(r3)
+/* 0000DC14 1C000006 */ mulli r0, r0, 6
+/* 0000DC18 C8010018 */ lfd f0, 0x18(r1)
+/* 0000DC1C FC000828 */ fsub f0, f0, f1
+/* 0000DC20 20000078 */ subfic r0, r0, 0x78
+/* 0000DC24 6C008000 */ xoris r0, r0, 0x8000
+/* 0000DC28 90010014 */ stw r0, 0x14(r1)
+/* 0000DC2C 3C600000 */ lis r3, lbl_00014D90@ha
+/* 0000DC30 FC020032 */ fmul f0, f2, f0
+/* 0000DC34 90810010 */ stw r4, 0x10(r1)
+/* 0000DC38 FC200018 */ frsp f1, f0
+/* 0000DC3C C8010010 */ lfd f0, 0x10(r1)
+/* 0000DC40 D03F006C */ stfs f1, 0x6c(r31)
+/* 0000DC44 C8230000 */ lfd f1, lbl_00014D90@l(r3)
+/* 0000DC48 EC000828 */ fsubs f0, f0, f1
+/* 0000DC4C D01F0008 */ stfs f0, 8(r31)
+/* 0000DC50 480000B0 */ b lbl_0000DD00
+lbl_0000DC54:
+/* 0000DC54 2C06003C */ cmpwi r6, 0x3c
+/* 0000DC58 40800030 */ bge lbl_0000DC88
+/* 0000DC5C 3806FFE2 */ addi r0, r6, -30
+/* 0000DC60 C01D0004 */ lfs f0, 4(r29)
+/* 0000DC64 1C600444 */ mulli r3, r0, 0x444
+/* 0000DC68 D01F006C */ stfs f0, 0x6c(r31)
+/* 0000DC6C 4BFF24F5 */ bl mathutil_sin
+/* 0000DC70 C05D0054 */ lfs f2, 0x54(r29)
+/* 0000DC74 C01D0050 */ lfs f0, 0x50(r29)
+/* 0000DC78 EC220072 */ fmuls f1, f2, f1
+/* 0000DC7C EC000828 */ fsubs f0, f0, f1
+/* 0000DC80 D01F0008 */ stfs f0, 8(r31)
+/* 0000DC84 4800007C */ b lbl_0000DD00
+lbl_0000DC88:
+/* 0000DC88 2C06005A */ cmpwi r6, 0x5a
+/* 0000DC8C 40800030 */ bge lbl_0000DCBC
+/* 0000DC90 3806FFC4 */ addi r0, r6, -60
+/* 0000DC94 C01D0004 */ lfs f0, 4(r29)
+/* 0000DC98 1C600444 */ mulli r3, r0, 0x444
+/* 0000DC9C D01F006C */ stfs f0, 0x6c(r31)
+/* 0000DCA0 4BFF24C1 */ bl mathutil_sin
+/* 0000DCA4 C05D0058 */ lfs f2, 0x58(r29)
+/* 0000DCA8 C01D0050 */ lfs f0, 0x50(r29)
+/* 0000DCAC EC220072 */ fmuls f1, f2, f1
+/* 0000DCB0 EC000828 */ fsubs f0, f0, f1
+/* 0000DCB4 D01F0008 */ stfs f0, 8(r31)
+/* 0000DCB8 48000048 */ b lbl_0000DD00
+lbl_0000DCBC:
+/* 0000DCBC 2C05000F */ cmpwi r5, 0xf
+/* 0000DCC0 41810038 */ bgt lbl_0000DCF8
+/* 0000DCC4 6CA08000 */ xoris r0, r5, 0x8000
+/* 0000DCC8 C85D0060 */ lfd f2, 0x60(r29)
+/* 0000DCCC 90010014 */ stw r0, 0x14(r1)
+/* 0000DCD0 3C004330 */ lis r0, 0x4330
+/* 0000DCD4 3C600000 */ lis r3, lbl_00014D90@ha
+/* 0000DCD8 90010010 */ stw r0, 0x10(r1)
+/* 0000DCDC C8230000 */ lfd f1, lbl_00014D90@l(r3)
+/* 0000DCE0 C8010010 */ lfd f0, 0x10(r1)
+/* 0000DCE4 FC000828 */ fsub f0, f0, f1
+/* 0000DCE8 FC020032 */ fmul f0, f2, f0
+/* 0000DCEC FC000018 */ frsp f0, f0
+/* 0000DCF0 D01F006C */ stfs f0, 0x6c(r31)
+/* 0000DCF4 4800000C */ b lbl_0000DD00
+lbl_0000DCF8:
+/* 0000DCF8 C01D0004 */ lfs f0, 4(r29)
+/* 0000DCFC D01F006C */ stfs f0, 0x6c(r31)
+lbl_0000DD00:
+/* 0000DD00 C01D0034 */ lfs f0, 0x34(r29)
+/* 0000DD04 D01F0040 */ stfs f0, 0x40(r31)
+/* 0000DD08 C01F0040 */ lfs f0, 0x40(r31)
+/* 0000DD0C D01F0044 */ stfs f0, 0x44(r31)
+/* 0000DD10 A87F0010 */ lha r3, 0x10(r31)
+/* 0000DD14 3803FFFF */ addi r0, r3, -1
+/* 0000DD18 B01F0010 */ sth r0, 0x10(r31)
+/* 0000DD1C A81F0010 */ lha r0, 0x10(r31)
+/* 0000DD20 2C000000 */ cmpwi r0, 0
+/* 0000DD24 4181000C */ bgt lbl_0000DD30
+/* 0000DD28 38000000 */ li r0, 0
+/* 0000DD2C 981E0000 */ stb r0, 0(r30)
+lbl_0000DD30:
+/* 0000DD30 80010034 */ lwz r0, 0x34(r1)
+/* 0000DD34 83E1002C */ lwz r31, 0x2c(r1)
+/* 0000DD38 83C10028 */ lwz r30, 0x28(r1)
+/* 0000DD3C 7C0803A6 */ mtlr r0
+/* 0000DD40 83A10024 */ lwz r29, 0x24(r1)
+/* 0000DD44 38210030 */ addi r1, r1, 0x30
+/* 0000DD48 4E800020 */ blr 
