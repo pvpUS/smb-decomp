@@ -430,6 +430,7 @@ ALL_RELS += mkbe.rel_mini_bowling.rel
 
 # mkbe.rel_mini_fight.rel sources
 SOURCES := \
+	src/mini_fight.c \
 	asm/mini_fight.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
@@ -516,7 +517,7 @@ all: $(DOL) $(ALL_RELS)
 
 %.elf: $(DOL_LCF)
 	@echo Linking static module $@
-	$(QUIET) $(LD) -lcf $(DOL_LCF) $(DOL_LDFLAGS) $(filter %.o,$^) -map $(@:.elf=.map) -o $@
+	$(QUIET) $(LD) -lcf $(DOL_LCF) $(DOL_LDFLAGS) $(filter %.o,$^) -o $@ -map $(@:.elf=.map)
 
 # relocatable module (.rel file)
 %.rel: %.plf $(ELF) $(ELF2REL)
@@ -525,7 +526,7 @@ all: $(DOL) $(ALL_RELS)
 
 %.plf: $(REL_LCF)
 	@echo Linking relocatable module $@
-	$(QUIET) $(LD) -lcf $(REL_LCF) $(REL_LDFLAGS) $(filter %.o,$^) -map $(@:.plf=.map) -o $@
+	$(QUIET) $(LD) -lcf $(REL_LCF) $(REL_LDFLAGS) $(filter %.o,$^) -o $@ -map $(@:.plf=.map)
 
 # Canned recipe for compiling C or C++
 # Uses CC_CHECK to check syntax and generate dependencies, compiles the file,
