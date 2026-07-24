@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function run lbl_00007740 .. lbl_00007778.
+ * mini_bowling.c -- REL module: isolated function run lbl_000076D0 .. lbl_00007778.
  * This file holds one contiguous run of functions, meant to be a single
  * pure-C file once ALL of them are converted from the asm-includes below.
  * Until the last stub becomes C this file still contains an `asm` block,
@@ -133,6 +133,7 @@ extern void u_set_minigame_callbacks_2();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_000076D0(void);
 void lbl_00007740(void);
 int lbl_00007778(void);
 void lbl_00007878(void);
@@ -173,6 +174,20 @@ void lbl_0000E7B0(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
+// lbl_000076D0 (0x76D0): commentary countdown tick; on expiry start the result BGM.
+void lbl_000076D0(void)
+{
+    s16 *cnt = (s16 *)(lbl_10000000 + 0x15c);
+    s16 c = *cnt;
+
+    if (c > 0) {
+        if (c == *(s16 *)(lbl_10000000 + 0x15e))
+            func_8002BFCC(*(u32 *)(lbl_10000000 + 0x154), *(u32 *)(lbl_10000000 + 0x158));
+        (*cnt)--;
+        if (*cnt <= 0)
+            lbl_00007740();
+    }
+}
 // lbl_00007740 (0x7740): clear the commentary counter and start result-screen BGM.
 void lbl_00007740(void)
 {

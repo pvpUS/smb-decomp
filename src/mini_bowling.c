@@ -169,7 +169,7 @@ static void lbl_00006E64(void);
 static void lbl_00006F0C(void);
 static void lbl_00007518(void);
 static void lbl_00007650(void);
-static void lbl_000076D0(void);
+void lbl_000076D0(void);
 void lbl_00007740(void);
 void lbl_00007778(void);
 void lbl_00007878(void);
@@ -409,10 +409,5 @@ static asm void lbl_00007650(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_bowling/lbl_00007650.s"
-}
-static asm void lbl_000076D0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_000076D0.s"
 }
 #pragma force_active reset

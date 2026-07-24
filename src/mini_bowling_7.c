@@ -132,6 +132,7 @@ extern void u_set_minigame_callbacks_2();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_000076D0(void);
 void lbl_00007740(void);
 void lbl_00007778(void);
 void lbl_00007878(void);
