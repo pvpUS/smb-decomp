@@ -282,7 +282,6 @@ asm void bg_pilot_draw(void)
 
 void bg_pilot_interact(int arg0) {}
 
-#ifdef NONMATCHING
 void func_80064C30(struct GCMMatState_Unit *arg0)
 {
     struct TevStageInfo sp44;
@@ -348,17 +347,7 @@ void func_80064C30(struct GCMMatState_Unit *arg0)
     sp44.texMapId += 1;
     arg0->unkC = sp44;
 }
-#else
-const float lbl_802F45E0 = 0.2f;
-const float lbl_802F45E4 = -0.8f;
-const float lbl_802F45E8 = 0.9f;
-asm void func_80064C30(struct GCMMatState_Unit *arg0)
-{
-	nofralloc
-#include "../asm/nonmatchings/func_80064C30.s"
-}
 #pragma peephole on
-#endif
 
 int func_80065084(int arg0, struct GMAModelEntry *arg1)
 {

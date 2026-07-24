@@ -386,7 +386,6 @@ static void bg_water_envmap_ball(struct GCMMatState_Unit *arg0)
     arg0->unkC = sp2C;
 }
 
-#ifdef NONMATCHING
 static void lbl_8005F520(struct GCMMatState_Unit *arg0)
 {
     struct BGWaterWork *work = backgroundInfo.work;
@@ -423,7 +422,6 @@ static void lbl_8005F520(struct GCMMatState_Unit *arg0)
     sp14[1][2] = 0.2f;
     GXSetIndTexMtx(arg0->unkC.indTexMtxId, sp14, 1);
     GXSetTexCoordGen(sp2C.texCoordId, GX_TG_MTX2x4, GX_TG_POS, sp2C.texMtxId);
-    // NONMATCHING: need it to reload sp2C.texCoordId here instead of using r29
     GXSetTexCoordGen(sp2C.texCoordId + 1, GX_TG_MTX2x4, GX_TG_POS, sp2C.texMtxId + 3);
     GXSetIndTexOrder(sp2C.tevIndStage, sp2C.texCoordId + 1, sp2C.texMapId + 1);
     GXSetTevIndirect(sp2C.tevStage, sp2C.tevIndStage, GX_ITF_8, GX_ITB_NONE, sp2C.indTexMtxId, GX_ITW_OFF, GX_ITW_OFF, GX_FALSE, GX_FALSE, GX_ITBA_OFF);
@@ -440,22 +438,7 @@ static void lbl_8005F520(struct GCMMatState_Unit *arg0)
     sp2C.indTexMtxId += 1;
     arg0->unkC = sp2C;
 }
-#else
-const float lbl_802F4314 = 2160.0f;
-const float lbl_802F4318 = -5280.0f;
-const float lbl_802F431C = 214.0f;
-const float lbl_802F4320 = 20.0f;
-const float lbl_802F4324 = 360.0f;
-const float lbl_802F4328 = 0.004999999888241291f;
-const float lbl_802F432C = 0.25f;
-const float lbl_802F4330 = -0.0099999997764825821f;
-static asm void lbl_8005F520(struct GCMMatState_Unit *arg0)
-{
-    nofralloc
-#include "../asm/nonmatchings/lbl_8005F520.s"
-}
 #pragma peephole on
-#endif
 
 static int model_find_proc(int index, struct GMAModelEntry *entry)
 {
