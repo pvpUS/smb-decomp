@@ -62,7 +62,9 @@ conversions re-applied (same as any hand-matched function).
 
 Usage:
     python tools/rel_split.py <module> [--include hdr.h ...] [--extra-start lbl ...]
-        [--extern-fn f ...] [--extern-data d ...] [--isolate lbl ...] [--chunk-size N]
+        [--extern-fn f ...] [--extern-data d ...] [--chunk-size N]
+        [--isolate lbl ...]                 # each lbl -> its own single-function file
+        [--isolate-range START END ...]     # a contiguous run -> one pure-C file
 """
 import argparse
 import os
@@ -109,7 +111,7 @@ def find_line(lines, pred, start=0):
 
 
 def split_module(module, extra_includes, extra_starts, extern_fns, extern_data,
-                 chunk_size=0, isolate=()):
+                 chunk_size=0, isolate=(), isolate_ranges=()):
     asm_path = os.path.join(REPO, 'asm', module + '.s')
     src_path = os.path.join(REPO, 'src', module + '.c')
     with open(asm_path, 'r', newline='\n') as f:
@@ -261,6 +263,11 @@ def split_module(module, extra_includes, extra_starts, extern_fns, extern_data,
         funcs.append((cur_name, cur_global, cur_lines))
     funcs.sort(key=lambda f: text_labels[f[0]])
 
+    # Validate --isolate / --isolate-range against the function set NOW, before
+    # any destructive writes, so a bad label/range fails without leaving a
+    # half-rewritten tree (the per-function bodies + data-only .s come next).
+    resolve_pure_ranges(funcs, isolate, isolate_ranges)
+
     # --- data/rodata/bss labels the code loads by address --------------------
     with open(src_path, 'r', newline='\n') as f:
         src = f.read().split('\n')
@@ -366,12 +373,44 @@ def split_module(module, extra_includes, extra_starts, extern_fns, extern_data,
 
     src_files = write_src_files(module, src_path, funcs, includes,
                                 data_externs, extern_data, extern_fns,
-                                chunk_size, isolate)
+                                chunk_size, isolate, isolate_ranges)
 
     return funcs, starts, text_labels, data_externs, src_files
 
 
-def partition_funcs(funcs, chunk_size, isolate=()):
+def resolve_pure_ranges(funcs, isolate=(), isolate_ranges=()):
+    """Turn ``--isolate`` singletons and ``--isolate-range`` pairs into a sorted,
+    validated list of (start_idx, end_idx) inclusive index ranges over ``funcs``.
+
+    Each range becomes one pure-C file.  A singleton is just ``(i, i)``.  Ranges
+    must not overlap.  Exits with a clear message on an unknown label or a
+    backwards / overlapping range.
+    """
+    names = [f[0] for f in funcs]
+    idx = {n: i for i, n in enumerate(names)}
+    ranges = []
+    for n in isolate:
+        if n not in idx:
+            sys.exit('--isolate: unknown function %r' % n)
+        ranges.append((idx[n], idx[n]))
+    for a, b in isolate_ranges:
+        if a not in idx:
+            sys.exit('--isolate-range: unknown start label %r' % a)
+        if b not in idx:
+            sys.exit('--isolate-range: unknown end label %r' % b)
+        s, e = idx[a], idx[b]
+        if s > e:
+            sys.exit('--isolate-range: %s comes after %s in .text order' % (a, b))
+        ranges.append((s, e))
+    ranges.sort()
+    for (s1, e1), (s2, e2) in zip(ranges, ranges[1:]):
+        if s2 <= e1:
+            sys.exit('--isolate/-range overlap: [%s..%s] and [%s..%s]'
+                     % (names[s1], names[e1], names[s2], names[e2]))
+    return ranges
+
+
+def partition_funcs(funcs, chunk_size, isolate=(), isolate_ranges=()):
     """Partition ``funcs`` (already in .text-offset order) into contiguous
     groups, one per generated ``.c`` file.
 
@@ -380,36 +419,48 @@ def partition_funcs(funcs, chunk_size, isolate=()):
     ``.c`` holds a contiguous offset range and the ``.c`` files are listed in
     order.
 
-    ``isolate`` names functions that must each land in their *own* single-
-    function file.  That is the mechanism for matching: mwcc's inline assembler
-    disables the instruction scheduler + peephole optimizer for EVERY C function
-    that shares a translation unit with an ``asm`` block (verified: a lone
+    ``isolate`` / ``isolate_ranges`` name the functions (or contiguous runs of
+    functions) that must land in their *own* file, separate from the asm-include
+    stubs.  That is the mechanism for matching: mwcc's inline assembler disables
+    the instruction scheduler + peephole optimizer for EVERY C function that
+    shares a translation unit with an ``asm`` block (verified: a lone
     ``static asm`` sibling is enough to turn ``extsb.`` into ``extsb``+``cmpwi``).
-    So a hand-written C function only reproduces the original schedule when it
-    sits alone in a pure-C file, with no asm-include siblings.  Isolating a
-    function gives it that file; once its body is converted from the asm-include
-    to C, the file is pure C and the optimizer stays on.
+    So a hand-written C function only reproduces the original schedule when its
+    file has NO asm-include siblings.  ``--isolate`` gives a single function its
+    own file (the incremental-matching mode -- verify each function on its own);
+    ``--isolate-range START END`` puts a whole contiguous run in ONE file, which
+    is how you consolidate an already-matched run into a single pure-C file (the
+    natural end state, like sel_stage_rel's few C files).  A range file is pure C
+    only once EVERY function in it is converted -- until then it still holds
+    asm-include stubs and deopts its own converted members, so match a run
+    function-by-function (singletons) first, then consolidate with a range.
 
     ``chunk_size`` (> 0) caps how many *asm-include* functions share a file --
     purely cosmetic (asm-include functions carry no C to optimize, so grouping
-    all of them in one file is byte-identical; the current single-file layout
-    proves it).  ``chunk_size <= 0`` groups every contiguous run of non-isolated
-    functions into as few files as possible.
+    all of them in one file is byte-identical; the single-file layout proves it).
+    ``chunk_size <= 0`` groups every contiguous run of non-isolated functions
+    into as few files as possible.
     """
-    isolate = set(isolate)
+    ranges = resolve_pure_ranges(funcs, isolate, isolate_ranges)
+    start_to_end = {s: e for s, e in ranges}
     groups = []
     cur = []
-    for f in funcs:
-        if f[0] in isolate:
+    i = 0
+    n = len(funcs)
+    while i < n:
+        if i in start_to_end:            # start of a pure-C range -> its own file
             if cur:
                 groups.append(cur)
                 cur = []
-            groups.append([f])       # its own pure file (convert body to C)
+            e = start_to_end[i]
+            groups.append(funcs[i:e + 1])
+            i = e + 1
             continue
-        cur.append(f)
+        cur.append(funcs[i])
         if chunk_size and chunk_size > 0 and len(cur) >= chunk_size:
             groups.append(cur)
             cur = []
+        i += 1
     if cur:
         groups.append(cur)
     return groups or [funcs]
@@ -449,7 +500,8 @@ def compute_globals(funcs, chunks):
 
 
 def write_src_files(module, src_path, funcs, includes, data_externs,
-                    extern_data, extern_fns, chunk_size, isolate=()):
+                    extern_data, extern_fns, chunk_size, isolate=(),
+                    isolate_ranges=()):
     """Emit ``src/<module>.c`` (+ ``_2.c``, ``_3.c`` ... when split).
 
     Returns the ``src/...`` paths written, in link order.  With a single group
@@ -457,11 +509,14 @@ def write_src_files(module, src_path, funcs, includes, data_externs,
     """
     src_dir = os.path.dirname(src_path)
     base = os.path.splitext(os.path.basename(src_path))[0]  # e.g. mini_bowling
-    isolate = set(isolate)
 
-    chunks = partition_funcs(funcs, chunk_size, isolate)
+    chunks = partition_funcs(funcs, chunk_size, isolate, isolate_ranges)
     global_names = compute_globals(funcs, chunks)
     multi = len(chunks) > 1
+    # the first-function name of every pure-C target group, so their files get
+    # the "convert me to C" header (a group is a target iff it starts a range)
+    target_starts = {funcs[s][0]
+                     for s, _e in resolve_pure_ranges(funcs, isolate, isolate_ranges)}
 
     # remove stale ``<module>_<N>.c`` from a previous, larger split
     stale_re = re.compile(r'^%s_\d+\.c$' % re.escape(base))
@@ -476,10 +531,10 @@ def write_src_files(module, src_path, funcs, includes, data_externs,
     for ci, chunk in enumerate(chunks):
         path = src_path if ci == 0 else os.path.join(src_dir, '%s_%d.c' % (base, ci + 1))
         chunk_names = {name for name, _g, _b in chunk}
-        is_isolated = len(chunk) == 1 and chunk[0][0] in isolate
+        is_isolated = chunk[0][0] in target_starts
         out = []
         out.append('/*')
-        if is_isolated:
+        if is_isolated and len(chunk) == 1:
             out.append(' * %s.c -- REL module: isolated function %s.' % (base, chunk[0][0]))
             out.append(' * This file holds exactly one function so it can be converted from the')
             out.append(' * asm-include below to matching C WITHOUT any asm sibling in the')
@@ -487,6 +542,16 @@ def write_src_files(module, src_path, funcs, includes, data_externs,
             out.append(' * instruction scheduler + peephole optimizer for every C function that')
             out.append(' * shares a TU with an `asm` block, so a schedule-sensitive function only')
             out.append(' * reproduces the original when it sits alone in a pure-C file like this.')
+            out.append(' * Keep the Makefile SOURCES order so the .text layout is preserved.')
+        elif is_isolated:
+            out.append(' * %s.c -- REL module: isolated function run %s .. %s.'
+                       % (base, chunk[0][0], chunk[-1][0]))
+            out.append(' * This file holds one contiguous run of functions, meant to be a single')
+            out.append(' * pure-C file once ALL of them are converted from the asm-includes below.')
+            out.append(' * Until the last stub becomes C this file still contains an `asm` block,')
+            out.append(' * which disables mwcc\'s scheduler/peephole for the C functions here -- so')
+            out.append(' * convert the whole run (or match function-by-function with --isolate')
+            out.append(' * singletons first, then consolidate into this range file).')
             out.append(' * Keep the Makefile SOURCES order so the .text layout is preserved.')
         elif multi:
             out.append(' * %s.c -- REL module, structurally split for per-function' % base)
@@ -568,14 +633,20 @@ def main():
                     help='function label to place in its OWN single-function .c file '
                          'so it can be converted to matching C with no asm sibling in '
                          'the TU (an asm sibling disables mwcc\'s optimizer for C in '
-                         'that TU). Repeatable.')
+                         'that TU). Repeatable. Use for incremental per-function matching.')
+    ap.add_argument('--isolate-range', action='append', nargs=2, default=[],
+                    metavar=('START', 'END'),
+                    help='contiguous run START..END (inclusive, .text order) into ONE '
+                         'pure-C file. Use to consolidate an already-matched run into a '
+                         'single file (the sel_stage_rel end state). Repeatable.')
     args = ap.parse_args()
+    iso_ranges = [tuple(r) for r in args.isolate_range]
     funcs, starts, text_labels, data_externs, src_files = split_module(
         args.module, args.include, args.extra_start, args.extern_fn, args.extern_data,
-        args.chunk_size, args.isolate)
+        args.chunk_size, args.isolate, iso_ranges)
     # cross-file-referenced functions are promoted to global, so recount from
     # what was actually written
-    chunks = partition_funcs(funcs, args.chunk_size, args.isolate)
+    chunks = partition_funcs(funcs, args.chunk_size, args.isolate, iso_ranges)
     global_names = compute_globals(funcs, chunks)
     n_global = len(global_names)
     print('module             : %s' % args.module)

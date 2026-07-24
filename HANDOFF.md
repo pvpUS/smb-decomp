@@ -57,7 +57,15 @@ Working build command (run from the Bash tool; delegates to msys2 so the native 
 - Commits on the branch:
   - `bdb8aff` — the 2 verified DOL matches (bg_water.c, bg_pilot.c).
   - `5138d8f` — WIP: all REL minigame **drafts** + `dol2elf.py` + mini_fight Makefile wiring. **The draft C for every REL module lives here** — retrieve with `git show 5138d8f:src/<module>.c`. These drafts are unverified but are strong STARTING POINTS for matching.
-- **Uncommitted in the working tree right now:** the mini_bowling split, now a **3-file `--isolate` split** that builds golden — `M asm/mini_bowling.s` (data-only), `M src/mini_bowling.c` (39 asm-include stubs, before 0x7778), `?? src/mini_bowling_2.c` (matched C `lbl_00007778`, the isolated pure-C file), `?? src/mini_bowling_3.c` (77 asm-include stubs + matched C `lbl_000086E4`, after 0x7778), `?? asm/nonmatchings/mini_bowling/` (120 per-function bodies), `M Makefile` (mini_bowling `SOURCES` lists the 3 `.c` + the `.s`), `M tools/rel_split.py` (multi-file + `--isolate`). Consider committing this as a checkpoint. NOTE: `lbl_000086E4` now lives in `_3.c`; it stayed matched through the re-split because it is optimizer-insensitive, but for consistency it could be `--isolate`d too.
+- **Committed checkpoints on this branch** (`git log` after `5138d8f`): `36a14f1` (multi-file + `--isolate`; matched `lbl_00007778`; 3-file split) and a follow-up (`--isolate-range`; matched `lbl_00007740`; restructured to 5 files). Not pushed to the fork yet.
+- **Current mini_bowling layout (5 files, builds golden `29ded64...`, 3 functions matched as C):**
+  - `src/mini_bowling.c` — asm-include stubs before 0x7740
+  - `src/mini_bowling_2.c` — **pure-C range** `lbl_00007740` + `lbl_00007778` (both matched, one file via `--isolate-range`)
+  - `src/mini_bowling_3.c` — asm-include stubs (0x7778 .. 0x86E4)
+  - `src/mini_bowling_4.c` — **pure-C singleton** `lbl_000086E4` (`--isolate`)
+  - `src/mini_bowling_5.c` — asm-include stubs after 0x86E4
+  - `asm/mini_bowling.s` (data-only) — last in `SOURCES`
+  - `asm/nonmatchings/mini_bowling/` — 120 per-function bodies.
 - **NEVER commit/push game binaries.** `baserom.*`, `*.dol`, `*.elf`, `*.rel`, `*.plf`, `*.o`, `*.map`, `*.bin` are all gitignored (copyrighted). Before any push, scan the diff for those patterns.
 
 ## 5. What's matched vs. not (DOL)
@@ -85,7 +93,7 @@ These DOL stubs use the pattern `#ifdef NONMATCHING <C attempt> #else asm void F
 - Rewrites `asm/<module>.s` to **data-only** (keeps `.rodata/.data/.bss/.sdata/.sdata2`; adds `.balign 8` to restore rodata alignment; un-`.if 0`s the alignment stub symbol; rewrites data→text relocs as `_prolog + <offset>`).
 - Generates `src/<module>.c` = includes + externs + per-function `static asm void lbl_X(){nofralloc #include ...}` (globals non-static), all wrapped in `#pragma force_active on ... reset` (REQUIRED so mwcc doesn't dead-strip statics reached only via jump tables).
 - Per-module knobs it exposes: `--include`, `--extern-fn`, `--extern-data`, `--extra-start`, plus (this session) **`--isolate <lbl>`** and `--chunk-size N` for multi-file output. Undeclared imports/data are found mechanically from the build's `undefined label` / `illegal use of label` errors.
-- **Validated:** mini_bowling split rebuilds to the golden `29ded64...` (byte-neutral) as a single file, as 6 uniform chunks, and as a 3-file `--isolate` split; `sha1sum -c` confirms nothing else broke.
+- **Validated:** mini_bowling split rebuilds to the golden `29ded64...` (byte-neutral) as a single file, as 6 uniform chunks, as a 3-file `--isolate` split, and as a 5-file `--isolate` + `--isolate-range` split with 3 functions matched as C; `sha1sum -c` confirms nothing else broke.
 
 **THE DEOPT FINDING — CORRECTED (this is the single most important REL gotcha):** the earlier "one giant TU exceeds a size threshold" explanation was WRONG. The real rule: **mwcc's inline assembler disables the instruction scheduler + peephole optimizer for every C function that shares a translation unit with ANY `asm` block.** It is the presence of inline asm, not the amount. Verified directly this session with the exact build flags:
 - `lbl_00007778` compiled **alone** (with or without `#pragma force_active`) → `extsb.` (record-form compare) + `blr` early-returns = **byte-exact match**.
@@ -98,11 +106,12 @@ These DOL stubs use the pattern `#ifdef NONMATCHING <C attempt> #else asm void F
 - `.text` order is preserved because each `.c` is a contiguous offset range and `SOURCES` lists them in order (linker groups each object's `.text` as one block). You cannot interleave functions between objects arbitrarily.
 - Cross-file references are auto-promoted to global symbols by `compute_globals` (REL24 `bl` / `@ha/@l` across files; conditional REL14 branches never cross a function boundary, so this is safe).
 - Converted C bodies are hand-written and applied AFTER the split; re-running the splitter regenerates asm-include scaffolding and needs those conversions re-applied (same as `lbl_000086E4` always did).
+- **`--isolate-range START END`** puts a whole contiguous run into ONE pure-C file — use it to consolidate an already-matched run into a single file (the sel_stage_rel end state, few C files). A range file is pure C only once EVERY function in it is C; until then it still holds asm-include stubs that deopt its own converted members. So match a run function-by-function with singleton `--isolate` first (each independently golden-checkable), THEN consolidate with `--isolate-range`. Proven: `--isolate-range lbl_00007740 lbl_00007778` puts both matched functions in one pure-C file and the REL stays `29ded64...`. Ranges/singletons are validated (unknown label / backwards / overlapping → clear error) before any writes.
 
 ## 7. Strategy & concrete next steps (in order)
 
-1. **DONE this session:** `tools/rel_split.py` multi-file + `--isolate`; `lbl_00007778` matched as C in `mini_bowling.rel` (golden); full `sha1sum -c` still all-OK. The mini_bowling working tree is now the 3-file `--isolate` split.
-2. **Keep matching mini_bowling** with the `--isolate` workflow above. Good next candidates (drafts in `git show 5138d8f:src/mini_bowling.c`, but treat as UNVERIFIED starting points — the "isolation-corrected" forms mentioned earlier are NOT saved anywhere and must be re-derived/re-verified): `lbl_00007740` (trivial: `sth 0 -> lbl_10000154+8; u_play_music(0x64,8)`), `lbl_00007964`/`lbl_000079E8` (replay snapshot save/restore — need the right struct/offsets). To isolate several at once: repeat `--isolate` (each becomes its own file); the tool prints the `SOURCES` order.
+1. **DONE (committed):** `tools/rel_split.py` multi-file + `--isolate` + `--isolate-range`; matched `lbl_00007740`, `lbl_00007778`, `lbl_000086E4` as C in `mini_bowling.rel` (golden); full `sha1sum -c` still all-OK. mini_bowling is the 5-file split described in §4.
+2. **Keep matching mini_bowling** with the `--isolate` workflow above. Match new functions as singleton `--isolate` files (incremental golden checks), then `--isolate-range` to consolidate contiguous matched runs. Candidates (drafts in `git show 5138d8f:src/mini_bowling.c`, UNVERIFIED starting points — the "isolation-corrected" forms are NOT saved and must be re-derived/re-verified): `lbl_00007964`/`lbl_000079E8` (replay snapshot save/restore — need the right struct/offsets), then the ball/camera callback runs. Reconstruct each from the asm, verify struct offsets, objdump the built `.plf` function vs `asm/nonmatchings/mini_bowling/<lbl>.s` for per-function feedback, and gate on the whole-REL `29ded64...`.
 3. **Generalize + roll out** to the other modules (mini_race/fight/golf/billiards/pilot, option, test_mode, sel_ngc). Each split is independent; validation builds collide in a shared tree, so use the **warm-copy method** (§8).
 4. **Parallel-match** functions across split modules (warm copies, drafts from `5138d8f` as references, objdump/sha1 verification). Expect a much better hit rate than the DOL tail.
 5. Merge matched files back to the main tree; re-run `sha1sum -c` to confirm the whole set still matches.

@@ -423,6 +423,8 @@ SOURCES := \
 	src/mini_bowling.c \
 	src/mini_bowling_2.c \
 	src/mini_bowling_3.c \
+	src/mini_bowling_4.c \
+	src/mini_bowling_5.c \
 	asm/mini_bowling.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
