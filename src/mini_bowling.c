@@ -1,6 +1,6 @@
 /*
  * mini_bowling.c -- REL module, structurally split for per-function
- * byte-matching (part 1 of 5; contiguous .text range).  Each function
+ * byte-matching (part 1 of 7; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_bowling/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -175,6 +175,11 @@ void lbl_00007778(void);
 void lbl_00007878(void);
 void lbl_00007964(void);
 void lbl_000079E8(void);
+void lbl_00007A6C(void);
+void lbl_00007C54(void);
+void lbl_00007E74(void);
+void lbl_00007FE0(void);
+void lbl_000080E0(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
 void lbl_000097B4(void);
