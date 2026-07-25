@@ -621,6 +621,22 @@ SOURCES := \
 	src/mini_golf_23.c \
 	src/mini_golf_24.c \
 	src/mini_golf_25.c \
+	src/mini_golf_26.c \
+	src/mini_golf_27.c \
+	src/mini_golf_28.c \
+	src/mini_golf_29.c \
+	src/mini_golf_30.c \
+	src/mini_golf_31.c \
+	src/mini_golf_32.c \
+	src/mini_golf_33.c \
+	src/mini_golf_34.c \
+	src/mini_golf_35.c \
+	src/mini_golf_36.c \
+	src/mini_golf_37.c \
+	src/mini_golf_38.c \
+	src/mini_golf_39.c \
+	src/mini_golf_40.c \
+	src/mini_golf_41.c \
 	asm/mini_golf.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)

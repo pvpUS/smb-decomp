@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_00009880.
+ * mini_golf.c -- REL module: isolated function lbl_00025A44.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -182,7 +182,7 @@ void lbl_000095C4(void);
 void lbl_000097D8(void);
 void lbl_00009800(void);
 void lbl_0000982C(void);
-int lbl_00009880(u8 a);
+void lbl_00009880(void);
 void lbl_00009968(void);
 void lbl_000099B4(void);
 void lbl_00009B68(void);
@@ -230,7 +230,7 @@ void lbl_0002544C(void);
 void lbl_000255CC(void);
 void lbl_0002572C(void);
 void lbl_00025928(void);
-void lbl_00025A44(void);
+s32 lbl_00025A44(void *arg);
 void lbl_00025B10(void);
 void lbl_00025B70(void);
 void lbl_00025BD0(void);
@@ -238,50 +238,26 @@ void lbl_00025EA8(void);
 void lbl_0002609C(void);
 void lbl_000260C0(void);
 
-#pragma force_active on
-int lbl_00009880(u8 a)
-{
-    u8 *st = (u8 *)lbl_10000000;
-    u8 *base = (u8 *)lbl_00026AB0;
-    u8 A, B, v;
+struct Struct25A44 {
+    s32 w[8];
+};
 
-    if ((s32)lbl_802F1BE8.unk0 == 0) {
-        u8 *p = base + a * 0x12;
-        p += *(s16 *)(st + 0x3a);
-        v = p[0x48];
-        if (v < 2) {
-            return 0;
-        }
-        if (v < 4) {
-            return 1;
-        }
-        return 2;
-    }
-    if (a == 0) {
-        A = base[*(s16 *)(st + 0x3a) + 0x48];
-        B = base[*(s16 *)(st + 0x3a) + 0x5a];
-        if (A < B) {
-            return 0;
-        }
-        if (A == B) {
-            return 1;
-        }
-        if (A > B) {
-            return 2;
-        }
-    } else if (a == 1) {
-        A = base[*(s16 *)(st + 0x3a) + 0x5a];
-        B = base[*(s16 *)(st + 0x3a) + 0x48];
-        if (A < B) {
-            return 0;
-        }
-        if (A == B) {
-            return 1;
-        }
-        if (A > B) {
-            return 2;
-        }
-    }
-    return 3;
+#pragma force_active on
+s32 lbl_00025A44(void *arg)
+{
+    u8 *cfg = (u8 *)lbl_00026AA0;
+    u8 *st = (u8 *)lbl_10000248;
+
+    *(struct Struct25A44 *)st = *(struct Struct25A44 *)arg;
+    *(s32 *)(st + 0x20) = *(s32 *)(*(u8 **)st + 0x24);
+
+    mathutil_mtxA_push();
+    mathutil_mtxA_from_translate_xyz(*(f32 *)(cfg + 8), *(f32 *)(cfg + 8), *(f32 *)(cfg + 4));
+    mathutil_mtxA_scale_xyz(*(f32 *)cfg, *(f32 *)cfg, *(f32 *)(cfg + 4));
+    mathutil_mtxA_rotate_x(0x4000);
+    mathutil_mtxA_translate_neg((Vec *)(st + 8));
+    mathutil_mtxA_to_mtx((f32 (*)[4])(st + 0x28));
+    mathutil_mtxA_pop();
+    return 1;
 }
 #pragma force_active reset

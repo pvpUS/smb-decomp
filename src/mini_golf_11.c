@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function run lbl_00009968 .. lbl_000099B4.
+ * mini_golf.c -- REL module: isolated function run lbl_000092C4 .. lbl_00009478.
  * This file holds one contiguous run of functions, meant to be a single
  * pure-C file once ALL of them are converted from the asm-includes below.
  * Until the last stub becomes C this file still contains an `asm` block,
@@ -147,6 +147,10 @@ void lbl_0000027C(void);
 void lbl_000002A8(void);
 void lbl_000005CC(void);
 void lbl_000056C4(void);
+void lbl_00008C78(void);
+void lbl_00008D34(void);
+void lbl_00008F44(void);
+void lbl_0000907C(void);
 u8 lbl_00009178(void);
 void lbl_000091BC(void);
 f32 lbl_000092C4(void);
@@ -194,6 +198,9 @@ void lbl_000106B8(void);
 void lbl_00010808(void);
 void lbl_000109CC(void);
 void lbl_00010E68(s16 x);
+void lbl_00010E74(void);
+void lbl_00011254(void);
+void lbl_000115F8(void);
 void lbl_0001199C(void);
 void lbl_00011A6C(void);
 void lbl_00011DAC(void);
@@ -201,8 +208,11 @@ void lbl_00011FEC(void);
 void lbl_000123B4(void);
 void lbl_00012A14(void);
 void lbl_00012C80(void);
+void lbl_00012EEC(void);
 void lbl_00013664(void);
 void lbl_00015520(void);
+void lbl_0001B5B8(void);
+void lbl_00022524(void);
 void lbl_00022610(void);
 void lbl_00022904(void);
 void lbl_00022D4C(void);
@@ -218,6 +228,7 @@ void lbl_00024E70(void);
 void lbl_000252C0(void);
 void lbl_0002544C(void);
 void lbl_000255CC(void);
+void lbl_0002572C(void);
 void lbl_00025928(void);
 void lbl_00025A44(void);
 void lbl_00025B10(void (*fn)(void));
@@ -228,19 +239,97 @@ int lbl_0002609C(void);
 int lbl_000260C0(void);
 
 #pragma force_active on
-int lbl_00009968(u8 a)
+f32 lbl_000092C4(void)
+{
+    return *(f32*)lbl_1000005C;
+}
+f32 lbl_000092D0(void)
+{
+    return *(f32*)(lbl_1000005C + 4);
+}
+f32 lbl_000092E0(void)
+{
+    return *(f32*)(lbl_1000005C + 8);
+}
+s16 lbl_000092F0(void)
+{
+    return *(s16*)lbl_1000003A;
+}
+u8 lbl_00009300(void)
+{
+    return *(u8*)lbl_100000ED;
+}
+u8 lbl_00009310(void)
+{
+    return *(u8*)lbl_100000EB;
+}
+void lbl_00009320(Vec* p)
+{
+    *(Vec*)lbl_10000004 = *p;
+}
+void lbl_00009340(Vec* p)
+{
+    *(Vec*)lbl_10000010 = *p;
+}
+void lbl_00009360(Vec* p)
+{
+    *p = *(Vec*)lbl_10000010;
+}
+void lbl_00009384(s16* p)
+{
+    *(s16*)lbl_10000046 = *p;
+}
+void lbl_00009394(s16* p)
+{
+    *p = *(s16*)lbl_10000046;
+}
+void lbl_000093A4(s16* p)
+{
+    *(s16*)lbl_10000048 = *p;
+}
+int lbl_000093B4(void)
+{
+    return *(int*)lbl_100000C8;
+}
+int lbl_000093C4(void)
+{
+    return *(int*)lbl_100000D0;
+}
+u8 lbl_000093D4(int a, int b)
 {
     u8* p = (u8*)lbl_00026AF8 + a * 0x12;
-    u8 v = p[*(s16*)lbl_1000003A];
-    if (v < 2)
-        return 0;
-    if (v < 4)
-        return 1;
-    return 2;
+    return p[b];
 }
-void lbl_000099B4(Mtx m)
+u8 lbl_000093F0(int i)
 {
-    mathutil_mtxA_from_mtx(m);
-    mathutil_mtxA_to_mtx((f32(*)[4])lbl_10000100);
+    return ((u8*)lbl_00026B40)[i];
+}
+u8 lbl_00009404(void)
+{
+    return *(s16*)lbl_1000003A;
+}
+u16 lbl_00009414(void)
+{
+    return *(u16*)lbl_100000F8;
+}
+u8 lbl_00009424(void)
+{
+    return !*(u8*)lbl_100000F6;
+}
+u8 lbl_00009438(void)
+{
+    return *(u8*)lbl_00026AEC;
+}
+void lbl_00009448(s8 a)
+{
+    *(s16*)lbl_1000003A = a;
+}
+u8 lbl_00009458(void)
+{
+    return ((u8*)lbl_00026AF4)[modeCtrl.currPlayer];
+}
+u8 lbl_00009478(void)
+{
+    return *(u8*)lbl_100000FB;
 }
 #pragma force_active reset

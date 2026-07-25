@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_00009880.
+ * mini_golf.c -- REL module: isolated function lbl_0001199C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -151,7 +151,7 @@ void lbl_00008C78(void);
 void lbl_00008D34(void);
 void lbl_00008F44(void);
 void lbl_0000907C(void);
-void lbl_00009178(void);
+u8 lbl_00009178(void);
 void lbl_000091BC(void);
 void lbl_000092C4(void);
 void lbl_000092D0(void);
@@ -169,20 +169,20 @@ void lbl_000093B4(void);
 void lbl_000093C4(void);
 void lbl_000093D4(void);
 void lbl_000093F0(void);
-void lbl_00009404(void);
+int lbl_00009404(void);
 void lbl_00009414(void);
 void lbl_00009424(void);
-void lbl_00009438(void);
-void lbl_00009448(void);
+int lbl_00009438(void);
+void lbl_00009448(int a);
 void lbl_00009458(void);
 void lbl_00009478(void);
 void lbl_00009488(void);
 void lbl_00009538(void);
 void lbl_000095C4(void);
 void lbl_000097D8(void);
-void lbl_00009800(void);
+u8 lbl_00009800(void);
 void lbl_0000982C(void);
-int lbl_00009880(u8 a);
+void lbl_00009880(void);
 void lbl_00009968(void);
 void lbl_000099B4(void);
 void lbl_00009B68(void);
@@ -239,49 +239,42 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-int lbl_00009880(u8 a)
+void lbl_0001199C(void)
 {
-    u8 *st = (u8 *)lbl_10000000;
-    u8 *base = (u8 *)lbl_00026AB0;
-    u8 A, B, v;
+    u8 *st = (u8 *)lbl_100001C8;
+    int sel = -1;
 
-    if ((s32)lbl_802F1BE8.unk0 == 0) {
-        u8 *p = base + a * 0x12;
-        p += *(s16 *)(st + 0x3a);
-        v = p[0x48];
-        if (v < 2) {
-            return 0;
+    switch (*(s16 *)(st + 0x3c)) {
+    case 1:
+        if (*(u32 *)(st + 8) == 0) {
+            *(u32 *)(st + 8) = globalAnimTimer;
         }
-        if (v < 4) {
-            return 1;
+
+        if ((s8)lbl_00009438() != -1) {
+            sel = lbl_00009404();
+            lbl_00009448(lbl_00009438());
         }
-        return 2;
+
+        lbl_00022524();
+        lbl_0001B5B8();
+        if ((s8)sel != -1) {
+            lbl_00009448(sel);
+        }
+
+        if (lbl_00009178() == 0) {
+            return;
+        }
+        if (lbl_00009800() == 0) {
+            return;
+        }
+        if (modeCtrl.playerCount == 1) {
+            return;
+        }
+        lbl_00012EEC();
+        break;
+    default:
+        *(s32 *)(st + 8) = 0;
+        break;
     }
-    if (a == 0) {
-        A = base[*(s16 *)(st + 0x3a) + 0x48];
-        B = base[*(s16 *)(st + 0x3a) + 0x5a];
-        if (A < B) {
-            return 0;
-        }
-        if (A == B) {
-            return 1;
-        }
-        if (A > B) {
-            return 2;
-        }
-    } else if (a == 1) {
-        A = base[*(s16 *)(st + 0x3a) + 0x5a];
-        B = base[*(s16 *)(st + 0x3a) + 0x48];
-        if (A < B) {
-            return 0;
-        }
-        if (A == B) {
-            return 1;
-        }
-        if (A > B) {
-            return 2;
-        }
-    }
-    return 3;
 }
 #pragma force_active reset

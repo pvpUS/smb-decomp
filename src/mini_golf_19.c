@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_00010E68.
+ * mini_golf.c -- REL module: isolated function lbl_00009C10.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -147,6 +147,10 @@ void lbl_0000027C(void);
 void lbl_000002A8(void);
 void lbl_000005CC(void);
 void lbl_000056C4(void);
+void lbl_00008C78(void);
+void lbl_00008D34(void);
+void lbl_00008F44(void);
+void lbl_0000907C(void);
 u8 lbl_00009178(void);
 void lbl_000091BC(void);
 f32 lbl_000092C4(void);
@@ -194,6 +198,9 @@ void lbl_000106B8(void);
 void lbl_00010808(void);
 void lbl_000109CC(void);
 void lbl_00010E68(s16 x);
+void lbl_00010E74(void);
+void lbl_00011254(void);
+void lbl_000115F8(void);
 void lbl_0001199C(void);
 void lbl_00011A6C(void);
 void lbl_00011DAC(void);
@@ -201,8 +208,11 @@ void lbl_00011FEC(void);
 void lbl_000123B4(void);
 void lbl_00012A14(void);
 void lbl_00012C80(void);
+void lbl_00012EEC(void);
 void lbl_00013664(void);
 void lbl_00015520(void);
+void lbl_0001B5B8(void);
+void lbl_00022524(void);
 void lbl_00022610(void);
 void lbl_00022904(void);
 void lbl_00022D4C(void);
@@ -218,6 +228,7 @@ void lbl_00024E70(void);
 void lbl_000252C0(void);
 void lbl_0002544C(void);
 void lbl_000255CC(void);
+void lbl_0002572C(void);
 void lbl_00025928(void);
 void lbl_00025A44(void);
 void lbl_00025B10(void (*fn)(void));
@@ -228,8 +239,10 @@ int lbl_0002609C(void);
 int lbl_000260C0(void);
 
 #pragma force_active on
-void lbl_00010E68(s16 x)
+void lbl_00009C10(void)
 {
-    *(s16*)lbl_10000204 = x;
+    s8 v = *(s8*)((u8*)eventInfo + 0x18);
+    if (v == 2 || v == 4)
+        lbl_0000B280();
 }
 #pragma force_active reset

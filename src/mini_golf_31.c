@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_00009880.
+ * mini_golf.c -- REL module: isolated function lbl_00023DC4.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -139,7 +139,7 @@ extern void mini_commend_free_data();
 
 // Forward declarations so mwcc accepts `<fn>@ha/@l` and cross-function
 // branches before each function is defined below.
-void lbl_000000C8(void);
+struct GMAModel* lbl_000000C8(struct GMA* gma, char* name);
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
@@ -151,40 +151,40 @@ void lbl_00008C78(void);
 void lbl_00008D34(void);
 void lbl_00008F44(void);
 void lbl_0000907C(void);
-void lbl_00009178(void);
+u8 lbl_00009178(void);
 void lbl_000091BC(void);
-void lbl_000092C4(void);
-void lbl_000092D0(void);
-void lbl_000092E0(void);
-void lbl_000092F0(void);
-void lbl_00009300(void);
-void lbl_00009310(void);
-void lbl_00009320(void);
-void lbl_00009340(void);
-void lbl_00009360(void);
-void lbl_00009384(void);
-void lbl_00009394(void);
-void lbl_000093A4(void);
-void lbl_000093B4(void);
-void lbl_000093C4(void);
-void lbl_000093D4(void);
-void lbl_000093F0(void);
-void lbl_00009404(void);
-void lbl_00009414(void);
-void lbl_00009424(void);
-void lbl_00009438(void);
-void lbl_00009448(void);
-void lbl_00009458(void);
-void lbl_00009478(void);
+f32 lbl_000092C4(void);
+f32 lbl_000092D0(void);
+f32 lbl_000092E0(void);
+s16 lbl_000092F0(void);
+u8 lbl_00009300(void);
+u8 lbl_00009310(void);
+void lbl_00009320(Vec* p);
+void lbl_00009340(Vec* p);
+void lbl_00009360(Vec* p);
+void lbl_00009384(s16* p);
+void lbl_00009394(s16* p);
+void lbl_000093A4(s16* p);
+int lbl_000093B4(void);
+int lbl_000093C4(void);
+u8 lbl_000093D4(int a, int b);
+u8 lbl_000093F0(int i);
+u8 lbl_00009404(void);
+u16 lbl_00009414(void);
+u8 lbl_00009424(void);
+u8 lbl_00009438(void);
+void lbl_00009448(s8 a);
+u8 lbl_00009458(void);
+u8 lbl_00009478(void);
 void lbl_00009488(void);
 void lbl_00009538(void);
 void lbl_000095C4(void);
-void lbl_000097D8(void);
-void lbl_00009800(void);
+int lbl_000097D8(void);
+int lbl_00009800(void);
 void lbl_0000982C(void);
-int lbl_00009880(u8 a);
-void lbl_00009968(void);
-void lbl_000099B4(void);
+void lbl_00009880(void);
+int lbl_00009968(u8 a);
+void lbl_000099B4(Mtx m);
 void lbl_00009B68(void);
 void lbl_00009C10(void);
 void lbl_00009C50(void);
@@ -192,12 +192,12 @@ void lbl_0000B280(void);
 void lbl_0000B36C(void);
 void lbl_0000E998(void);
 void lbl_0000E99C(void);
-void lbl_0000F11C(void);
+void lbl_0000F11C(u8* s, Vec* out, f32 t);
 void lbl_0000F194(void);
 void lbl_000106B8(void);
 void lbl_00010808(void);
 void lbl_000109CC(void);
-void lbl_00010E68(void);
+void lbl_00010E68(s16 x);
 void lbl_00010E74(void);
 void lbl_00011254(void);
 void lbl_000115F8(void);
@@ -219,7 +219,7 @@ void lbl_00022D4C(void);
 void lbl_000230E4(void);
 void lbl_00023AB4(void);
 void lbl_00023C68(void);
-void lbl_00023DC4(void);
+u8 lbl_00023DC4(void);
 void lbl_00023DD4(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
@@ -231,57 +231,16 @@ void lbl_000255CC(void);
 void lbl_0002572C(void);
 void lbl_00025928(void);
 void lbl_00025A44(void);
-void lbl_00025B10(void);
-void lbl_00025B70(void);
+void lbl_00025B10(void (*fn)(void));
+void lbl_00025B70(void (*fn)(void));
 void lbl_00025BD0(void);
 void lbl_00025EA8(void);
-void lbl_0002609C(void);
-void lbl_000260C0(void);
+int lbl_0002609C(void);
+int lbl_000260C0(void);
 
 #pragma force_active on
-int lbl_00009880(u8 a)
+u8 lbl_00023DC4(void)
 {
-    u8 *st = (u8 *)lbl_10000000;
-    u8 *base = (u8 *)lbl_00026AB0;
-    u8 A, B, v;
-
-    if ((s32)lbl_802F1BE8.unk0 == 0) {
-        u8 *p = base + a * 0x12;
-        p += *(s16 *)(st + 0x3a);
-        v = p[0x48];
-        if (v < 2) {
-            return 0;
-        }
-        if (v < 4) {
-            return 1;
-        }
-        return 2;
-    }
-    if (a == 0) {
-        A = base[*(s16 *)(st + 0x3a) + 0x48];
-        B = base[*(s16 *)(st + 0x3a) + 0x5a];
-        if (A < B) {
-            return 0;
-        }
-        if (A == B) {
-            return 1;
-        }
-        if (A > B) {
-            return 2;
-        }
-    } else if (a == 1) {
-        A = base[*(s16 *)(st + 0x3a) + 0x5a];
-        B = base[*(s16 *)(st + 0x3a) + 0x48];
-        if (A < B) {
-            return 0;
-        }
-        if (A == B) {
-            return 1;
-        }
-        if (A > B) {
-            return 2;
-        }
-    }
-    return 3;
+    return *(u8*)lbl_100001CA;
 }
 #pragma force_active reset

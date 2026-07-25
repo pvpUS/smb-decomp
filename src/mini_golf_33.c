@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_00009880.
+ * mini_golf.c -- REL module: isolated function lbl_000245D4.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -182,9 +182,9 @@ void lbl_000095C4(void);
 void lbl_000097D8(void);
 void lbl_00009800(void);
 void lbl_0000982C(void);
-int lbl_00009880(u8 a);
+void lbl_00009880(void);
 void lbl_00009968(void);
-void lbl_000099B4(void);
+void lbl_000099B4(Mtx m);
 void lbl_00009B68(void);
 void lbl_00009C10(void);
 void lbl_00009C50(void);
@@ -239,49 +239,23 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-int lbl_00009880(u8 a)
+void lbl_000245D4(void)
 {
-    u8 *st = (u8 *)lbl_10000000;
-    u8 *base = (u8 *)lbl_00026AB0;
-    u8 A, B, v;
+    u8 *cfg = (u8 *)lbl_00026A38;
 
-    if ((s32)lbl_802F1BE8.unk0 == 0) {
-        u8 *p = base + a * 0x12;
-        p += *(s16 *)(st + 0x3a);
-        v = p[0x48];
-        if (v < 2) {
-            return 0;
-        }
-        if (v < 4) {
-            return 1;
-        }
-        return 2;
+    if (*(u8 *)lbl_0002A9E8 != 0) {
+        *(u8 *)lbl_0002A9E8 = 0;
+        *(s32 *)(lbl_0002A9E8 + 4) = 0;
+        *(u32 *)((u8 *)ballInfo[modeCtrl.currPlayer].ape + 0x14) &= ~0x2000;
+        *(u32 *)((u8 *)ballInfo[modeCtrl.currPlayer].ape + 0x14) &= ~0x1000;
     }
-    if (a == 0) {
-        A = base[*(s16 *)(st + 0x3a) + 0x48];
-        B = base[*(s16 *)(st + 0x3a) + 0x5a];
-        if (A < B) {
-            return 0;
-        }
-        if (A == B) {
-            return 1;
-        }
-        if (A > B) {
-            return 2;
-        }
-    } else if (a == 1) {
-        A = base[*(s16 *)(st + 0x3a) + 0x5a];
-        B = base[*(s16 *)(st + 0x3a) + 0x48];
-        if (A < B) {
-            return 0;
-        }
-        if (A == B) {
-            return 1;
-        }
-        if (A > B) {
-            return 2;
-        }
-    }
-    return 3;
+
+    mathutil_mtxA_from_translate_xyz(*(f32 *)(cfg + 0), *(f32 *)(cfg + 4), *(f32 *)(cfg + 8));
+    mathutil_mtxA_rotate_z(0x8000);
+    mathutil_mtxA_rotate_y(-0x4000);
+    mathutil_mtxA_rotate_x(-0x4000);
+    mathutil_mtxA_to_mtx((f32 (*)[4])lbl_10000210);
+    lbl_000099B4((f32 (*)[4])lbl_10000210);
+    new_ape_stat_motion(ballInfo[modeCtrl.currPlayer].ape, 0xd, 0, 0, *(f32 *)(cfg + 0xc));
 }
 #pragma force_active reset
