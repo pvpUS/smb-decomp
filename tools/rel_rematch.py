@@ -101,7 +101,7 @@ def main():
     # reconstruct the isolate layout + save each pure-C file's full content,
     # keyed by the frozenset of functions it DEFINES
     asm_inc = 'nonmatchings/%s/' % mod
-    singletons, ranges, saved = [], [], {}
+    singletons, ranges, saved, saved_fwd = [], [], {}, {}
     for f in files:
         txt = open(f, errors='ignore').read()
         if asm_inc in txt:
@@ -111,6 +111,16 @@ def main():
         if not labs:
             continue
         saved[frozenset(labs)] = '\n'.join(content)
+        # capture the committed forward declarations verbatim, keyed by label.
+        # a match may hand-type a forward decl for a function DEFINED IN ANOTHER
+        # file (e.g. a typed call `lbl_X(i, *p)` needs `void lbl_X(int,int);`);
+        # the regenerated preamble only carries the generic `void lbl_X(void);`
+        # and the sig-rewrite below only covers labels defined in THIS file, so
+        # without this those cross-file typed decls would be lost and the file
+        # would no longer compile.
+        saved_fwd[frozenset(labs)] = {
+            FWD.match(l).group(1): l.rstrip()
+            for l in _pre if FWD.match(l) and l.rstrip().endswith(';')}
         ordered = [DEFSIG.match(l).group(1) for l in content
                    if DEFSIG.match(l) and not l.rstrip().endswith(';')]
         if len(ordered) == 1:
@@ -147,13 +157,27 @@ def main():
             content = saved[labs]
             # the match may have changed a function's signature (params/return
             # type); those forward decls live in the regenerated preamble, so
-            # rewrite them from the saved definitions to keep decl==def.
+            # rewrite them to keep decl==def.  Precedence per forward-decl line:
+            #   1. the committed forward decl verbatim (covers cross-file typed
+            #      calls the match hand-typed, defined in some OTHER file);
+            #   2. the saved local definition's signature (this file's own defs);
+            #   3. the regenerated generic line (untouched).
+            cfwd = saved_fwd.get(labs, {})
             sigs = {DEFSIG.match(l).group(1): l.rstrip()
                     for l in content.split('\n')
                     if DEFSIG.match(l) and not l.rstrip().endswith(';')}
-            pre = [sigs[FWD.match(l).group(1)] + ';'
-                   if FWD.match(l) and FWD.match(l).group(1) in sigs else l
-                   for l in pre]
+
+            def fix_decl(l):
+                m = FWD.match(l)
+                if not m:
+                    return l
+                lab = m.group(1)
+                if lab in cfwd:
+                    return cfwd[lab]
+                if lab in sigs:
+                    return sigs[lab] + ';'
+                return l
+            pre = [fix_decl(l) for l in pre]
             open(f, 'w', newline='\n').write('\n'.join(pre) + '\n' + content)
             applied += 1
     if applied != len(saved):
