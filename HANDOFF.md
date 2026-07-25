@@ -234,9 +234,26 @@ doing whole-TU conversions**. Every item below has a saved draft or a decoded bo
    (`x = x + c58 * ((c210 + c80 * (double)n) - x)`) but need the single
    `lbl_0000C380` magic and are scattered across `.text`.
 
-**Warm copies** at `C:/tmp/smbm/<mod>` are all left dirty at their final merged
-state (nine of them now, incl. `option` and `test_mode`). **Refresh them from the
-new HEAD before run 6** — they are behind by every run-5 commit.
+### RUN 6 IS SET UP — everything below is done and verified
+
+- **Pushed**: `fork/wip/rel-drafts-and-dol-matches` at `8817308`. Diff scanned for
+  game binaries first (`.dol/.elf/.rel/.plf/.o/.map/.bin`, `baserom*`) — clean;
+  640 files, all `.c`/`.s`/`.py`/`.args`/`.md`/Makefile.
+- **All NINE warm copies** at `C:/tmp/smbm/<mod>` have been reset to `8817308`,
+  cleaned, and **each rebuilt to its golden sha1 from the refreshed state**
+  (verified, all nine). Their CW temps `C:/tmp/tmp_<mod>` are in place. Build
+  objects were preserved, so builds stay incremental.
+- **`C:/tmp/smbm/RUN6_BRIEF.md`** is the agent briefing — hand it to every module
+  agent. It supersedes RUN5_BRIEF.md, which contains rules now known WRONG (the
+  file-count assertion, the float-MIN ternary shape, the empty-switch-case scope,
+  the memory-CSE claim, and the `rel_fdiff` invocation).
+- **Near-miss drafts rescued out of Windows temp** to
+  `D:/Nonschool Projects/smb-updated-decomp/run5-nearmiss-drafts/` with a
+  `README.md` giving each one's residual diff count and exactly what is left.
+  19 files across mini_fight, mini_golf, mini_pilot, mini_billiards, sel_ngc.
+  Deliberately outside the repo — none of it byte-matches, so none belongs in git.
+  **These are the cheapest instructions available anywhere in the project**
+  (a 2-diff, two more at 2-4, several under 15).
 
 **Unverified inferences to flag if anyone upstreams this:** invented structs in
 sel_ngc (`SelNgcMenu`), mini_fight (`FightCell`, `FightSceneWork`, `FightPart`,
