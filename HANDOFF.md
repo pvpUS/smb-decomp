@@ -4,6 +4,15 @@
 
 ---
 
+## 0.5 — PARALLEL ROLLOUT DONE (all 6 minigame RELs have matched C)
+
+All six minigame RELs are split + partially matched to pure C, each building to its golden sha1, committed + pushed on `wip/rel-drafts-and-dol-matches`. **123 functions matched total:** mini_bowling 6, mini_golf 39, mini_fight 36, mini_race 23, mini_pilot 12, mini_billiards 7. The 5 non-bowling modules were done by 5 parallel Opus subagents (one per module) in isolated warm copies. Method to reproduce/extend:
+- **Isolation:** git worktrees DON'T work (mwcc is gitignored). REL builds need the prebuilt DOL (ELF2REL resolves imports from `supermonkeyball.map/.elf`), so a warm copy must be the full tree minus `.git`/`baserom`. Per-agent `TMP=C:/tmp/w<x>` for the CW linker. Each agent worked in `C:/tmp/smbm/<x>`.
+- **Integrate a finished module:** copy `src/<mod>*.c` + `asm/<mod>.s` + `asm/nonmatchings/<mod>/` + its Makefile `SOURCES` block into main, then rebuild the REL in main to independently confirm golden + `sha1sum -c`.
+- **rel_split.py `.data` fix** (3 agents found it independently, now in the tool): the `.balign 8` alignment-restore must cover `.section .data` too, not just `.rodata` (a module whose .data has a `.c`-provided `.if 0` stub is otherwise 4 bytes short).
+- **iso-verify caveat:** the isolated mwcc compile MUST add `-sdata 0 -sdata2 0 -g` (the REL_FLAGS) or DOL globals use small-data addressing (`R_PPC_EMB_SDA21`, 1 insn) instead of the golden `lis@ha`+`lwz@l` — false verification.
+- Each module's remaining functions are the harder ones (physics/draw/dispatch, register-allocator tie-breaks). Continue per-module with singleton `--isolate` + isolation objdump verify, gate on the whole-REL golden.
+
 ## 0. TL;DR — where we are and what to do next
 
 - This is a **matching decompilation** of Super Monkey Ball (GameCube). Goal: C that compiles (with CodeWarrior 1.1) to **byte-identical** original binaries.
