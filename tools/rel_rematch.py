@@ -171,9 +171,16 @@ def main():
 
     # reconstruct the isolate layout + save each pure-C file's full content,
     # keyed by the frozenset of functions it DEFINES
-    asm_inc = 'nonmatchings/%s/' % mod
+    # Detect a still-asm file by the actual asm-include DIRECTIVE, not by a bare
+    # 'nonmatchings/<mod>/' substring.  rel_split.py's multi-function file header
+    # comment says "... an asm-include of its body in asm/nonmatchings/<mod>/.",
+    # so a fully-converted pure-C file that kept that header was mis-detected as
+    # a group file and silently dropped -- reverting the match.  (This is the
+    # long-standing "rel_rematch loses newly-converted files" bug; it cost
+    # mini_race 6 files in run 3 and hit again in run 4 before being fixed.)
+    asm_inc = '#include "../asm/nonmatchings/%s/' % mod
     singletons, ranges, saved, saved_fwd = [], [], {}, {}
-    saved_ext, saved_extra, pure_labels = {}, {}, set()
+    saved_ext, saved_extra, saved_inc, pure_labels = {}, {}, {}, set()
     for f in files:
         txt = open(f, errors='ignore').read()
         if asm_inc in txt:
@@ -206,6 +213,14 @@ def main():
         # capture any hand-added preamble lines that are NOT scaffolding (a
         # struct/typedef/#define a typed extern above needs) so they survive too.
         saved_extra[key] = [l.rstrip() for l in _pre if not is_scaffold(l)]
+        # capture the committed #include list.  rel_split.py picks a file's
+        # includes from the symbols its asm stubs reference; once the stubs are
+        # gone that heuristic can drop a header the hand-written C still needs
+        # (mini_race lbl_00010BC8 lost "stcoli.h"/"thread.h" this way and no
+        # longer compiled).  Any committed include missing from the regenerated
+        # preamble is re-inserted below.
+        saved_inc[key] = [l.rstrip() for l in _pre
+                          if l.strip().startswith('#include')]
         ordered = [DEFSIG.match(l).group(1) for l in content
                    if DEFSIG.match(l) and not l.rstrip().endswith(';')]
         if len(ordered) == 1:
@@ -275,6 +290,22 @@ def main():
                     return cext[sym]         # committed (possibly typed) form
                 return l
             pre = [fix_decl(l) for l in pre]
+            # restore any committed #include the regenerated preamble dropped
+            cinc = saved_inc.get(labs, [])
+            have = {l.strip() for l in pre if l.strip().startswith('#include')}
+            missing = [l for l in cinc if l.strip() not in have]
+            if missing:
+                last_inc = max(i for i, l in enumerate(pre)
+                               if l.strip().startswith('#include'))
+                pre = pre[:last_inc + 1] + missing + pre[last_inc + 1:]
+                # A restored header may already declare a function that
+                # rel_split.py re-emitted as the generic `extern void X();`,
+                # which mwcc rejects as a conflicting redeclaration.  For a
+                # pure-C file the committed extern set is authoritative (it is
+                # what compiled), so drop generic externs it does not carry.
+                pre = [l for l in pre
+                       if not (re.match(r'^extern void [A-Za-z0-9_]+\(\);\s*$', l)
+                               and extern_name(l) not in cext)]
             # inject any committed hand-added preamble lines (struct/typedef a
             # typed extern needs) + any committed extern with no regenerated
             # counterpart, ahead of the extern block so a needed type precedes it.
@@ -303,7 +334,14 @@ def main():
     L = open(mk).read().split('\n')
     h = next(i for i, l in enumerate(L) if l.strip() == '# mkbe.rel_%s.rel sources' % mod)
     s = h + 1
-    e = next(i for i in range(s + 1, len(L)) if L[i].strip() == 'asm/%s.s' % mod)
+    # The block ends at its last continuation line.  Do NOT look for
+    # `asm/<mod>.s` as the terminator: rel_carve.py moves that line to the FRONT
+    # and appends `asm/<mod>_dN.s` instead, and the old search then raised
+    # StopIteration after the src files had already been rewritten, leaving the
+    # tree half-updated.
+    e = s
+    while e < len(L) and L[e].rstrip().endswith('\\'):
+        e += 1
     L[s:e + 1] = ['SOURCES := \\'] + ['\t%s \\' % p for p in rel] + ['\tasm/%s.s' % mod]
     open(mk, 'w', newline='\n').write('\n'.join(L))
 

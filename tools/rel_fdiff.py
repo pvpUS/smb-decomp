@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+"""Per-function diff of a built REL .plf against asm/nonmatchings/<mod>/*.s.
+
+Usage: python tools/rel_fdiff.py mkbe.rel_<mod>.plf lbl_XXXXXXXX ...
+(set FDIFF_MODULE to the module name; defaults to mini_race)
+
+Function addresses inside the .plf are taken from the link map (they shift as
+soon as any converted function's size differs), so this stays valid even when
+several functions in the batch are still wrong.
+Unresolved cross-object branch placeholders (0x48000000/0x48000001) are ignored.
+"""
+import re
+import struct
+import sys
+import os
+
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MOD = os.environ.get('FDIFF_MODULE', 'mini_race')
+
+
+def load_text(plf):
+    with open(plf, 'rb') as f:
+        data = f.read()
+    e_shoff, = struct.unpack('>I', data[0x20:0x24])
+    e_shentsize, = struct.unpack('>H', data[0x2E:0x30])
+    e_shnum, = struct.unpack('>H', data[0x30:0x32])
+    e_shstrndx, = struct.unpack('>H', data[0x32:0x34])
+    secs = []
+    for i in range(e_shnum):
+        off = e_shoff + i * e_shentsize
+        secs.append(struct.unpack('>IIIIII', data[off:off + 24]))
+    strtab = secs[e_shstrndx][4]
+    for name, typ, flags, addr, offset, size in secs:
+        end = data.index(b'\0', strtab + name)
+        if data[strtab + name:end].decode() == '.text':
+            return data[offset:offset + size]
+    raise SystemExit('no .text')
+
+
+def load_map(mapfile):
+    out, inlayout = {}, False
+    for line in open(mapfile, errors='ignore'):
+        if line.startswith('.text section layout'):
+            inlayout = True
+            continue
+        if inlayout and 'section layout' in line:
+            break
+        m = re.match(r'\s*([0-9a-f]{8}) ([0-9a-f]{6}) [0-9a-f]{8}\s+\d+ '
+                     r'(lbl_[0-9A-Fa-f]+|_prolog|_epilog|_unresolved)\s', line)
+        if inlayout and m:
+            out[m.group(3)] = int(m.group(1), 16)
+    return out
+
+
+def load_asm(lbl):
+    p = os.path.join(REPO, 'asm', 'nonmatchings', MOD, lbl + '.s')
+    rows = []
+    for line in open(p):
+        m = re.match(r'/\* ([0-9A-F]{8}) ([0-9A-F]{8}) \*/(.*)', line.strip())
+        if m:
+            rows.append((int(m.group(1), 16), int(m.group(2), 16), m.group(3).strip()))
+    return rows
+
+
+def main():
+    plf = sys.argv[1]
+    text = load_text(plf)
+    addrs = load_map(os.path.splitext(plf)[0] + '.map')
+    for lbl in sys.argv[2:]:
+        rows = load_asm(lbl)
+        base = addrs.get(lbl)
+        print('==== %s (%d insn)' % (lbl, len(rows)))
+        if base is None:
+            print('  -> NOT IN MAP')
+            continue
+        start = rows[0][0]
+        bad = 0
+        for addr, word, txt in rows:
+            o = base + (addr - start)
+            got = int.from_bytes(text[o:o + 4], 'big')
+            if got != word and not (got in (0x48000000, 0x48000001)
+                                    and (word >> 26) == 18):
+                bad += 1
+                print('  %08X exp %08X  %-42s got %08X' % (addr, word, txt, got))
+        print('  -> %s (%d diffs)' % ('MATCH' if bad == 0 else 'DIFF', bad))
+
+
+main()

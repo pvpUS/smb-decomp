@@ -73,14 +73,34 @@ ADDR = re.compile(r'^# 0x([0-9A-Fa-f]+)$')
 # --------------------------------------------------------------------------- #
 
 def pristine(mod, ref):
-    """The module's data-only .s as committed (holes not yet applied)."""
+    """The module's data-only .s as committed (holes not yet applied).
+
+    ``--from worktree`` reads the CURRENT ``asm/<mod>.s`` instead of git.  Needed
+    once a module has been committed in its carved state: then HEAD's
+    ``asm/<mod>.s`` is itself the truncated head segment (the rest lives in
+    ``asm/<mod>_dN.s``), and re-carving it silently drops .data/.bss.  After
+    ``rel_rematch.py`` re-splits, the working tree holds a complete, freshly
+    generated blob -- carve that.
+    """
     p = 'asm/%s.s' % mod
-    try:
-        out = subprocess.run(['git', 'show', '%s:%s' % (ref, p)], cwd=REPO,
-                             capture_output=True, check=True).stdout
-    except (subprocess.CalledProcessError, FileNotFoundError) as e:
-        sys.exit('cannot read %s:%s from git (%s)' % (ref, p, e))
-    return out.decode('utf-8', 'replace').replace('\r\n', '\n').split('\n')
+    if ref.lower() == 'worktree':
+        with open(os.path.join(REPO, p), errors='replace') as f:
+            lines = f.read().replace('\r\n', '\n').split('\n')
+    else:
+        try:
+            out = subprocess.run(['git', 'show', '%s:%s' % (ref, p)], cwd=REPO,
+                                 capture_output=True, check=True).stdout
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            sys.exit('cannot read %s:%s from git (%s)' % (ref, p, e))
+        lines = out.decode('utf-8', 'replace').replace('\r\n', '\n').split('\n')
+    have = {l.strip().split()[1] for l in lines
+            if l.strip().startswith('.section ') and len(l.strip().split()) > 1}
+    if '.data' not in have or '.bss' not in have:
+        sys.exit('%s blob for %s is missing %s -- it is already carved.  Re-run '
+                 'tools/rel_rematch.py to regenerate a complete blob and carve '
+                 'it with --from worktree.'
+                 % (ref, mod, ' and '.join(sorted({'.data', '.bss'} - have))))
+    return lines
 
 
 def split_sections(lines):
@@ -257,8 +277,8 @@ def write_sources(mod, items):
 
 # --------------------------------------------------------------------------- #
 
-def do_list(mod):
-    ents = parse_rodata(split_sections(pristine(mod, 'HEAD'))[1]['.rodata'])
+def do_list(mod, ref='HEAD'):
+    ents = parse_rodata(split_sections(pristine(mod, ref))[1]['.rodata'])
     fu = first_users(mod)
     print('%s: %d rodata entries\n' % (mod, len([e for e in ents if e['label']])))
     print('%-20s %-10s %6s  %-18s %s' % ('label', 'addr', 'bytes', 'first user', 'owning .c (if C)'))
@@ -292,14 +312,16 @@ def main():
     ap.add_argument('--list', action='store_true',
                     help='show carvable constants and their required owner')
     ap.add_argument('--from', dest='ref', default='HEAD',
-                    help='git ref to read the pristine blob from (default HEAD)')
+                    help="git ref to read the pristine blob from (default HEAD); "
+                         "'worktree' reads the current asm/<mod>.s -- use that after "
+                         "rel_rematch.py when HEAD is already committed carved")
     ap.add_argument('--force', action='store_true',
                     help='carve even if --into is not the first-use owner')
     a = ap.parse_args()
     mod = a.module
 
     if a.list:
-        return do_list(mod)
+        return do_list(mod, a.ref)
 
     lines = pristine(mod, a.ref)
     pre, secs, order = split_sections(lines)
