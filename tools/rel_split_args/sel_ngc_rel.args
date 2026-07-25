@@ -1,0 +1,81 @@
+# rel_split arguments that reproduce the golden split of sel_ngc_rel.
+# sel_ngc's alignment stub is a STRING -- the case that broke rel_split's
+# un-.if-0 handling. Restore the monolith from d32e854^ (5138d8f works too:
+# only that commit's .c is the bad draft, its .s is fine).
+# rel_rematch CANNOT re-split this module: run_split() never passes
+# --include, and saved_inc only re-adds includes to pure-C files, so the
+# group files come back non-compiling. Use rel_split directly with these.
+#
+# usage: python tools/rel_split.py sel_ngc_rel $(grep -v "^#" tools/rel_split_args/sel_ngc_rel.args)
+
+--include stddef.h
+--include stdio.h
+--include stdlib.h
+--include global.h
+--include ball.h
+--include bitmap.h
+--include camera.h
+--include event.h
+--include functions.h
+--include game.h
+--include info.h
+--include input.h
+--include light.h
+--include mathutil.h
+--include mode.h
+--include mot_ape.h
+--include polydisp.h
+--include pool.h
+--include rend_efc.h
+--include sound.h
+--include sprite.h
+--include stage.h
+--include thread.h
+--include variables.h
+--include window.h
+--include world.h
+--include pause_menu.h
+--include string.h
+--include avdisp.h
+--include background.h
+--include obj_collision.h
+--include ord_tbl.h
+--include stcoli.h
+--extern-data g_totalPlayPoints
+--extern-data lbl_801EED50
+--extern-data lbl_801EED98
+--extern-data lbl_8027CE24
+--extern-data lbl_802F1FA8
+--extern-data lbl_802F1FAC
+--extern-data lbl_802F1FB0
+--extern-data lbl_802F1FB4
+--extern-data u_isCompetitionModeCourse
+--extern-fn __cvt_fp2unsigned
+--extern-fn are_all_continues_unlocked
+--extern-fn course_first
+--extern-fn course_floor_count
+--extern-fn effect_draw
+--extern-fn empty_file_cache
+--extern-fn empty_load_queue
+--extern-fn file_preload
+--extern-fn floor_to_stage_id
+--extern-fn func_8009F4C4
+--extern-fn func_80067310
+--extern-fn is_floor_visited
+--extern-fn is_load_queue_not_empty
+--extern-fn is_minigame_unlocked
+--extern-fn item_draw
+--extern-fn lens_flare_draw
+--extern-fn lens_flare_draw_mask
+--extern-fn memcard_set_mode
+--extern-fn nl2ngc_draw_model_sort_translucent_alt2
+--extern-fn preview_create
+--extern-fn preview_create_with_allocated_tex
+--extern-fn preview_draw
+--extern-fn preview_free
+--extern-fn preview_main
+--extern-fn spend_play_points
+--extern-fn start_preview_image_read
+--extern-fn stobj_draw
+--extern-fn textbox_add_text
+--extern-fn textbox_set_properties

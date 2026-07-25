@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_0000C230.
+ * mini_golf.c -- REL module: isolated function lbl_0000B754.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -193,11 +193,11 @@ void lbl_00009C10(void);
 void lbl_00009C50(void);
 void lbl_0000B280(void);
 void lbl_0000B36C(void);
-void lbl_0000B754(void);
+void lbl_0000B754(struct Camera *, struct Ball *);
 void lbl_0000B8A8(void);
 void lbl_0000BDEC(void);
 void lbl_0000C128(void);
-void lbl_0000C230(struct Camera *);
+void lbl_0000C230(void);
 void lbl_0000C33C(void);
 void lbl_0000D64C(void);
 void lbl_0000E8AC(void);
@@ -205,6 +205,7 @@ void lbl_0000E998(void);
 void lbl_0000E99C(void);
 void lbl_0000F11C(void);
 void lbl_0000F194(void);
+void lbl_0000F290(void);
 void lbl_0000F750(void);
 void lbl_0000F7E8(void);
 void lbl_0000FA18(void);
@@ -239,7 +240,6 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
-void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -247,7 +247,6 @@ void lbl_00024E70(void);
 void lbl_000252C0(void);
 void lbl_0002544C(void);
 void lbl_000255CC(void);
-void lbl_0002572C(void);
 void lbl_00025928(void);
 void lbl_00025A44(void);
 void lbl_00025B10(void);
@@ -258,25 +257,39 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-void lbl_0000C230(struct Camera *camera)
+void lbl_0000B754(struct Camera *camera, struct Ball *ball)
 {
-    camera->lookAt = stageBoundSphere.pos;
-    camera->eye.x = stageBoundSphere.radius;
-    camera->eye.y = *(f32 *)lbl_00026390;
-    camera->eye.z = *(f32 *)lbl_00026390;
+    u8 *p = (u8 *)lbl_00026378;
+    u8 *w = (u8 *)lbl_10000130;
+    Vec sp10;
 
-    mathutil_mtxA_from_identity();
-    mathutil_mtxA_translate((Vec *)&stageBoundSphere);
-    mathutil_mtxA_rotate_y((s16)globalAnimTimer * 64);
-    mathutil_mtxA_rotate_z(0x1000);
-    mathutil_mtxA_tf_point(&camera->eye, &camera->eye);
+    camera_clear(camera);
+    w[2] = 0;
+    camera->lookAt.x = ball->pos.x;
+    camera->lookAt.y = *(f64 *)(p + 0x10) + ball->pos.y;
+    camera->lookAt.z = ball->pos.z;
+    mathutil_mtxA_from_translate(&camera->lookAt);
+    mathutil_mtxA_rotate_y(decodedStageLzPtr->startPos->yrot);
 
-    camera->rotY = mathutil_atan2(camera->lookAt.x - camera->eye.x,
-                                  camera->lookAt.z - camera->eye.z) - 0x8000;
-    camera->rotX = mathutil_atan2(
-        camera->lookAt.y - camera->eye.y,
-        mathutil_sqrt(mathutil_sum_of_sq_2(camera->lookAt.x - camera->eye.x,
-                                           camera->lookAt.z - camera->eye.z)));
+    sp10.x = *(f32 *)(p + 0x18);
+    sp10.y = *(f32 *)(p + 0x1C);
+    sp10.z = *(f32 *)(p + 0x20);
+    mathutil_mtxA_tf_point(&sp10, &camera->eye);
+
+    sp10.x = *(f32 *)(p + 0x18);
+    sp10.y = *(f32 *)(p + 0x18);
+    sp10.z = *(f32 *)(p + 0x20);
+    mathutil_mtxA_tf_point(&sp10, &camera->unkAC);
+
+    sp10.x = camera->lookAt.x - camera->eye.x;
+    sp10.y = camera->lookAt.y - camera->eye.y;
+    sp10.z = camera->lookAt.z - camera->eye.z;
+    camera->rotY = mathutil_atan2(sp10.x, sp10.z) - 0x8000;
+    camera->rotX =
+        mathutil_atan2(sp10.y, mathutil_sqrt(mathutil_sum_of_sq_2(sp10.x, sp10.z)));
     camera->rotZ = 0;
+    w[0] = 2;
+    w[1] = 0;
+    camera->subState = 1;
 }
 #pragma force_active reset

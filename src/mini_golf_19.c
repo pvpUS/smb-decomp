@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_00009880.
+ * mini_golf.c -- REL module: isolated function lbl_000095C4.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -180,15 +180,15 @@ void lbl_00009458(void);
 void lbl_00009478(void);
 void lbl_00009488(void);
 void lbl_00009538(void);
-void lbl_000095C4(void);
+f32 lbl_000095C4(void);
 void lbl_000097D8(void);
 void lbl_00009800(void);
 void lbl_0000982C(void);
-int lbl_00009880(u8 a);
+void lbl_00009880(void);
 void lbl_00009968(void);
 void lbl_000099B4(void);
 void lbl_000099E0(void);
-void lbl_00009B68(void);
+f32 lbl_00009B68(Vec *arg);
 void lbl_00009C10(void);
 void lbl_00009C50(void);
 void lbl_0000B280(void);
@@ -205,6 +205,7 @@ void lbl_0000E998(void);
 void lbl_0000E99C(void);
 void lbl_0000F11C(void);
 void lbl_0000F194(void);
+void lbl_0000F290(void);
 void lbl_0000F750(void);
 void lbl_0000F7E8(void);
 void lbl_0000FA18(void);
@@ -239,7 +240,6 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
-void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -247,7 +247,6 @@ void lbl_00024E70(void);
 void lbl_000252C0(void);
 void lbl_0002544C(void);
 void lbl_000255CC(void);
-void lbl_0002572C(void);
 void lbl_00025928(void);
 void lbl_00025A44(void);
 void lbl_00025B10(void);
@@ -258,49 +257,46 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-int lbl_00009880(u8 a)
+f32 lbl_000095C4(void)
 {
     u8 *st = (u8 *)lbl_10000000;
-    u8 *base = (u8 *)lbl_00026AB0;
-    u8 A, B, v;
+    u8 *k = (u8 *)lbl_000260F0;
+    s16 idx = *(s16 *)(st + 0x3a);
 
-    if ((s32)lbl_802F1BE8.unk0 == 0) {
-        u8 *p = base + a * 0x12;
-        p += *(s16 *)(st + 0x3a);
-        v = p[0x48];
-        if (v < 2) {
-            return 0;
+    if (idx == 0)
+    {
+        if (*(u8 *)(st + 0xeb) != 0)
+        {
+            if (((u8 *)lbl_00026AF8 + modeCtrl.currPlayer * 0x12)[idx] == 0)
+            {
+                return (*(double *)(k + 0xf0) + *(f32 *)(st + 0x60))
+                     - (decodedStageLzPtr->startPos->pos.y - *(double *)(k + 0x28))
+                     - *(double *)(k + 0xa8);
+            }
         }
-        if (v < 4) {
-            return 1;
-        }
-        return 2;
+        if (lbl_00009B68(&ballInfo[modeCtrl.currPlayer].pos) < *(double *)(k + 0x1d8))
+            return *(f32 *)k;
+        return (*(double *)(k + 0xf0) + *(f32 *)(st + 0x60))
+             - (*(f32 *)(st + 8) - *(double *)(k + 0x28))
+             - *(double *)(k + 0xa8);
     }
-    if (a == 0) {
-        A = base[*(s16 *)(st + 0x3a) + 0x48];
-        B = base[*(s16 *)(st + 0x3a) + 0x5a];
-        if (A < B) {
-            return 0;
-        }
-        if (A == B) {
-            return 1;
-        }
-        if (A > B) {
-            return 2;
-        }
-    } else if (a == 1) {
-        A = base[*(s16 *)(st + 0x3a) + 0x5a];
-        B = base[*(s16 *)(st + 0x3a) + 0x48];
-        if (A < B) {
-            return 0;
-        }
-        if (A == B) {
-            return 1;
-        }
-        if (A > B) {
-            return 2;
+    if (*(u8 *)(st + 0xeb) != 0)
+    {
+        if (((u8 *)lbl_00026AF8 + modeCtrl.currPlayer * 0x12)[idx] == 0)
+        {
+            if (idx == 7)
+                return *(f32 *)(k + 0x1f0);
+            if (idx == 0xe)
+                return *(f32 *)(k + 0x1f4);
+            if (idx == 0x11)
+                return *(f32 *)(k + 0x1f8);
+            return (*(double *)(k + 0xf0) + *(f32 *)(st + 0x60))
+                 - (decodedStageLzPtr->startPos->pos.y - *(double *)(k + 0x28));
         }
     }
-    return 3;
+    if (lbl_00009B68(&ballInfo[modeCtrl.currPlayer].pos) < *(double *)(k + 0x1d8))
+        return *(f32 *)k;
+    return (*(double *)(k + 0xf0) + *(f32 *)(st + 0x60))
+         - (*(f32 *)(st + 8) - *(double *)(k + 0x28));
 }
 #pragma force_active reset

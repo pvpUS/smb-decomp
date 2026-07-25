@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_000245D4.
+ * mini_golf.c -- REL module: isolated function lbl_00025EA8.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -186,7 +186,7 @@ void lbl_00009800(void);
 void lbl_0000982C(void);
 void lbl_00009880(void);
 void lbl_00009968(void);
-void lbl_000099B4(Mtx m);
+void lbl_000099B4(void);
 void lbl_000099E0(void);
 void lbl_00009B68(void);
 void lbl_00009C10(void);
@@ -205,6 +205,7 @@ void lbl_0000E998(void);
 void lbl_0000E99C(void);
 void lbl_0000F11C(void);
 void lbl_0000F194(void);
+void lbl_0000F290(void);
 void lbl_0000F750(void);
 void lbl_0000F7E8(void);
 void lbl_0000FA18(void);
@@ -239,7 +240,6 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
-void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -247,7 +247,6 @@ void lbl_00024E70(void);
 void lbl_000252C0(void);
 void lbl_0002544C(void);
 void lbl_000255CC(void);
-void lbl_0002572C(void);
 void lbl_00025928(void);
 void lbl_00025A44(void);
 void lbl_00025B10(void);
@@ -258,23 +257,40 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-void lbl_000245D4(void)
+void lbl_00025EA8(void)
 {
-    u8 *cfg = (u8 *)lbl_00026A38;
+    Mtx sp38;
+    Mtx sp8;
 
-    if (*(u8 *)lbl_0002A9E8 != 0) {
-        *(u8 *)lbl_0002A9E8 = 0;
-        *(s32 *)(lbl_0002A9E8 + 4) = 0;
-        *(u32 *)((u8 *)ballInfo[modeCtrl.currPlayer].ape + 0x14) &= ~0x2000;
-        *(u32 *)((u8 *)ballInfo[modeCtrl.currPlayer].ape + 0x14) &= ~0x1000;
-    }
+    mathutil_mtxA_push();
+    mathutil_mtxA_from_mtx(cameraInfo[modeCtrl.currPlayer].unk144);
+    mathutil_mtxA_rigid_invert();
+    mathutil_mtxA_to_mtx(sp38);
+    mathutil_mtxA_pop();
 
-    mathutil_mtxA_from_translate_xyz(*(f32 *)(cfg + 0), *(f32 *)(cfg + 4), *(f32 *)(cfg + 8));
-    mathutil_mtxA_rotate_z(0x8000);
-    mathutil_mtxA_rotate_y(-0x4000);
-    mathutil_mtxA_rotate_x(-0x4000);
-    mathutil_mtxA_to_mtx((f32 (*)[4])lbl_10000210);
-    lbl_000099B4((f32 (*)[4])lbl_10000210);
-    new_ape_stat_motion(ballInfo[modeCtrl.currPlayer].ape, 0xd, 0, 0, *(f32 *)(cfg + 0xc));
+    mathutil_mtxA_push();
+    mathutil_mtxA_mult_left(sp38);
+    mathutil_mtxA_push();
+    mathutil_mtxA_mult_left((f32 (*)[4])((u8 *)lbl_10000248 + 0x28));
+    mathutil_mtxA_to_mtx(sp8);
+    mathutil_mtxA_pop();
+    mathutil_mtxA_pop();
+
+    GXSetBlendMode_cached(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR);
+    GXSetZMode_cached(GX_TRUE, GX_EQUAL, GX_TRUE);
+    GXLoadTexMtxImm(sp8, 0x1EU, GX_MTX2x4);
+    GXSetTexCoordGen2(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_POS, 0x1EU, GX_FALSE, 0x7DU);
+    GXLoadTexObj_cached(*(GXTexObj **)((u8 *)lbl_10000248 + 0x20), GX_TEXMAP0);
+    GXSetTevSwapMode_cached(GX_TEVSTAGE0, GX_TEV_SWAP0, GX_TEV_SWAP0);
+    GXSetTevDirect(GX_TEVSTAGE0);
+    GXSetTevOrder_cached(GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR_NULL);
+    GXSetTevColorIn_cached(GX_TEVSTAGE0, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO, GX_CC_TEXC);
+    GXSetTevColorOp_cached(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_FALSE, GX_TEVPREV);
+    GXSetTevAlphaIn_cached(GX_TEVSTAGE0, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GX_CA_TEXA);
+    GXSetTevAlphaOp_cached(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_FALSE, GX_TEVPREV);
+    GXSetNumIndStages(0U);
+    GXSetNumChans(1U);
+    GXSetNumTevStages_cached(1);
+    GXSetNumTexGens(1U);
 }
 #pragma force_active reset

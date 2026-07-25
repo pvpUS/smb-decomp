@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_00009538.
+ * mini_golf.c -- REL module: isolated function lbl_000091BC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -154,7 +154,7 @@ void lbl_00008D34(void);
 void lbl_00008F44(void);
 void lbl_0000907C(void);
 void lbl_00009178(void);
-void lbl_000091BC(void);
+u8 lbl_000091BC(void);
 void lbl_000092C4(void);
 void lbl_000092D0(void);
 void lbl_000092E0(void);
@@ -179,7 +179,7 @@ void lbl_00009448(void);
 void lbl_00009458(void);
 void lbl_00009478(void);
 void lbl_00009488(void);
-f32 lbl_00009538(void);
+void lbl_00009538(void);
 void lbl_000095C4(void);
 void lbl_000097D8(void);
 void lbl_00009800(void);
@@ -205,6 +205,7 @@ void lbl_0000E998(void);
 void lbl_0000E99C(void);
 void lbl_0000F11C(void);
 void lbl_0000F194(void);
+void lbl_0000F290(void);
 void lbl_0000F750(void);
 void lbl_0000F7E8(void);
 void lbl_0000FA18(void);
@@ -239,7 +240,6 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
-void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -247,7 +247,6 @@ void lbl_00024E70(void);
 void lbl_000252C0(void);
 void lbl_0002544C(void);
 void lbl_000255CC(void);
-void lbl_0002572C(void);
 void lbl_00025928(void);
 void lbl_00025A44(void);
 void lbl_00025B10(void);
@@ -258,10 +257,23 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-f32 lbl_00009538(void)
+u8 lbl_000091BC(void)
 {
-    return mathutil_sqrt(mathutil_sum_of_sq_3(ballInfo[modeCtrl.currPlayer].pos.x - cameraInfo[modeCtrl.currPlayer].lookAt.x,
-                                              *(double *)lbl_00026118 + (ballInfo[modeCtrl.currPlayer].pos.y - cameraInfo[modeCtrl.currPlayer].lookAt.y),
-                                              ballInfo[modeCtrl.currPlayer].pos.z - cameraInfo[modeCtrl.currPlayer].lookAt.z));
+    int i;
+    int res = 0;
+
+    for (i = 0; i < modeCtrl.playerCount; i++)
+    {
+        if (((u8 *)lbl_00026AF8 + i * 0x12)[*(s16 *)lbl_1000003A] == 0)
+            res = 1;
+        if (mathutil_sqrt(mathutil_sum_of_sq_3(
+                ballInfo[i].pos.x - decodedStageLzPtr->startPos->pos.x,
+                *(f32 *)lbl_000260F0,
+                ballInfo[i].pos.z - decodedStageLzPtr->startPos->pos.z)) <
+                *(f64 *)lbl_00026158 &&
+            ((u8 *)lbl_00026AF0)[i] == 0)
+            res = 1;
+    }
+    return res;
 }
 #pragma force_active reset

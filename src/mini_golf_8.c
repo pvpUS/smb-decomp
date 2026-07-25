@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_00008D34.
+ * mini_golf.c -- REL module: isolated function lbl_00007F34.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -183,7 +183,7 @@ void lbl_00009538(void);
 void lbl_000095C4(void);
 void lbl_000097D8(void);
 void lbl_00009800(void);
-s32 lbl_0000982C(void);
+void lbl_0000982C(void);
 void lbl_00009880(void);
 void lbl_00009968(void);
 void lbl_000099B4(void);
@@ -205,6 +205,7 @@ void lbl_0000E998(void);
 void lbl_0000E99C(void);
 void lbl_0000F11C(void);
 void lbl_0000F194(void);
+void lbl_0000F290(void);
 void lbl_0000F750(void);
 void lbl_0000F7E8(void);
 void lbl_0000FA18(void);
@@ -239,7 +240,6 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
-void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -247,7 +247,6 @@ void lbl_00024E70(void);
 void lbl_000252C0(void);
 void lbl_0002544C(void);
 void lbl_000255CC(void);
-void lbl_0002572C(void);
 void lbl_00025928(void);
 void lbl_00025A44(void);
 void lbl_00025B10(void);
@@ -258,47 +257,9 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-void lbl_00008D34(void)
+asm void lbl_00007F34(void)
 {
-    u8 *st = (u8 *)lbl_10000000;
-    u8 *k = (u8 *)lbl_000260F0;
-    struct DecodedStageLzPtr_child6 *q;
-    int i;
-
-    *(s16 *)(st + 0x3a) = *(s16 *)(st + 0x3c);
-    lbl_00008F44();
-    q = decodedStageLzPtr->unk88;
-    if (q != NULL)
-    {
-        *(Vec *)(st + 0x5c) = *(Vec *)q;
-        if ((u8)lbl_0000982C() == 0)
-        {
-            lbl_000106B8();
-            lbl_00010808();
-            mathutil_mtxA_tf_point((Vec *)(st + 0x5c), (Vec *)(st + 0x5c));
-        }
-    }
-    ballInfo[modeCtrl.currPlayer].state = 0x1a;
-    ballInfo[modeCtrl.currPlayer].unk148 = 0;
-    ballInfo[modeCtrl.currPlayer].ape->ballId = modeCtrl.currPlayer;
-    ballInfo[modeCtrl.currPlayer].flags &= ~0x10;
-    ballInfo[modeCtrl.currPlayer].flags |= 0x4000;
-    ballInfo[modeCtrl.currPlayer].ape->flags &= ~0x20;
-    cameraInfo[modeCtrl.currPlayer].subState = 2;
-    cameraInfo[modeCtrl.currPlayer].eye = cameraInfo[(modeCtrl.currPlayer + 3) % 4].eye;
-    cameraInfo[modeCtrl.currPlayer].unk26 = 0;
-    cameraInfo[modeCtrl.currPlayer].flags &= ~0x10;
-    cameraInfo[(modeCtrl.currPlayer + 1) % 4].subState = 9;
-    cameraInfo[(modeCtrl.currPlayer + 1) % 4].unk26 = 0xb;
-    cameraInfo[(modeCtrl.currPlayer + 1) % 4].flags |= 0x10;
-    for (i = 0; i < 4; i++)
-        setup_camera_viewport(i, *(f32 *)k, *(f32 *)k, *(f32 *)k, *(f32 *)k);
-    {
-        f32 a = *(f32 *)k;
-        f32 b = *(f32 *)(k + 4);
-
-        setup_camera_viewport(modeCtrl.currPlayer, a, a, b, b);
-    }
-    setup_camera_viewport((modeCtrl.currPlayer + 1) % 4, *(f32 *)(k + 8), *(f32 *)k, *(f32 *)(k + 0xc), *(f32 *)(k + 0x10));
+    nofralloc
+#include "../asm/nonmatchings/mini_golf/lbl_00007F34.s"
 }
 #pragma force_active reset

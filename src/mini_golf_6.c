@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_00008A44.
+ * mini_golf.c -- REL module: isolated function lbl_000002A8.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -205,6 +205,7 @@ void lbl_0000E998(void);
 void lbl_0000E99C(void);
 void lbl_0000F11C(void);
 void lbl_0000F194(void);
+void lbl_0000F290(void);
 void lbl_0000F750(void);
 void lbl_0000F7E8(void);
 void lbl_0000FA18(void);
@@ -239,7 +240,6 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
-void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -247,7 +247,6 @@ void lbl_00024E70(void);
 void lbl_000252C0(void);
 void lbl_0002544C(void);
 void lbl_000255CC(void);
-void lbl_0002572C(void);
 void lbl_00025928(void);
 void lbl_00025A44(void);
 void lbl_00025B10(void);
@@ -258,45 +257,83 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-void lbl_00008A44(void)
+void lbl_000002A8(void)
 {
     u8 *st = (u8 *)lbl_10000000;
-    u8 *k = (u8 *)lbl_000260F0;
-    s8 prev;
+    u8 *p = (u8 *)lbl_000260F0;
+    struct World *world;
+    s8 *status;
     int i;
+    int j;
+    int k;
+    f64 pad8;
 
-    *(s32 *)st = 2;
-    st[0xed] = 0;
-    ballInfo[modeCtrl.currPlayer].state = 4;
-    ballInfo[modeCtrl.currPlayer].flags |= 0x10;
-    ballInfo[modeCtrl.currPlayer].flags &= ~0x4000;
-    ballInfo[modeCtrl.currPlayer].ape->flags |= 0x20;
-    prev = modeCtrl.currPlayer;
-    lbl_00007F34();
-    ballInfo[modeCtrl.currPlayer].state = 0x1a;
-    if (((u8 *)lbl_00026AF8 + modeCtrl.currPlayer * 0x12)[*(s16 *)(st + 0x3a)] == 0)
-        ballInfo[modeCtrl.currPlayer].unk148 = 1;
-    else
-        ballInfo[modeCtrl.currPlayer].unk148 = 4;
-    ballInfo[modeCtrl.currPlayer].ape->ballId = modeCtrl.currPlayer;
-    ballInfo[modeCtrl.currPlayer].flags &= ~0x10;
-    ballInfo[modeCtrl.currPlayer].flags |= 0x4000;
-    ballInfo[modeCtrl.currPlayer].ape->flags &= ~0x20;
-    cameraInfo[modeCtrl.currPlayer].subState = 2;
-    cameraInfo[modeCtrl.currPlayer].eye = cameraInfo[prev].eye;
-    cameraInfo[modeCtrl.currPlayer].unk26 = 0;
-    cameraInfo[modeCtrl.currPlayer].flags &= ~0x10;
+    modeCtrl.gameType = 8;
+    event_finish_all();
+    free_all_bitmap_groups_except_com();
+    func_800249D4();
+    SoundGroupLoad(0xC);
+    u_load_minigame_graphics(5);
+    call_bitmap_load_group(0xA);
+    g_poolInfo.playerPool.statusList[0] = STAT_NULL;
+    g_poolInfo.playerPool.statusList[1] = STAT_NULL;
+    g_poolInfo.playerPool.statusList[2] = STAT_NULL;
+    g_poolInfo.playerPool.statusList[3] = STAT_NULL;
+    for (i = 0; i < modeCtrl.playerCount; i++)
+        g_poolInfo.playerPool.statusList[i] = STAT_NORMAL;
+    modeCtrl.currPlayer = 0;
+    currentBall = &ballInfo[modeCtrl.currPlayer];
+    currentCamera = &cameraInfo[modeCtrl.currPlayer];
+    u_init_player_data_1();
+    func_80044920();
+    load_stage(0xA7);
+    event_start(1);
+    event_start(2);
+    event_start(3);
+    event_start(4);
+    event_start(9);
+    event_start(7);
+    event_start(0xF);
+    event_start(0x10);
+    event_start(0x12);
+    event_start(0xB);
+    event_start(0xD);
+    event_start(0x13);
+    status = g_poolInfo.playerPool.statusList;
+    world = worldInfo;
+    for (j = 0; j < g_poolInfo.playerPool.count; j++, world++, status++) {
+        if (*status == STAT_NORMAL)
+            world->state = 1;
+    }
+    camera_set_state_all(0x40);
+    for (k = 0; k < 4; k++)
+        setup_camera_viewport(k, *(f32 *)p, *(f32 *)p, *(f32 *)p, *(f32 *)p);
+    cameraInfo[modeCtrl.currPlayer].subState = 0;
     cameraInfo[(modeCtrl.currPlayer + 1) % 4].subState = 9;
-    cameraInfo[(modeCtrl.currPlayer + 1) % 4].unk26 = 0xb;
-    cameraInfo[(modeCtrl.currPlayer + 1) % 4].flags |= 0x10;
-    for (i = 0; i < 4; i++)
-        setup_camera_viewport(i, *(f32 *)k, *(f32 *)k, *(f32 *)k, *(f32 *)k);
     {
-        f32 a = *(f32 *)k;
-        f32 b = *(f32 *)(k + 4);
-
+        f32 a = *(f32 *)p;
+        f32 b = *(f32 *)(p + 4);
         setup_camera_viewport(modeCtrl.currPlayer, a, a, b, b);
     }
-    setup_camera_viewport((modeCtrl.currPlayer + 1) % 4, *(f32 *)(k + 8), *(f32 *)k, *(f32 *)(k + 0xc), *(f32 *)(k + 0x10));
+    setup_camera_viewport((modeCtrl.currPlayer + 1) % 4, *(f32 *)(p + 8), *(f32 *)p,
+                          *(f32 *)(p + 0xC), *(f32 *)(p + 0x10));
+    info_init_first();
+    start_screen_fade(0x100, 0, 0x3C);
+    *(s32 *)st = 1;
+    *(s16 *)(st + 0x28) = 3;
+    if (decodedStageLzPtr->unk88 != NULL)
+        *(Vec *)(st + 0x5C) = *(Vec *)decodedStageLzPtr->unk88;
+    *(s8 *)(st + 0xFC) = (s8)modeCtrl.playerCount;
+    *(s8 *)(st + 0xF0) = 0;
+    *(s8 *)(st + 0xF1) = 0;
+    *(s8 *)(st + 0xF2) = 0;
+    *(s8 *)(st + 0xF3) = 0;
+    *(s8 *)(st + 0xF6) = 0;
+    *(s8 *)(st + 0xF7) = 0;
+    u_play_music(0x38, 0);
+    set_text_font(0xB1);
+    *(s8 *)(st + 0xFA) = 1;
+    *(s8 *)lbl_00026AEC = -1;
+    gameSubmodeRequest = 0x9F;
 }
 #pragma force_active reset

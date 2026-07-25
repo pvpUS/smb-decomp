@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_00022524.
+ * mini_golf.c -- REL module: isolated function lbl_000245D4.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -186,7 +186,7 @@ void lbl_00009800(void);
 void lbl_0000982C(void);
 void lbl_00009880(void);
 void lbl_00009968(void);
-void lbl_000099B4(void);
+void lbl_000099B4(Mtx m);
 void lbl_000099E0(void);
 void lbl_00009B68(void);
 void lbl_00009C10(void);
@@ -205,6 +205,7 @@ void lbl_0000E998(void);
 void lbl_0000E99C(void);
 void lbl_0000F11C(void);
 void lbl_0000F194(void);
+void lbl_0000F290(void);
 void lbl_0000F750(void);
 void lbl_0000F7E8(void);
 void lbl_0000FA18(void);
@@ -239,7 +240,6 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
-void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -247,7 +247,6 @@ void lbl_00024E70(void);
 void lbl_000252C0(void);
 void lbl_0002544C(void);
 void lbl_000255CC(void);
-void lbl_0002572C(void);
 void lbl_00025928(void);
 void lbl_00025A44(void);
 void lbl_00025B10(void);
@@ -258,32 +257,23 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-void lbl_00022524(void)
+void lbl_000245D4(void)
 {
-    u8 *tbl = (u8 *)lbl_00026E28;
+    u8 *cfg = (u8 *)lbl_00026A38;
 
-    nlSprPut((NLsprarg *)(tbl + 0x690));
-    nlSprPut((NLsprarg *)(tbl + 0x6e0));
-    if ((s8)lbl_802F1BE8.unk4 == 0) {
-        if ((s32)lbl_802F1BE8.unk0 == 0) {
-            nlSprPut((NLsprarg *)(tbl + 0x730));
-        } else if ((s32)lbl_802F1BE8.unk0 == 1) {
-            nlSprPut((NLsprarg *)(tbl + 0x7d0));
-        }
-        nlSprPut((NLsprarg *)(tbl + 0x870));
-        nlSprPut((NLsprarg *)(tbl + 0x910));
-        nlSprPut((NLsprarg *)(tbl + 0x9b0));
-    } else if ((s8)lbl_802F1BE8.unk4 != 0) {
-        if ((s32)lbl_802F1BE8.unk0 == 0) {
-            nlSprPut((NLsprarg *)(tbl + 0x780));
-        } else if ((s32)lbl_802F1BE8.unk0 == 1) {
-            nlSprPut((NLsprarg *)(tbl + 0x820));
-        }
-        nlSprPut((NLsprarg *)(tbl + 0x8c0));
-        nlSprPut((NLsprarg *)(tbl + 0x960));
-        nlSprPut((NLsprarg *)(tbl + 0xa00));
+    if (*(u8 *)lbl_0002A9E8 != 0) {
+        *(u8 *)lbl_0002A9E8 = 0;
+        *(s32 *)(lbl_0002A9E8 + 4) = 0;
+        *(u32 *)((u8 *)ballInfo[modeCtrl.currPlayer].ape + 0x14) &= ~0x2000;
+        *(u32 *)((u8 *)ballInfo[modeCtrl.currPlayer].ape + 0x14) &= ~0x1000;
     }
-    nlSprPut((NLsprarg *)(tbl + 0xa50));
-    nlSprPut((NLsprarg *)(tbl + 0xaa0));
+
+    mathutil_mtxA_from_translate_xyz(*(f32 *)(cfg + 0), *(f32 *)(cfg + 4), *(f32 *)(cfg + 8));
+    mathutil_mtxA_rotate_z(0x8000);
+    mathutil_mtxA_rotate_y(-0x4000);
+    mathutil_mtxA_rotate_x(-0x4000);
+    mathutil_mtxA_to_mtx((f32 (*)[4])lbl_10000210);
+    lbl_000099B4((f32 (*)[4])lbl_10000210);
+    new_ape_stat_motion(ballInfo[modeCtrl.currPlayer].ape, 0xd, 0, 0, *(f32 *)(cfg + 0xc));
 }
 #pragma force_active reset

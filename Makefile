@@ -390,6 +390,61 @@ $(ELF): $(O_FILES)
 # mkbe.sel_ngc.rel sources
 SOURCES := \
 	src/sel_ngc_rel.c \
+	src/sel_ngc_rel_2.c \
+	src/sel_ngc_rel_3.c \
+	src/sel_ngc_rel_4.c \
+	src/sel_ngc_rel_5.c \
+	src/sel_ngc_rel_6.c \
+	src/sel_ngc_rel_7.c \
+	src/sel_ngc_rel_8.c \
+	src/sel_ngc_rel_9.c \
+	src/sel_ngc_rel_10.c \
+	src/sel_ngc_rel_11.c \
+	src/sel_ngc_rel_12.c \
+	src/sel_ngc_rel_13.c \
+	src/sel_ngc_rel_14.c \
+	src/sel_ngc_rel_15.c \
+	src/sel_ngc_rel_16.c \
+	src/sel_ngc_rel_17.c \
+	src/sel_ngc_rel_18.c \
+	src/sel_ngc_rel_19.c \
+	src/sel_ngc_rel_20.c \
+	src/sel_ngc_rel_21.c \
+	src/sel_ngc_rel_22.c \
+	src/sel_ngc_rel_23.c \
+	src/sel_ngc_rel_24.c \
+	src/sel_ngc_rel_25.c \
+	src/sel_ngc_rel_26.c \
+	src/sel_ngc_rel_27.c \
+	src/sel_ngc_rel_28.c \
+	src/sel_ngc_rel_29.c \
+	src/sel_ngc_rel_30.c \
+	src/sel_ngc_rel_31.c \
+	src/sel_ngc_rel_32.c \
+	src/sel_ngc_rel_33.c \
+	src/sel_ngc_rel_34.c \
+	src/sel_ngc_rel_35.c \
+	src/sel_ngc_rel_36.c \
+	src/sel_ngc_rel_37.c \
+	src/sel_ngc_rel_38.c \
+	src/sel_ngc_rel_39.c \
+	src/sel_ngc_rel_40.c \
+	src/sel_ngc_rel_41.c \
+	src/sel_ngc_rel_42.c \
+	src/sel_ngc_rel_43.c \
+	src/sel_ngc_rel_44.c \
+	src/sel_ngc_rel_45.c \
+	src/sel_ngc_rel_46.c \
+	src/sel_ngc_rel_47.c \
+	src/sel_ngc_rel_48.c \
+	src/sel_ngc_rel_49.c \
+	src/sel_ngc_rel_50.c \
+	src/sel_ngc_rel_51.c \
+	src/sel_ngc_rel_52.c \
+	src/sel_ngc_rel_53.c \
+	src/sel_ngc_rel_54.c \
+	src/sel_ngc_rel_55.c \
+	src/sel_ngc_rel_56.c \
 	asm/sel_ngc_rel.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
@@ -833,13 +888,6 @@ SOURCES := \
 	src/mini_golf_63.c \
 	src/mini_golf_64.c \
 	src/mini_golf_65.c \
-	src/mini_golf_66.c \
-	src/mini_golf_70.c \
-	src/mini_golf_71.c \
-	src/mini_golf_72.c \
-	src/mini_golf_73.c \
-	src/mini_golf_74.c \
-	src/mini_golf_75.c \
 	asm/mini_golf_d1.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)

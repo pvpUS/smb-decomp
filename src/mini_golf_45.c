@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_00010808.
+ * mini_golf.c -- REL module: isolated function lbl_000106B8.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -205,6 +205,7 @@ void lbl_0000E998(void);
 void lbl_0000E99C(void);
 void lbl_0000F11C(void);
 void lbl_0000F194(void);
+void lbl_0000F290(void);
 void lbl_0000F750(void);
 void lbl_0000F7E8(void);
 void lbl_0000FA18(void);
@@ -239,7 +240,6 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
-void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -247,7 +247,6 @@ void lbl_00024E70(void);
 void lbl_000252C0(void);
 void lbl_0002544C(void);
 void lbl_000255CC(void);
-void lbl_0002572C(void);
 void lbl_00025928(void);
 void lbl_00025A44(void);
 void lbl_00025B10(void);
@@ -258,46 +257,41 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-void lbl_00010808(void)
+void lbl_000106B8(void)
 {
     u8 *w = (u8 *)lbl_10000190;
-    struct AnimGroupInfo *ag;
-    struct StageAnimGroup *sag;
+    struct StageAnimGroup *ag;
+    Mtx sp8;
 
-    ag = &animGroups[w[4]];
-    sag = &decodedStageLzPtr->animGroups[w[4]];
-    ag->prevRot.y = ag->rot.y = *(s16 *)w * 0x10000 / 0x40;
-    mathutil_mtxA_from_translate(&ag->pos);
-    mathutil_mtxA_rotate_z(ag->rot.z);
-    mathutil_mtxA_rotate_y(ag->rot.y);
-    mathutil_mtxA_rotate_x(ag->rot.x - sag->initRot.x);
-    mathutil_mtxA_rotate_y(-sag->initRot.y);
-    mathutil_mtxA_rotate_z(-sag->initRot.z);
-    mathutil_mtxA_translate_neg(&sag->initPos);
-    mathutil_mtxA_to_mtx(ag->transform);
-    mathutil_mtxA_to_mtx(ag->prevTransform);
-    mathutil_mtxA_from_translate(&ag->pos);
-    mathutil_mtxA_rotate_z(ag->rot.z);
-    mathutil_mtxA_rotate_y(ag->rot.y);
-    mathutil_mtxA_rotate_x(ag->rot.x);
-    mathutil_mtxA_mult_right((f32 (*)[4])(w + 8));
+    *(s16 *)w = (rand() & 0x7FFF) % 64;
+    *(s16 *)(w + 2) = (rand() & 0x7FFF) % 64;
+    {
+        struct StageAnimGroup **agp = &decodedStageLzPtr->animGroups;
 
-    ag = &animGroups[w[5]];
-    sag = &decodedStageLzPtr->animGroups[w[5]];
-    mathutil_mtxA_rotate_y(*(s16 *)(w + 2) * 0x10000 / 0x40);
-    mathutil_mtxA_get_translate(&ag->pos);
-    u_math_unk14(&ag->rot.z, &ag->rot.y, &ag->rot.x);
-    ag->prevPos.x = ag->pos.x;
-    ag->prevPos.y = ag->pos.y;
-    ag->prevPos.z = ag->pos.z;
-    ag->prevRot.x = ag->rot.x;
-    ag->prevRot.y = ag->rot.y;
-    ag->prevRot.z = ag->rot.z;
-    mathutil_mtxA_rotate_x(-sag->initRot.x);
-    mathutil_mtxA_rotate_y(-sag->initRot.y);
-    mathutil_mtxA_rotate_z(-sag->initRot.z);
-    mathutil_mtxA_translate_neg(&sag->initPos);
-    mathutil_mtxA_to_mtx(ag->transform);
-    mathutil_mtxA_to_mtx(ag->prevTransform);
+        if ((*agp)[1].gridStepX > (*agp)[2].gridStepX)
+        {
+            w[4] = 1;
+            w[5] = 2;
+        }
+        else
+        {
+            w[4] = 2;
+            w[5] = 1;
+        }
+        ag = &(*agp)[w[5]];
+    }
+    mathutil_mtxA_from_translate(&ag->initPos);
+    mathutil_mtxA_rotate_z(ag->initRot.z);
+    mathutil_mtxA_rotate_y(ag->initRot.y);
+    mathutil_mtxA_rotate_x(ag->initRot.x);
+    mathutil_mtxA_to_mtx(sp8);
+    ag = &decodedStageLzPtr->animGroups[w[4]];
+    mathutil_mtxA_from_identity();
+    mathutil_mtxA_rotate_x(-ag->initRot.x);
+    mathutil_mtxA_rotate_y(-ag->initRot.y);
+    mathutil_mtxA_rotate_z(-ag->initRot.z);
+    mathutil_mtxA_translate_neg(&ag->initPos);
+    mathutil_mtxA_mult_right(sp8);
+    mathutil_mtxA_to_mtx((f32 (*)[4])(w + 8));
 }
 #pragma force_active reset

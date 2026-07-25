@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_000002A8.
+ * mini_golf.c -- REL module: isolated function _unresolved.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -205,6 +205,7 @@ void lbl_0000E998(void);
 void lbl_0000E99C(void);
 void lbl_0000F11C(void);
 void lbl_0000F194(void);
+void lbl_0000F290(void);
 void lbl_0000F750(void);
 void lbl_0000F7E8(void);
 void lbl_0000FA18(void);
@@ -239,7 +240,6 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
-void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -247,7 +247,6 @@ void lbl_00024E70(void);
 void lbl_000252C0(void);
 void lbl_0002544C(void);
 void lbl_000255CC(void);
-void lbl_0002572C(void);
 void lbl_00025928(void);
 void lbl_00025A44(void);
 void lbl_00025B10(void);
@@ -258,9 +257,23 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-asm void lbl_000002A8(void)
+void _unresolved(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_000002A8.s"
+    char *s;
+    u32 i;
+    u32 *sp;
+
+    s = (char *)lbl_00026AB0;
+    puts(s + 0x154);
+    puts(s + 0x17C);
+
+    i = 0;
+    sp = (u32 *)OSGetStackPointer();
+    while (sp != NULL && (u32)sp != 0xFFFFFFFF && i++ < 16)
+    {
+        printf(s + 0x1A4, (u32)sp, sp[0], sp[1]);
+        sp = (u32 *)sp[0];
+    }
+    OSPanic(s + 0x1C0, 0x17D, s + 0x1CC);
 }
 #pragma force_active reset

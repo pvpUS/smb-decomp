@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_0000907C.
+ * mini_golf.c -- REL module: isolated function lbl_00008C78.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -183,7 +183,7 @@ void lbl_00009538(void);
 void lbl_000095C4(void);
 void lbl_000097D8(void);
 void lbl_00009800(void);
-void lbl_0000982C(void);
+u8 lbl_0000982C(void);
 void lbl_00009880(void);
 void lbl_00009968(void);
 void lbl_000099B4(void);
@@ -205,6 +205,7 @@ void lbl_0000E998(void);
 void lbl_0000E99C(void);
 void lbl_0000F11C(void);
 void lbl_0000F194(void);
+void lbl_0000F290(void);
 void lbl_0000F750(void);
 void lbl_0000F7E8(void);
 void lbl_0000FA18(void);
@@ -239,7 +240,6 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
-void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -247,7 +247,6 @@ void lbl_00024E70(void);
 void lbl_000252C0(void);
 void lbl_0002544C(void);
 void lbl_000255CC(void);
-void lbl_0002572C(void);
 void lbl_00025928(void);
 void lbl_00025A44(void);
 void lbl_00025B10(void);
@@ -258,35 +257,32 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-void lbl_0000907C(void)
+void lbl_00008C78(void)
 {
-    f32 *cfg = (f32 *)lbl_000260F0;
-    int i;
+    u8 *st = (u8 *)lbl_10000000;
+    struct DecodedStageLzPtr_child6 *p;
 
-    event_finish_all();
-    free_all_bitmap_groups_except_com();
-    u_free_minigame_graphics();
-    SoundGroupFree();
-    load_stage(*(s16 *)(lbl_00026AC4 + 0x22));
-    event_start(0xf);
-    event_start(0x12);
-    event_start(0x13);
-    event_start(0xd);
-    event_start(0x10);
-
-    g_poolInfo.playerPool.statusList[0] = 2;
-    g_poolInfo.playerPool.statusList[1] = 0;
-    g_poolInfo.playerPool.statusList[2] = 0;
-    g_poolInfo.playerPool.statusList[3] = 0;
-    modeCtrl.currPlayer = 0;
-
-    for (i = 0; i < 4; i++) {
-        setup_camera_viewport(i, cfg[0], cfg[0], cfg[0], cfg[0]);
+    *(s16 *)(st + 0x3a) += 1;
+    if (*(s16 *)(st + 0x3a) > *(s16 *)(st + 0x3e)) {
+        *(s32 *)st = 0x2000;
+        lbl_0000907C();
+        return;
     }
-    {
-        f32 lt = cfg[0];
-        f32 wh = cfg[1];
-        setup_camera_viewport(0, lt, lt, wh, wh);
+
+    *(s32 *)st = 2;
+    *(u8 *)(st + 0xed) = 0;
+    lbl_00008F44();
+
+    p = decodedStageLzPtr->unk88;
+    if (p == NULL) {
+        return;
+    }
+
+    *(Vec *)(st + 0x5c) = *(Vec *)p;
+    if (lbl_0000982C() == 0) {
+        lbl_000106B8();
+        lbl_00010808();
+        mathutil_mtxA_tf_point((Vec *)(st + 0x5c), (Vec *)(st + 0x5c));
     }
 }
 #pragma force_active reset

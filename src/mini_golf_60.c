@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_00023C68.
+ * mini_golf.c -- REL module: isolated function lbl_00025928.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -155,9 +155,9 @@ void lbl_00008F44(void);
 void lbl_0000907C(void);
 void lbl_00009178(void);
 void lbl_000091BC(void);
-f32 lbl_000092C4(void);
+void lbl_000092C4(void);
 void lbl_000092D0(void);
-f32 lbl_000092E0(void);
+void lbl_000092E0(void);
 void lbl_000092F0(void);
 void lbl_00009300(void);
 void lbl_00009310(void);
@@ -205,6 +205,7 @@ void lbl_0000E998(void);
 void lbl_0000E99C(void);
 void lbl_0000F11C(void);
 void lbl_0000F194(void);
+void lbl_0000F290(void);
 void lbl_0000F750(void);
 void lbl_0000F7E8(void);
 void lbl_0000FA18(void);
@@ -239,7 +240,6 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
-void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -247,8 +247,7 @@ void lbl_00024E70(void);
 void lbl_000252C0(void);
 void lbl_0002544C(void);
 void lbl_000255CC(void);
-void lbl_0002572C(void);
-void lbl_00025928(void);
+s32 lbl_00025928(void *arg);
 void lbl_00025A44(void);
 void lbl_00025B10(void);
 void lbl_00025B70(void);
@@ -257,10 +256,37 @@ void lbl_00025EA8(void);
 void lbl_0002609C(void);
 void lbl_000260C0(void);
 
+struct Struct25928 {
+    s32 w[8];
+};
+
 #pragma force_active on
-asm void lbl_00023C68(void)
+s32 lbl_00025928(void *arg)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_00023C68.s"
+    u8 *cfg = (u8 *)lbl_00026AA0;
+    u8 *st = (u8 *)lbl_10000248;
+    Vec *v;
+
+    *(struct Struct25928 *)st = *(struct Struct25928 *)arg;
+    *(s32 *)(st + 0x20) = *(s32 *)(*(u8 **)st + 0x24);
+    *(s32 *)(st + 0x24) = *(s32 *)(*(u8 **)(st + 4) + 0x24);
+
+    mathutil_mtxA_push();
+    mathutil_mtxA_from_identity();
+    mathutil_mtxA_scale_xyz(*(f32 *)cfg / *(f32 *)(st + 0x14),
+                            *(f32 *)cfg / *(f32 *)(st + 0x18),
+                            *(f32 *)(cfg + 4));
+    mathutil_mtxA_rotate_x(0x4000);
+    v = (Vec *)(st + 8);
+    mathutil_mtxA_translate_neg(v);
+    mathutil_mtxA_to_mtx((f32 (*)[4])(st + 0x28));
+    mathutil_mtxA_from_translate_xyz(*(f32 *)(cfg + 8), *(f32 *)(cfg + 8), *(f32 *)(cfg + 4));
+    mathutil_mtxA_scale_xyz(*(f32 *)(cfg + 4),
+                            *(f32 *)(cfg + 0xc) / *(f32 *)(st + 0x1c),
+                            *(f32 *)(cfg + 4));
+    mathutil_mtxA_translate_neg(v);
+    mathutil_mtxA_to_mtx((f32 (*)[4])(st + 0x58));
+    mathutil_mtxA_pop();
+    return 1;
 }
 #pragma force_active reset

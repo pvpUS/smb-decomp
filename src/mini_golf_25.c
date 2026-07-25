@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_0000B280.
+ * mini_golf.c -- REL module: isolated function lbl_00009B68.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -187,8 +187,8 @@ void lbl_0000982C(void);
 void lbl_00009880(void);
 void lbl_00009968(void);
 void lbl_000099B4(void);
-void lbl_000099E0(void);
-void lbl_00009B68(void);
+f32 lbl_000099E0(Vec *);
+f32 lbl_00009B68(Vec *);
 void lbl_00009C10(void);
 void lbl_00009C50(void);
 void lbl_0000B280(void);
@@ -205,6 +205,7 @@ void lbl_0000E998(void);
 void lbl_0000E99C(void);
 void lbl_0000F11C(void);
 void lbl_0000F194(void);
+void lbl_0000F290(void);
 void lbl_0000F750(void);
 void lbl_0000F7E8(void);
 void lbl_0000FA18(void);
@@ -239,7 +240,6 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
-void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -247,7 +247,6 @@ void lbl_00024E70(void);
 void lbl_000252C0(void);
 void lbl_0002544C(void);
 void lbl_000255CC(void);
-void lbl_0002572C(void);
 void lbl_00025928(void);
 void lbl_00025A44(void);
 void lbl_00025B10(void);
@@ -258,36 +257,18 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-void lbl_0000B280(void)
+f32 lbl_00009B68(Vec *v)
 {
-    if (decodedStageGmaPtr != NULL)
-    {
-        int i;
-        int j;
-        struct AnimGroupInfo *animGroup = animGroups;
-        struct Struct8020A348 *iter2 = lbl_8020AB88;
-        struct Struct8020A348_child *iter3;
-        struct GMAModel *model;
-        struct Struct8020A348 sp8;  // dead local; only its 8-byte stack footprint is observable
+    u8 *st = (u8 *)lbl_10000000;
 
-        for (i = 0; i < animGroupCount; i++, iter2++, animGroup++)
-        {
-            mathutil_mtxA_from_mtxB();
-            if (i > 0)
-                mathutil_mtxA_mult_right(animGroup->transform);
-            GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
-            GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
-            iter3 = iter2->unk0;
-            for (j = 0; j < iter2->unk4; j++, iter3++)
-            {
-                if ((iter3->flags & 3) == 1)
-                {
-                    model = iter3->model;
-                    if (model != NULL)
-                        avdisp_draw_model_culled_sort_none(model);
-                }
-            }
-        }
+    if (*(s16 *)(st + 0x3A) == 4)
+    {
+        if (__fabs(*(f32 *)(st + 0x60) - ballInfo[modeCtrl.currPlayer].pos.y) >
+            *(f64 *)lbl_000262F0)
+            return lbl_000099E0(v);
     }
+    return mathutil_sqrt(mathutil_sum_of_sq_3(*(f32 *)(st + 0x5C) - v->x,
+                                              *(f32 *)(st + 0x60) - v->y,
+                                              *(f32 *)(st + 0x64) - v->z));
 }
 #pragma force_active reset
