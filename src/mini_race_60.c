@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_0000E11C.
+ * mini_race.c -- REL module: isolated function lbl_0000D03C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -236,6 +236,7 @@ extern void u_draw_ball_shadow();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_00000228(void);
 void lbl_0000048C(void);
 void lbl_0000056C(void);
 void lbl_000007EC(void);
@@ -259,6 +260,9 @@ void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_00005CEC(void);
+void lbl_00005DDC(void);
+void lbl_00005FC4(void);
 void lbl_0000612C(void);
 void lbl_000061D0(void);
 void lbl_00006248(void);
@@ -315,7 +319,7 @@ void lbl_0000CA9C(void);
 void lbl_0000CB3C(void);
 void lbl_0000CE24(void);
 void lbl_0000CF44(void);
-void lbl_0000D03C(void);
+void lbl_0000D03C(s8 *arg0, struct Sprite *sprite);
 void lbl_0000D0FC(void);
 void lbl_0000D19C(void);
 void lbl_0000D20C(void);
@@ -325,7 +329,8 @@ void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
 void lbl_0000DE5C(void);
-void lbl_0000E11C(s16 idx, f32 x, f32 y);
+void lbl_0000DF6C(void);
+void lbl_0000E11C(void);
 void lbl_0000E1CC(void);
 void lbl_0000E520(void);
 void lbl_0000E7AC(void);
@@ -361,20 +366,19 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
-void lbl_0000E11C(s16 idx, f32 x, f32 y)
+#pragma force_active on
+void lbl_0000D03C(s8 *arg0, struct Sprite *sprite)
 {
-    u8 *cfg = lbl_00013C48;
-    struct Sprite *sprite = create_sprite();
-    if (sprite == NULL)
-        return;
-    sprite->tag = idx + 0x67;
-    sprite->x = x;
-    sprite->y = y;
-    sprite->depth = *(f32 *)(cfg + 0xd0);
-    sprite->scaleX = *(f32 *)(cfg + 8);
-    sprite->scaleY = *(f32 *)(cfg + 8);
-    sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000E1CC;
-    sprite->userVar = idx;
-    sprintf(sprite->text, (char *)lbl_00015D00, idx + 1);
+    struct Ball *ball = &ballInfo[sprite->userVar];
+    Vec sp10;
+    int speed;
+
+    sp10.x = ball->pos.x - ball->prevPos.x;
+    sp10.y = ball->pos.y - ball->prevPos.y;
+    sp10.z = ball->pos.z - ball->prevPos.z;
+    speed = *(f32 *)lbl_00013D44 * mathutil_vec_len(&sp10);
+    if (speed >= 1000)
+        speed = 999;
+    sprintf(sprite->text, (char *)lbl_00015CD4, speed);
 }
 #pragma force_active reset

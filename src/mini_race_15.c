@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_00003238.
+ * mini_race.c -- REL module: isolated function lbl_00003120.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -236,6 +236,7 @@ extern void u_draw_ball_shadow();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_00000228(void);
 void lbl_0000048C(void);
 void lbl_0000056C(void);
 void lbl_000007EC(void);
@@ -254,11 +255,14 @@ void lbl_00003094(void);
 void lbl_000030DC(void);
 void lbl_00003120(void);
 void lbl_000031C0(void);
-f32 lbl_00003238(f32 x);
+void lbl_00003238(void);
 void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_00005CEC(void);
+void lbl_00005DDC(void);
+void lbl_00005FC4(void);
 void lbl_0000612C(void);
 void lbl_000061D0(void);
 void lbl_00006248(void);
@@ -325,6 +329,7 @@ void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
 void lbl_0000DE5C(void);
+void lbl_0000DF6C(void);
 void lbl_0000E11C(void);
 void lbl_0000E1CC(void);
 void lbl_0000E520(void);
@@ -361,14 +366,55 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
-#pragma force_active on
-f32 lbl_00003238(f32 x)
+struct RaceCourseInfo
 {
-    u8 *cfg = lbl_00013680;
-    if (x < *(f32 *)(cfg + 0x20))
-        x += *(f32 *)(cfg + 0x40);
-    if (x >= *(f32 *)(cfg + 0x40))
-        x -= *(f32 *)(cfg + 0x40);
-    return x;
+    u8 filler0[0x36];
+    s16 unk36;
+    u8 filler38[0x48 - 0x38];
+};
+
+struct RaceEntity
+{
+    u8 filler0[0x14];
+    u32 unk14;
+    u8 filler18[0x22 - 0x18];
+    s16 unk22;
+    s16 unk24;
+};
+
+struct RaceGlobals
+{
+    u8 filler0[0x28];
+    u16 unk28;
+    u8 filler2a[0x54 - 0x2a];
+    struct RaceEntity *unk54[4];
+    u8 filler64[0x106c - 0x64];
+    s32 unk106c;
+};
+
+#pragma force_active on
+void lbl_00003120(void)
+{
+    struct RaceGlobals *g = (struct RaceGlobals *)lbl_10000000;
+    struct RaceEntity **arr = g->unk54;
+    struct RaceEntity *p;
+    struct RaceCourseInfo *ci = &((struct RaceCourseInfo *)lbl_00015768)[g->unk28];
+    s16 i;
+
+    for (i = 0; i < 4; i++)
+    {
+        p = arr[i];
+        if (!(p->unk14 & 0x20))
+            break;
+    }
+    if (p->unk14 & 0x20)
+        return;
+    if (p->unk14 & 2)
+        return;
+    if (p->unk22 <= p->unk24)
+        return;
+    g->unk106c += ci->unk36;
+    if (g->unk106c >= 36000)
+        g->unk106c = 36000;
 }
 #pragma force_active reset

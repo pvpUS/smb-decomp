@@ -151,7 +151,6 @@ void lbl_00004410(void);
 void lbl_000045E8(void);
 void lbl_00004A80(void);
 void lbl_00004BD8(void);
-void lbl_00004D10(void);
 void lbl_00004DF8(void);
 void lbl_00005128(void);
 void lbl_000051E0(void);
@@ -201,7 +200,7 @@ void lbl_0000A778(void);
 void lbl_0000A808(void);
 void lbl_0000A878(void);
 void lbl_0000AAAC(void);
-void lbl_0000AB98(void);
+void lbl_0000AB98(Vec *pos, s8 idx);
 void lbl_0000AC60(void);
 void lbl_0000AD8C(void);
 void lbl_0000AF18(void);
@@ -237,9 +236,29 @@ void lbl_0000E870(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
-asm void lbl_00004D10(void)
+// lbl_00004D10 (0x4D10): (re)set up the pin rack.  In the normal game every
+// pin is spawned; otherwise only the pins selected by the per-stage bitmask
+// table reached through the pointer at lbl_00015020, indexed by the stage id
+// in lbl_10000004[3].
+void lbl_00004D10(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00004D10.s"
+    u32 i;
+    u16 mask;
+
+    lbl_0000A808();
+    if ((int)lbl_802F1BF0 == 0)
+    {
+        for (i = 0; i < 10; i++)
+            lbl_0000AB98(&((Vec *)lbl_00010C40)[i], i);
+    }
+    else
+    {
+        mask = *(u16 *)(*(u8 **)lbl_00015020 + ((s8 *)lbl_10000004)[3] * 8);
+        for (i = 0; i < 10; i++)
+        {
+            if (mask & (1 << i))
+                lbl_0000AB98(&((Vec *)lbl_00010C40)[i], i);
+        }
+    }
 }
 #pragma force_active reset

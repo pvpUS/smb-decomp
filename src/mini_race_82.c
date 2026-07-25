@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_00010BC8.
+ * mini_race.c -- REL module: isolated function lbl_00010218.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -32,8 +32,6 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
-#include "stcoli.h"
-#include "thread.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_race.s) or imported.  Declared so mwcc accepts `@ha/@l`.
@@ -181,6 +179,7 @@ extern u8 backgroundInfo[];
 extern void item_replace_type_funcs();
 extern void u_load_minigame_graphics();
 extern void u_ball_init_1();
+extern void raycast_stage_down();
 extern void vibration_control();
 extern void func_800246F4();
 extern void mot_ape_set_quat_from_vec();
@@ -190,6 +189,7 @@ extern void avdisp_draw_model_unculled_sort_translucent();
 extern void avdisp_draw_model_culled_sort_translucent();
 extern void gxutil_load_pos_nrm_matrix();
 extern void mathutil_incr_mtx_stack();
+extern void thread_create();
 extern void ape_face_dir();
 extern void new_ape_stat_motion();
 extern void func_8002BB20();
@@ -236,6 +236,7 @@ extern void u_draw_ball_shadow();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_00000228(void);
 void lbl_0000048C(void);
 void lbl_0000056C(void);
 void lbl_000007EC(void);
@@ -259,6 +260,9 @@ void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_00005CEC(void);
+void lbl_00005DDC(void);
+void lbl_00005FC4(void);
 void lbl_0000612C(void);
 void lbl_000061D0(void);
 void lbl_00006248(void);
@@ -325,6 +329,7 @@ void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
 void lbl_0000DE5C(void);
+void lbl_0000DF6C(void);
 void lbl_0000E11C(void);
 void lbl_0000E1CC(void);
 void lbl_0000E520(void);
@@ -343,7 +348,7 @@ void lbl_0000FDD8(void);
 void lbl_0000FE90(void);
 void lbl_0000FEF8(void);
 void lbl_00010130(void);
-void lbl_00010218(void);
+void lbl_00010218(int idx);
 void lbl_000102FC(void);
 void lbl_00010484(void);
 void lbl_0001053C(void);
@@ -353,67 +358,42 @@ void lbl_000107D0(void);
 void lbl_000108E8(void);
 void lbl_00010918(void);
 void lbl_00010B70(void);
-void lbl_00010BC8(struct Ape *ape, int status);
-void lbl_00010DCC();
+void lbl_00010BC8(void);
+void lbl_00010DCC(void);
 void lbl_00011128(void);
 void lbl_0001157C(void);
 void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
+/* ---- handwritten ---- */
 #pragma force_active on
-void lbl_00010BC8(struct Ape *ape, int status)
+void lbl_00010218(int idx)
 {
-    u8 *cfg = lbl_00013F28;
-    struct Ball *ball = &ballInfo[ape->ballId];
-    struct RaycastHit sp50;
-    int r27;
-    float speed;
+    u8 *cfg = lbl_00013C48;
+    struct Sprite *sprite = create_sprite();
+    f64 depth;
 
-    switch (status)
+    if (sprite != NULL)
     {
-    case THREAD_STATUS_KILLED:
-        ape_destroy(ape);
-        return;
+        sprite->x = *(f32 *)(cfg + 0x0);
+        sprite->y = *(f32 *)(cfg + 0x4);
+        if (modeCtrl.unk30 == 1)
+            depth = *(f64 *)(cfg + 0x298);
+        else
+            depth = *(f64 *)(cfg + 0x2A0);
+        sprite->depth = depth;
+        sprite->fontId = 9;
+        sprite->textAlign = 4;
+        sprite->mulR = 0xFF;
+        sprite->mulG = 0xC8;
+        sprite->mulB = 0;
+        sprite->counter = (s16)idx;
+        sprite->userVar = idx;
+        sprite->flags |= 0x1000;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_000102FC;
+        sprintf(sprite->text, (char *)lbl_00015DF0);
     }
-
-    if (debugFlags & 0xA)
-        return;
-
-    raycast_stage_down(&ball->pos, &sp50, NULL);
-    ape->flags &= -20;
-    if (!(sp50.flags & 1) && ball->vel.y < *(f32 *)cfg)
-        ape->flags |= 2;
-    else if (mathutil_vec_len(&ball->unkB8) < *(f32 *)(cfg + 4))
-        ape->flags |= 1;
-
-    r27 = (ball->flags & BALL_FLAG_GOAL) != 0;
-    r27 |= !(ape->flags & 3);
-    u_ball_something_with_ape_rotation(ape);
-    if (r27)
-    {
-        speed = u_ball_something_with_walking_speed(ape);
-    }
-    else
-    {
-        speed = *(f32 *)(cfg + 8);
-        mathutil_mtxA_from_quat(&ape->unk60);
-        mathutil_mtxA_normalize_basis();
-        if (ape->flags & (1 << 1))
-            func_80037718(ape);
-    }
-
-    if (ball->flags & BALL_FLAG_05)
-        speed = mathutil_vec_len(&ball->vel);
-
-    check_ball_teeter(ape);
-    mathutil_mtxA_to_quat(&ape->unk60);
-    lbl_00010DCC(ape, speed);
-    ape_skel_anim_main(ape);
-    if (!(ape->flags & (1 << 3)))
-        func_8003765C(ape);
-    ape_face_dir(ape, &ball->lookPoint);
-    ball->unk100 = 0;
-    ball->lookPointPrio = *(f32 *)(cfg + 8);
+    u_play_sound_0(0x1E8);
 }
 #pragma force_active reset

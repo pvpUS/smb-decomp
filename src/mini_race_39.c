@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_0000C134.
+ * mini_race.c -- REL module: isolated function lbl_0000AC30.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -236,6 +236,7 @@ extern void u_draw_ball_shadow();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_00000228(void);
 void lbl_0000048C(void);
 void lbl_0000056C(void);
 void lbl_000007EC(void);
@@ -259,6 +260,9 @@ void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_00005CEC(void);
+void lbl_00005DDC(void);
+void lbl_00005FC4(void);
 void lbl_0000612C(void);
 void lbl_000061D0(void);
 void lbl_00006248(void);
@@ -288,8 +292,8 @@ void lbl_00008C4C(void);
 void lbl_0000A9C4(void);
 void lbl_0000A9EC(void);
 void lbl_0000AC30(void);
-void lbl_0000ACF4(void);
-void lbl_0000AD74(void);
+void lbl_0000ACF4(struct Ball *ball);
+void lbl_0000AD74(struct Ball *ball);
 void lbl_0000ADDC(void);
 void lbl_0000AFF8(void);
 void lbl_0000B2F0(void);
@@ -299,13 +303,13 @@ void lbl_0000B834(void);
 void lbl_0000B8C8(void);
 void lbl_0000B948(void);
 void lbl_0000BB0C(void);
-void lbl_0000C134(u8 *arg0, f32 a, f32 b);
+void lbl_0000C134(void);
 void lbl_0000C230(void);
 void lbl_0000C2B4(void);
 void lbl_0000C438(void);
 void lbl_0000C590(void);
 void lbl_0000C5EC(void);
-void lbl_0000C668();
+void lbl_0000C668(void);
 void lbl_0000C76C(void);
 void lbl_0000C7E4(void);
 void lbl_0000C93C(void);
@@ -314,18 +318,19 @@ void lbl_0000CA24(void);
 void lbl_0000CA9C(void);
 void lbl_0000CB3C(void);
 void lbl_0000CE24(void);
-void lbl_0000CF44();
+void lbl_0000CF44(void);
 void lbl_0000D03C(void);
-void lbl_0000D0FC();
+void lbl_0000D0FC(void);
 void lbl_0000D19C(void);
-void lbl_0000D20C();
+void lbl_0000D20C(void);
 void lbl_0000D2B8(void);
-void lbl_0000D41C();
+void lbl_0000D41C(void);
 void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
-void lbl_0000DE5C();
-void lbl_0000E11C();
+void lbl_0000DE5C(void);
+void lbl_0000DF6C(void);
+void lbl_0000E11C(void);
 void lbl_0000E1CC(void);
 void lbl_0000E520(void);
 void lbl_0000E7AC(void);
@@ -361,19 +366,63 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
-#pragma force_active on
-void lbl_0000C134(u8 *arg0, f32 a, f32 b)
-{
-    u8 *cfg = lbl_00013C48;
-    f32 t;
+/* ---- handwritten ---- */
 
-    lbl_0000C668(arg0, *(f32 *)(cfg + 0xAC) + a, *(f32 *)(cfg + 0x6C) + b);
-    lbl_0000D20C(arg0, *(f32 *)(cfg + 0xB0) + a, t = *(f32 *)(cfg + 0x78) + b);
-    lbl_0000D0FC(arg0, *(f32 *)(cfg + 0xB4) + a, t);
-    lbl_0000D41C(arg0, *(f32 *)(cfg + 0xB8) + a, *(f32 *)(cfg + 0x8C) + b);
-    lbl_0000CF44(arg0, *(f32 *)(cfg + 0xBC) + a, *(f32 *)(cfg + 0xC0) + b);
-    t = *(f32 *)(cfg + 0x54) + a;
-    lbl_0000DE5C(arg0, t, *(f32 *)(cfg + 0x90) + b);
-    lbl_0000E11C(arg0, t, *(f32 *)(cfg + 0xC4) + b);
+// Per-racer state hanging off struct Ball::unk144 inside this module.
+// INVENTED -- offsets read off the asm, names are placeholders.
+struct RaceSub
+{
+    u8 filler0[0x4];
+    Vec unk4;
+    f32 unk10;
+    u32 unk14;
+    u8 filler18[0x22 - 0x18];
+    s16 unk22;
+    u8 filler24[0x1CE - 0x24];
+    s16 unk1CE;
+    s16 unk1D0;
+    u8 filler1D2[0x1D4 - 0x1D2];
+    f32 unk1D4;
+    f32 unk1D8;
+    f32 unk1DC;
+    f32 unk1E0;
+    f32 unk1E4;
+    f32 unk1E8;
+    u8 filler1EC[0x1F0 - 0x1EC];
+    f32 unk1F0;
+    u8 filler1F4[0x262 - 0x1F4];
+    u8 unk262;
+    u8 unk263;
+    u8 filler264[0x26A - 0x264];
+    s16 unk26A;
+    s16 unk26C;
+};
+
+#pragma force_active on
+void lbl_0000AC30(void)
+{
+    struct Ball *ball = ballInfo;
+    s16 i;
+    struct RaceSub *st;
+
+    for (i = 0; i < 4; i++, ball++)
+    {
+        if (*(s8 *)ball != 2)
+            continue;
+        st = (struct RaceSub *)ball->unk144;
+        if (!(st->unk14 & 0x8000))
+            continue;
+        if ((st->unk14 & 0x10000) && (globalAnimTimer & 4))
+            continue;
+        switch (st->unk263)
+        {
+        case 6:
+            lbl_0000ACF4(ball);
+            break;
+        case 5:
+            lbl_0000AD74(ball);
+            break;
+        }
+    }
 }
 #pragma force_active reset

@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_0000D19C.
+ * mini_race.c -- REL module: isolated function lbl_0000C93C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -236,6 +236,7 @@ extern void u_draw_ball_shadow();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_00000228(void);
 void lbl_0000048C(void);
 void lbl_0000056C(void);
 void lbl_000007EC(void);
@@ -259,6 +260,9 @@ void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_00005CEC(void);
+void lbl_00005DDC(void);
+void lbl_00005FC4(void);
 void lbl_0000612C(void);
 void lbl_000061D0(void);
 void lbl_00006248(void);
@@ -308,8 +312,8 @@ void lbl_0000C5EC(void);
 void lbl_0000C668(void);
 void lbl_0000C76C(void);
 void lbl_0000C7E4(void);
-void lbl_0000C93C(void);
-void lbl_0000C9B0(void);
+void lbl_0000C93C(u8 *arg0, struct RaceHandlerObj *obj);
+void lbl_0000C9B0();
 void lbl_0000CA24(void);
 void lbl_0000CA9C(void);
 void lbl_0000CB3C(void);
@@ -317,7 +321,7 @@ void lbl_0000CE24(void);
 void lbl_0000CF44(void);
 void lbl_0000D03C(void);
 void lbl_0000D0FC(void);
-void lbl_0000D19C(u8 *arg0, struct RaceBufObj *obj);
+void lbl_0000D19C(void);
 void lbl_0000D20C(void);
 void lbl_0000D2B8(void);
 void lbl_0000D41C(void);
@@ -325,6 +329,7 @@ void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
 void lbl_0000DE5C(void);
+void lbl_0000DF6C(void);
 void lbl_0000E11C(void);
 void lbl_0000E1CC(void);
 void lbl_0000E520(void);
@@ -361,28 +366,34 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
-struct RaceApe2
+struct RaceApe3
 {
-    u16 unk0;
-    u8 filler2[0x1e - 0x2];
-    u16 unk1e;
+    u8 filler0[0x22];
+    s16 unk22;
 };
 
-struct RaceBufObj
+struct RaceHandlerObj
 {
-    u8 filler0[0x48];
+    u8 filler0[1];
+    u8 unk1;
+    u8 filler2[2];
+    f32 unk4;
+    u8 filler8[0x34 - 8];
+    void *unk34;
+    u8 filler38[0x48 - 0x38];
     s32 unk48;
-    u8 filler4c[0x8c - 0x4c];
-    char unk8c[1];
 };
 
 #pragma force_active on
-void lbl_0000D19C(u8 *arg0, struct RaceBufObj *obj)
+void lbl_0000C93C(u8 *arg0, struct RaceHandlerObj *obj)
 {
-    struct RaceApe2 *ape = (struct RaceApe2 *)ballInfo[obj->unk48].unk144;
-    u16 val = ape->unk1e;
-    if (val == 0)
-        val = *(s16 *)lbl_10000046 - ape->unk0;
-    sprintf(obj->unk8c, (char *)lbl_00015CA8, val);
+    struct RaceApe3 *ape = (struct RaceApe3 *)ballInfo[obj->unk48].unk144;
+    if (ape->unk22 + 1 >= 10)
+    {
+        obj->unk1 = 0x4b;
+        obj->unk4 = obj->unk4 - *(f32 *)lbl_00013C50;
+        obj->unk34 = (void *)lbl_0000C9B0;
+    }
+    lbl_0000C9B0(arg0, obj);
 }
 #pragma force_active reset

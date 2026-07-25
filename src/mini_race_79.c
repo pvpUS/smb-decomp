@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_000108E8.
+ * mini_race.c -- REL module: isolated function lbl_0000FE90.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -236,6 +236,7 @@ extern void u_draw_ball_shadow();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_00000228(void);
 void lbl_0000048C(void);
 void lbl_0000056C(void);
 void lbl_000007EC(void);
@@ -259,6 +260,9 @@ void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_00005CEC(void);
+void lbl_00005DDC(void);
+void lbl_00005FC4(void);
 void lbl_0000612C(void);
 void lbl_000061D0(void);
 void lbl_00006248(void);
@@ -325,6 +329,7 @@ void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
 void lbl_0000DE5C(void);
+void lbl_0000DF6C(void);
 void lbl_0000E11C(void);
 void lbl_0000E1CC(void);
 void lbl_0000E520(void);
@@ -340,7 +345,7 @@ void lbl_0000FC8C(void);
 void lbl_0000FCC4(void);
 void lbl_0000FD48(void);
 void lbl_0000FDD8(void);
-void lbl_0000FE90(void);
+void lbl_0000FE90(s8 *, struct Sprite *);
 void lbl_0000FEF8(void);
 void lbl_00010130(void);
 void lbl_00010218(void);
@@ -350,7 +355,7 @@ void lbl_0001053C(void);
 void lbl_000106C4(void);
 void lbl_0001075C(void);
 void lbl_000107D0(void);
-void lbl_000108E8(s8 *str, struct Sprite *sprite);
+void lbl_000108E8(void);
 void lbl_00010918(void);
 void lbl_00010B70(void);
 void lbl_00010BC8(void);
@@ -362,11 +367,13 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-void lbl_000108E8(s8 *str, struct Sprite *sprite)
+void lbl_0000FE90(s8 *arg0, struct Sprite *sprite)
 {
-    if (sprite->counter <= 0)
-        return;
-    sprite->x -= *(f32 *)lbl_00013C50;
-    sprite->counter--;
+    u8 *cfg = lbl_00013C48;
+    f32 t = (f32)sprite->counter / *(f32 *)(cfg + 0xAC);
+
+    if (sprite->counter > 0)
+        sprite->counter--;
+    sprite->scaleY = *(f64 *)(cfg + 0x288) * (*(f64 *)(cfg + 0x1D8) - t);
 }
 #pragma force_active reset

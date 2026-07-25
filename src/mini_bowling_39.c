@@ -46,6 +46,25 @@
 #include "shadow.h"
 #include "vibration.h"
 
+struct BowlPt {            // 0x14 -- entry of the pin collision-point table
+    Vec pos;
+    u8 filler0C[0x14 - 0xC];
+};
+
+struct BowlPin {
+    u32 flags;                 // 0x000
+    Vec unk4[12];              // 0x004 -- collision points, pin space
+    Vec unk94[12];             // 0x094 -- previous frame's world-space points
+    Vec unk124;                // 0x124
+    Vec unk130;                // 0x130
+    Vec unk13c;                // 0x13c
+    Mtx unk148;                // 0x148
+    u32 unk178;                // 0x178
+    u32 unk17c;                // 0x17c
+    s16 unk180;                // 0x180
+    u8 filler182[2];
+};
+
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_bowling.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000F020[];
@@ -211,7 +230,7 @@ void lbl_0000B1BC(void);
 void lbl_0000B344(void);
 void lbl_0000B460(void);
 void lbl_0000B654(void);
-void lbl_0000B848(void);
+void lbl_0000B848(struct BowlPin *pin);
 void lbl_0000B914(void);
 void lbl_0000BDE0(void);
 void lbl_0000BEB8(void);
@@ -240,9 +259,23 @@ void lbl_0000E870(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
-asm void lbl_0000B848(void)
+// lbl_0000B848 (0xB848): refresh a pin's world-space collision points.  Build
+// mtxA from the pin's orientation + position (minus the model pivot at
+// tbl+0x37c), keep last frame's points in unk94 and re-transform the template
+// point table at tbl+0x3a8 (tbl+0x3ac entries) into unk4.
+void lbl_0000B848(struct BowlPin *pin)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000B848.s"
+    u8 *tbl = lbl_00014800;
+    int i;
+
+    mathutil_mtxA_from_mtx(pin->unk148);
+    mathutil_mtxA_set_translate(&pin->unk124);
+    mathutil_mtxA_translate_xyz(-*(f32 *)(tbl + 0x37C), -*(f32 *)(tbl + 0x380),
+                                -*(f32 *)(tbl + 0x384));
+    for (i = 0; i < *(u8 *)(tbl + 0x3AC); i++)
+    {
+        pin->unk94[i] = pin->unk4[i];
+        mathutil_mtxA_tf_point(&(*(struct BowlPt **)(tbl + 0x3A8))[i].pos, &pin->unk4[i]);
+    }
 }
 #pragma force_active reset

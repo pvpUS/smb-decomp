@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_000031C0.
+ * mini_race.c -- REL module: isolated function lbl_000030DC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -236,6 +236,7 @@ extern void u_draw_ball_shadow();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_00000228(void);
 void lbl_0000048C(void);
 void lbl_0000056C(void);
 void lbl_000007EC(void);
@@ -253,12 +254,15 @@ void lbl_00002FA4(void);
 void lbl_00003094(void);
 void lbl_000030DC(void);
 void lbl_00003120(void);
-void lbl_000031C0(struct AnimChannel *ch, Vec *out, f32 t);
+void lbl_000031C0(void);
 void lbl_00003238(void);
 void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_00005CEC(void);
+void lbl_00005DDC(void);
+void lbl_00005FC4(void);
 void lbl_0000612C(void);
 void lbl_000061D0(void);
 void lbl_00006248(void);
@@ -325,6 +329,7 @@ void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
 void lbl_0000DE5C(void);
+void lbl_0000DF6C(void);
 void lbl_0000E11C(void);
 void lbl_0000E1CC(void);
 void lbl_0000E520(void);
@@ -362,16 +367,10 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-struct AnimChannel
+void lbl_000030DC(void)
 {
-    int count;
-    struct Keyframe *frames;
-};
-
-void lbl_000031C0(struct AnimChannel *ch, Vec *out, f32 t)
-{
-    out->x = interpolate_keyframes(ch[0].count, ch[0].frames, t);
-    out->y = interpolate_keyframes(ch[1].count, ch[1].frames, t);
-    out->z = interpolate_keyframes(ch[2].count, ch[2].frames, t);
+    OSHeapHandle old = OSSetCurrentHeap(stageHeap);
+    u_free_minigame_graphics();
+    OSSetCurrentHeap(old);
 }
 #pragma force_active reset

@@ -46,6 +46,19 @@
 #include "shadow.h"
 #include "vibration.h"
 
+struct BowlPin {
+    u32 flags;                 // 0x000
+    u8 filler4[0x124 - 0x4];
+    Vec unk124;                // 0x124
+    Vec unk130;                // 0x130
+    Vec unk13c;                // 0x13c
+    Mtx unk148;                // 0x148
+    u32 unk178;                // 0x178
+    u32 unk17c;                // 0x17c
+    s16 unk180;                // 0x180
+    u8 filler182[2];
+};
+
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_bowling.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000F020[];
@@ -108,7 +121,7 @@ extern u8 lbl_100004C0[];
 extern u8 lbl_100004E0[];
 extern u8 lbl_10012140[];
 extern u8 lbl_10012180[];
-extern u8 lbl_10018510[];
+extern struct BowlPin lbl_10018510[];
 
 // Imported functions the code calls that no included header declares.
 extern void draw_test_camera_target();
@@ -200,7 +213,6 @@ void lbl_0000A610(void);
 void lbl_0000A778(void);
 void lbl_0000A808(void);
 void lbl_0000A878(void);
-void lbl_0000AAAC(void);
 void lbl_0000AB98(void);
 void lbl_0000AC60(void);
 void lbl_0000AD8C(void);
@@ -237,9 +249,30 @@ void lbl_0000E870(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
-asm void lbl_0000AAAC(void)
+// lbl_0000AAAC (0xAAAC): draw the ten pins (translucent pass).  tbl+0x3e0 is a
+// height cutoff used when polyDisp is in its "below the mirror plane" mode,
+// tbl+0x37c..0x384 the model's pivot offset and tbl+0x3a0 the pin model index.
+void lbl_0000AAAC(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000AAAC.s"
+    u8 *tbl = lbl_00014800;
+    int i;
+    struct BowlPin *pin = lbl_10018510;
+
+    for (i = 0; i < 10; i++, pin++)
+    {
+        if (pin->flags == 0)
+            continue;
+        if ((polyDisp.flags & 4) && pin->unk124.y < *(f64 *)(tbl + 0x3E0))
+            continue;
+        mathutil_mtxA_from_mtxB();
+        mathutil_mtxA_translate(&pin->unk124);
+        mathutil_mtxA_mult_right(pin->unk148);
+        mathutil_mtxA_translate_xyz(-*(f32 *)(tbl + 0x37C), -*(f32 *)(tbl + 0x380),
+                                    -*(f32 *)(tbl + 0x384));
+        GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+        GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
+        avdisp_draw_model_culled_sort_translucent(
+            minigameGma->modelEntries[*(int *)(tbl + 0x3A0)].model);
+    }
 }
 #pragma force_active reset

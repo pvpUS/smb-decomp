@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_0000612C.
+ * mini_race.c -- REL module: isolated function lbl_0000340C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -236,6 +236,7 @@ extern void u_draw_ball_shadow();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_00000228(void);
 void lbl_0000048C(void);
 void lbl_0000056C(void);
 void lbl_000007EC(void);
@@ -257,9 +258,12 @@ void lbl_000031C0(void);
 void lbl_00003238(void);
 void lbl_0000326C(void);
 void lbl_00003398(void);
-void lbl_0000340C(void);
+void lbl_0000340C(u8 *obj, s16 value);
 void lbl_00003474(void);
-void lbl_0000612C(struct Ball *ball);
+void lbl_00005CEC(void);
+void lbl_00005DDC(void);
+void lbl_00005FC4(void);
+void lbl_0000612C(void);
 void lbl_000061D0(void);
 void lbl_00006248(void);
 void lbl_000062F8(void);
@@ -325,6 +329,7 @@ void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
 void lbl_0000DE5C(void);
+void lbl_0000DF6C(void);
 void lbl_0000E11C(void);
 void lbl_0000E1CC(void);
 void lbl_0000E520(void);
@@ -361,57 +366,11 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
-/* ---- handwritten ---- */
-
-// Per-racer state hanging off struct Ball::unk144 inside this module.
-// INVENTED -- offsets read off the asm, names are placeholders.
-struct RaceSub
-{
-    u8 filler0[0x4];
-    Vec unk4;
-    f32 unk10;
-    u32 unk14;
-    u8 filler18[0x22 - 0x18];
-    s16 unk22;
-    u8 filler24[0x1CE - 0x24];
-    s16 unk1CE;
-    s16 unk1D0;
-    u8 filler1D2[0x1D4 - 0x1D2];
-    f32 unk1D4;
-    f32 unk1D8;
-    f32 unk1DC;
-    f32 unk1E0;
-    f32 unk1E4;
-    f32 unk1E8;
-    u8 filler1EC[0x1F0 - 0x1EC];
-    f32 unk1F0;
-    u8 filler1F4[0x262 - 0x1F4];
-    u8 unk262;
-    u8 unk263;
-    u8 filler264[0x26A - 0x264];
-    s16 unk26A;
-    s16 unk26C;
-};
-
 #pragma force_active on
-void lbl_0000612C(struct Ball *ball)
+void lbl_0000340C(u8 *obj, s16 value)
 {
-    struct RaceSub *st = (struct RaceSub *)ball->unk144;
-    u8 *cfg = lbl_00013740;
-    int mode = st->unk262;
-
-    if (mode != 2 && mode >= 2 && mode < 4)
-    {
-        if (st->unk26A > 120)
-            ball->modelScale = ball->modelScale + *(f64 *)(cfg + 0x1D0);
-        else if (st->unk26A > 120)
-            ball->modelScale = *(f32 *)(cfg + 0x1D8);
-        else
-            ball->modelScale = ball->modelScale - *(f64 *)(cfg + 0x1D0);
-        ball->currRadius = ball->targetRadius * ball->modelScale;
-        if (ball->ape != NULL)
-            ball->ape->modelScale = ball->modelScale;
-        st->unk10 = ball->modelScale * (ball->modelScale * ball->modelScale);
-    }
+    if (value < 0 || value >= 20)
+        OSPanic((char *)lbl_00015A70, 0x96, (char *)lbl_00015A84);
+    obj[0x148] = value;
 }
 #pragma force_active reset

@@ -176,9 +176,9 @@ void lbl_00007FE0(void);
 void lbl_000080E0(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
-void lbl_000087CC(void);
+void lbl_000087CC(struct Camera *camera, Vec *eye, Vec *lookAt, s16 fov, float t);
 void lbl_000089FC(void);
-void lbl_00008B8C(void);
+void lbl_00008B8C(struct Camera *camera, struct Ball *ball);
 void lbl_00008C68(void);
 void lbl_00008D2C(void);
 void lbl_00008DF0(void);
@@ -237,9 +237,32 @@ void lbl_0000E870(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
-asm void lbl_00008B8C(void)
+// lbl_00008B8C (0x8B8C): camera substate -- trail the ball down the lane,
+// leading it by an amount that grows as the ball slows (capped at tbl+0x28),
+// and clamp the eye into the lane box.
+void lbl_00008B8C(struct Camera *camera, struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00008B8C.s"
+    u8 *tbl = lbl_00011338;
+    Vec sp10;
+    f64 lead;
+    f64 t;
+
+    sp10.x = *(f64 *)(tbl + 0x10) * ball->pos.x;
+    sp10.y = *(f32 *)(tbl + 0x18);
+    t = *(f64 *)(tbl + 0x20);
+    t /= -ball->vel.z;
+    if (t < *(f64 *)(tbl + 0x28))
+        lead = t;
+    else
+        lead = *(f64 *)(tbl + 0x28);
+    t = *(f64 *)(tbl + 0x20) + ball->pos.z;
+    sp10.z = t + lead;
+    if (sp10.z < *(f64 *)(tbl + 0x30))
+        sp10.z = *(f32 *)(tbl + 0x38);
+    if (sp10.x < *(f64 *)(tbl + 0x40))
+        sp10.x = *(f32 *)(tbl + 0x48);
+    if (sp10.x > *(f64 *)(tbl + 0x50))
+        sp10.x = *(f32 *)(tbl + 0x58);
+    lbl_000087CC(camera, &sp10, (Vec *)lbl_000153E8, 0x1800, *(f32 *)(tbl + 0x5c));
 }
 #pragma force_active reset

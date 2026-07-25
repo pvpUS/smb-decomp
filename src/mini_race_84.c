@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_00012B10.
+ * mini_race.c -- REL module: isolated function lbl_00010484.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -236,6 +236,7 @@ extern void u_draw_ball_shadow();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_00000228(void);
 void lbl_0000048C(void);
 void lbl_0000056C(void);
 void lbl_000007EC(void);
@@ -259,12 +260,15 @@ void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_00005CEC(void);
+void lbl_00005DDC(void);
+void lbl_00005FC4(void);
 void lbl_0000612C(void);
 void lbl_000061D0(void);
 void lbl_00006248(void);
 void lbl_000062F8(void);
 void lbl_000065A0(void);
-void lbl_000068E8(struct Ball *ball);
+void lbl_000068E8(void);
 void lbl_000069D0(void);
 void lbl_00006CF0(void);
 void lbl_00006FF4(void);
@@ -325,6 +329,7 @@ void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
 void lbl_0000DE5C(void);
+void lbl_0000DF6C(void);
 void lbl_0000E11C(void);
 void lbl_0000E1CC(void);
 void lbl_0000E520(void);
@@ -357,70 +362,28 @@ void lbl_00010BC8(void);
 void lbl_00010DCC(void);
 void lbl_00011128(void);
 void lbl_0001157C(void);
-void lbl_00012B10(struct Item *item, s8 kind);
+void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
-
-// Per-racer state hanging off struct Ball::unk144 inside this module.
-// INVENTED -- offsets read off the asm, names are placeholders.
-struct RaceSub
-{
-    u8 filler0[0x4];
-    Vec unk4;
-    f32 unk10;
-    u32 unk14;
-    u8 filler18[0x22 - 0x18];
-    s16 unk22;
-    u8 filler24[0x1CE - 0x24];
-    s16 unk1CE;
-    s16 unk1D0;
-    u8 filler1D2[0x1D4 - 0x1D2];
-    f32 unk1D4;
-    f32 unk1D8;
-    f32 unk1DC;
-    f32 unk1E0;
-    f32 unk1E4;
-    f32 unk1E8;
-    u8 filler1EC[0x1F0 - 0x1EC];
-    f32 unk1F0;
-    u8 filler1F4[0x262 - 0x1F4];
-    u8 unk262;
-    u8 unk263;
-    u8 filler264[0x26A - 0x264];
-    s16 unk26A;
-    s16 unk26C;
-};
-
-// The object mini_race hangs off struct Item::unk60 (typed struct StageBanana *
-// in item.h, but this module puts something else there).  INVENTED.
-struct RaceMarker
-{
-    u8 filler0[8];
-    s16 unk8;
-};
-
 #pragma force_active on
-void lbl_00012B10(struct Item *item, s8 kind)
+void lbl_00010484(void)
 {
-    struct RaceSub *st = (struct RaceSub *)currentBall->unk144;
-    struct RaceMarker *marker = (struct RaceMarker *)item->stageBanana;
-
-    if (marker == NULL)
+    u8 *cfg = lbl_00013C48;
+    u8 *base = lbl_10000028;
+    struct Sprite *sprite = create_sprite();
+    if (sprite == NULL)
         return;
-    if (marker->unk8 == currentBall->playerId || (st->unk14 & 0x10000)
-        || (st->unk14 & 2))
-    {
-        item->unkC = 0;
-    }
-    else
-    {
-        item->flags &= ~2;
-        item->state = 4;
-        if (st->unk14 & 0x10)
-            lbl_000068E8(currentBall);
-        st->unk14 |= 8;
-        st->unk263 = kind;
-    }
+    sprite->type = 0;
+    sprite->fontId = 9;
+    sprite->x = *(f32 *)(cfg + 0);
+    sprite->y = *(f32 *)(cfg + 4);
+    sprite->depth = *(f32 *)(cfg + 0xd8);
+    sprite->textAlign = 4;
+    sprite->flags |= 0x1000;
+    sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0001053C;
+    sprite->counter = 0x7e;
+    sprite->userVar = 0x7e;
+    sprintf(sprite->text, (char *)lbl_00015DF8, *(u16 *)(base + 6) + 1);
 }
 #pragma force_active reset

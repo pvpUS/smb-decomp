@@ -551,6 +551,16 @@ SOURCES := \
 	src/mini_race_83.c \
 	src/mini_race_84.c \
 	src/mini_race_85.c \
+	src/mini_race_86.c \
+	src/mini_race_87.c \
+	src/mini_race_88.c \
+	src/mini_race_89.c \
+	src/mini_race_90.c \
+	src/mini_race_91.c \
+	src/mini_race_92.c \
+	src/mini_race_93.c \
+	src/mini_race_94.c \
+	src/mini_race_95.c \
 	asm/mini_race_d1.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
@@ -562,10 +572,16 @@ ALL_RELS += mkbe.rel_mini_race.rel
 SOURCES := \
 	asm/mini_bowling.s \
 	src/mini_bowling.c \
+	src/mini_bowling_1b.c \
+	src/mini_bowling_1c.c \
+	src/mini_bowling_1d.c \
 	src/mini_bowling_2.c \
 	src/mini_bowling_3.c \
 	src/mini_bowling_4.c \
 	src/mini_bowling_5.c \
+	src/mini_bowling_5f.c \
+	src/mini_bowling_5g.c \
+	src/mini_bowling_5e.c \
 	src/mini_bowling_5b.c \
 	src/mini_bowling_5c.c \
 	src/mini_bowling_5d.c \
@@ -577,6 +593,7 @@ SOURCES := \
 	src/mini_bowling_9c.c \
 	src/mini_bowling_10.c \
 	src/mini_bowling_11.c \
+	src/mini_bowling_11b.c \
 	src/mini_bowling_12.c \
 	asm/mini_bowling_d1.s \
 	src/mini_bowling_13.c \
@@ -605,6 +622,8 @@ SOURCES := \
 	src/mini_bowling_28.c \
 	src/mini_bowling_29.c \
 	src/mini_bowling_30.c \
+	src/mini_bowling_30d.c \
+	src/mini_bowling_30e.c \
 	src/mini_bowling_30b.c \
 	src/mini_bowling_30c.c \
 	src/mini_bowling_31.c \
@@ -642,6 +661,8 @@ SOURCES := \
 	src/mini_bowling_55.c \
 	src/mini_bowling_56.c \
 	src/mini_bowling_57.c \
+	src/mini_bowling_57b.c \
+	src/mini_bowling_57c.c \
 	asm/mini_bowling_d3.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)

@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_00000838.
+ * mini_race.c -- REL module: isolated function lbl_000007EC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -236,10 +236,11 @@ extern void u_draw_ball_shadow();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_00000228(void);
 void lbl_0000048C(void);
 void lbl_0000056C(void);
 void lbl_000007EC(void);
-void lbl_00000838(s16 mode);
+void lbl_00000838(void);
 void lbl_000008B4(void);
 void lbl_00002018(void);
 void lbl_000020A4(void);
@@ -259,6 +260,9 @@ void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_00005CEC(void);
+void lbl_00005DDC(void);
+void lbl_00005FC4(void);
 void lbl_0000612C(void);
 void lbl_000061D0(void);
 void lbl_00006248(void);
@@ -325,6 +329,7 @@ void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
 void lbl_0000DE5C(void);
+void lbl_0000DF6C(void);
 void lbl_0000E11C(void);
 void lbl_0000E1CC(void);
 void lbl_0000E520(void);
@@ -362,14 +367,12 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-void lbl_00000838(s16 mode)
+void lbl_000007EC(void)
 {
-    u8 *w = lbl_10000000;
-
-    if (mode < 0 || mode >= 15)
-        OSPanic((char *)lbl_000159D8, 0x49F, (char *)lbl_000159F0);
-    *(s16 *)(w + 0x44) = *(s16 *)(w + 0x38);
-    *(s16 *)(w + 0x38) = mode;
-    *(s32 *)(w + 0x00) = 0;
+    s16 v = *(s16 *)lbl_10000038;
+    if (v >= 0 && v <= 9)
+        lbl_0000A9EC();
+    else if (v == 10)
+        lbl_0000B67C();
 }
 #pragma force_active reset

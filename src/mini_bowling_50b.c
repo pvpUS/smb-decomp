@@ -226,7 +226,7 @@ void lbl_0000DAF4(void);
 void lbl_0000DBB8(void);
 void lbl_0000DD4C(void);
 void lbl_0000DE10(void);
-void lbl_0000DFA4(void);
+void lbl_0000DFA4(int timer, int pins);
 void lbl_0000E098(void);
 void lbl_0000E22C(void);
 void lbl_0000E2E0(void);
@@ -238,9 +238,36 @@ void lbl_0000E870(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
-asm void lbl_0000DFA4(void)
+// lbl_0000DFA4 (0xDFA4): spawn the "STRIKE!" / "n PINS" banner sprite that
+// lbl_0000E098 animates for `timer` frames.
+void lbl_0000DFA4(int timer, int pins)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000DFA4.s"
+    u8 *tbl = lbl_00014D70;
+    struct Sprite *sprite;
+
+    if (pins > 0)
+    {
+        sprite = create_sprite();
+        if (sprite != NULL)
+        {
+            sprite->x = *(f32 *)(tbl + 0x28);
+            sprite->y = *(f32 *)(tbl + 0x50);
+            sprite->depth = *(f32 *)(tbl + 0x30);
+            sprite->mulR = 0xff;
+            sprite->mulG = 0x8c;
+            sprite->mulB = 0;
+            sprite->tag = 0x6b;
+            sprite->fontId = 9;
+            sprite->textAlign = 4;
+            sprite->counter = timer;
+            sprite->userVar = timer;
+            sprite->flags |= 0x1000;
+            sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000E098;
+            if (pins == 1)
+                strcpy(sprite->text, (char *)lbl_0001543C);
+            else
+                sprintf(sprite->text, (char *)lbl_00015444, pins);
+        }
+    }
 }
 #pragma force_active reset

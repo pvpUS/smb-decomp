@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_00006248.
+ * mini_race.c -- REL module: isolated function lbl_00005CEC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -23,6 +23,7 @@
 #include "functions.h"
 #include "game.h"
 #include "hud.h"
+#include "input.h"
 #include "item.h"
 #include "mathutil.h"
 #include "mode.h"
@@ -170,8 +171,6 @@ extern u8 lbl_802F02F8[];
 extern u8 worldInfo[];
 extern u8 lbl_802F1F10[];
 extern u8 pauseMenuState[];
-extern u8 g_currPlayerButtons[];
-extern u8 controllerInfo[];
 extern u8 lbl_802F16BC[];
 extern u8 backgroundInfo[];
 
@@ -236,6 +235,7 @@ extern void u_draw_ball_shadow();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_00000228(void);
 void lbl_0000048C(void);
 void lbl_0000056C(void);
 void lbl_000007EC(void);
@@ -259,12 +259,15 @@ void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
-void lbl_0000612C(void);
-void lbl_000061D0(void);
-void lbl_00006248(struct Ball *ball);
-void lbl_000062F8(struct Ball *ball);
-void lbl_000065A0(struct Ball *ball);
-void lbl_000068E8(struct Ball *ball);
+void lbl_00005CEC(struct Ball *);
+void lbl_00005DDC(struct Ball *);
+void lbl_00005FC4(struct Ball *);
+void lbl_0000612C(struct Ball *);
+void lbl_000061D0(struct Ball *);
+void lbl_00006248(void);
+void lbl_000062F8(void);
+void lbl_000065A0(void);
+void lbl_000068E8(void);
 void lbl_000069D0(void);
 void lbl_00006CF0(void);
 void lbl_00006FF4(void);
@@ -325,6 +328,7 @@ void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
 void lbl_0000DE5C(void);
+void lbl_0000DF6C(void);
 void lbl_0000E11C(void);
 void lbl_0000E1CC(void);
 void lbl_0000E520(void);
@@ -362,54 +366,45 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 
+/* ---- handwritten ---- */
+
 // Per-racer state hanging off struct Ball::unk144 inside this module.
 // INVENTED -- offsets read off the asm, names are placeholders.
 struct RaceSub
 {
-    u8 filler0[0x4];
-    Vec unk4;
-    f32 unk10;
+    u8 filler0[0x14];
     u32 unk14;
-    u8 filler18[0x22 - 0x18];
-    s16 unk22;
-    u8 filler24[0x1CE - 0x24];
-    s16 unk1CE;
-    s16 unk1D0;
-    u8 filler1D2[0x1D4 - 0x1D2];
-    f32 unk1D4;
-    f32 unk1D8;
-    f32 unk1DC;
-    f32 unk1E0;
-    f32 unk1E4;
-    f32 unk1E8;
-    u8 filler1EC[0x1F0 - 0x1EC];
-    f32 unk1F0;
-    u8 filler1F4[0x262 - 0x1F4];
-    u8 unk262;
-    u8 unk263;
-    u8 filler264[0x26A - 0x264];
+    u8 filler18[0x264 - 0x18];
+    u8 unk264;
+    u8 filler265[0x26A - 0x265];
     s16 unk26A;
-    s16 unk26C;
 };
 
 #pragma force_active on
-void lbl_00006248(struct Ball *ball)
+void lbl_00005CEC(struct Ball *ball)
 {
     struct RaceSub *st = (struct RaceSub *)ball->unk144;
+    u32 flags;
 
-    if (st->unk14 & 8)
+    if (st->unk264 != 0)
     {
-        lbl_000062F8(ball);
-        st->unk14 &= ~8;
-        st->unk14 |= 0x10;
+        flags = st->unk14;
+        if (!(flags & 8))
+        {
+            if (flags & 0x20)
+                lbl_00005DDC(ball);
+            else if (controllerInfo[playerControllerIDs[ball->playerId]].pressed.button & 0x100)
+                st->unk14 = flags | 0x80;
+        }
     }
-    if (st->unk26C <= 0 && (st->unk14 & 0x10))
+    if (st->unk26A <= 0 && (st->unk14 & 4))
+        lbl_000061D0(ball);
+    if (st->unk14 & 0x80)
     {
-        if (st->unk263 == 6 || st->unk263 == 5)
-            u_play_sound_0(0x168);
-        lbl_000068E8(ball);
+        st->unk14 &= ~0x80;
+        lbl_00005FC4(ball);
     }
-    if (st->unk14 & 0x10)
-        lbl_000065A0(ball);
+    if (st->unk14 & 4)
+        lbl_0000612C(ball);
 }
 #pragma force_active reset

@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_00010B70.
+ * mini_race.c -- REL module: isolated function lbl_00010130.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -236,6 +236,7 @@ extern void u_draw_ball_shadow();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_00000228(void);
 void lbl_0000048C(void);
 void lbl_0000056C(void);
 void lbl_000007EC(void);
@@ -259,6 +260,9 @@ void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_00005CEC(void);
+void lbl_00005DDC(void);
+void lbl_00005FC4(void);
 void lbl_0000612C(void);
 void lbl_000061D0(void);
 void lbl_00006248(void);
@@ -325,6 +329,7 @@ void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
 void lbl_0000DE5C(void);
+void lbl_0000DF6C(void);
 void lbl_0000E11C(void);
 void lbl_0000E1CC(void);
 void lbl_0000E520(void);
@@ -342,7 +347,7 @@ void lbl_0000FD48(void);
 void lbl_0000FDD8(void);
 void lbl_0000FE90(void);
 void lbl_0000FEF8(void);
-void lbl_00010130(void);
+void lbl_00010130(s16, f32, f32);
 void lbl_00010218(void);
 void lbl_000102FC(void);
 void lbl_00010484(void);
@@ -352,7 +357,7 @@ void lbl_0001075C(void);
 void lbl_000107D0(void);
 void lbl_000108E8(void);
 void lbl_00010918(void);
-void lbl_00010B70(struct Ball *ball);
+void lbl_00010B70(void);
 void lbl_00010BC8(void);
 void lbl_00010DCC(void);
 void lbl_00011128(void);
@@ -362,9 +367,35 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-void lbl_00010B70(struct Ball *ball)
+void lbl_00010130(s16 arg0, f32 x, f32 y)
 {
-    extern int thread_create();
-    apeThreadNo[ball->playerId] = thread_create(lbl_00010BC8, ball->ape, 5);
+    u8 *cfg = lbl_00013C48;
+    struct Sprite *sprite;
+    int tag;
+
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    tag = arg0 + 0x67;
+    sprite->tag = tag;
+    sprite->x = x;
+    sprite->y = y;
+    sprite->fontId = 0x45;
+    sprite->textAlign = 0;
+    sprite->depth = *(f32 *)(cfg + 0xD8);
+    sprite->flags = 0x200000;
+    sprintf(sprite->text, (char *)lbl_00015DE0);
+
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    sprite->tag = tag;
+    sprite->x = x;
+    sprite->y = *(f32 *)(cfg + 0xAC) + y;
+    sprite->fontId = 0x45;
+    sprite->textAlign = 0;
+    sprite->depth = *(f32 *)(cfg + 0xD8);
+    sprite->flags = 0x200000;
+    sprintf(sprite->text, (char *)lbl_00015DE8);
 }
 #pragma force_active reset

@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_0000CA9C.
+ * mini_race.c -- REL module: isolated function lbl_0000C5EC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -236,6 +236,7 @@ extern void u_draw_ball_shadow();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_00000228(void);
 void lbl_0000048C(void);
 void lbl_0000056C(void);
 void lbl_000007EC(void);
@@ -259,6 +260,9 @@ void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_00005CEC(void);
+void lbl_00005DDC(void);
+void lbl_00005FC4(void);
 void lbl_0000612C(void);
 void lbl_000061D0(void);
 void lbl_00006248(void);
@@ -304,14 +308,14 @@ void lbl_0000C230(void);
 void lbl_0000C2B4(void);
 void lbl_0000C438(void);
 void lbl_0000C590(void);
-void lbl_0000C5EC(void);
+void lbl_0000C5EC(s8 *str, struct Sprite *sprite);
 void lbl_0000C668(void);
 void lbl_0000C76C(void);
 void lbl_0000C7E4(void);
 void lbl_0000C93C(void);
 void lbl_0000C9B0(void);
 void lbl_0000CA24(void);
-void lbl_0000CA9C(s16 idx, f32 x, f32 y);
+void lbl_0000CA9C(void);
 void lbl_0000CB3C(void);
 void lbl_0000CE24(void);
 void lbl_0000CF44(void);
@@ -325,6 +329,7 @@ void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
 void lbl_0000DE5C(void);
+void lbl_0000DF6C(void);
 void lbl_0000E11C(void);
 void lbl_0000E1CC(void);
 void lbl_0000E520(void);
@@ -361,19 +366,10 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
-void lbl_0000CA9C(s16 idx, f32 x, f32 y)
+#pragma force_active on
+void lbl_0000C5EC(s8 *str, struct Sprite *sprite)
 {
-    struct Sprite *sprite = create_sprite();
-    if (sprite == NULL)
-        return;
-    sprite->tag = idx + 0x67;
-    sprite->type = 1;
-    sprite->fontId = 0x45;
-    sprite->x = x;
-    sprite->y = y;
-    sprite->depth = *(f32 *)lbl_00013D18;
-    sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000CB3C;
-    sprite->userVar = idx;
-    sprintf(sprite->text, (char *)lbl_00015CAC);
+    sprintf(sprite->text, (char *)lbl_00015C60,
+            *(s32 *)lbl_1000106C % 60 * 100 / 60);
 }
 #pragma force_active reset

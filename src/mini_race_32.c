@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_0000AC30.
+ * mini_race.c -- REL module: isolated function lbl_00007800.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -236,6 +236,7 @@ extern void u_draw_ball_shadow();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_00000228(void);
 void lbl_0000048C(void);
 void lbl_0000056C(void);
 void lbl_000007EC(void);
@@ -259,6 +260,9 @@ void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_00005CEC(void);
+void lbl_00005DDC(void);
+void lbl_00005FC4(void);
 void lbl_0000612C(void);
 void lbl_000061D0(void);
 void lbl_00006248(void);
@@ -288,8 +292,8 @@ void lbl_00008C4C(void);
 void lbl_0000A9C4(void);
 void lbl_0000A9EC(void);
 void lbl_0000AC30(void);
-void lbl_0000ACF4(struct Ball *ball);
-void lbl_0000AD74(struct Ball *ball);
+void lbl_0000ACF4(void);
+void lbl_0000AD74(void);
 void lbl_0000ADDC(void);
 void lbl_0000AFF8(void);
 void lbl_0000B2F0(void);
@@ -325,6 +329,7 @@ void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
 void lbl_0000DE5C(void);
+void lbl_0000DF6C(void);
 void lbl_0000E11C(void);
 void lbl_0000E1CC(void);
 void lbl_0000E520(void);
@@ -361,63 +366,29 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
+
 /* ---- handwritten ---- */
 
 // Per-racer state hanging off struct Ball::unk144 inside this module.
 // INVENTED -- offsets read off the asm, names are placeholders.
-struct RaceSub
+struct RaceSub2
 {
-    u8 filler0[0x4];
-    Vec unk4;
-    f32 unk10;
+    u8 filler0[0x14];
     u32 unk14;
-    u8 filler18[0x22 - 0x18];
-    s16 unk22;
-    u8 filler24[0x1CE - 0x24];
-    s16 unk1CE;
-    s16 unk1D0;
-    u8 filler1D2[0x1D4 - 0x1D2];
-    f32 unk1D4;
-    f32 unk1D8;
+    u8 filler18[0x1E - 0x18];
+    u16 unk1E;
+    u8 filler20[0x1DC - 0x20];
     f32 unk1DC;
-    f32 unk1E0;
+    u8 filler1E0[0x1E4 - 0x1E0];
     f32 unk1E4;
-    f32 unk1E8;
-    u8 filler1EC[0x1F0 - 0x1EC];
-    f32 unk1F0;
-    u8 filler1F4[0x262 - 0x1F4];
-    u8 unk262;
-    u8 unk263;
-    u8 filler264[0x26A - 0x264];
-    s16 unk26A;
-    s16 unk26C;
+    u8 filler1E8[0x1F8 - 0x1E8];
+    f32 unk1F8;
 };
 
 #pragma force_active on
-void lbl_0000AC30(void)
+asm void lbl_00007800(void)
 {
-    struct Ball *ball = ballInfo;
-    s16 i;
-    struct RaceSub *st;
-
-    for (i = 0; i < 4; i++, ball++)
-    {
-        if (*(s8 *)ball != 2)
-            continue;
-        st = (struct RaceSub *)ball->unk144;
-        if (!(st->unk14 & 0x8000))
-            continue;
-        if ((st->unk14 & 0x10000) && (globalAnimTimer & 4))
-            continue;
-        switch (st->unk263)
-        {
-        case 6:
-            lbl_0000ACF4(ball);
-            break;
-        case 5:
-            lbl_0000AD74(ball);
-            break;
-        }
-    }
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00007800.s"
 }
 #pragma force_active reset

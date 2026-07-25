@@ -132,10 +132,10 @@ extern void u_set_minigame_callbacks_2();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
-static void lbl_0000020C(void);
-static void lbl_00000718(void);
-static void lbl_000009EC(void);
-static void lbl_00000F98(void);
+void lbl_0000020C(void);
+void lbl_00000718(void);
+void lbl_000009EC(void);
+void lbl_00000F98(void);
 void lbl_00001888(void);
 void lbl_00001908(void);
 void lbl_00001B14(void);
@@ -241,39 +241,13 @@ void lbl_0000E870(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
-asm void _prolog(void)
+void _prolog(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/_prolog.s"
-}
-asm void _epilog(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/_epilog.s"
-}
-asm void _unresolved(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/_unresolved.s"
-}
-static asm void lbl_0000020C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000020C.s"
-}
-static asm void lbl_00000718(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00000718.s"
-}
-static asm void lbl_000009EC(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_000009EC.s"
-}
-static asm void lbl_00000F98(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00000F98.s"
+    u_set_minigame_callbacks_2(lbl_00000718, lbl_000009EC, lbl_00000F98,
+                               (void (*)(struct Ball *))lbl_00007878,
+                               (void (*)(struct Camera *, struct Ball *))lbl_0000871C);
+    lbl_0000020C();
+    gameSubmodeRequest = 0x97;
+    puts((char *)lbl_00015024);
 }
 #pragma force_active reset
