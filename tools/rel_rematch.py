@@ -158,9 +158,22 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('module')
     ap.add_argument('--add', action='append', default=[])
+    ap.add_argument('--extra-start', action='append', default=[],
+                    help='extra rel_split function-start label to preserve '
+                         'across the re-split (repeatable).  Required for a '
+                         'module whose handlers are reached only through a '
+                         '.data function-pointer table -- see below.')
+    ap.add_argument('--extra-start-file',
+                    help='file with one --extra-start label per line; blank '
+                         'lines and #comments ignored')
     ap.add_argument('--monolith-rev', default=DRAFT_REV)
     args = ap.parse_args()
     mod = args.module
+    if args.extra_start_file:
+        for line in open(args.extra_start_file):
+            line = line.split('#')[0].strip()
+            if line:
+                args.extra_start.append(line)
 
     files = src_files(mod)
     if not files:
@@ -236,7 +249,14 @@ def main():
     # function-pointer table (`blrl`) is not a `bl`/`@ha` target, so without an
     # explicit --extra-start rel_split neither isolates it nor accepts it as a
     # range endpoint ("unknown end label ...").  Force them all.
-    extra = sorted(pure_labels | set(args.add))
+    # NOTE this used to be `pure_labels | set(args.add)`, which silently threw
+    # away any --extra-start set the original split needed.  The failure is a
+    # FALSE NEGATIVE, not a crash: the re-split merges the invisible handlers
+    # into the preceding function, so a correctly-converted 11-instruction
+    # function comes back measured as a 716-instruction one with 700 diffs.
+    # On option (47 auto-detected starts vs 71 real) that made per-function
+    # feedback meaningless.  Keep the caller's starts.
+    extra = sorted(pure_labels | set(args.add) | set(args.extra_start))
 
     # PROBE: split with no extern-data / no isolates to learn the auto data
     # externs; the committed extras are the imports that need --extern-data.

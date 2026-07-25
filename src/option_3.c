@@ -1,5 +1,5 @@
 /*
- * option.c -- REL module: isolated function _prolog.
+ * option.c -- REL module: isolated function _unresolved.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -150,22 +150,23 @@ void lbl_0000B218(void);
 void lbl_0000C148(void);
 
 #pragma force_active on
-void _prolog(void)
+void _unresolved(void)
 {
-    *(s32 *)lbl_802F2130 = 1;
-    u_clear_buffers_2_and_5();
-    free_all_bitmap_groups_except_com();
-    func_800249D4();
-    unload_stage();
-    light_init(0);
-    event_finish_all();
-    event_start(0x10);
-    event_start(0x12);
-    call_bitmap_load_group(4);
-    lbl_000047D0();
-    start_screen_fade(0x100, 0, 30);
-    lbl_802F1B74 = lbl_00000258;
-    lbl_802F1B70 = lbl_00003F10;
-    puts((char *)lbl_0000C6A8);
+    char *s;
+    u32 i;
+    u32 *sp;
+
+    s = (char *)lbl_0000C640;
+    puts(s + 0x88);
+    puts(s + 0xB0);
+
+    i = 0;
+    sp = (u32 *)OSGetStackPointer();
+    while (sp != NULL && (u32)sp != 0xFFFFFFFF && i++ < 16)
+    {
+        printf(s + 0xD8, (u32)sp, sp[0], sp[1]);
+        sp = (u32 *)sp[0];
+    }
+    OSPanic(s + 0xF4, 0x97, s + 0x100);
 }
 #pragma force_active reset

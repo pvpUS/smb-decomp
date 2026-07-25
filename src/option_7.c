@@ -1,5 +1,5 @@
 /*
- * option.c -- REL module: isolated function _prolog.
+ * option.c -- REL module: isolated function lbl_0000057C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -109,6 +109,7 @@ void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
 void lbl_00000258(void);
+static void lbl_0000057C(void);
 void lbl_00000714(void);
 void lbl_00001598(void);
 void lbl_0000266C(void);
@@ -150,22 +151,13 @@ void lbl_0000B218(void);
 void lbl_0000C148(void);
 
 #pragma force_active on
-void _prolog(void)
+static void lbl_0000057C(void)
 {
-    *(s32 *)lbl_802F2130 = 1;
-    u_clear_buffers_2_and_5();
-    free_all_bitmap_groups_except_com();
-    func_800249D4();
-    unload_stage();
-    light_init(0);
-    event_finish_all();
-    event_start(0x10);
-    event_start(0x12);
-    call_bitmap_load_group(4);
-    lbl_000047D0();
-    start_screen_fade(0x100, 0, 30);
-    lbl_802F1B74 = lbl_00000258;
-    lbl_802F1B70 = lbl_00003F10;
-    puts((char *)lbl_0000C6A8);
+    u_play_music(*(u8 *)lbl_0000C6A4, 0);
+    lbl_00007F90();
+    *(s32 *)(lbl_10000000 + 0xD8) = 30;
+    *(s16 *)lbl_100001B4 = 0;
+    submodeFinishFunc = lbl_00000714;
+    gameSubmodeRequest = 0xB1;
 }
 #pragma force_active reset

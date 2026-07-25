@@ -1,5 +1,5 @@
 /*
- * option.c -- REL module: isolated function _prolog.
+ * option.c -- REL module: isolated function lbl_000047D0.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -150,22 +150,21 @@ void lbl_0000B218(void);
 void lbl_0000C148(void);
 
 #pragma force_active on
-void _prolog(void)
+void lbl_000047D0(void)
 {
-    *(s32 *)lbl_802F2130 = 1;
-    u_clear_buffers_2_and_5();
-    free_all_bitmap_groups_except_com();
-    func_800249D4();
-    unload_stage();
-    light_init(0);
-    event_finish_all();
-    event_start(0x10);
-    event_start(0x12);
-    call_bitmap_load_group(4);
-    lbl_000047D0();
-    start_screen_fade(0x100, 0, 30);
-    lbl_802F1B74 = lbl_00000258;
-    lbl_802F1B70 = lbl_00003F10;
-    puts((char *)lbl_0000C6A8);
+    u8 *p = lbl_0000C370;
+    struct Sprite *sprite = create_sprite();
+
+    if (sprite != NULL)
+    {
+        sprite->type = SPRITE_TYPE_BITMAP;
+        sprite->bmpId = 0x404;
+        sprite->x = *(f32 *)(p + 0x64);
+        sprite->y = *(f32 *)(p + 0x68);
+        sprite->depth = *(f32 *)(p + 0x6C);
+        sprite->textAlign = 4;
+        sprite->flags |= 0x40000;
+        sprintf(sprite->text, (char *)lbl_0000CA30);
+    }
 }
 #pragma force_active reset
