@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function _prolog.
+ * test_mode.c -- REL module: isolated function _unresolved.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -246,10 +246,23 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void _prolog(void)
+void _unresolved(void)
 {
-    lbl_802F1B74 = lbl_00000208;
-    lbl_802F1B70 = lbl_00009060;
-    puts((char *)lbl_00010350);
+    char *s;
+    u32 i;
+    u32 *sp;
+
+    s = (char *)lbl_000102B0;
+    puts(s + 0xC8);
+    puts(s + 0xF0);
+
+    i = 0;
+    sp = (u32 *)OSGetStackPointer();
+    while (sp != NULL && (u32)sp != 0xFFFFFFFF && i++ < 16)
+    {
+        printf(s + 0x118, (u32)sp, sp[0], sp[1]);
+        sp = (u32 *)sp[0];
+    }
+    OSPanic(s + 0x134, 154, s + 0x140);
 }
 #pragma force_active reset

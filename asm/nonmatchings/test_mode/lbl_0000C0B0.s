@@ -1,0 +1,68 @@
+/* 0000C0B0 7C0802A6 */ mflr r0
+/* 0000C0B4 3C600000 */ lis r3, lbl_10000FA8@ha
+/* 0000C0B8 90010004 */ stw r0, 4(r1)
+/* 0000C0BC 9421FFF0 */ stwu r1, -0x10(r1)
+/* 0000C0C0 93E1000C */ stw r31, 0xc(r1)
+/* 0000C0C4 3BE30000 */ addi r31, r3, lbl_10000FA8@l
+/* 0000C0C8 93C10008 */ stw r30, 8(r1)
+/* 0000C0CC 480008B9 */ bl lbl_0000C984
+/* 0000C0D0 3BDF2C24 */ addi r30, r31, 0x2c24
+/* 0000C0D4 801F2C24 */ lwz r0, 0x2c24(r31)
+/* 0000C0D8 28000000 */ cmplwi r0, 0
+/* 0000C0DC 40820034 */ bne lbl_0000C110
+/* 0000C0E0 38600100 */ li r3, 0x100
+/* 0000C0E4 38800100 */ li r4, 0x100
+/* 0000C0E8 38A00001 */ li r5, 1
+/* 0000C0EC 38C00000 */ li r6, 0
+/* 0000C0F0 38E00000 */ li r7, 0
+/* 0000C0F4 4BFF4069 */ bl GXGetTexBufferSize
+/* 0000C0F8 3C800000 */ lis r4, __OSCurrHeap@ha
+/* 0000C0FC 38A40000 */ addi r5, r4, __OSCurrHeap@l
+/* 0000C100 38830000 */ addi r4, r3, 0
+/* 0000C104 80650000 */ lwz r3, 0(r5)
+/* 0000C108 4BFF4055 */ bl OSAllocFromHeap
+/* 0000C10C 907E0000 */ stw r3, 0(r30)
+lbl_0000C110:
+/* 0000C110 809E0000 */ lwz r4, 0(r30)
+/* 0000C114 387F2C04 */ addi r3, r31, 0x2c04
+/* 0000C118 38A00100 */ li r5, 0x100
+/* 0000C11C 38C00100 */ li r6, 0x100
+/* 0000C120 38E00001 */ li r7, 1
+/* 0000C124 39000000 */ li r8, 0
+/* 0000C128 39200000 */ li r9, 0
+/* 0000C12C 39400000 */ li r10, 0
+/* 0000C130 4BFF402D */ bl GXInitTexObj
+/* 0000C134 3BDF2C48 */ addi r30, r31, 0x2c48
+/* 0000C138 801F2C48 */ lwz r0, 0x2c48(r31)
+/* 0000C13C 28000000 */ cmplwi r0, 0
+/* 0000C140 40820034 */ bne lbl_0000C174
+/* 0000C144 38600280 */ li r3, 0x280
+/* 0000C148 388001E0 */ li r4, 0x1e0
+/* 0000C14C 38A00004 */ li r5, 4
+/* 0000C150 38C00000 */ li r6, 0
+/* 0000C154 38E00000 */ li r7, 0
+/* 0000C158 4BFF4005 */ bl GXGetTexBufferSize
+/* 0000C15C 3C800000 */ lis r4, __OSCurrHeap@ha
+/* 0000C160 38A40000 */ addi r5, r4, __OSCurrHeap@l
+/* 0000C164 38830000 */ addi r4, r3, 0
+/* 0000C168 80650000 */ lwz r3, 0(r5)
+/* 0000C16C 4BFF3FF1 */ bl OSAllocFromHeap
+/* 0000C170 907E0000 */ stw r3, 0(r30)
+lbl_0000C174:
+/* 0000C174 3C600000 */ lis r3, currRenderMode@ha
+/* 0000C178 809E0000 */ lwz r4, 0(r30)
+/* 0000C17C 80C30000 */ lwz r6, currRenderMode@l(r3)
+/* 0000C180 387F2C28 */ addi r3, r31, 0x2c28
+/* 0000C184 38E00004 */ li r7, 4
+/* 0000C188 A0A60004 */ lhz r5, 4(r6)
+/* 0000C18C 39000000 */ li r8, 0
+/* 0000C190 A0C60006 */ lhz r6, 6(r6)
+/* 0000C194 39200000 */ li r9, 0
+/* 0000C198 39400000 */ li r10, 0
+/* 0000C19C 4BFF3FC1 */ bl GXInitTexObj
+/* 0000C1A0 80010014 */ lwz r0, 0x14(r1)
+/* 0000C1A4 83E1000C */ lwz r31, 0xc(r1)
+/* 0000C1A8 83C10008 */ lwz r30, 8(r1)
+/* 0000C1AC 7C0803A6 */ mtlr r0
+/* 0000C1B0 38210010 */ addi r1, r1, 0x10
+/* 0000C1B4 4E800020 */ blr 

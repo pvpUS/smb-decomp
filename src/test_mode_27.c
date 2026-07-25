@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function _prolog.
+ * test_mode.c -- REL module: isolated function lbl_0000BE94.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -246,10 +246,7 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void _prolog(void)
+void lbl_0000BE94(void)
 {
-    lbl_802F1B74 = lbl_00000208;
-    lbl_802F1B70 = lbl_00009060;
-    puts((char *)lbl_00010350);
 }
 #pragma force_active reset

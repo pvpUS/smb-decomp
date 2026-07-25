@@ -1,0 +1,100 @@
+/* 0000C260 7C0802A6 */ mflr r0
+/* 0000C264 3C800100 */ lis r4, 0x100
+/* 0000C268 90010004 */ stw r0, 4(r1)
+/* 0000C26C 3C600000 */ lis r3, lbl_00010150@ha
+/* 0000C270 3884FFFF */ addi r4, r4, -1
+/* 0000C274 9421FF98 */ stwu r1, -0x68(r1)
+/* 0000C278 93E10064 */ stw r31, 0x64(r1)
+/* 0000C27C 93C10060 */ stw r30, 0x60(r1)
+/* 0000C280 3BC30000 */ addi r30, r3, lbl_00010150@l
+/* 0000C284 38610008 */ addi r3, r1, 8
+/* 0000C288 801E0000 */ lwz r0, 0(r30)
+/* 0000C28C 90010008 */ stw r0, 8(r1)
+/* 0000C290 4BFF3ECD */ bl GXSetCopyClear
+/* 0000C294 38600000 */ li r3, 0
+/* 0000C298 38800000 */ li r4, 0
+/* 0000C29C 38A00020 */ li r5, 0x20
+/* 0000C2A0 38C00020 */ li r6, 0x20
+/* 0000C2A4 4BFF3EB9 */ bl GXSetTexCopySrc
+/* 0000C2A8 38600020 */ li r3, 0x20
+/* 0000C2AC 38800020 */ li r4, 0x20
+/* 0000C2B0 38A00000 */ li r5, 0
+/* 0000C2B4 38C00000 */ li r6, 0
+/* 0000C2B8 4BFF3EA5 */ bl GXSetTexCopyDst
+/* 0000C2BC 3C600000 */ lis r3, lbl_10003BAC@ha
+/* 0000C2C0 38630000 */ addi r3, r3, lbl_10003BAC@l
+/* 0000C2C4 3BE30020 */ addi r31, r3, 0x20
+/* 0000C2C8 80630020 */ lwz r3, 0x20(r3)
+/* 0000C2CC 38800001 */ li r4, 1
+/* 0000C2D0 4BFF3E8D */ bl GXCopyTex
+/* 0000C2D4 C03E0004 */ lfs f1, 4(r30)
+/* 0000C2D8 C07E0008 */ lfs f3, 8(r30)
+/* 0000C2DC FC400890 */ fmr f2, f1
+/* 0000C2E0 C0DE000C */ lfs f6, 0xc(r30)
+/* 0000C2E4 FC801890 */ fmr f4, f3
+/* 0000C2E8 FCA00890 */ fmr f5, f1
+/* 0000C2EC 4BFF3E71 */ bl GXSetViewport
+/* 0000C2F0 38600000 */ li r3, 0
+/* 0000C2F4 38800000 */ li r4, 0
+/* 0000C2F8 38A00100 */ li r5, 0x100
+/* 0000C2FC 38C00100 */ li r6, 0x100
+/* 0000C300 4BFF3E5D */ bl GXSetScissor
+/* 0000C304 C03E0010 */ lfs f1, 0x10(r30)
+/* 0000C308 3861000C */ addi r3, r1, 0xc
+/* 0000C30C C05E0014 */ lfs f2, 0x14(r30)
+/* 0000C310 C07E0018 */ lfs f3, 0x18(r30)
+/* 0000C314 C09E001C */ lfs f4, 0x1c(r30)
+/* 0000C318 4BFF3E45 */ bl C_MTXPerspective
+/* 0000C31C 3861000C */ addi r3, r1, 0xc
+/* 0000C320 38800000 */ li r4, 0
+/* 0000C324 4BFF3E39 */ bl GXSetProjection
+/* 0000C328 48000AB9 */ bl lbl_0000CDE0
+/* 0000C32C 38600000 */ li r3, 0
+/* 0000C330 38800000 */ li r4, 0
+/* 0000C334 38A00100 */ li r5, 0x100
+/* 0000C338 38C00100 */ li r6, 0x100
+/* 0000C33C 4BFF3E21 */ bl GXSetTexCopySrc
+/* 0000C340 38600100 */ li r3, 0x100
+/* 0000C344 38800100 */ li r4, 0x100
+/* 0000C348 38A00028 */ li r5, 0x28
+/* 0000C34C 38C00000 */ li r6, 0
+/* 0000C350 4BFF3E0D */ bl GXSetTexCopyDst
+/* 0000C354 807F0000 */ lwz r3, 0(r31)
+/* 0000C358 38800001 */ li r4, 1
+/* 0000C35C 4BFF3E01 */ bl GXCopyTex
+/* 0000C360 3C600000 */ lis r3, currRenderMode@ha
+/* 0000C364 C03E0004 */ lfs f1, 4(r30)
+/* 0000C368 3BE30000 */ addi r31, r3, currRenderMode@l
+/* 0000C36C C0DE000C */ lfs f6, 0xc(r30)
+/* 0000C370 80DF0000 */ lwz r6, 0(r31)
+/* 0000C374 3CA00000 */ lis r5, lbl_00010170@ha
+/* 0000C378 3C600000 */ lis r3, lbl_00010170@ha
+/* 0000C37C C8E50000 */ lfd f7, lbl_00010170@l(r5)
+/* 0000C380 A0860004 */ lhz r4, 4(r6)
+/* 0000C384 A0060008 */ lhz r0, 8(r6)
+/* 0000C388 FC400890 */ fmr f2, f1
+/* 0000C38C 9081005C */ stw r4, 0x5c(r1)
+/* 0000C390 3C804330 */ lis r4, 0x4330
+/* 0000C394 C8830000 */ lfd f4, lbl_00010170@l(r3)
+/* 0000C398 90010054 */ stw r0, 0x54(r1)
+/* 0000C39C FCA00890 */ fmr f5, f1
+/* 0000C3A0 90810058 */ stw r4, 0x58(r1)
+/* 0000C3A4 90810050 */ stw r4, 0x50(r1)
+/* 0000C3A8 C8610058 */ lfd f3, 0x58(r1)
+/* 0000C3AC C8010050 */ lfd f0, 0x50(r1)
+/* 0000C3B0 EC633828 */ fsubs f3, f3, f7
+/* 0000C3B4 EC802028 */ fsubs f4, f0, f4
+/* 0000C3B8 4BFF3DA5 */ bl GXSetViewport
+/* 0000C3BC 80DF0000 */ lwz r6, 0(r31)
+/* 0000C3C0 38600000 */ li r3, 0
+/* 0000C3C4 38800000 */ li r4, 0
+/* 0000C3C8 A0A60004 */ lhz r5, 4(r6)
+/* 0000C3CC A0C60006 */ lhz r6, 6(r6)
+/* 0000C3D0 4BFF3D8D */ bl GXSetScissor
+/* 0000C3D4 4BFF3D89 */ bl reset_camera_perspective
+/* 0000C3D8 8001006C */ lwz r0, 0x6c(r1)
+/* 0000C3DC 83E10064 */ lwz r31, 0x64(r1)
+/* 0000C3E0 83C10060 */ lwz r30, 0x60(r1)
+/* 0000C3E4 7C0803A6 */ mtlr r0
+/* 0000C3E8 38210068 */ addi r1, r1, 0x68
+/* 0000C3EC 4E800020 */ blr 

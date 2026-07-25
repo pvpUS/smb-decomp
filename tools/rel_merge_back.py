@@ -58,11 +58,18 @@ MODULES = {
     'test_mode':      ('test_mode',      'mkbe.test_mode.rel'),
 }
 
-BUILD = (
-    "/c/msys64/usr/bin/bash.exe -lc 'export DEVKITPPC=/c/devkitPro/devkitPPC "
-    'PATH="/mingw64/bin:$PATH" TMP=C:/tmp TEMP=C:/tmp; cd /c/smbwork; '
-    "make OS=Windows_NT COMPILER_VERSION=1.1 HOSTCC=gcc CC_CHECK=true {target} "
-    "2>&1 | tail -6'"
+# The native CW tools need a real TMP, and make/gcc live in msys2, so the build
+# has to go through `bash -lc`.  Pass it as an ARGV LIST, never shell=True:
+# on Windows shell=True means cmd.exe, which does not understand the single
+# quotes around the script and hands bash a mangled argv.  That failed silently
+# with rc 255 and no output, so verify() would go on to hash whatever .rel was
+# already on disk -- reporting GOLDEN without having built anything.  The whole
+# point of this tool is to catch that class of lie, so it must not commit it.
+BASH = 'C:/msys64/usr/bin/bash.exe'
+BUILD_SCRIPT = (
+    'export DEVKITPPC=/c/devkitPro/devkitPPC PATH="/mingw64/bin:$PATH" '
+    'TMP=C:/tmp TEMP=C:/tmp; cd /c/smbwork; '
+    'make OS=Windows_NT COMPILER_VERSION=1.1 HOSTCC=gcc CC_CHECK=true {target}'
 )
 
 
@@ -131,6 +138,25 @@ def merge(module, dry):
         shutil.copy2(p, os.path.join(REPO, 'src', os.path.basename(p)))
     for p in warm_asm:
         shutil.copy2(p, os.path.join(REPO, 'asm', os.path.basename(p)))
+
+    # Per-function bodies. For a module already split in main these are
+    # deterministic and identical, so this is a no-op -- but the FIRST time a
+    # module is split they only exist in the warm copy, and without them every
+    # asm-include stub fails with "cannot be opened".
+    warm_nm = os.path.join(src_root, 'asm', 'nonmatchings', stem)
+    main_nm = os.path.join(REPO, 'asm', 'nonmatchings', stem)
+    if os.path.isdir(warm_nm):
+        os.makedirs(main_nm, exist_ok=True)
+        added = 0
+        for name in os.listdir(warm_nm):
+            dst = os.path.join(main_nm, name)
+            if not os.path.exists(dst):
+                shutil.copy2(os.path.join(warm_nm, name), dst)
+                added += 1
+        if added:
+            print('  copied %d new per-function asm bodies (first split of this '
+                  'module in the main tree)' % added)
+
     replace_sources(module, items)
     return True
 
@@ -145,7 +171,15 @@ def verify(module):
         os.remove(os.path.join(REPO, tgt))
     except FileNotFoundError:
         pass
-    subprocess.run(BUILD.format(target=tgt), shell=True, cwd=REPO)
+    r = subprocess.run([BASH, '-lc', BUILD_SCRIPT.format(target=tgt)],
+                       cwd=REPO, capture_output=True, text=True)
+    log = (r.stdout or '') + (r.stderr or '')
+    if r.returncode != 0 or re.search(r'^#\s+Error|Errors caused tool to abort',
+                                      log, re.M):
+        print('  BUILD FAILED (rc %d):' % r.returncode)
+        print('\n'.join('    ' + l for l in log.strip().split('\n')[-15:]))
+        return False
+
     got = subprocess.run(['sha1sum', tgt], cwd=REPO, capture_output=True,
                          text=True).stdout.split()
     got = got[0] if got else '(build produced nothing)'

@@ -1,0 +1,99 @@
+/* 0000C984 7C0802A6 */ mflr r0
+/* 0000C988 3C600000 */ lis r3, lbl_10000FAC@ha
+/* 0000C98C 90010004 */ stw r0, 4(r1)
+/* 0000C990 38030000 */ addi r0, r3, lbl_10000FAC@l
+/* 0000C994 3C600000 */ lis r3, lbl_00010150@ha
+/* 0000C998 9421FFC8 */ stwu r1, -0x38(r1)
+/* 0000C99C 93E10034 */ stw r31, 0x34(r1)
+/* 0000C9A0 3FE04330 */ lis r31, 0x4330
+/* 0000C9A4 93C10030 */ stw r30, 0x30(r1)
+/* 0000C9A8 3BC30000 */ addi r30, r3, lbl_00010150@l
+/* 0000C9AC 93A1002C */ stw r29, 0x2c(r1)
+/* 0000C9B0 3BA00100 */ li r29, 0x100
+/* 0000C9B4 93810028 */ stw r28, 0x28(r1)
+/* 0000C9B8 7C1C0378 */ mr r28, r0
+lbl_0000C9BC:
+/* 0000C9BC 4BFF37A1 */ bl rand
+/* 0000C9C0 6C608000 */ xoris r0, r3, 0x8000
+/* 0000C9C4 C05E0058 */ lfs f2, 0x58(r30)
+/* 0000C9C8 90010024 */ stw r0, 0x24(r1)
+/* 0000C9CC 3C600000 */ lis r3, lbl_000101B8@ha
+/* 0000C9D0 C8830000 */ lfd f4, lbl_000101B8@l(r3)
+/* 0000C9D4 93E10020 */ stw r31, 0x20(r1)
+/* 0000C9D8 C03E002C */ lfs f1, 0x2c(r30)
+/* 0000C9DC C8610020 */ lfd f3, 0x20(r1)
+/* 0000C9E0 C01E0054 */ lfs f0, 0x54(r30)
+/* 0000C9E4 EC632028 */ fsubs f3, f3, f4
+/* 0000C9E8 EC431024 */ fdivs f2, f3, f2
+/* 0000C9EC EC220828 */ fsubs f1, f2, f1
+/* 0000C9F0 EC000072 */ fmuls f0, f0, f1
+/* 0000C9F4 D01C0000 */ stfs f0, 0(r28)
+/* 0000C9F8 4BFF3765 */ bl rand
+/* 0000C9FC 6C608000 */ xoris r0, r3, 0x8000
+/* 0000CA00 C05E0058 */ lfs f2, 0x58(r30)
+/* 0000CA04 9001001C */ stw r0, 0x1c(r1)
+/* 0000CA08 3C600000 */ lis r3, lbl_000101B8@ha
+/* 0000CA0C C8830000 */ lfd f4, lbl_000101B8@l(r3)
+/* 0000CA10 93E10018 */ stw r31, 0x18(r1)
+/* 0000CA14 C03E002C */ lfs f1, 0x2c(r30)
+/* 0000CA18 C8610018 */ lfd f3, 0x18(r1)
+/* 0000CA1C C01E005C */ lfs f0, 0x5c(r30)
+/* 0000CA20 EC632028 */ fsubs f3, f3, f4
+/* 0000CA24 EC431024 */ fdivs f2, f3, f2
+/* 0000CA28 EC220828 */ fsubs f1, f2, f1
+/* 0000CA2C EC000072 */ fmuls f0, f0, f1
+/* 0000CA30 D01C0004 */ stfs f0, 4(r28)
+/* 0000CA34 C01E0004 */ lfs f0, 4(r30)
+/* 0000CA38 D01C000C */ stfs f0, 0xc(r28)
+/* 0000CA3C C01E0004 */ lfs f0, 4(r30)
+/* 0000CA40 D01C0010 */ stfs f0, 0x10(r28)
+/* 0000CA44 4BFF3719 */ bl rand
+/* 0000CA48 7C600734 */ extsh r0, r3
+/* 0000CA4C B01C001C */ sth r0, 0x1c(r28)
+/* 0000CA50 4BFF370D */ bl rand
+/* 0000CA54 6C608000 */ xoris r0, r3, 0x8000
+/* 0000CA58 C07E0058 */ lfs f3, 0x58(r30)
+/* 0000CA5C 90010014 */ stw r0, 0x14(r1)
+/* 0000CA60 3C600000 */ lis r3, lbl_000101B8@ha
+/* 0000CA64 C8830000 */ lfd f4, lbl_000101B8@l(r3)
+/* 0000CA68 93E10010 */ stw r31, 0x10(r1)
+/* 0000CA6C C05E0064 */ lfs f2, 0x64(r30)
+/* 0000CA70 C8010010 */ lfd f0, 0x10(r1)
+/* 0000CA74 C03E002C */ lfs f1, 0x2c(r30)
+/* 0000CA78 EC802028 */ fsubs f4, f0, f4
+/* 0000CA7C C01E0060 */ lfs f0, 0x60(r30)
+/* 0000CA80 EC641824 */ fdivs f3, f4, f3
+/* 0000CA84 EC4200F2 */ fmuls f2, f2, f3
+/* 0000CA88 EC21102A */ fadds f1, f1, f2
+/* 0000CA8C EC000072 */ fmuls f0, f0, f1
+/* 0000CA90 D01C0020 */ stfs f0, 0x20(r28)
+/* 0000CA94 4BFF36C9 */ bl rand
+/* 0000CA98 6C608000 */ xoris r0, r3, 0x8000
+/* 0000CA9C C07E0058 */ lfs f3, 0x58(r30)
+/* 0000CAA0 9001000C */ stw r0, 0xc(r1)
+/* 0000CAA4 3C600000 */ lis r3, lbl_000101B8@ha
+/* 0000CAA8 C8830000 */ lfd f4, lbl_000101B8@l(r3)
+/* 0000CAAC 37BDFFFF */ addic. r29, r29, -1
+/* 0000CAB0 93E10008 */ stw r31, 8(r1)
+/* 0000CAB4 C05E0064 */ lfs f2, 0x64(r30)
+/* 0000CAB8 C8010008 */ lfd f0, 8(r1)
+/* 0000CABC C03E002C */ lfs f1, 0x2c(r30)
+/* 0000CAC0 EC802028 */ fsubs f4, f0, f4
+/* 0000CAC4 C01E0060 */ lfs f0, 0x60(r30)
+/* 0000CAC8 EC641824 */ fdivs f3, f4, f3
+/* 0000CACC EC4200F2 */ fmuls f2, f2, f3
+/* 0000CAD0 EC21102A */ fadds f1, f1, f2
+/* 0000CAD4 EC000072 */ fmuls f0, f0, f1
+/* 0000CAD8 D01C0024 */ stfs f0, 0x24(r28)
+/* 0000CADC C01E000C */ lfs f0, 0xc(r30)
+/* 0000CAE0 D01C0028 */ stfs f0, 0x28(r28)
+/* 0000CAE4 3B9C002C */ addi r28, r28, 0x2c
+/* 0000CAE8 4181FED4 */ bgt lbl_0000C9BC
+/* 0000CAEC 8001003C */ lwz r0, 0x3c(r1)
+/* 0000CAF0 83E10034 */ lwz r31, 0x34(r1)
+/* 0000CAF4 83C10030 */ lwz r30, 0x30(r1)
+/* 0000CAF8 7C0803A6 */ mtlr r0
+/* 0000CAFC 83A1002C */ lwz r29, 0x2c(r1)
+/* 0000CB00 83810028 */ lwz r28, 0x28(r1)
+/* 0000CB04 38210038 */ addi r1, r1, 0x38
+/* 0000CB08 4E800020 */ blr 

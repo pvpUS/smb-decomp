@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function _prolog.
+ * test_mode.c -- REL module: isolated function lbl_0000AEB8.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -54,6 +54,11 @@
 #include "perf.h"
 #include "course.h"
 
+struct TestModeVecKey
+{
+    /*0x00*/ Vec pos;
+    /*0x0C*/ float f;
+};
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/test_mode.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000FE78[];
@@ -219,7 +224,7 @@ void lbl_0000AD30(void);
 void lbl_0000ADEC(void);
 void lbl_0000ADF0(void);
 void lbl_0000AE7C(void);
-void lbl_0000AEB8(void);
+void lbl_0000AEB8(struct TestModeVecKey *, Vec *, float *);
 void lbl_0000AEDC(void);
 void lbl_0000B364(void);
 void lbl_0000B44C(void);
@@ -246,10 +251,9 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void _prolog(void)
+void lbl_0000AEB8(struct TestModeVecKey *src, Vec *dst, float *out)
 {
-    lbl_802F1B74 = lbl_00000208;
-    lbl_802F1B70 = lbl_00009060;
-    puts((char *)lbl_00010350);
+    *dst = src->pos;
+    *out = src->f;
 }
 #pragma force_active reset

@@ -1,0 +1,59 @@
+/* 0000B364 7C0802A6 */ mflr r0
+/* 0000B368 3C800000 */ lis r4, lbl_00010118@ha
+/* 0000B36C 90010004 */ stw r0, 4(r1)
+/* 0000B370 3C600000 */ lis r3, lbl_10000F70@ha
+/* 0000B374 9421FFE8 */ stwu r1, -0x18(r1)
+/* 0000B378 93E10014 */ stw r31, 0x14(r1)
+/* 0000B37C 3BE30000 */ addi r31, r3, lbl_10000F70@l
+/* 0000B380 93C10010 */ stw r30, 0x10(r1)
+/* 0000B384 3BC40000 */ addi r30, r4, lbl_00010118@l
+/* 0000B388 93A1000C */ stw r29, 0xc(r1)
+/* 0000B38C 48000A75 */ bl lbl_0000BE00
+/* 0000B390 C01E0000 */ lfs f0, 0(r30)
+/* 0000B394 38000002 */ li r0, 2
+/* 0000B398 3BBF0034 */ addi r29, r31, 0x34
+/* 0000B39C D01F0000 */ stfs f0, 0(r31)
+/* 0000B3A0 C01E0004 */ lfs f0, 4(r30)
+/* 0000B3A4 D01F0004 */ stfs f0, 4(r31)
+/* 0000B3A8 901F0008 */ stw r0, 8(r31)
+/* 0000B3AC C01E0008 */ lfs f0, 8(r30)
+/* 0000B3B0 D01F000C */ stfs f0, 0xc(r31)
+/* 0000B3B4 801F0034 */ lwz r0, 0x34(r31)
+/* 0000B3B8 28000000 */ cmplwi r0, 0
+/* 0000B3BC 4082003C */ bne lbl_0000B3F8
+/* 0000B3C0 38600280 */ li r3, 0x280
+/* 0000B3C4 388001E0 */ li r4, 0x1e0
+/* 0000B3C8 38A00004 */ li r5, 4
+/* 0000B3CC 38C00000 */ li r6, 0
+/* 0000B3D0 38E00000 */ li r7, 0
+/* 0000B3D4 4BFF4D89 */ bl GXGetTexBufferSize
+/* 0000B3D8 389F0030 */ addi r4, r31, 0x30
+/* 0000B3DC 907F0030 */ stw r3, 0x30(r31)
+/* 0000B3E0 3C600000 */ lis r3, __OSCurrHeap@ha
+/* 0000B3E4 38630000 */ addi r3, r3, __OSCurrHeap@l
+/* 0000B3E8 80630000 */ lwz r3, 0(r3)
+/* 0000B3EC 80840000 */ lwz r4, 0(r4)
+/* 0000B3F0 4BFF4D6D */ bl OSAllocFromHeap
+/* 0000B3F4 907D0000 */ stw r3, 0(r29)
+lbl_0000B3F8:
+/* 0000B3F8 3C600000 */ lis r3, currRenderMode@ha
+/* 0000B3FC 809D0000 */ lwz r4, 0(r29)
+/* 0000B400 80C30000 */ lwz r6, currRenderMode@l(r3)
+/* 0000B404 387F0010 */ addi r3, r31, 0x10
+/* 0000B408 38E00004 */ li r7, 4
+/* 0000B40C A0A60004 */ lhz r5, 4(r6)
+/* 0000B410 39000000 */ li r8, 0
+/* 0000B414 A0C60006 */ lhz r6, 6(r6)
+/* 0000B418 39200000 */ li r9, 0
+/* 0000B41C 39400000 */ li r10, 0
+/* 0000B420 4BFF4D3D */ bl GXInitTexObj
+/* 0000B424 4BFF4D39 */ bl u_replay_test_init
+/* 0000B428 38600002 */ li r3, 2
+/* 0000B42C 4BFF4D31 */ bl camera_set_state_all
+/* 0000B430 8001001C */ lwz r0, 0x1c(r1)
+/* 0000B434 83E10014 */ lwz r31, 0x14(r1)
+/* 0000B438 83C10010 */ lwz r30, 0x10(r1)
+/* 0000B43C 7C0803A6 */ mtlr r0
+/* 0000B440 83A1000C */ lwz r29, 0xc(r1)
+/* 0000B444 38210018 */ addi r1, r1, 0x18
+/* 0000B448 4E800020 */ blr 

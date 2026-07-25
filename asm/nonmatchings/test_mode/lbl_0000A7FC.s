@@ -1,0 +1,343 @@
+/* 0000A7FC 7C0802A6 */ mflr r0
+/* 0000A800 3C600000 */ lis r3, lbl_00010080@ha
+/* 0000A804 90010004 */ stw r0, 4(r1)
+/* 0000A808 9421FF18 */ stwu r1, -0xe8(r1)
+/* 0000A80C BF4100D0 */ stmw r26, 0xd0(r1)
+/* 0000A810 3BE30000 */ addi r31, r3, lbl_00010080@l
+/* 0000A814 3C600000 */ lis r3, lbl_10000E00@ha
+/* 0000A818 3BA30000 */ addi r29, r3, lbl_10000E00@l
+/* 0000A81C 801F0060 */ lwz r0, 0x60(r31)
+/* 0000A820 900100B8 */ stw r0, 0xb8(r1)
+/* 0000A824 4BFF5939 */ bl mathutil_mtxA_from_mtxB
+/* 0000A828 C03F0064 */ lfs f1, 0x64(r31)
+/* 0000A82C 38610078 */ addi r3, r1, 0x78
+/* 0000A830 38800000 */ li r4, 0
+/* 0000A834 4BFF5929 */ bl GXInitLightSpot
+/* 0000A838 C03F0000 */ lfs f1, 0(r31)
+/* 0000A83C 38610078 */ addi r3, r1, 0x78
+/* 0000A840 38800000 */ li r4, 0
+/* 0000A844 FC400890 */ fmr f2, f1
+/* 0000A848 4BFF5915 */ bl GXInitLightDistAttn
+/* 0000A84C 380000FF */ li r0, 0xff
+/* 0000A850 980100B8 */ stb r0, 0xb8(r1)
+/* 0000A854 38810014 */ addi r4, r1, 0x14
+/* 0000A858 38610078 */ addi r3, r1, 0x78
+/* 0000A85C 980100B9 */ stb r0, 0xb9(r1)
+/* 0000A860 980100BA */ stb r0, 0xba(r1)
+/* 0000A864 980100BB */ stb r0, 0xbb(r1)
+/* 0000A868 800100B8 */ lwz r0, 0xb8(r1)
+/* 0000A86C 90010014 */ stw r0, 0x14(r1)
+/* 0000A870 4BFF58ED */ bl GXInitLightColor
+/* 0000A874 3B5D0000 */ addi r26, r29, 0
+/* 0000A878 3B600000 */ li r27, 0
+lbl_0000A87C:
+/* 0000A87C 387A0000 */ addi r3, r26, 0
+/* 0000A880 388100BC */ addi r4, r1, 0xbc
+/* 0000A884 4BFF58D9 */ bl mathutil_mtxA_tf_point
+/* 0000A888 C02100BC */ lfs f1, 0xbc(r1)
+/* 0000A88C 38610078 */ addi r3, r1, 0x78
+/* 0000A890 C04100C0 */ lfs f2, 0xc0(r1)
+/* 0000A894 C06100C4 */ lfs f3, 0xc4(r1)
+/* 0000A898 4BFF58C5 */ bl GXInitLightPos
+/* 0000A89C 38610078 */ addi r3, r1, 0x78
+/* 0000A8A0 389B0001 */ addi r4, r27, 1
+/* 0000A8A4 4BFF58B9 */ bl GXLoadLightObjImm
+/* 0000A8A8 3B7B0001 */ addi r27, r27, 1
+/* 0000A8AC 2C1B0002 */ cmpwi r27, 2
+/* 0000A8B0 3B5A009C */ addi r26, r26, 0x9c
+/* 0000A8B4 4180FFC8 */ blt lbl_0000A87C
+/* 0000A8B8 3B8000FF */ li r28, 0xff
+/* 0000A8BC 9B8100B8 */ stb r28, 0xb8(r1)
+/* 0000A8C0 38810010 */ addi r4, r1, 0x10
+/* 0000A8C4 38600004 */ li r3, 4
+/* 0000A8C8 9B8100B9 */ stb r28, 0xb9(r1)
+/* 0000A8CC 9B8100BA */ stb r28, 0xba(r1)
+/* 0000A8D0 9B8100BB */ stb r28, 0xbb(r1)
+/* 0000A8D4 800100B8 */ lwz r0, 0xb8(r1)
+/* 0000A8D8 90010010 */ stw r0, 0x10(r1)
+/* 0000A8DC 4BFF5881 */ bl GXSetChanMatColor
+/* 0000A8E0 38600020 */ li r3, 0x20
+/* 0000A8E4 986100B8 */ stb r3, 0xb8(r1)
+/* 0000A8E8 38000040 */ li r0, 0x40
+/* 0000A8EC 3881000C */ addi r4, r1, 0xc
+/* 0000A8F0 986100B9 */ stb r3, 0xb9(r1)
+/* 0000A8F4 38600004 */ li r3, 4
+/* 0000A8F8 980100BA */ stb r0, 0xba(r1)
+/* 0000A8FC 9B8100BB */ stb r28, 0xbb(r1)
+/* 0000A900 800100B8 */ lwz r0, 0xb8(r1)
+/* 0000A904 9001000C */ stw r0, 0xc(r1)
+/* 0000A908 4BFF5855 */ bl GXSetChanAmbColor
+/* 0000A90C 800100B8 */ lwz r0, 0xb8(r1)
+/* 0000A910 38810008 */ addi r4, r1, 8
+/* 0000A914 38600001 */ li r3, 1
+/* 0000A918 90010008 */ stw r0, 8(r1)
+/* 0000A91C 4BFF5841 */ bl GXSetTevColor
+/* 0000A920 38600004 */ li r3, 4
+/* 0000A924 38800001 */ li r4, 1
+/* 0000A928 38A00000 */ li r5, 0
+/* 0000A92C 38C00000 */ li r6, 0
+/* 0000A930 38E00001 */ li r7, 1
+/* 0000A934 39000002 */ li r8, 2
+/* 0000A938 39200001 */ li r9, 1
+/* 0000A93C 4BFF5821 */ bl GXSetChanCtrl
+/* 0000A940 38600001 */ li r3, 1
+/* 0000A944 4BFF5819 */ bl GXSetNumChans
+/* 0000A948 4BFF5815 */ bl GXInvalidateTexAll
+/* 0000A94C 387D0138 */ addi r3, r29, 0x138
+/* 0000A950 38800000 */ li r4, 0
+/* 0000A954 4BFF5809 */ bl GXLoadTexObj_cached
+/* 0000A958 3B400001 */ li r26, 1
+/* 0000A95C 3B600002 */ li r27, 2
+lbl_0000A960:
+/* 0000A960 387D0070 */ addi r3, r29, 0x70
+/* 0000A964 389A0000 */ addi r4, r26, 0
+/* 0000A968 4BFF57F5 */ bl GXLoadTexObj_cached
+/* 0000A96C 377BFFFF */ addic. r27, r27, -1
+/* 0000A970 3BBD009C */ addi r29, r29, 0x9c
+/* 0000A974 3B5A0001 */ addi r26, r26, 1
+/* 0000A978 4181FFE8 */ bgt lbl_0000A960
+/* 0000A97C 3B400000 */ li r26, 0
+/* 0000A980 3B800000 */ li r28, 0
+/* 0000A984 3BA0001E */ li r29, 0x1e
+/* 0000A988 3BC0000A */ li r30, 0xa
+/* 0000A98C 3B600002 */ li r27, 2
+lbl_0000A990:
+/* 0000A990 387C0000 */ addi r3, r28, 0
+/* 0000A994 38DD0000 */ addi r6, r29, 0
+/* 0000A998 38800000 */ li r4, 0
+/* 0000A99C 38A00000 */ li r5, 0
+/* 0000A9A0 38E00000 */ li r7, 0
+/* 0000A9A4 3900007D */ li r8, 0x7d
+/* 0000A9A8 4BFF57B5 */ bl GXSetTexCoordGen2
+/* 0000A9AC 387A0000 */ addi r3, r26, 0
+/* 0000A9B0 389C0000 */ addi r4, r28, 0
+/* 0000A9B4 38A00001 */ li r5, 1
+/* 0000A9B8 38C00004 */ li r6, 4
+/* 0000A9BC 4BFF57A1 */ bl GXSetTevOrder_cached
+/* 0000A9C0 7F43D378 */ mr r3, r26
+/* 0000A9C4 4BFF5799 */ bl GXSetTevDirect
+/* 0000A9C8 387A0000 */ addi r3, r26, 0
+/* 0000A9CC 38800004 */ li r4, 4
+/* 0000A9D0 4BFF578D */ bl GXSetTevOp_cached
+/* 0000A9D4 387A0000 */ addi r3, r26, 0
+/* 0000A9D8 3880000F */ li r4, 0xf
+/* 0000A9DC 38A0000F */ li r5, 0xf
+/* 0000A9E0 38C0000F */ li r6, 0xf
+/* 0000A9E4 38E00008 */ li r7, 8
+/* 0000A9E8 4BFF5775 */ bl GXSetTevColorIn_cached
+/* 0000A9EC 387A0000 */ addi r3, r26, 0
+/* 0000A9F0 38800000 */ li r4, 0
+/* 0000A9F4 38A00000 */ li r5, 0
+/* 0000A9F8 38C00000 */ li r6, 0
+/* 0000A9FC 38E00001 */ li r7, 1
+/* 0000AA00 39000000 */ li r8, 0
+/* 0000AA04 4BFF5759 */ bl GXSetTevColorOp_cached
+/* 0000AA08 3BBD0003 */ addi r29, r29, 3
+/* 0000AA0C 38DD0000 */ addi r6, r29, 0
+/* 0000AA10 387C0001 */ addi r3, r28, 1
+/* 0000AA14 38800000 */ li r4, 0
+/* 0000AA18 38A00000 */ li r5, 0
+/* 0000AA1C 38E00000 */ li r7, 0
+/* 0000AA20 3900007D */ li r8, 0x7d
+/* 0000AA24 4BFF5739 */ bl GXSetTexCoordGen2
+/* 0000AA28 387A0001 */ addi r3, r26, 1
+/* 0000AA2C 389C0001 */ addi r4, r28, 1
+/* 0000AA30 38A00000 */ li r5, 0
+/* 0000AA34 38C00004 */ li r6, 4
+/* 0000AA38 4BFF5725 */ bl GXSetTevOrder_cached
+/* 0000AA3C 387A0001 */ addi r3, r26, 1
+/* 0000AA40 4BFF571D */ bl GXSetTevDirect
+/* 0000AA44 387A0001 */ addi r3, r26, 1
+/* 0000AA48 38800004 */ li r4, 4
+/* 0000AA4C 4BFF5711 */ bl GXSetTevOp_cached
+/* 0000AA50 387A0001 */ addi r3, r26, 1
+/* 0000AA54 3880000F */ li r4, 0xf
+/* 0000AA58 38A00008 */ li r5, 8
+/* 0000AA5C 38C00000 */ li r6, 0
+/* 0000AA60 38E0000F */ li r7, 0xf
+/* 0000AA64 4BFF56F9 */ bl GXSetTevColorIn_cached
+/* 0000AA68 387A0001 */ addi r3, r26, 1
+/* 0000AA6C 38800000 */ li r4, 0
+/* 0000AA70 38A00000 */ li r5, 0
+/* 0000AA74 38C00000 */ li r6, 0
+/* 0000AA78 38E00001 */ li r7, 1
+/* 0000AA7C 39000000 */ li r8, 0
+/* 0000AA80 4BFF56DD */ bl GXSetTevColorOp_cached
+/* 0000AA84 387A0002 */ addi r3, r26, 2
+/* 0000AA88 388000FF */ li r4, 0xff
+/* 0000AA8C 38A000FF */ li r5, 0xff
+/* 0000AA90 38C00004 */ li r6, 4
+/* 0000AA94 3B9C0002 */ addi r28, r28, 2
+/* 0000AA98 3BBD0003 */ addi r29, r29, 3
+/* 0000AA9C 4BFF56C1 */ bl GXSetTevOrder_cached
+/* 0000AAA0 387A0002 */ addi r3, r26, 2
+/* 0000AAA4 4BFF56B9 */ bl GXSetTevDirect
+/* 0000AAA8 387A0002 */ addi r3, r26, 2
+/* 0000AAAC 38800004 */ li r4, 4
+/* 0000AAB0 4BFF56AD */ bl GXSetTevOp_cached
+/* 0000AAB4 389E0000 */ addi r4, r30, 0
+/* 0000AAB8 387A0002 */ addi r3, r26, 2
+/* 0000AABC 38A00002 */ li r5, 2
+/* 0000AAC0 38C00000 */ li r6, 0
+/* 0000AAC4 38E0000F */ li r7, 0xf
+/* 0000AAC8 4BFF5695 */ bl GXSetTevColorIn_cached
+/* 0000AACC 2C1B0001 */ cmpwi r27, 1
+/* 0000AAD0 40820024 */ bne lbl_0000AAF4
+/* 0000AAD4 387A0002 */ addi r3, r26, 2
+/* 0000AAD8 38800000 */ li r4, 0
+/* 0000AADC 38A00000 */ li r5, 0
+/* 0000AAE0 38C00000 */ li r6, 0
+/* 0000AAE4 38E00001 */ li r7, 1
+/* 0000AAE8 39000000 */ li r8, 0
+/* 0000AAEC 4BFF5671 */ bl GXSetTevColorOp_cached
+/* 0000AAF0 48000024 */ b lbl_0000AB14
+lbl_0000AAF4:
+/* 0000AAF4 387A0002 */ addi r3, r26, 2
+/* 0000AAF8 38800000 */ li r4, 0
+/* 0000AAFC 38A00000 */ li r5, 0
+/* 0000AB00 38C00000 */ li r6, 0
+/* 0000AB04 38E00001 */ li r7, 1
+/* 0000AB08 39000002 */ li r8, 2
+/* 0000AB0C 4BFF5651 */ bl GXSetTevColorOp_cached
+/* 0000AB10 3BC00004 */ li r30, 4
+lbl_0000AB14:
+/* 0000AB14 377BFFFF */ addic. r27, r27, -1
+/* 0000AB18 3B5A0003 */ addi r26, r26, 3
+/* 0000AB1C 4181FE74 */ bgt lbl_0000A990
+/* 0000AB20 5743063E */ clrlwi r3, r26, 0x18
+/* 0000AB24 4BFF5639 */ bl GXSetNumTevStages_cached
+/* 0000AB28 5783063E */ clrlwi r3, r28, 0x18
+/* 0000AB2C 4BFF5631 */ bl GXSetNumTexGens
+/* 0000AB30 38600000 */ li r3, 0
+/* 0000AB34 4BFF5629 */ bl GXSetNumIndStages
+/* 0000AB38 38600001 */ li r3, 1
+/* 0000AB3C 38800001 */ li r4, 1
+/* 0000AB40 38A00000 */ li r5, 0
+/* 0000AB44 38C00000 */ li r6, 0
+/* 0000AB48 4BFF5615 */ bl GXSetBlendMode_cached
+/* 0000AB4C 3C600000 */ lis r3, gxCache@ha
+/* 0000AB50 38630000 */ addi r3, r3, gxCache@l
+/* 0000AB54 80630000 */ lwz r3, 0(r3)
+/* 0000AB58 88030008 */ lbz r0, 8(r3)
+/* 0000AB5C 28000001 */ cmplwi r0, 1
+/* 0000AB60 4082001C */ bne lbl_0000AB7C
+/* 0000AB64 80030004 */ lwz r0, 4(r3)
+/* 0000AB68 2C000001 */ cmpwi r0, 1
+/* 0000AB6C 40820010 */ bne lbl_0000AB7C
+/* 0000AB70 88030000 */ lbz r0, 0(r3)
+/* 0000AB74 28000001 */ cmplwi r0, 1
+/* 0000AB78 41820038 */ beq lbl_0000ABB0
+lbl_0000AB7C:
+/* 0000AB7C 38600001 */ li r3, 1
+/* 0000AB80 38800001 */ li r4, 1
+/* 0000AB84 38A00001 */ li r5, 1
+/* 0000AB88 4BFF55D5 */ bl GXSetZMode
+/* 0000AB8C 3C600000 */ lis r3, gxCache@ha
+/* 0000AB90 38830000 */ addi r4, r3, gxCache@l
+/* 0000AB94 80640000 */ lwz r3, 0(r4)
+/* 0000AB98 38000001 */ li r0, 1
+/* 0000AB9C 98030000 */ stb r0, 0(r3)
+/* 0000ABA0 80640000 */ lwz r3, 0(r4)
+/* 0000ABA4 90030004 */ stw r0, 4(r3)
+/* 0000ABA8 80640000 */ lwz r3, 0(r4)
+/* 0000ABAC 98030008 */ stb r0, 8(r3)
+lbl_0000ABB0:
+/* 0000ABB0 4BFF55AD */ bl fog_gx_set
+/* 0000ABB4 3C600000 */ lis r3, mathutilData@ha
+/* 0000ABB8 3BC30000 */ addi r30, r3, mathutilData@l
+/* 0000ABBC 3B600014 */ li r27, 0x14
+/* 0000ABC0 3FA04330 */ lis r29, 0x4330
+lbl_0000ABC4:
+/* 0000ABC4 576007BE */ clrlwi r0, r27, 0x1e
+/* 0000ABC8 7C000034 */ cntlzw r0, r0
+/* 0000ABCC 541CD97E */ srwi r28, r0, 5
+/* 0000ABD0 4BFF558D */ bl mathutil_mtxA_from_identity
+/* 0000ABD4 381BFFFF */ addi r0, r27, -1
+/* 0000ABD8 C09F0004 */ lfs f4, 4(r31)
+/* 0000ABDC 6C008000 */ xoris r0, r0, 0x8000
+/* 0000ABE0 C03F0068 */ lfs f1, 0x68(r31)
+/* 0000ABE4 900100CC */ stw r0, 0xcc(r1)
+/* 0000ABE8 3C600000 */ lis r3, lbl_000100D8@ha
+/* 0000ABEC C8630000 */ lfd f3, lbl_000100D8@l(r3)
+/* 0000ABF0 93A100C8 */ stw r29, 0xc8(r1)
+/* 0000ABF4 C05F006C */ lfs f2, 0x6c(r31)
+/* 0000ABF8 C80100C8 */ lfd f0, 0xc8(r1)
+/* 0000ABFC EC001828 */ fsubs f0, f0, f3
+/* 0000AC00 EC040032 */ fmuls f0, f4, f0
+/* 0000AC04 EC61002A */ fadds f3, f1, f0
+/* 0000AC08 4BFF5555 */ bl mathutil_mtxA_translate_xyz
+/* 0000AC0C 3B400014 */ li r26, 0x14
+lbl_0000AC10:
+/* 0000AC10 C03F0070 */ lfs f1, 0x70(r31)
+/* 0000AC14 38610048 */ addi r3, r1, 0x48
+/* 0000AC18 FC400890 */ fmr f2, f1
+/* 0000AC1C FC600890 */ fmr f3, f1
+/* 0000AC20 4BFF553D */ bl C_MTXScale
+/* 0000AC24 807E0000 */ lwz r3, 0(r30)
+/* 0000AC28 38810048 */ addi r4, r1, 0x48
+/* 0000AC2C 38A10018 */ addi r5, r1, 0x18
+/* 0000AC30 4BFF552D */ bl PSMTXConcat
+/* 0000AC34 38610018 */ addi r3, r1, 0x18
+/* 0000AC38 3880001E */ li r4, 0x1e
+/* 0000AC3C 4BFFF6C9 */ bl lbl_0000A304
+/* 0000AC40 807E0000 */ lwz r3, 0(r30)
+/* 0000AC44 38810018 */ addi r4, r1, 0x18
+/* 0000AC48 38A40000 */ addi r5, r4, 0
+/* 0000AC4C 38630030 */ addi r3, r3, 0x30
+/* 0000AC50 4BFF550D */ bl PSMTXConcat
+/* 0000AC54 38610018 */ addi r3, r1, 0x18
+/* 0000AC58 38800000 */ li r4, 0
+/* 0000AC5C 4BFF5501 */ bl GXLoadPosMtxImm
+/* 0000AC60 38610018 */ addi r3, r1, 0x18
+/* 0000AC64 38800000 */ li r4, 0
+/* 0000AC68 4BFF54F5 */ bl GXLoadNrmMtxImm
+/* 0000AC6C 4BFF54F1 */ bl GXDrawCube
+/* 0000AC70 2C1C0000 */ cmpwi r28, 0
+/* 0000AC74 41820088 */ beq lbl_0000ACFC
+/* 0000AC78 4BFF54E5 */ bl mathutil_mtxA_push
+/* 0000AC7C C03F0000 */ lfs f1, 0(r31)
+/* 0000AC80 C05F0074 */ lfs f2, 0x74(r31)
+/* 0000AC84 FC600890 */ fmr f3, f1
+/* 0000AC88 4BFF54D5 */ bl mathutil_mtxA_translate_xyz
+/* 0000AC8C 38604000 */ li r3, 0x4000
+/* 0000AC90 4BFF54CD */ bl mathutil_mtxA_rotate_x
+/* 0000AC94 C03F0078 */ lfs f1, 0x78(r31)
+/* 0000AC98 38610048 */ addi r3, r1, 0x48
+/* 0000AC9C C07F0074 */ lfs f3, 0x74(r31)
+/* 0000ACA0 FC400890 */ fmr f2, f1
+/* 0000ACA4 4BFF54B9 */ bl C_MTXScale
+/* 0000ACA8 807E0000 */ lwz r3, 0(r30)
+/* 0000ACAC 38810048 */ addi r4, r1, 0x48
+/* 0000ACB0 38A10018 */ addi r5, r1, 0x18
+/* 0000ACB4 4BFF54A9 */ bl PSMTXConcat
+/* 0000ACB8 38610018 */ addi r3, r1, 0x18
+/* 0000ACBC 3880001E */ li r4, 0x1e
+/* 0000ACC0 4BFFF645 */ bl lbl_0000A304
+/* 0000ACC4 807E0000 */ lwz r3, 0(r30)
+/* 0000ACC8 38810018 */ addi r4, r1, 0x18
+/* 0000ACCC 38A40000 */ addi r5, r4, 0
+/* 0000ACD0 38630030 */ addi r3, r3, 0x30
+/* 0000ACD4 4BFF5489 */ bl PSMTXConcat
+/* 0000ACD8 38610018 */ addi r3, r1, 0x18
+/* 0000ACDC 38800000 */ li r4, 0
+/* 0000ACE0 4BFF547D */ bl GXLoadPosMtxImm
+/* 0000ACE4 38610018 */ addi r3, r1, 0x18
+/* 0000ACE8 38800000 */ li r4, 0
+/* 0000ACEC 4BFF5471 */ bl GXLoadNrmMtxImm
+/* 0000ACF0 3860000C */ li r3, 0xc
+/* 0000ACF4 4BFF5469 */ bl GXDrawCylinder
+/* 0000ACF8 4BFF5465 */ bl mathutil_mtxA_pop
+lbl_0000ACFC:
+/* 0000ACFC C05F0000 */ lfs f2, 0(r31)
+/* 0000AD00 C03F0004 */ lfs f1, 4(r31)
+/* 0000AD04 FC601090 */ fmr f3, f2
+/* 0000AD08 4BFF5455 */ bl mathutil_mtxA_translate_xyz
+/* 0000AD0C 375AFFFF */ addic. r26, r26, -1
+/* 0000AD10 4181FF00 */ bgt lbl_0000AC10
+/* 0000AD14 377BFFFF */ addic. r27, r27, -1
+/* 0000AD18 4181FEAC */ bgt lbl_0000ABC4
+/* 0000AD1C BB4100D0 */ lmw r26, 0xd0(r1)
+/* 0000AD20 800100EC */ lwz r0, 0xec(r1)
+/* 0000AD24 382100E8 */ addi r1, r1, 0xe8
+/* 0000AD28 7C0803A6 */ mtlr r0
+/* 0000AD2C 4E800020 */ blr 

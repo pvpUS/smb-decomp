@@ -1,0 +1,47 @@
+/* 0000AD30 7C0802A6 */ mflr r0
+/* 0000AD34 3C600000 */ lis r3, lbl_00010080@ha
+/* 0000AD38 90010004 */ stw r0, 4(r1)
+/* 0000AD3C 3C800000 */ lis r4, lbl_10000E00@ha
+/* 0000AD40 38000001 */ li r0, 1
+/* 0000AD44 9421FFE0 */ stwu r1, -0x20(r1)
+/* 0000AD48 93E1001C */ stw r31, 0x1c(r1)
+/* 0000AD4C 3BE30000 */ addi r31, r3, lbl_00010080@l
+/* 0000AD50 93C10018 */ stw r30, 0x18(r1)
+/* 0000AD54 3BC40000 */ addi r30, r4, lbl_10000E00@l
+/* 0000AD58 93A10014 */ stw r29, 0x14(r1)
+/* 0000AD5C 541D801E */ slwi r29, r0, 0x10
+/* 0000AD60 93810010 */ stw r28, 0x10(r1)
+/* 0000AD64 3B9E0160 */ addi r28, r30, 0x160
+/* 0000AD68 C01F0004 */ lfs f0, 4(r31)
+/* 0000AD6C D01E0160 */ stfs f0, 0x160(r30)
+/* 0000AD70 C01F0004 */ lfs f0, 4(r31)
+/* 0000AD74 D01E0164 */ stfs f0, 0x164(r30)
+/* 0000AD78 C01F0000 */ lfs f0, 0(r31)
+/* 0000AD7C D01E0168 */ stfs f0, 0x168(r30)
+/* 0000AD80 4BFF53DD */ bl mathutil_mtxA_from_identity
+/* 0000AD84 7FA3EB78 */ mr r3, r29
+/* 0000AD88 4BFF53D5 */ bl mathutil_mtxA_rotate_y
+/* 0000AD8C 387C0000 */ addi r3, r28, 0
+/* 0000AD90 389C0000 */ addi r4, r28, 0
+/* 0000AD94 4BFF53C9 */ bl mathutil_mtxA_tf_point
+/* 0000AD98 C01F0070 */ lfs f0, 0x70(r31)
+/* 0000AD9C 3C800000 */ lis r4, lbl_0000AEB8@ha
+/* 0000ADA0 3C600000 */ lis r3, lbl_0000AEDC@ha
+/* 0000ADA4 D01C000C */ stfs f0, 0xc(r28)
+/* 0000ADA8 38BE0160 */ addi r5, r30, 0x160
+/* 0000ADAC 38840000 */ addi r4, r4, lbl_0000AEB8@l
+/* 0000ADB0 90BE0064 */ stw r5, 0x64(r30)
+/* 0000ADB4 38030000 */ addi r0, r3, lbl_0000AEDC@l
+/* 0000ADB8 909E0068 */ stw r4, 0x68(r30)
+/* 0000ADBC 901E006C */ stw r0, 0x6c(r30)
+/* 0000ADC0 90BE0100 */ stw r5, 0x100(r30)
+/* 0000ADC4 909E0104 */ stw r4, 0x104(r30)
+/* 0000ADC8 901E0108 */ stw r0, 0x108(r30)
+/* 0000ADCC 80010024 */ lwz r0, 0x24(r1)
+/* 0000ADD0 83E1001C */ lwz r31, 0x1c(r1)
+/* 0000ADD4 83C10018 */ lwz r30, 0x18(r1)
+/* 0000ADD8 7C0803A6 */ mtlr r0
+/* 0000ADDC 83A10014 */ lwz r29, 0x14(r1)
+/* 0000ADE0 83810010 */ lwz r28, 0x10(r1)
+/* 0000ADE4 38210020 */ addi r1, r1, 0x20
+/* 0000ADE8 4E800020 */ blr 

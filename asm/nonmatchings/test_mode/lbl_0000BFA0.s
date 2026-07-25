@@ -1,0 +1,19 @@
+/* 0000BFA0 7C0802A6 */ mflr r0
+/* 0000BFA4 90010004 */ stw r0, 4(r1)
+/* 0000BFA8 9421FFF0 */ stwu r1, -0x10(r1)
+/* 0000BFAC 93E1000C */ stw r31, 0xc(r1)
+/* 0000BFB0 48000209 */ bl lbl_0000C1B8
+/* 0000BFB4 3C600000 */ lis r3, lbl_10000FA8@ha
+/* 0000BFB8 3BE30000 */ addi r31, r3, lbl_10000FA8@l
+/* 0000BFBC 807F0000 */ lwz r3, 0(r31)
+/* 0000BFC0 28030000 */ cmplwi r3, 0
+/* 0000BFC4 41820010 */ beq lbl_0000BFD4
+/* 0000BFC8 4BFF4195 */ bl bitmap_free_tpl
+/* 0000BFCC 38000000 */ li r0, 0
+/* 0000BFD0 901F0000 */ stw r0, 0(r31)
+lbl_0000BFD4:
+/* 0000BFD4 80010014 */ lwz r0, 0x14(r1)
+/* 0000BFD8 83E1000C */ lwz r31, 0xc(r1)
+/* 0000BFDC 38210010 */ addi r1, r1, 0x10
+/* 0000BFE0 7C0803A6 */ mtlr r0
+/* 0000BFE4 4E800020 */ blr 

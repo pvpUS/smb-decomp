@@ -1,0 +1,117 @@
+/* 0000D844 7C0802A6 */ mflr r0
+/* 0000D848 3C800000 */ lis r4, lbl_000148E8@ha
+/* 0000D84C 90010004 */ stw r0, 4(r1)
+/* 0000D850 3C600000 */ lis r3, lbl_10003BF8@ha
+/* 0000D854 9421FFE8 */ stwu r1, -0x18(r1)
+/* 0000D858 93E10014 */ stw r31, 0x14(r1)
+/* 0000D85C 3BE30000 */ addi r31, r3, lbl_10003BF8@l
+/* 0000D860 3860000A */ li r3, 0xa
+/* 0000D864 93C10010 */ stw r30, 0x10(r1)
+/* 0000D868 3BC40000 */ addi r30, r4, lbl_000148E8@l
+/* 0000D86C 38800000 */ li r4, 0
+/* 0000D870 93A1000C */ stw r29, 0xc(r1)
+/* 0000D874 93810008 */ stw r28, 8(r1)
+/* 0000D878 4BFF28E5 */ bl window_set_cursor_pos
+/* 0000D87C 387E0E50 */ addi r3, r30, 0xe50
+/* 0000D880 4CC63182 */ crclr 6
+/* 0000D884 4BFF28D9 */ bl window_printf_2
+/* 0000D888 3860000B */ li r3, 0xb
+/* 0000D88C 38800001 */ li r4, 1
+/* 0000D890 4BFF28CD */ bl window_set_cursor_pos
+/* 0000D894 3C600000 */ lis r3, motInfo@ha
+/* 0000D898 4CC63182 */ crclr 6
+/* 0000D89C 3BA30000 */ addi r29, r3, motInfo@l
+/* 0000D8A0 809D0000 */ lwz r4, 0(r29)
+/* 0000D8A4 387E0E60 */ addi r3, r30, 0xe60
+/* 0000D8A8 3CA40003 */ addis r5, r4, 3
+/* 0000D8AC 3C840005 */ addis r4, r4, 5
+/* 0000D8B0 3804E000 */ addi r0, r4, -8192
+/* 0000D8B4 84858000 */ lwzu r4, -0x8000(r5)
+/* 0000D8B8 7C050050 */ subf r0, r5, r0
+/* 0000D8BC 5405E13E */ srwi r5, r0, 4
+/* 0000D8C0 4BFF289D */ bl window_printf_2
+/* 0000D8C4 809D0000 */ lwz r4, 0(r29)
+/* 0000D8C8 387E0E74 */ addi r3, r30, 0xe74
+/* 0000D8CC 4CC63182 */ crclr 6
+/* 0000D8D0 4BFF288D */ bl window_printf_2
+/* 0000D8D4 801F0088 */ lwz r0, 0x88(r31)
+/* 0000D8D8 28000000 */ cmplwi r0, 0
+/* 0000D8DC 40820058 */ bne lbl_0000D934
+/* 0000D8E0 4BFFF7A5 */ bl lbl_0000D084
+/* 0000D8E4 2C030001 */ cmpwi r3, 1
+/* 0000D8E8 40820024 */ bne lbl_0000D90C
+/* 0000D8EC 807F0064 */ lwz r3, 0x64(r31)
+/* 0000D8F0 3403FFFF */ addic. r0, r3, -1
+/* 0000D8F4 901F0064 */ stw r0, 0x64(r31)
+/* 0000D8F8 4080003C */ bge lbl_0000D934
+/* 0000D8FC 807F0070 */ lwz r3, 0x70(r31)
+/* 0000D900 3803FFFF */ addi r0, r3, -1
+/* 0000D904 901F0064 */ stw r0, 0x64(r31)
+/* 0000D908 4800002C */ b lbl_0000D934
+lbl_0000D90C:
+/* 0000D90C 2C030002 */ cmpwi r3, 2
+/* 0000D910 40820024 */ bne lbl_0000D934
+/* 0000D914 807F0064 */ lwz r3, 0x64(r31)
+/* 0000D918 38630001 */ addi r3, r3, 1
+/* 0000D91C 907F0064 */ stw r3, 0x64(r31)
+/* 0000D920 801F0070 */ lwz r0, 0x70(r31)
+/* 0000D924 7C030000 */ cmpw r3, r0
+/* 0000D928 4180000C */ blt lbl_0000D934
+/* 0000D92C 38000000 */ li r0, 0
+/* 0000D930 901F0064 */ stw r0, 0x64(r31)
+lbl_0000D934:
+/* 0000D934 801F0088 */ lwz r0, 0x88(r31)
+/* 0000D938 28000000 */ cmplwi r0, 0
+/* 0000D93C 40820098 */ bne lbl_0000D9D4
+/* 0000D940 38600017 */ li r3, 0x17
+/* 0000D944 38800003 */ li r4, 3
+/* 0000D948 4BFF2815 */ bl window_set_cursor_pos
+/* 0000D94C 387E0E84 */ addi r3, r30, 0xe84
+/* 0000D950 4CC63182 */ crclr 6
+/* 0000D954 4BFF2809 */ bl window_printf_2
+/* 0000D958 3B800000 */ li r28, 0
+/* 0000D95C 57801838 */ slwi r0, r28, 3
+/* 0000D960 7FBE0214 */ add r29, r30, r0
+/* 0000D964 3BBD0E08 */ addi r29, r29, 0xe08
+/* 0000D968 48000060 */ b lbl_0000D9C8
+lbl_0000D96C:
+/* 0000D96C 801F0064 */ lwz r0, 0x64(r31)
+/* 0000D970 7C1C0000 */ cmpw r28, r0
+/* 0000D974 40820028 */ bne lbl_0000D99C
+/* 0000D978 801F0088 */ lwz r0, 0x88(r31)
+/* 0000D97C 28000000 */ cmplwi r0, 0
+/* 0000D980 4082001C */ bne lbl_0000D99C
+/* 0000D984 38600002 */ li r3, 2
+/* 0000D988 4BFF27D5 */ bl window_set_text_color
+/* 0000D98C 387E0E98 */ addi r3, r30, 0xe98
+/* 0000D990 4CC63182 */ crclr 6
+/* 0000D994 4BFF27C9 */ bl window_printf_2
+/* 0000D998 48000018 */ b lbl_0000D9B0
+lbl_0000D99C:
+/* 0000D99C 38600000 */ li r3, 0
+/* 0000D9A0 4BFF27BD */ bl window_set_text_color
+/* 0000D9A4 387E0E9C */ addi r3, r30, 0xe9c
+/* 0000D9A8 4CC63182 */ crclr 6
+/* 0000D9AC 4BFF27B1 */ bl window_printf_2
+lbl_0000D9B0:
+/* 0000D9B0 809D0004 */ lwz r4, 4(r29)
+/* 0000D9B4 387E0EA0 */ addi r3, r30, 0xea0
+/* 0000D9B8 4CC63182 */ crclr 6
+/* 0000D9BC 4BFF27A1 */ bl window_printf_2
+/* 0000D9C0 3BBD0008 */ addi r29, r29, 8
+/* 0000D9C4 3B9C0001 */ addi r28, r28, 1
+lbl_0000D9C8:
+/* 0000D9C8 801F0070 */ lwz r0, 0x70(r31)
+/* 0000D9CC 7C1C0000 */ cmpw r28, r0
+/* 0000D9D0 4180FF9C */ blt lbl_0000D96C
+lbl_0000D9D4:
+/* 0000D9D4 38600000 */ li r3, 0
+/* 0000D9D8 4BFF2785 */ bl window_set_text_color
+/* 0000D9DC 8001001C */ lwz r0, 0x1c(r1)
+/* 0000D9E0 83E10014 */ lwz r31, 0x14(r1)
+/* 0000D9E4 83C10010 */ lwz r30, 0x10(r1)
+/* 0000D9E8 7C0803A6 */ mtlr r0
+/* 0000D9EC 83A1000C */ lwz r29, 0xc(r1)
+/* 0000D9F0 83810008 */ lwz r28, 8(r1)
+/* 0000D9F4 38210018 */ addi r1, r1, 0x18
+/* 0000D9F8 4E800020 */ blr 

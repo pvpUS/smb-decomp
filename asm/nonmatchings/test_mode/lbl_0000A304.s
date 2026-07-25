@@ -1,0 +1,80 @@
+/* 0000A304 7C0802A6 */ mflr r0
+/* 0000A308 3CA00000 */ lis r5, lbl_00010080@ha
+/* 0000A30C 90010004 */ stw r0, 4(r1)
+/* 0000A310 9421FF48 */ stwu r1, -0xb8(r1)
+/* 0000A314 BF6100A4 */ stmw r27, 0xa4(r1)
+/* 0000A318 3B630000 */ addi r27, r3, 0
+/* 0000A31C 3B840000 */ addi r28, r4, 0
+/* 0000A320 3BE50000 */ addi r31, r5, lbl_00010080@l
+/* 0000A324 38610040 */ addi r3, r1, 0x40
+/* 0000A328 4BFF5E35 */ bl PSMTXIdentity
+/* 0000A32C C01F0040 */ lfs f0, 0x40(r31)
+/* 0000A330 38610070 */ addi r3, r1, 0x70
+/* 0000A334 D0010048 */ stfs f0, 0x48(r1)
+/* 0000A338 C01F0040 */ lfs f0, 0x40(r31)
+/* 0000A33C D0010058 */ stfs f0, 0x58(r1)
+/* 0000A340 C03F0000 */ lfs f1, 0(r31)
+/* 0000A344 FC400890 */ fmr f2, f1
+/* 0000A348 FC600890 */ fmr f3, f1
+/* 0000A34C 4BFF5E11 */ bl C_MTXScale
+/* 0000A350 C01F000C */ lfs f0, 0xc(r31)
+/* 0000A354 3C600000 */ lis r3, lbl_10000E00@ha
+/* 0000A358 38030000 */ addi r0, r3, lbl_10000E00@l
+/* 0000A35C D001009C */ stfs f0, 0x9c(r1)
+/* 0000A360 7C1D0378 */ mr r29, r0
+/* 0000A364 3BC00002 */ li r30, 2
+lbl_0000A368:
+/* 0000A368 C03F003C */ lfs f1, 0x3c(r31)
+/* 0000A36C 38610040 */ addi r3, r1, 0x40
+/* 0000A370 C01D0060 */ lfs f0, 0x60(r29)
+/* 0000A374 389D002C */ addi r4, r29, 0x2c
+/* 0000A378 38A10010 */ addi r5, r1, 0x10
+/* 0000A37C EC010032 */ fmuls f0, f1, f0
+/* 0000A380 D0010040 */ stfs f0, 0x40(r1)
+/* 0000A384 C03F0040 */ lfs f1, 0x40(r31)
+/* 0000A388 C01D0060 */ lfs f0, 0x60(r29)
+/* 0000A38C EC010032 */ fmuls f0, f1, f0
+/* 0000A390 D0010054 */ stfs f0, 0x54(r1)
+/* 0000A394 4BFF5DC9 */ bl PSMTXConcat
+/* 0000A398 38610010 */ addi r3, r1, 0x10
+/* 0000A39C 389B0000 */ addi r4, r27, 0
+/* 0000A3A0 38A30000 */ addi r5, r3, 0
+/* 0000A3A4 4BFF5DB9 */ bl PSMTXConcat
+/* 0000A3A8 389C0000 */ addi r4, r28, 0
+/* 0000A3AC 38610010 */ addi r3, r1, 0x10
+/* 0000A3B0 38A00000 */ li r5, 0
+/* 0000A3B4 4BFF5DA9 */ bl GXLoadTexMtxImm
+/* 0000A3B8 C03F003C */ lfs f1, 0x3c(r31)
+/* 0000A3BC 38610070 */ addi r3, r1, 0x70
+/* 0000A3C0 C01D0028 */ lfs f0, 0x28(r29)
+/* 0000A3C4 389D002C */ addi r4, r29, 0x2c
+/* 0000A3C8 38A10010 */ addi r5, r1, 0x10
+/* 0000A3CC EC010024 */ fdivs f0, f1, f0
+/* 0000A3D0 3B9C0003 */ addi r28, r28, 3
+/* 0000A3D4 D0010078 */ stfs f0, 0x78(r1)
+/* 0000A3D8 C05F003C */ lfs f2, 0x3c(r31)
+/* 0000A3DC C03D0024 */ lfs f1, 0x24(r29)
+/* 0000A3E0 C01D0028 */ lfs f0, 0x28(r29)
+/* 0000A3E4 EC220072 */ fmuls f1, f2, f1
+/* 0000A3E8 C05F0040 */ lfs f2, 0x40(r31)
+/* 0000A3EC EC010024 */ fdivs f0, f1, f0
+/* 0000A3F0 EC02002A */ fadds f0, f2, f0
+/* 0000A3F4 D001007C */ stfs f0, 0x7c(r1)
+/* 0000A3F8 4BFF5D65 */ bl PSMTXConcat
+/* 0000A3FC 38610010 */ addi r3, r1, 0x10
+/* 0000A400 389B0000 */ addi r4, r27, 0
+/* 0000A404 38A30000 */ addi r5, r3, 0
+/* 0000A408 4BFF5D55 */ bl PSMTXConcat
+/* 0000A40C 389C0000 */ addi r4, r28, 0
+/* 0000A410 38610010 */ addi r3, r1, 0x10
+/* 0000A414 38A00000 */ li r5, 0
+/* 0000A418 4BFF5D45 */ bl GXLoadTexMtxImm
+/* 0000A41C 37DEFFFF */ addic. r30, r30, -1
+/* 0000A420 3B9C0003 */ addi r28, r28, 3
+/* 0000A424 3BBD009C */ addi r29, r29, 0x9c
+/* 0000A428 4181FF40 */ bgt lbl_0000A368
+/* 0000A42C BB6100A4 */ lmw r27, 0xa4(r1)
+/* 0000A430 800100BC */ lwz r0, 0xbc(r1)
+/* 0000A434 382100B8 */ addi r1, r1, 0xb8
+/* 0000A438 7C0803A6 */ mtlr r0
+/* 0000A43C 4E800020 */ blr 

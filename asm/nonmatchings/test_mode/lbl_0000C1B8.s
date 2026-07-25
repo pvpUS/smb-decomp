@@ -1,0 +1,36 @@
+/* 0000C1B8 7C0802A6 */ mflr r0
+/* 0000C1BC 3C600000 */ lis r3, lbl_10003BAC@ha
+/* 0000C1C0 90010004 */ stw r0, 4(r1)
+/* 0000C1C4 38630000 */ addi r3, r3, lbl_10003BAC@l
+/* 0000C1C8 9421FFF0 */ stwu r1, -0x10(r1)
+/* 0000C1CC 93E1000C */ stw r31, 0xc(r1)
+/* 0000C1D0 3BE30020 */ addi r31, r3, 0x20
+/* 0000C1D4 80830020 */ lwz r4, 0x20(r3)
+/* 0000C1D8 28040000 */ cmplwi r4, 0
+/* 0000C1DC 4182001C */ beq lbl_0000C1F8
+/* 0000C1E0 3C600000 */ lis r3, __OSCurrHeap@ha
+/* 0000C1E4 38630000 */ addi r3, r3, __OSCurrHeap@l
+/* 0000C1E8 80630000 */ lwz r3, 0(r3)
+/* 0000C1EC 4BFF3F71 */ bl OSFreeToHeap
+/* 0000C1F0 38000000 */ li r0, 0
+/* 0000C1F4 901F0000 */ stw r0, 0(r31)
+lbl_0000C1F8:
+/* 0000C1F8 3C600000 */ lis r3, lbl_10003BAC@ha
+/* 0000C1FC 38630000 */ addi r3, r3, lbl_10003BAC@l
+/* 0000C200 3BE30044 */ addi r31, r3, 0x44
+/* 0000C204 80830044 */ lwz r4, 0x44(r3)
+/* 0000C208 28040000 */ cmplwi r4, 0
+/* 0000C20C 4182001C */ beq lbl_0000C228
+/* 0000C210 3C600000 */ lis r3, __OSCurrHeap@ha
+/* 0000C214 38630000 */ addi r3, r3, __OSCurrHeap@l
+/* 0000C218 80630000 */ lwz r3, 0(r3)
+/* 0000C21C 4BFF3F41 */ bl OSFreeToHeap
+/* 0000C220 38000000 */ li r0, 0
+/* 0000C224 901F0000 */ stw r0, 0(r31)
+lbl_0000C228:
+/* 0000C228 480008E5 */ bl lbl_0000CB0C
+/* 0000C22C 80010014 */ lwz r0, 0x14(r1)
+/* 0000C230 83E1000C */ lwz r31, 0xc(r1)
+/* 0000C234 38210010 */ addi r1, r1, 0x10
+/* 0000C238 7C0803A6 */ mtlr r0
+/* 0000C23C 4E800020 */ blr 

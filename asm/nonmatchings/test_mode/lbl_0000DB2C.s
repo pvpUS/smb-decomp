@@ -1,0 +1,82 @@
+/* 0000DB2C 7C0802A6 */ mflr r0
+/* 0000DB30 3C600000 */ lis r3, u_motAnimCount@ha
+/* 0000DB34 90010004 */ stw r0, 4(r1)
+/* 0000DB38 3C800000 */ lis r4, lbl_10003BF8@ha
+/* 0000DB3C 9421FFD8 */ stwu r1, -0x28(r1)
+/* 0000DB40 BF21000C */ stmw r25, 0xc(r1)
+/* 0000DB44 3BC30000 */ addi r30, r3, u_motAnimCount@l
+/* 0000DB48 3C600000 */ lis r3, __OSCurrHeap@ha
+/* 0000DB4C 3B230000 */ addi r25, r3, __OSCurrHeap@l
+/* 0000DB50 3BA40000 */ addi r29, r4, lbl_10003BF8@l
+/* 0000DB54 801E0000 */ lwz r0, 0(r30)
+/* 0000DB58 80790000 */ lwz r3, 0(r25)
+/* 0000DB5C 5404103A */ slwi r4, r0, 2
+/* 0000DB60 4BFF25FD */ bl OSAllocFromHeap
+/* 0000DB64 907D00B0 */ stw r3, 0xb0(r29)
+/* 0000DB68 809E0000 */ lwz r4, 0(r30)
+/* 0000DB6C 80790000 */ lwz r3, 0(r25)
+/* 0000DB70 38040001 */ addi r0, r4, 1
+/* 0000DB74 5404103A */ slwi r4, r0, 2
+/* 0000DB78 4BFF25E5 */ bl OSAllocFromHeap
+/* 0000DB7C 3C800000 */ lis r4, motLabel@ha
+/* 0000DB80 907D00B4 */ stw r3, 0xb4(r29)
+/* 0000DB84 3BE40000 */ addi r31, r4, motLabel@l
+/* 0000DB88 3B400000 */ li r26, 0
+/* 0000DB8C 3B600000 */ li r27, 0
+/* 0000DB90 480000A0 */ b lbl_0000DC30
+lbl_0000DB94:
+/* 0000DB94 807D00B0 */ lwz r3, 0xb0(r29)
+/* 0000DB98 381A0001 */ addi r0, r26, 1
+/* 0000DB9C 3B3AFFFF */ addi r25, r26, -1
+/* 0000DBA0 7C03D92E */ stwx r0, r3, r27
+/* 0000DBA4 381B0004 */ addi r0, r27, 4
+/* 0000DBA8 573C103A */ slwi r28, r25, 2
+/* 0000DBAC 809F0000 */ lwz r4, 0(r31)
+/* 0000DBB0 807D00B4 */ lwz r3, 0xb4(r29)
+/* 0000DBB4 7C04002E */ lwzx r0, r4, r0
+/* 0000DBB8 7C03D92E */ stwx r0, r3, r27
+/* 0000DBBC 48000064 */ b lbl_0000DC20
+lbl_0000DBC0:
+/* 0000DBC0 801D00B4 */ lwz r0, 0xb4(r29)
+/* 0000DBC4 7C80E214 */ add r4, r0, r28
+/* 0000DBC8 80640000 */ lwz r3, 0(r4)
+/* 0000DBCC 80840004 */ lwz r4, 4(r4)
+/* 0000DBD0 4BFF258D */ bl strcmp
+/* 0000DBD4 2C030000 */ cmpwi r3, 0
+/* 0000DBD8 40810050 */ ble lbl_0000DC28
+/* 0000DBDC 801D00B4 */ lwz r0, 0xb4(r29)
+/* 0000DBE0 389C0004 */ addi r4, r28, 4
+/* 0000DBE4 3B39FFFF */ addi r25, r25, -1
+/* 0000DBE8 7C60E214 */ add r3, r0, r28
+/* 0000DBEC 80A30000 */ lwz r5, 0(r3)
+/* 0000DBF0 80030004 */ lwz r0, 4(r3)
+/* 0000DBF4 90030000 */ stw r0, 0(r3)
+/* 0000DBF8 807D00B4 */ lwz r3, 0xb4(r29)
+/* 0000DBFC 7CA3212E */ stwx r5, r3, r4
+/* 0000DC00 801D00B0 */ lwz r0, 0xb0(r29)
+/* 0000DC04 7C60E214 */ add r3, r0, r28
+/* 0000DC08 80A30000 */ lwz r5, 0(r3)
+/* 0000DC0C 3B9CFFFC */ addi r28, r28, -4
+/* 0000DC10 80030004 */ lwz r0, 4(r3)
+/* 0000DC14 90030000 */ stw r0, 0(r3)
+/* 0000DC18 807D00B0 */ lwz r3, 0xb0(r29)
+/* 0000DC1C 7CA3212E */ stwx r5, r3, r4
+lbl_0000DC20:
+/* 0000DC20 2C190000 */ cmpwi r25, 0
+/* 0000DC24 4080FF9C */ bge lbl_0000DBC0
+lbl_0000DC28:
+/* 0000DC28 3B7B0004 */ addi r27, r27, 4
+/* 0000DC2C 3B5A0001 */ addi r26, r26, 1
+lbl_0000DC30:
+/* 0000DC30 801E0000 */ lwz r0, 0(r30)
+/* 0000DC34 7C1A0000 */ cmpw r26, r0
+/* 0000DC38 4180FF5C */ blt lbl_0000DB94
+/* 0000DC3C 807D00B4 */ lwz r3, 0xb4(r29)
+/* 0000DC40 5740103A */ slwi r0, r26, 2
+/* 0000DC44 38800000 */ li r4, 0
+/* 0000DC48 7C83012E */ stwx r4, r3, r0
+/* 0000DC4C 8001002C */ lwz r0, 0x2c(r1)
+/* 0000DC50 BB21000C */ lmw r25, 0xc(r1)
+/* 0000DC54 38210028 */ addi r1, r1, 0x28
+/* 0000DC58 7C0803A6 */ mtlr r0
+/* 0000DC5C 4E800020 */ blr 

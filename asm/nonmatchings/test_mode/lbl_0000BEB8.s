@@ -1,0 +1,59 @@
+/* 0000BEB8 7C0802A6 */ mflr r0
+/* 0000BEBC 3C600000 */ lis r3, lbl_10000FA8@ha
+/* 0000BEC0 90010004 */ stw r0, 4(r1)
+/* 0000BEC4 9421FFE8 */ stwu r1, -0x18(r1)
+/* 0000BEC8 93E10014 */ stw r31, 0x14(r1)
+/* 0000BECC 3BE30000 */ addi r31, r3, lbl_10000FA8@l
+/* 0000BED0 93C10010 */ stw r30, 0x10(r1)
+/* 0000BED4 93A1000C */ stw r29, 0xc(r1)
+/* 0000BED8 93810008 */ stw r28, 8(r1)
+/* 0000BEDC 801F0000 */ lwz r0, 0(r31)
+/* 0000BEE0 28000000 */ cmplwi r0, 0
+/* 0000BEE4 40820014 */ bne lbl_0000BEF8
+/* 0000BEE8 3C600000 */ lis r3, lbl_000148D8@ha
+/* 0000BEEC 38630000 */ addi r3, r3, lbl_000148D8@l
+/* 0000BEF0 4BFF426D */ bl bitmap_load_tpl
+/* 0000BEF4 907F0000 */ stw r3, 0(r31)
+lbl_0000BEF8:
+/* 0000BEF8 807F0000 */ lwz r3, 0(r31)
+/* 0000BEFC 8063000C */ lwz r3, 0xc(r3)
+/* 0000BF00 38630020 */ addi r3, r3, 0x20
+/* 0000BF04 4BFF4259 */ bl GXGetTexObjWidth
+/* 0000BF08 809F0000 */ lwz r4, 0(r31)
+/* 0000BF0C 7C7E1B78 */ mr r30, r3
+/* 0000BF10 8064000C */ lwz r3, 0xc(r4)
+/* 0000BF14 38630020 */ addi r3, r3, 0x20
+/* 0000BF18 4BFF4245 */ bl GXGetTexObjHeight
+/* 0000BF1C 809F0000 */ lwz r4, 0(r31)
+/* 0000BF20 7C7D1B78 */ mr r29, r3
+/* 0000BF24 8064000C */ lwz r3, 0xc(r4)
+/* 0000BF28 38630020 */ addi r3, r3, 0x20
+/* 0000BF2C 4BFF4231 */ bl GXGetTexObjFmt
+/* 0000BF30 809F0000 */ lwz r4, 0(r31)
+/* 0000BF34 7C7C1B78 */ mr r28, r3
+/* 0000BF38 8064000C */ lwz r3, 0xc(r4)
+/* 0000BF3C 38630020 */ addi r3, r3, 0x20
+/* 0000BF40 4BFF421D */ bl GXGetTexObjData
+/* 0000BF44 809F0000 */ lwz r4, 0(r31)
+/* 0000BF48 38BE0000 */ addi r5, r30, 0
+/* 0000BF4C 38DD0000 */ addi r6, r29, 0
+/* 0000BF50 8104000C */ lwz r8, 0xc(r4)
+/* 0000BF54 38830000 */ addi r4, r3, 0
+/* 0000BF58 38FC0000 */ addi r7, r28, 0
+/* 0000BF5C 38680020 */ addi r3, r8, 0x20
+/* 0000BF60 39000002 */ li r8, 2
+/* 0000BF64 39200002 */ li r9, 2
+/* 0000BF68 39400000 */ li r10, 0
+/* 0000BF6C 4BFF41F1 */ bl GXInitTexObj
+/* 0000BF70 48000141 */ bl lbl_0000C0B0
+/* 0000BF74 4BFF41E9 */ bl u_replay_test_init
+/* 0000BF78 38600002 */ li r3, 2
+/* 0000BF7C 4BFF41E1 */ bl camera_set_state_all
+/* 0000BF80 8001001C */ lwz r0, 0x1c(r1)
+/* 0000BF84 83E10014 */ lwz r31, 0x14(r1)
+/* 0000BF88 83C10010 */ lwz r30, 0x10(r1)
+/* 0000BF8C 7C0803A6 */ mtlr r0
+/* 0000BF90 83A1000C */ lwz r29, 0xc(r1)
+/* 0000BF94 83810008 */ lwz r28, 8(r1)
+/* 0000BF98 38210018 */ addi r1, r1, 0x18
+/* 0000BF9C 4E800020 */ blr 

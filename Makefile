@@ -904,6 +904,43 @@ ALL_RELS += mkbe.rel_sample.rel
 # mkbe.test_mode.rel sources
 SOURCES := \
 	src/test_mode.c \
+	src/test_mode_2.c \
+	src/test_mode_3.c \
+	src/test_mode_4.c \
+	src/test_mode_5.c \
+	src/test_mode_6.c \
+	src/test_mode_7.c \
+	src/test_mode_8.c \
+	src/test_mode_9.c \
+	src/test_mode_10.c \
+	src/test_mode_11.c \
+	src/test_mode_12.c \
+	src/test_mode_13.c \
+	src/test_mode_14.c \
+	src/test_mode_15.c \
+	src/test_mode_16.c \
+	src/test_mode_17.c \
+	src/test_mode_18.c \
+	src/test_mode_19.c \
+	src/test_mode_20.c \
+	src/test_mode_21.c \
+	src/test_mode_22.c \
+	src/test_mode_23.c \
+	src/test_mode_24.c \
+	src/test_mode_25.c \
+	src/test_mode_26.c \
+	src/test_mode_27.c \
+	src/test_mode_28.c \
+	src/test_mode_29.c \
+	src/test_mode_30.c \
+	src/test_mode_31.c \
+	src/test_mode_32.c \
+	src/test_mode_33.c \
+	src/test_mode_34.c \
+	src/test_mode_35.c \
+	src/test_mode_36.c \
+	src/test_mode_37.c \
+	src/test_mode_38.c \
 	asm/test_mode.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
