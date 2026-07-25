@@ -1,0 +1,39 @@
+/* 0000EEE4 7C0802A6 */ mflr r0
+/* 0000EEE8 3C800000 */ lis r4, lbl_100188E8@ha
+/* 0000EEEC 90010004 */ stw r0, 4(r1)
+/* 0000EEF0 9421FFE8 */ stwu r1, -0x18(r1)
+/* 0000EEF4 93E10014 */ stw r31, 0x14(r1)
+/* 0000EEF8 93C10010 */ stw r30, 0x10(r1)
+/* 0000EEFC 3BC30000 */ addi r30, r3, 0
+/* 0000EF00 80040000 */ lwz r0, lbl_100188E8@l(r4)
+/* 0000EF04 2C000000 */ cmpwi r0, 0
+/* 0000EF08 41820020 */ beq lbl_0000EF28
+/* 0000EF0C 1C00000C */ mulli r0, r0, 0xc
+/* 0000EF10 3C600000 */ lis r3, lbl_10017E98@ha
+/* 0000EF14 38630000 */ addi r3, r3, lbl_10017E98@l
+/* 0000EF18 7C630214 */ add r3, r3, r0
+/* 0000EF1C 81830008 */ lwz r12, 8(r3)
+/* 0000EF20 7D8803A6 */ mtlr r12
+/* 0000EF24 4E800021 */ blrl 
+lbl_0000EF28:
+/* 0000EF28 3C600000 */ lis r3, lbl_100188E8@ha
+/* 0000EF2C 3BE30000 */ addi r31, r3, lbl_100188E8@l
+/* 0000EF30 387F0004 */ addi r3, r31, 4
+/* 0000EF34 4BFF1231 */ bl get_curr_stage_fly_in_position
+/* 0000EF38 2C1E0000 */ cmpwi r30, 0
+/* 0000EF3C 93DF0000 */ stw r30, 0(r31)
+/* 0000EF40 41820020 */ beq lbl_0000EF60
+/* 0000EF44 1C9E000C */ mulli r4, r30, 0xc
+/* 0000EF48 3C600000 */ lis r3, lbl_10017E98@ha
+/* 0000EF4C 38030000 */ addi r0, r3, lbl_10017E98@l
+/* 0000EF50 7C602214 */ add r3, r0, r4
+/* 0000EF54 81830000 */ lwz r12, 0(r3)
+/* 0000EF58 7D8803A6 */ mtlr r12
+/* 0000EF5C 4E800021 */ blrl 
+lbl_0000EF60:
+/* 0000EF60 8001001C */ lwz r0, 0x1c(r1)
+/* 0000EF64 83E10014 */ lwz r31, 0x14(r1)
+/* 0000EF68 83C10010 */ lwz r30, 0x10(r1)
+/* 0000EF6C 7C0803A6 */ mtlr r0
+/* 0000EF70 38210018 */ addi r1, r1, 0x18
+/* 0000EF74 4E800020 */ blr 

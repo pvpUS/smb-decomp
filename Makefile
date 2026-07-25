@@ -437,6 +437,39 @@ ALL_RELS += mkbe.rel_mini_bowling.rel
 # mkbe.rel_mini_fight.rel sources
 SOURCES := \
 	src/mini_fight.c \
+	src/mini_fight_2.c \
+	src/mini_fight_3.c \
+	src/mini_fight_4.c \
+	src/mini_fight_5.c \
+	src/mini_fight_6.c \
+	src/mini_fight_7.c \
+	src/mini_fight_8.c \
+	src/mini_fight_9.c \
+	src/mini_fight_10.c \
+	src/mini_fight_11.c \
+	src/mini_fight_12.c \
+	src/mini_fight_13.c \
+	src/mini_fight_14.c \
+	src/mini_fight_15.c \
+	src/mini_fight_16.c \
+	src/mini_fight_17.c \
+	src/mini_fight_18.c \
+	src/mini_fight_19.c \
+	src/mini_fight_20.c \
+	src/mini_fight_21.c \
+	src/mini_fight_22.c \
+	src/mini_fight_23.c \
+	src/mini_fight_24.c \
+	src/mini_fight_25.c \
+	src/mini_fight_26.c \
+	src/mini_fight_27.c \
+	src/mini_fight_28.c \
+	src/mini_fight_29.c \
+	src/mini_fight_30.c \
+	src/mini_fight_31.c \
+	src/mini_fight_32.c \
+	src/mini_fight_33.c \
+	src/mini_fight_34.c \
 	asm/mini_fight.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)

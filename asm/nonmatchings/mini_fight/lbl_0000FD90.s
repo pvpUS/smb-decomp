@@ -1,0 +1,23 @@
+/* 0000FD90 3C600000 */ lis r3, lbl_100188E8@ha
+/* 0000FD94 38630000 */ addi r3, r3, lbl_100188E8@l
+/* 0000FD98 38A30014 */ addi r5, r3, 0x14
+/* 0000FD9C 3C600000 */ lis r3, lbl_0001CE60@ha
+/* 0000FDA0 80850000 */ lwz r4, 0(r5)
+/* 0000FDA4 38030000 */ addi r0, r3, lbl_0001CE60@l
+/* 0000FDA8 3C600000 */ lis r3, modeCtrl@ha
+/* 0000FDAC 90040004 */ stw r0, 4(r4)
+/* 0000FDB0 38630000 */ addi r3, r3, modeCtrl@l
+/* 0000FDB4 80030024 */ lwz r0, 0x24(r3)
+/* 0000FDB8 2C000004 */ cmpwi r0, 4
+/* 0000FDBC 40800010 */ bge lbl_0000FDCC
+/* 0000FDC0 38000004 */ li r0, 4
+/* 0000FDC4 90040008 */ stw r0, 8(r4)
+/* 0000FDC8 4800000C */ b lbl_0000FDD4
+lbl_0000FDCC:
+/* 0000FDCC 38000003 */ li r0, 3
+/* 0000FDD0 90040008 */ stw r0, 8(r4)
+lbl_0000FDD4:
+/* 0000FDD4 80650000 */ lwz r3, 0(r5)
+/* 0000FDD8 80030004 */ lwz r0, 4(r3)
+/* 0000FDDC 90030000 */ stw r0, 0(r3)
+/* 0000FDE0 4E800020 */ blr 

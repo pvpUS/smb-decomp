@@ -1,6 +1,6 @@
 /*
  * mini_fight.c -- REL module, structurally split for per-function
- * byte-matching (part 1 of 34; contiguous .text range).  Each function
+ * byte-matching (part 3 of 34; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_fight/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -282,7 +282,25 @@ void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
 void lbl_00000210(void);
+static void lbl_00000270(void);
+static void lbl_000032B8(void);
+static void lbl_000033AC(void);
+static void lbl_0000351C(void);
+static void lbl_00003CC8(void);
+static void lbl_00003DE0(void);
 void lbl_00004314(void);
+static void lbl_00004498(void);
+static void lbl_00004D14(void);
+static void lbl_000053EC(void);
+static void lbl_000057FC(void);
+static void lbl_000058A0(void);
+static void lbl_00005A08(void);
+static void lbl_00007444(void);
+static void lbl_000074DC(void);
+static void lbl_00007640(void);
+static void lbl_00007AD4(void);
+static void lbl_00007F7C(void);
+static void lbl_000080D4(void);
 void lbl_0000A690(void);
 void lbl_0000A974(void);
 void lbl_0000AAD0(void);
@@ -378,19 +396,114 @@ void lbl_0001B910();
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void _prolog(void)
+static asm void lbl_00000270(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_fight/_prolog.s"
+#include "../asm/nonmatchings/mini_fight/lbl_00000270.s"
 }
-asm void _epilog(void)
+static asm void lbl_000032B8(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_fight/_epilog.s"
+#include "../asm/nonmatchings/mini_fight/lbl_000032B8.s"
 }
-asm void _unresolved(void)
+static asm void lbl_000033AC(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_fight/_unresolved.s"
+#include "../asm/nonmatchings/mini_fight/lbl_000033AC.s"
+}
+static asm void lbl_0000351C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_0000351C.s"
+}
+static asm void lbl_00003CC8(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00003CC8.s"
+}
+static asm void lbl_00003DE0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00003DE0.s"
+}
+asm void lbl_00004314(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00004314.s"
+}
+static asm void lbl_00004498(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00004498.s"
+}
+static asm void lbl_00004D14(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00004D14.s"
+}
+static asm void lbl_000053EC(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_000053EC.s"
+}
+static asm void lbl_000057FC(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_000057FC.s"
+}
+static asm void lbl_000058A0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_000058A0.s"
+}
+static asm void lbl_00005A08(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00005A08.s"
+}
+static asm void lbl_00007444(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00007444.s"
+}
+static asm void lbl_000074DC(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_000074DC.s"
+}
+static asm void lbl_00007640(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00007640.s"
+}
+static asm void lbl_00007AD4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00007AD4.s"
+}
+static asm void lbl_00007F7C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00007F7C.s"
+}
+static asm void lbl_000080D4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_000080D4.s"
+}
+asm void lbl_0000A690(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_0000A690.s"
+}
+asm void lbl_0000A974(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_0000A974.s"
+}
+asm void lbl_0000AAD0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_0000AAD0.s"
 }
 #pragma force_active reset

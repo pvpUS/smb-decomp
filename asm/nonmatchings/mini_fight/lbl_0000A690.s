@@ -1,0 +1,188 @@
+/* 0000A690 7C0802A6 */ mflr r0
+/* 0000A694 3CA00001 */ lis r5, 1
+/* 0000A698 90010004 */ stw r0, 4(r1)
+/* 0000A69C 3805A800 */ addi r0, r5, -22528
+/* 0000A6A0 3CA00000 */ lis r5, lbl_0001C238@ha
+/* 0000A6A4 9421FFC8 */ stwu r1, -0x38(r1)
+/* 0000A6A8 38C50000 */ addi r6, r5, lbl_0001C238@l
+/* 0000A6AC 3C600000 */ lis r3, lbl_802F1EA2@ha
+/* 0000A6B0 BF21001C */ stmw r25, 0x1c(r1)
+/* 0000A6B4 3F600000 */ lis r27, lbl_10017520@ha
+/* 0000A6B8 3D200000 */ lis r9, lbl_802F1E6A@ha
+/* 0000A6BC 3C800000 */ lis r4, lbl_802F1EA0@ha
+/* 0000A6C0 3BC00000 */ li r30, 0
+/* 0000A6C4 3CE00000 */ lis r7, lbl_802F1E98@ha
+/* 0000A6C8 3CA00000 */ lis r5, lbl_802F1E90@ha
+/* 0000A6CC 3D600000 */ lis r11, lbl_802F1E70@ha
+/* 0000A6D0 3D400000 */ lis r10, lbl_802F1E6C@ha
+/* 0000A6D4 3BBB0000 */ addi r29, r27, lbl_10017520@l
+/* 0000A6D8 B0030000 */ sth r0, lbl_802F1EA2@l(r3)
+/* 0000A6DC 3C600000 */ lis r3, lbl_802F1E9C@ha
+/* 0000A6E0 3800000A */ li r0, 0xa
+/* 0000A6E4 B3C40000 */ sth r30, lbl_802F1EA0@l(r4)
+/* 0000A6E8 3C800000 */ lis r4, lbl_802F1E94@ha
+/* 0000A6EC 3B6A0000 */ addi r27, r10, lbl_802F1E6C@l
+/* 0000A6F0 C0060000 */ lfs f0, 0(r6)
+/* 0000A6F4 3B890000 */ addi r28, r9, lbl_802F1E6A@l
+/* 0000A6F8 3BE00014 */ li r31, 0x14
+/* 0000A6FC D0030000 */ stfs f0, lbl_802F1E9C@l(r3)
+/* 0000A700 3C600000 */ lis r3, lbl_802F1E8C@ha
+/* 0000A704 90070000 */ stw r0, lbl_802F1E98@l(r7)
+/* 0000A708 38E40000 */ addi r7, r4, lbl_802F1E94@l
+/* 0000A70C 3C800000 */ lis r4, lbl_802F1E88@ha
+/* 0000A710 93C70000 */ stw r30, 0(r7)
+/* 0000A714 38E50000 */ addi r7, r5, lbl_802F1E90@l
+/* 0000A718 38A30000 */ addi r5, r3, lbl_802F1E8C@l
+/* 0000A71C 93C70000 */ stw r30, 0(r7)
+/* 0000A720 38E0005A */ li r7, 0x5a
+/* 0000A724 3C600000 */ lis r3, lbl_802F1E84@ha
+/* 0000A728 90E50000 */ stw r7, 0(r5)
+/* 0000A72C 39030000 */ addi r8, r3, lbl_802F1E84@l
+/* 0000A730 3C600000 */ lis r3, lbl_802F1E80@ha
+/* 0000A734 C0060004 */ lfs f0, 4(r6)
+/* 0000A738 38E30000 */ addi r7, r3, lbl_802F1E80@l
+/* 0000A73C 3CA00000 */ lis r5, lbl_802F1E7C@ha
+/* 0000A740 D0040000 */ stfs f0, lbl_802F1E88@l(r4)
+/* 0000A744 39850000 */ addi r12, r5, lbl_802F1E7C@l
+/* 0000A748 3C800000 */ lis r4, lbl_802F1E78@ha
+/* 0000A74C C0060008 */ lfs f0, 8(r6)
+/* 0000A750 3B440000 */ addi r26, r4, lbl_802F1E78@l
+/* 0000A754 3CA00000 */ lis r5, lbl_802F1E64@ha
+/* 0000A758 D0080000 */ stfs f0, 0(r8)
+/* 0000A75C 39250000 */ addi r9, r5, lbl_802F1E64@l
+/* 0000A760 3C600000 */ lis r3, lbl_802F1E74@ha
+/* 0000A764 C006000C */ lfs f0, 0xc(r6)
+/* 0000A768 3D000000 */ lis r8, lbl_802F1E68@ha
+/* 0000A76C 3C800000 */ lis r4, lbl_802F1E60@ha
+/* 0000A770 D0070000 */ stfs f0, 0(r7)
+/* 0000A774 3CE00000 */ lis r7, lbl_802F1E66@ha
+/* 0000A778 39470000 */ addi r10, r7, lbl_802F1E66@l
+/* 0000A77C C0060010 */ lfs f0, 0x10(r6)
+/* 0000A780 38A00750 */ li r5, 0x750
+/* 0000A784 D00C0000 */ stfs f0, 0(r12)
+/* 0000A788 39830000 */ addi r12, r3, lbl_802F1E74@l
+/* 0000A78C 3C600000 */ lis r3, lbl_802F1E5C@ha
+/* 0000A790 C0060000 */ lfs f0, 0(r6)
+/* 0000A794 38E30000 */ addi r7, r3, lbl_802F1E5C@l
+/* 0000A798 387D0144 */ addi r3, r29, 0x144
+/* 0000A79C D01A0000 */ stfs f0, 0(r26)
+/* 0000A7A0 3B4B0000 */ addi r26, r11, lbl_802F1E70@l
+/* 0000A7A4 39600005 */ li r11, 5
+/* 0000A7A8 C0060014 */ lfs f0, 0x14(r6)
+/* 0000A7AC D00C0000 */ stfs f0, 0(r12)
+/* 0000A7B0 39880000 */ addi r12, r8, lbl_802F1E68@l
+/* 0000A7B4 39040000 */ addi r8, r4, lbl_802F1E60@l
+/* 0000A7B8 C0060018 */ lfs f0, 0x18(r6)
+/* 0000A7BC 38800000 */ li r4, 0
+/* 0000A7C0 D01A0000 */ stfs f0, 0(r26)
+/* 0000A7C4 C006001C */ lfs f0, 0x1c(r6)
+/* 0000A7C8 D01B0000 */ stfs f0, 0(r27)
+/* 0000A7CC B3FC0000 */ sth r31, 0(r28)
+/* 0000A7D0 B00C0000 */ sth r0, 0(r12)
+/* 0000A7D4 B16A0000 */ sth r11, 0(r10)
+/* 0000A7D8 B3C90000 */ sth r30, 0(r9)
+/* 0000A7DC C0060020 */ lfs f0, 0x20(r6)
+/* 0000A7E0 D0080000 */ stfs f0, 0(r8)
+/* 0000A7E4 C0060014 */ lfs f0, 0x14(r6)
+/* 0000A7E8 D0070000 */ stfs f0, 0(r7)
+/* 0000A7EC 4BFF5979 */ bl memset
+/* 0000A7F0 3C600000 */ lis r3, modeCtrl@ha
+/* 0000A7F4 B3DD0146 */ sth r30, 0x146(r29)
+/* 0000A7F8 3B830000 */ addi r28, r3, modeCtrl@l
+/* 0000A7FC 3BE00004 */ li r31, 4
+/* 0000A800 93FC0028 */ stw r31, 0x28(r28)
+/* 0000A804 93DC002C */ stw r30, 0x2c(r28)
+/* 0000A808 4BFF595D */ bl free_all_bitmap_groups_except_com
+/* 0000A80C 4BFF5959 */ bl func_800249D4
+/* 0000A810 38600005 */ li r3, 5
+/* 0000A814 4BFF5951 */ bl bitmap_load_group
+/* 0000A818 38600009 */ li r3, 9
+/* 0000A81C 4BFF5949 */ bl bitmap_load_group
+/* 0000A820 3C600000 */ lis r3, stageHeap@ha
+/* 0000A824 38630000 */ addi r3, r3, stageHeap@l
+/* 0000A828 80630000 */ lwz r3, 0(r3)
+/* 0000A82C 4BFF5939 */ bl OSSetCurrentHeap
+/* 0000A830 3B430000 */ addi r26, r3, 0
+/* 0000A834 38600002 */ li r3, 2
+/* 0000A838 4BFF592D */ bl u_load_minigame_graphics
+/* 0000A83C 7F43D378 */ mr r3, r26
+/* 0000A840 4BFF5925 */ bl OSSetCurrentHeap
+/* 0000A844 3860000B */ li r3, 0xb
+/* 0000A848 4BFF591D */ bl SoundGroupLoad
+/* 0000A84C 4BFF5919 */ bl event_finish_all
+/* 0000A850 801C0024 */ lwz r0, 0x24(r28)
+/* 0000A854 3C800000 */ lis r4, g_poolInfo@ha
+/* 0000A858 3C600000 */ lis r3, playerCharacterSelection@ha
+/* 0000A85C 981D0138 */ stb r0, 0x138(r29)
+/* 0000A860 38840000 */ addi r4, r4, g_poolInfo@l
+/* 0000A864 3BC30000 */ addi r30, r3, playerCharacterSelection@l
+/* 0000A868 8084000C */ lwz r4, 0xc(r4)
+/* 0000A86C 3C600000 */ lis r3, lbl_801EED98@ha
+/* 0000A870 38BC0024 */ addi r5, r28, 0x24
+/* 0000A874 88040000 */ lbz r0, 0(r4)
+/* 0000A878 981D013C */ stb r0, 0x13c(r29)
+/* 0000A87C 801E0000 */ lwz r0, 0(r30)
+/* 0000A880 981D0140 */ stb r0, 0x140(r29)
+/* 0000A884 88040001 */ lbz r0, 1(r4)
+/* 0000A888 981D013D */ stb r0, 0x13d(r29)
+/* 0000A88C 801E0004 */ lwz r0, 4(r30)
+/* 0000A890 981D0141 */ stb r0, 0x141(r29)
+/* 0000A894 88040002 */ lbz r0, 2(r4)
+/* 0000A898 981D013E */ stb r0, 0x13e(r29)
+/* 0000A89C 801E0008 */ lwz r0, 8(r30)
+/* 0000A8A0 981D0142 */ stb r0, 0x142(r29)
+/* 0000A8A4 88040003 */ lbz r0, 3(r4)
+/* 0000A8A8 981D013F */ stb r0, 0x13f(r29)
+/* 0000A8AC 801E000C */ lwz r0, 0xc(r30)
+/* 0000A8B0 981D0143 */ stb r0, 0x143(r29)
+/* 0000A8B4 80030000 */ lwz r0, lbl_801EED98@l(r3)
+/* 0000A8B8 540007FF */ clrlwi. r0, r0, 0x1f
+/* 0000A8BC 41820080 */ beq lbl_0000A93C
+/* 0000A8C0 3C600000 */ lis r3, playerControllerIDs@ha
+/* 0000A8C4 93E50000 */ stw r31, 0(r5)
+/* 0000A8C8 3BE30000 */ addi r31, r3, playerControllerIDs@l
+/* 0000A8CC 3B3D014C */ addi r25, r29, 0x14c
+/* 0000A8D0 3B840000 */ addi r28, r4, 0
+/* 0000A8D4 3B5F0000 */ addi r26, r31, 0
+/* 0000A8D8 3B600000 */ li r27, 0
+/* 0000A8DC 3BA00002 */ li r29, 2
+lbl_0000A8E0:
+/* 0000A8E0 881C0000 */ lbz r0, 0(r28)
+/* 0000A8E4 7C000775 */ extsb. r0, r0
+/* 0000A8E8 40820038 */ bne lbl_0000A920
+/* 0000A8EC 9BBC0000 */ stb r29, 0(r28)
+/* 0000A8F0 4BFF5875 */ bl rand
+/* 0000A8F4 5463047E */ clrlwi r3, r3, 0x11
+/* 0000A8F8 7C601670 */ srawi r0, r3, 2
+/* 0000A8FC 7C000194 */ addze r0, r0
+/* 0000A900 5400103A */ slwi r0, r0, 2
+/* 0000A904 7C001810 */ subfc r0, r0, r3
+/* 0000A908 901E0000 */ stw r0, 0(r30)
+/* 0000A90C 801F0000 */ lwz r0, 0(r31)
+/* 0000A910 901A0000 */ stw r0, 0(r26)
+/* 0000A914 A0190012 */ lhz r0, 0x12(r25)
+/* 0000A918 60000001 */ ori r0, r0, 1
+/* 0000A91C B0190012 */ sth r0, 0x12(r25)
+lbl_0000A920:
+/* 0000A920 3B7B0001 */ addi r27, r27, 1
+/* 0000A924 2C1B0004 */ cmpwi r27, 4
+/* 0000A928 3BDE0004 */ addi r30, r30, 4
+/* 0000A92C 3B5A0004 */ addi r26, r26, 4
+/* 0000A930 3B390018 */ addi r25, r25, 0x18
+/* 0000A934 3B9C0001 */ addi r28, r28, 1
+/* 0000A938 4180FFA8 */ blt lbl_0000A8E0
+lbl_0000A93C:
+/* 0000A93C 4800431D */ bl lbl_0000EC58
+/* 0000A940 48005589 */ bl lbl_0000FEC8
+/* 0000A944 4BFFCB01 */ bl lbl_00007444
+/* 0000A948 4BFF58C9 */ bl lbl_00000210
+/* 0000A94C 480078B1 */ bl lbl_000121FC
+/* 0000A950 480092CD */ bl lbl_00013C1C
+/* 0000A954 4800E9ED */ bl lbl_00019340
+/* 0000A958 4800FA25 */ bl lbl_0001A37C
+/* 0000A95C 4800407D */ bl lbl_0000E9D8
+/* 0000A960 BB21001C */ lmw r25, 0x1c(r1)
+/* 0000A964 8001003C */ lwz r0, 0x3c(r1)
+/* 0000A968 38210038 */ addi r1, r1, 0x38
+/* 0000A96C 7C0803A6 */ mtlr r0
+/* 0000A970 4E800020 */ blr 

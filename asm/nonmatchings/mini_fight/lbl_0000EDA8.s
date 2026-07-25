@@ -1,0 +1,34 @@
+/* 0000EDA8 7C0802A6 */ mflr r0
+/* 0000EDAC 3C600000 */ lis r3, lbl_100188E8@ha
+/* 0000EDB0 90010004 */ stw r0, 4(r1)
+/* 0000EDB4 9421FFF8 */ stwu r1, -8(r1)
+/* 0000EDB8 80030000 */ lwz r0, lbl_100188E8@l(r3)
+/* 0000EDBC 2C000000 */ cmpwi r0, 0
+/* 0000EDC0 41820020 */ beq lbl_0000EDE0
+/* 0000EDC4 1C00000C */ mulli r0, r0, 0xc
+/* 0000EDC8 3C600000 */ lis r3, lbl_10017E98@ha
+/* 0000EDCC 38630000 */ addi r3, r3, lbl_10017E98@l
+/* 0000EDD0 7C630214 */ add r3, r3, r0
+/* 0000EDD4 81830008 */ lwz r12, 8(r3)
+/* 0000EDD8 7D8803A6 */ mtlr r12
+/* 0000EDDC 4E800021 */ blrl 
+lbl_0000EDE0:
+/* 0000EDE0 3C600000 */ lis r3, lbl_100188E8@ha
+/* 0000EDE4 80030000 */ lwz r0, lbl_100188E8@l(r3)
+/* 0000EDE8 2C000000 */ cmpwi r0, 0
+/* 0000EDEC 41820020 */ beq lbl_0000EE0C
+/* 0000EDF0 1C80000C */ mulli r4, r0, 0xc
+/* 0000EDF4 3C600000 */ lis r3, lbl_10017E98@ha
+/* 0000EDF8 38030000 */ addi r0, r3, lbl_10017E98@l
+/* 0000EDFC 7C602214 */ add r3, r0, r4
+/* 0000EE00 81830000 */ lwz r12, 0(r3)
+/* 0000EE04 7D8803A6 */ mtlr r12
+/* 0000EE08 4E800021 */ blrl 
+lbl_0000EE0C:
+/* 0000EE0C 3C600000 */ lis r3, lbl_0000EE28@ha
+/* 0000EE10 38630000 */ addi r3, r3, lbl_0000EE28@l
+/* 0000EE14 4BFF1351 */ bl func_80047518
+/* 0000EE18 8001000C */ lwz r0, 0xc(r1)
+/* 0000EE1C 38210008 */ addi r1, r1, 8
+/* 0000EE20 7C0803A6 */ mtlr r0
+/* 0000EE24 4E800020 */ blr 

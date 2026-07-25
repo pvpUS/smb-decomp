@@ -1,0 +1,8 @@
+/* 0000FDE4 7C0802A6 */ mflr r0
+/* 0000FDE8 90010004 */ stw r0, 4(r1)
+/* 0000FDEC 9421FFF8 */ stwu r1, -8(r1)
+/* 0000FDF0 4BFFFC29 */ bl lbl_0000FA18
+/* 0000FDF4 8001000C */ lwz r0, 0xc(r1)
+/* 0000FDF8 38210008 */ addi r1, r1, 8
+/* 0000FDFC 7C0803A6 */ mtlr r0
+/* 0000FE00 4E800020 */ blr 

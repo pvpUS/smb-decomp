@@ -1,0 +1,19 @@
+/* 0000FE80 3C600000 */ lis r3, g_poolInfo@ha
+/* 0000FE84 38630000 */ addi r3, r3, g_poolInfo@l
+/* 0000FE88 80830028 */ lwz r4, 0x28(r3)
+/* 0000FE8C 3C600000 */ lis r3, lbl_10000118@ha
+/* 0000FE90 38030000 */ addi r0, r3, lbl_10000118@l
+/* 0000FE94 2C040000 */ cmpwi r4, 0
+/* 0000FE98 7C8903A6 */ mtctr r4
+/* 0000FE9C 7C040378 */ mr r4, r0
+/* 0000FEA0 38600000 */ li r3, 0
+/* 0000FEA4 4C810020 */ blelr 
+lbl_0000FEA8:
+/* 0000FEA8 80040000 */ lwz r0, 0(r4)
+/* 0000FEAC 28000000 */ cmplwi r0, 0
+/* 0000FEB0 41820008 */ beq lbl_0000FEB8
+/* 0000FEB4 38630001 */ addi r3, r3, 1
+lbl_0000FEB8:
+/* 0000FEB8 388402E8 */ addi r4, r4, 0x2e8
+/* 0000FEBC 4200FFEC */ bdnz lbl_0000FEA8
+/* 0000FEC0 4E800020 */ blr 

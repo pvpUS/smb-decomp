@@ -1,0 +1,32 @@
+/* 00016B8C 7C0802A6 */ mflr r0
+/* 00016B90 90010004 */ stw r0, 4(r1)
+/* 00016B94 9421FFF0 */ stwu r1, -0x10(r1)
+/* 00016B98 93E1000C */ stw r31, 0xc(r1)
+/* 00016B9C 4BFE95C9 */ bl func_8000D5B8
+/* 00016BA0 4BFE95C5 */ bl create_sprite
+/* 00016BA4 7C7F1B79 */ or. r31, r3, r3
+/* 00016BA8 4182004C */ beq lbl_00016BF4
+/* 00016BAC 4800005D */ bl lbl_00016C08
+/* 00016BB0 3C600000 */ lis r3, lbl_0001C6FC@ha
+/* 00016BB4 4CC63182 */ crclr 6
+/* 00016BB8 C0030000 */ lfs f0, lbl_0001C6FC@l(r3)
+/* 00016BBC 3CA00000 */ lis r5, lbl_000170F8@ha
+/* 00016BC0 3C600000 */ lis r3, lbl_0001C700@ha
+/* 00016BC4 D01F0004 */ stfs f0, 4(r31)
+/* 00016BC8 3CC00000 */ lis r6, lbl_00016CC8@ha
+/* 00016BCC 38050000 */ addi r0, r5, lbl_000170F8@l
+/* 00016BD0 C0030000 */ lfs f0, lbl_0001C700@l(r3)
+/* 00016BD4 3C600000 */ lis r3, lbl_0001D9B8@ha
+/* 00016BD8 38830000 */ addi r4, r3, lbl_0001D9B8@l
+/* 00016BDC D01F0008 */ stfs f0, 8(r31)
+/* 00016BE0 38660000 */ addi r3, r6, lbl_00016CC8@l
+/* 00016BE4 907F0034 */ stw r3, 0x34(r31)
+/* 00016BE8 387F008C */ addi r3, r31, 0x8c
+/* 00016BEC 901F0038 */ stw r0, 0x38(r31)
+/* 00016BF0 4BFE9575 */ bl sprintf
+lbl_00016BF4:
+/* 00016BF4 80010014 */ lwz r0, 0x14(r1)
+/* 00016BF8 83E1000C */ lwz r31, 0xc(r1)
+/* 00016BFC 38210010 */ addi r1, r1, 0x10
+/* 00016C00 7C0803A6 */ mtlr r0
+/* 00016C04 4E800020 */ blr 

@@ -1,0 +1,34 @@
+/* 0000DC24 80030094 */ lwz r0, 0x94(r3)
+/* 0000DC28 540007FF */ clrlwi. r0, r0, 0x1f
+/* 0000DC2C 4D820020 */ beqlr 
+/* 0000DC30 8883002E */ lbz r4, 0x2e(r3)
+/* 0000DC34 3C600000 */ lis r3, lbl_10017664@ha
+/* 0000DC38 38030000 */ addi r0, r3, lbl_10017664@l
+/* 0000DC3C 7C830774 */ extsb r3, r4
+/* 0000DC40 1C630018 */ mulli r3, r3, 0x18
+/* 0000DC44 7C601A14 */ add r3, r0, r3
+/* 0000DC48 38830010 */ addi r4, r3, 0x10
+/* 0000DC4C A8630010 */ lha r3, 0x10(r3)
+/* 0000DC50 2C030000 */ cmpwi r3, 0
+/* 0000DC54 4081000C */ ble lbl_0000DC60
+/* 0000DC58 3803FFFF */ addi r0, r3, -1
+/* 0000DC5C B0040000 */ sth r0, 0(r4)
+lbl_0000DC60:
+/* 0000DC60 AC640002 */ lhau r3, 2(r4)
+/* 0000DC64 2C030000 */ cmpwi r3, 0
+/* 0000DC68 4081000C */ ble lbl_0000DC74
+/* 0000DC6C 3803FFFF */ addi r0, r3, -1
+/* 0000DC70 B0040000 */ sth r0, 0(r4)
+lbl_0000DC74:
+/* 0000DC74 AC640002 */ lhau r3, 2(r4)
+/* 0000DC78 2C030000 */ cmpwi r3, 0
+/* 0000DC7C 4081000C */ ble lbl_0000DC88
+/* 0000DC80 3803FFFF */ addi r0, r3, -1
+/* 0000DC84 B0040000 */ sth r0, 0(r4)
+lbl_0000DC88:
+/* 0000DC88 AC640002 */ lhau r3, 2(r4)
+/* 0000DC8C 2C030000 */ cmpwi r3, 0
+/* 0000DC90 4C810020 */ blelr 
+/* 0000DC94 3803FFFF */ addi r0, r3, -1
+/* 0000DC98 B0040000 */ sth r0, 0(r4)
+/* 0000DC9C 4E800020 */ blr 

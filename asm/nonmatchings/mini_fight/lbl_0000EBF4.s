@@ -1,0 +1,28 @@
+/* 0000EBF4 3C600000 */ lis r3, g_poolInfo@ha
+/* 0000EBF8 38630000 */ addi r3, r3, g_poolInfo@l
+/* 0000EBFC 80A30008 */ lwz r5, 8(r3)
+/* 0000EC00 3C800000 */ lis r4, lbl_10017664@ha
+/* 0000EC04 38840000 */ addi r4, r4, lbl_10017664@l
+/* 0000EC08 80C3000C */ lwz r6, 0xc(r3)
+/* 0000EC0C 8064074C */ lwz r3, 0x74c(r4)
+/* 0000EC10 2C050000 */ cmpwi r5, 0
+/* 0000EC14 7CA903A6 */ mtctr r5
+/* 0000EC18 38E3FFFF */ addi r7, r3, -1
+/* 0000EC1C 38640008 */ addi r3, r4, 8
+/* 0000EC20 4081002C */ ble lbl_0000EC4C
+lbl_0000EC24:
+/* 0000EC24 88060000 */ lbz r0, 0(r6)
+/* 0000EC28 7C000775 */ extsb. r0, r0
+/* 0000EC2C 41820010 */ beq lbl_0000EC3C
+/* 0000EC30 A8030004 */ lha r0, 4(r3)
+/* 0000EC34 7C003800 */ cmpw r0, r7
+/* 0000EC38 41800014 */ blt lbl_0000EC4C
+lbl_0000EC3C:
+/* 0000EC3C 38A5FFFF */ addi r5, r5, -1
+/* 0000EC40 38C60001 */ addi r6, r6, 1
+/* 0000EC44 38630018 */ addi r3, r3, 0x18
+/* 0000EC48 4200FFDC */ bdnz lbl_0000EC24
+lbl_0000EC4C:
+/* 0000EC4C 7CA00034 */ cntlzw r0, r5
+/* 0000EC50 5403D97E */ srwi r3, r0, 5
+/* 0000EC54 4E800020 */ blr 
