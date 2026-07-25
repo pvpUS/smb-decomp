@@ -4,14 +4,51 @@
 
 ---
 
-## 0.5 — PARALLEL ROLLOUT DONE (all 6 minigame RELs have matched C)
+## 0.5 — PARALLEL ROLLOUT DONE + NEXT-RUN PLAYBOOK
 
-All six minigame RELs are split + partially matched to pure C, each building to its golden sha1, committed + pushed on `wip/rel-drafts-and-dol-matches`. **123 functions matched total:** mini_bowling 6, mini_golf 39, mini_fight 36, mini_race 23, mini_pilot 12, mini_billiards 7. The 5 non-bowling modules were done by 5 parallel Opus subagents (one per module) in isolated warm copies. Method to reproduce/extend:
-- **Isolation:** git worktrees DON'T work (mwcc is gitignored). REL builds need the prebuilt DOL (ELF2REL resolves imports from `supermonkeyball.map/.elf`), so a warm copy must be the full tree minus `.git`/`baserom`. Per-agent `TMP=C:/tmp/w<x>` for the CW linker. Each agent worked in `C:/tmp/smbm/<x>`.
-- **Integrate a finished module:** copy `src/<mod>*.c` + `asm/<mod>.s` + `asm/nonmatchings/<mod>/` + its Makefile `SOURCES` block into main, then rebuild the REL in main to independently confirm golden + `sha1sum -c`.
-- **rel_split.py `.data` fix** (3 agents found it independently, now in the tool): the `.balign 8` alignment-restore must cover `.section .data` too, not just `.rodata` (a module whose .data has a `.c`-provided `.if 0` stub is otherwise 4 bytes short).
-- **iso-verify caveat:** the isolated mwcc compile MUST add `-sdata 0 -sdata2 0 -g` (the REL_FLAGS) or DOL globals use small-data addressing (`R_PPC_EMB_SDA21`, 1 insn) instead of the golden `lis@ha`+`lwz@l` — false verification.
-- Each module's remaining functions are the harder ones (physics/draw/dispatch, register-allocator tie-breaks). Continue per-module with singleton `--isolate` + isolation objdump verify, gate on the whole-REL golden.
+All six minigame RELs are split + partially matched to pure C, each building to its golden sha1, committed + pushed on `wip/rel-drafts-and-dol-matches`. The 5 non-bowling modules were done by 5 parallel Opus subagents (one per module) in isolated warm copies.
+
+**BASELINE — measured progress after run 1** (matched vs total; the honest metric is instructions of code, NOT function count — the easy small functions went first):
+
+| module | funcs matched/total | instructions matched/total | % code |
+|---|---|---|---|
+| mini_bowling | 6/120 | 186/15313 | 1.2% |
+| mini_race | 23/157 | 624/19817 | 3.1% |
+| mini_fight | 36/154 | 327/28588 | 1.1% |
+| mini_pilot | 12/75 | 262/12137 | 2.2% |
+| mini_golf | 39/118 | 345/38919 | 0.9% |
+| mini_billiards | 7/70 | 137/28793 | 0.5% |
+| **TOTAL** | **123/694** | **1881/143567** | **1.3%** |
+
+**Re-measure after the next run with this exact script** (run from repo root; compares matched-vs-total instructions per module so you can compute the delta / rate):
+```python
+python3 - <<'PY'
+import glob, os, re
+for m in ['mini_bowling','mini_race','mini_fight','mini_pilot','mini_golf','mini_billiards']:
+    insn = {os.path.basename(b)[:-2]: sum(1 for l in open(b) if re.match(r'/\* [0-9A-Fa-f]{8} ', l))
+            for b in glob.glob(f'asm/nonmatchings/{m}/*.s')}
+    src = '\n'.join(open(p, errors='ignore').read() for p in glob.glob(f'src/{m}*.c'))
+    still = set(re.findall(r'nonmatchings/%s/(lbl_[0-9A-Fa-f]+|_prolog|_epilog|_unresolved)\.s' % m, src))
+    matched = set(insn) - still
+    im, it = sum(insn[l] for l in matched), sum(insn.values())
+    print(f"{m:<16}{len(matched):>4}/{len(insn):<4} funcs   {im:>6}/{it:<6} insn  {100*im/it:5.1f}%")
+PY
+```
+
+**To EXTEND an already-matched module (this is what the next run does):** each module is already split; re-running `rel_split.py` from scratch would clobber the committed C. Use **`tools/rel_rematch.py`** instead — it reconstructs the module's whole split (imports, `--isolate`/`--isolate-range` layout, and the FULL content of every pure-C file incl. any struct/typedef a match added) from the committed `src/<mod>*.c`, restores the monolithic `asm/<mod>.s` from commit `5138d8f`, re-splits, and swaps the saved C back in — plus it carves any NEW functions you name into their own pure-C files:
+```
+python tools/rel_rematch.py <module> --add <lbl> [--add <lbl> ...]
+```
+Then convert each `--add` stub file to C (verify in isolation first — see below), rebuild, and gate on the golden sha1. Verified: `rel_rematch <module>` with no `--add` reproduces golden for mini_pilot and mini_golf.
+
+**Run-1 method (kept for reference / new modules):**
+- **Isolation:** git worktrees DON'T work (mwcc is gitignored). REL builds need the prebuilt DOL (ELF2REL resolves imports from `supermonkeyball.map/.elf`), so a warm copy must be the full tree minus `.git`/`baserom` (~44MB; robocopy). Per-agent `TMP=C:/tmp/w<x>` for the CW linker; each agent works in a spaceless `C:/tmp/smbm/<x>`.
+- **Integrate a finished module** back to main: copy `src/<mod>*.c` + `asm/<mod>.s` + `asm/nonmatchings/<mod>/` + its Makefile `SOURCES` block, then rebuild the REL in main to independently confirm golden + run `sha1sum -c`.
+- **iso-verify caveat:** the isolated mwcc compile MUST add `-sdata 0 -sdata2 0 -g` (the REL_FLAGS from Makefile line ~61) or DOL globals use small-data addressing (`R_PPC_EMB_SDA21`, 1 insn) instead of the golden `lis@ha`+`lwz@l` — false verification.
+- **VERIFY the C survived, not just the hash:** an all-asm split ALSO hashes golden, so after any regen confirm `grep -c '#include "../asm/nonmatchings' src/<mod>_N.c` == 0 on your pure-C files.
+- The `rel_split.py` `.data` `.balign 8` fix (3 agents found it independently) is already in the tool.
+
+Each module's remaining functions are the harder ones (physics/draw/dispatch, register-allocator tie-breaks — some never source-matchable). Continue per-module: `rel_rematch --add <lbl>`, write matching C, isolation objdump-verify, rebuild, gate on the whole-REL golden.
 
 ## 0. TL;DR — where we are and what to do next
 
