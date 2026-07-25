@@ -457,6 +457,30 @@ ALL_RELS += mkbe.rel_mini_pilot.rel
 # mkbe.rel_mini_golf.rel sources
 SOURCES := \
 	src/mini_golf.c \
+	src/mini_golf_2.c \
+	src/mini_golf_3.c \
+	src/mini_golf_4.c \
+	src/mini_golf_5.c \
+	src/mini_golf_6.c \
+	src/mini_golf_7.c \
+	src/mini_golf_8.c \
+	src/mini_golf_9.c \
+	src/mini_golf_10.c \
+	src/mini_golf_11.c \
+	src/mini_golf_12.c \
+	src/mini_golf_13.c \
+	src/mini_golf_14.c \
+	src/mini_golf_15.c \
+	src/mini_golf_16.c \
+	src/mini_golf_17.c \
+	src/mini_golf_18.c \
+	src/mini_golf_19.c \
+	src/mini_golf_20.c \
+	src/mini_golf_21.c \
+	src/mini_golf_22.c \
+	src/mini_golf_23.c \
+	src/mini_golf_24.c \
+	src/mini_golf_25.c \
 	asm/mini_golf.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)

@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_000000C8.
+ * mini_golf.c -- REL module: isolated function lbl_00009178.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -228,22 +228,15 @@ int lbl_0002609C(void);
 int lbl_000260C0(void);
 
 #pragma force_active on
-struct GMAModel* lbl_000000C8(struct GMA* gma, char* name)
+u8 lbl_00009178(void)
 {
-    struct GMAModelEntry* entry;
-    int count;
-
-    if (gma == NULL)
-        return NULL;
-
-    entry = gma->modelEntries;
-    count = gma->numModels;
-    while (count > 0) {
-        if (strcmp(entry->name, name) == 0)
-            return entry->model;
-        count--;
-        entry++;
+    int i;
+    int result = 1;
+    u8* p = (u8*)lbl_00026AF0;
+    for (i = 0; i < modeCtrl.playerCount; i++) {
+        if (p[i] == 0)
+            result = 0;
     }
-    return NULL;
+    return result;
 }
 #pragma force_active reset
