@@ -931,6 +931,7 @@ SOURCES := \
 	src/mini_billiards_13.c \
 	src/mini_billiards_14.c \
 	src/mini_billiards_15.c \
+	asm/mini_billiards_d1.s \
 	src/mini_billiards_16.c \
 	src/mini_billiards_17.c \
 	src/mini_billiards_18.c \
@@ -942,7 +943,6 @@ SOURCES := \
 	src/mini_billiards_24.c \
 	src/mini_billiards_25.c \
 	src/mini_billiards_26.c \
-	asm/mini_billiards_d1.s \
 	src/mini_billiards_27.c \
 	src/mini_billiards_28.c \
 	src/mini_billiards_29.c \
@@ -951,7 +951,29 @@ SOURCES := \
 	src/mini_billiards_32.c \
 	src/mini_billiards_33.c \
 	src/mini_billiards_34.c \
-	asm/mini_billiards_d2.s
+	asm/mini_billiards_d2.s \
+	src/mini_billiards_35.c \
+	src/mini_billiards_36.c \
+	src/mini_billiards_37.c \
+	src/mini_billiards_38.c \
+	src/mini_billiards_39.c \
+	src/mini_billiards_40.c \
+	src/mini_billiards_41.c \
+	src/mini_billiards_42.c \
+	src/mini_billiards_43.c \
+	src/mini_billiards_44.c \
+	src/mini_billiards_45.c \
+	src/mini_billiards_46.c \
+	src/mini_billiards_47.c \
+	src/mini_billiards_48.c \
+	src/mini_billiards_49.c \
+	src/mini_billiards_50.c \
+	src/mini_billiards_51.c \
+	src/mini_billiards_52.c \
+	src/mini_billiards_53.c \
+	src/mini_billiards_54.c \
+	src/mini_billiards_55.c \
+	asm/mini_billiards_d3.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
 mkbe.rel_mini_billiards.plf: $(O_FILES)

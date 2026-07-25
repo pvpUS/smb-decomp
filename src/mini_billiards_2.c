@@ -1,5 +1,5 @@
 /*
- * mini_billiards.c -- REL module: isolated function lbl_00000754.
+ * mini_billiards.c -- REL module: isolated function _epilog.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -161,13 +161,19 @@ extern void window_printf_1();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_000001E0(void);
 void lbl_00000614(void);
 void lbl_00000754(void);
 void lbl_00000800(void);
 void lbl_00000E68(void);
 void lbl_00000F34(void);
 void lbl_00000F5C(void);
+void lbl_000023B0(void);
+void lbl_000025B0(void);
 void lbl_00002B4C(void);
+void lbl_00002C80(void);
+void lbl_0000341C(void);
+void lbl_0000367C(void);
 void lbl_00003CC8(void);
 void lbl_00003F4C(void);
 void lbl_00004634(void);
@@ -195,15 +201,22 @@ void lbl_0000D0A4(void);
 void lbl_0000D330(void);
 void lbl_0000D7E8(void);
 void lbl_0000E8D0(void);
+void lbl_00010FD0(void);
+void lbl_000111B4(void);
+void lbl_000115F4(void);
 void lbl_00016D24(void);
 void lbl_00016D9C(void);
 void lbl_0001723C(void);
+void lbl_00017408(void);
 void lbl_00017A00(void);
 void lbl_00018008(void);
 void lbl_00018474(void);
 void lbl_00018608(void);
 void lbl_000186EC(void);
 void lbl_000189B4(void);
+void lbl_00018A98(void);
+void lbl_00018C78(void);
+void lbl_00018F4C(void);
 void lbl_00019264(void);
 void lbl_0001968C(void);
 void lbl_00019F5C(void);
@@ -214,32 +227,8 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-void lbl_00000754(void)
+void _epilog(void)
 {
-    int i;
-    int j;
-
-    for (i = 0; i < 5; i++) {
-        for (j = 0; j < 2; j++) {
-            u8 *sub = lbl_10009710 + i * 0x48 + j * 0x24;
-            *(s8 *)(sub + 0x00) = -1;
-            *(s8 *)(sub + 0x01) = 0;
-            *(s16 *)(sub + 0x08) = 0;
-            *(s16 *)(sub + 0x0a) = 0;
-            *(s16 *)(sub + 0x0c) = 0;
-            *(s16 *)(sub + 0x0e) = 0;
-            *(s16 *)(sub + 0x10) = 0;
-            *(s16 *)(sub + 0x12) = 0;
-            *(s16 *)(sub + 0x14) = 0;
-            *(s16 *)(sub + 0x18) = 0;
-            *(s16 *)(sub + 0x16) = 0;
-            *(s8 *)(sub + 0x02) = 0;
-            *(s8 *)(sub + 0x04) = 0;
-            *(s8 *)(sub + 0x03) = 0;
-            *(s32 *)(sub + 0x1c) = 0;
-            *(s32 *)(sub + 0x20) = 0;
-            *(s16 *)(sub + 0x06) = 0;
-        }
-    }
+    lbl_00009E34();
 }
 #pragma force_active reset

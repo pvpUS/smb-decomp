@@ -60,6 +60,19 @@ extern u8 lbl_0001C2D8[];
 extern u8 lbl_0001C308[];
 extern u8 lbl_0001C320[];
 extern u8 lbl_0001C330[];
+struct FightPanel
+{
+    u8 unk0;
+    u8 unk1;
+    s16 state;
+    s16 timer;
+    u8 pad6[6];
+    f32 unkC;
+    u8 pad10[8];
+    f32 unk18;
+    u8 pad1C[8];
+    f32 unk24;
+};
 extern u8 lbl_0001C348[];
 extern u8 lbl_0001C3C0[];
 extern u8 lbl_0001C3CC[];
@@ -333,11 +346,11 @@ void lbl_0000F2C4(void);
 void lbl_0000F2C8(void);
 void lbl_0000F38C(void);
 void lbl_0000F4C8(void);
-void lbl_0000F628(void);
+void lbl_0000F628(struct FightPanel *p);
 void lbl_0000F6F4(void);
 void lbl_0000F848(void);
 void lbl_0000F9A0(void);
-void lbl_0000F9DC(void);
+int lbl_0000F9DC(u8 *p);
 void lbl_0000FA18(void);
 void lbl_0000FD38(void);
 void lbl_0000FD6C(void);
@@ -392,9 +405,31 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_0000F628(void)
+void lbl_0000F628(struct FightPanel *p)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000F628.s"
+    struct Effect ef;
+
+    switch (p->state)
+    {
+    case 0:
+        p->state = 1;
+        p->timer = lbl_0000F9DC((u8 *)p) + 0x78;
+        memset(&ef, 0, sizeof(ef));
+        ef.type = 0x19;
+        ef.playerId = p->unk0;
+        spawn_effect(&ef);
+    case 1:
+        p->timer -= 1;
+        if (p->timer < 0)
+            p->state = 2;
+        break;
+    case 2:
+        p->state = 3;
+        p->unkC = *(f32 *)lbl_0001C330;
+        p->unk24 = *(f32 *)lbl_0001C330;
+        break;
+    case 3:
+        break;
+    }
 }
 #pragma force_active reset

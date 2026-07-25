@@ -1,5 +1,5 @@
 /*
- * mini_billiards.c -- REL module: isolated function lbl_00009F3C.
+ * mini_billiards.c -- REL module: isolated function lbl_00007D18.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -161,13 +161,19 @@ extern void window_printf_1();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_000001E0(void);
 void lbl_00000614(void);
 void lbl_00000754(void);
 void lbl_00000800(void);
 void lbl_00000E68(void);
 void lbl_00000F34(void);
 void lbl_00000F5C(void);
+void lbl_000023B0(void);
+void lbl_000025B0(void);
 void lbl_00002B4C(void);
+void lbl_00002C80(void);
+void lbl_0000341C(void);
+void lbl_0000367C(void);
 void lbl_00003CC8(void);
 void lbl_00003F4C(void);
 void lbl_00004634(void);
@@ -179,7 +185,7 @@ void lbl_00006DC0(void);
 void lbl_000077D8(void);
 void lbl_00007974(void);
 void lbl_00007C74(void);
-void lbl_00007D18(void);
+void lbl_00007D18(s16 arg0, s32 arg1);
 void lbl_00007D80(void);
 void lbl_00008EC0(void);
 void lbl_0000939C(void);
@@ -195,15 +201,22 @@ void lbl_0000D0A4(void);
 void lbl_0000D330(void);
 void lbl_0000D7E8(void);
 void lbl_0000E8D0(void);
+void lbl_00010FD0(void);
+void lbl_000111B4(void);
+void lbl_000115F4(void);
 void lbl_00016D24(void);
 void lbl_00016D9C(void);
 void lbl_0001723C(void);
+void lbl_00017408(void);
 void lbl_00017A00(void);
 void lbl_00018008(void);
 void lbl_00018474(void);
 void lbl_00018608(void);
 void lbl_000186EC(void);
 void lbl_000189B4(void);
+void lbl_00018A98(void);
+void lbl_00018C78(void);
+void lbl_00018F4C(void);
 void lbl_00019264(void);
 void lbl_0001968C(void);
 void lbl_00019F5C(void);
@@ -213,30 +226,33 @@ void lbl_0001A0B0(void);
 void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
+struct Rec7D18 {
+    s16 unk0;
+    s16 unk2;
+    s32 unk4;
+    s32 unk8;
+    s32 unkC;
+};
+
+struct Work7D18 {
+    u8 pad[0xA5BC];
+    struct Rec7D18 recs[64];
+};
+
 #pragma force_active on
-void lbl_00009F3C(void)
+void lbl_00007D18(s16 arg0, s32 arg1)
 {
-    s32 o = lbl_802F1C32 * 6;
-    s8 *b = (s8 *)lbl_10000000;
-
-    if (b[o + 0xa66] != 0 || (u8)(*(u8 *)(b + 0xa) - 10) <= 1 ||
-        (u8)(*(u8 *)(b + 0xa) - 7) <= 1) {
-        pauseMenuState.unk16 = -1;
-        lbl_802F0310[0] = 1;
-        lbl_802F0310[1] = 1;
-    } else {
-        pauseMenuState.unk16 = playerControllerIDs[lbl_802F1C32];
-        lbl_802F0310[lbl_802F1C32] = 1;
-        lbl_802F0310[1 - lbl_802F1C32] = 0;
+    struct Work7D18 *w = (struct Work7D18 *)lbl_10000000;
+    struct Rec7D18 *p = w->recs;
+    int i;
+    for (i = 0; i < 64; p++, i++) {
+        if (p->unk0 == -1) {
+            w->recs[i].unk0 = arg0;
+            w->recs[i].unkC = arg1;
+            w->recs[i].unk4 = lbl_802F1DFC;
+            w->recs[i].unk8 = u_somePlayerId;
+            return;
+        }
     }
-
-    if (pauseMenuState.unk4 & 0x10) {
-        pauseMenuState.unk4 &= ~0x10;
-        b[o + 0xa67] ^= 1;
-    }
-    if (b[o + 0xa67] != 0)
-        pauseMenuState.unk4 |= 8;
-    else
-        pauseMenuState.unk4 &= ~8;
 }
 #pragma force_active reset

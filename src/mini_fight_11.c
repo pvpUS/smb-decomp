@@ -291,7 +291,7 @@ void lbl_00004314(void);
 void lbl_00004498(void);
 void lbl_00004D14(void);
 void lbl_000053EC(void);
-void lbl_000057FC(void);
+void lbl_000057FC(u8 *p, int max);
 void lbl_000058A0(void);
 void lbl_0000A690(void);
 void lbl_0000A974(void);
@@ -393,9 +393,26 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_000057FC(void)
+void lbl_000057FC(u8 *p, int max)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000057FC.s"
+    s32 n;
+    s32 *q;
+
+    if (max < 1)
+        max = 1;
+    p = *(u8 **)(p + 0xa4);
+    *(u16 *)(p + 0x94) |= 2;
+    q = (s32 *)(p + 0xb8);
+    n = *(s32 *)(p + 0xb4);
+    while (n > 0)
+    {
+        if (*q >= 0)
+        {
+            n--;
+            if (*q == 0 || *q > max)
+                *q = (rand() & 0x7fff) % max + 1;
+        }
+        q += 4;
+    }
 }
 #pragma force_active reset

@@ -1,5 +1,5 @@
 /*
- * mini_billiards.c -- REL module: isolated function lbl_00009540.
+ * mini_billiards.c -- REL module: isolated function lbl_000055FC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -161,13 +161,19 @@ extern void window_printf_1();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_000001E0(void);
 void lbl_00000614(void);
 void lbl_00000754(void);
 void lbl_00000800(void);
 void lbl_00000E68(void);
 void lbl_00000F34(void);
 void lbl_00000F5C(void);
+void lbl_000023B0(void);
+void lbl_000025B0(void);
 void lbl_00002B4C(void);
+void lbl_00002C80(void);
+void lbl_0000341C(void);
+void lbl_0000367C(void);
 void lbl_00003CC8(void);
 void lbl_00003F4C(void);
 void lbl_00004634(void);
@@ -195,15 +201,22 @@ void lbl_0000D0A4(void);
 void lbl_0000D330(void);
 void lbl_0000D7E8(void);
 void lbl_0000E8D0(void);
+void lbl_00010FD0(void);
+void lbl_000111B4(void);
+void lbl_000115F4(void);
 void lbl_00016D24(void);
 void lbl_00016D9C(void);
 void lbl_0001723C(void);
+void lbl_00017408(void);
 void lbl_00017A00(void);
 void lbl_00018008(void);
 void lbl_00018474(void);
 void lbl_00018608(void);
 void lbl_000186EC(void);
 void lbl_000189B4(void);
+void lbl_00018A98(void);
+void lbl_00018C78(void);
+void lbl_00018F4C(void);
 void lbl_00019264(void);
 void lbl_0001968C(void);
 void lbl_00019F5C(void);
@@ -214,9 +227,24 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm void lbl_00009540(void)
+struct W55FC {
+    u8 _0[0xa];
+    s8 fA;      /* 0xa */
+    s8 fB;      /* 0xb */
+    u8 _c[0x20 - 0xc];
+    s32 f20;    /* 0x20 */
+    u8 _24[0x2c - 0x24];
+    s32 f2C;    /* 0x2c */
+};
+
+void lbl_000055FC(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00009540.s"
+    struct W55FC *w = (struct W55FC *)lbl_10000000;
+    lbl_00000800();
+    w->f20 = 0;
+    w->fB = w->fA;
+    lbl_00003F4C();
+    w->fA = 0xe;
+    w->f2C = 0;
 }
 #pragma force_active reset

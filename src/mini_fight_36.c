@@ -141,9 +141,27 @@ extern u8 lbl_10017520[];
 extern u8 lbl_10017578[];
 extern u8 lbl_10017664[];
 extern u8 lbl_10017DC8[];
-extern u8 lbl_10017E98[];
+struct FightSceneCmd
+{
+    void (*init)(void);
+    void (*main)(void);
+    void (*dest)(void);
+};                                  /* 0x0C */
+struct FightSceneWork
+{
+    /*0x00*/ struct FightSceneCmd cmds[7];
+    /*0x54*/ u8 work[0x9F4];
+};
+extern struct FightSceneWork lbl_10017E98;
+
 extern u8 lbl_100188E0[];
-extern u8 lbl_100188E8[];
+struct FightSceneSeq
+{
+    u8 unk0[0x14];
+    /*0x14*/ void *work;
+};                                  /* 0x18 */
+extern struct FightSceneSeq lbl_100188E8;
+
 extern u8 lbl_10018900[];
 extern u8 lbl_10018920[];
 extern u8 lbl_10018C6C[];
@@ -393,9 +411,34 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_0000EC58(void)
+void lbl_0000EC58(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000EC58.s"
+    struct FightSceneWork *w = &lbl_10017E98;
+
+    memset(&lbl_100188E8, 0, sizeof(lbl_100188E8));
+    memset(w->work, 0, sizeof(w->work));
+    lbl_100188E8.work = (u8 *)w + 0x54;
+    w->cmds[0].init = NULL;
+    w->cmds[0].main = NULL;
+    w->cmds[0].dest = NULL;
+    w->cmds[1].init = lbl_0000EF78;
+    w->cmds[1].main = lbl_0000EF7C;
+    w->cmds[1].dest = lbl_0000EF80;
+    w->cmds[2].init = lbl_0000EF84;
+    w->cmds[2].main = lbl_0000EF88;
+    w->cmds[2].dest = lbl_0000EF8C;
+    w->cmds[3].init = lbl_0000EF90;
+    w->cmds[3].main = lbl_0000F078;
+    w->cmds[3].dest = lbl_0000F2C4;
+    w->cmds[4].init = lbl_0000FD38;
+    w->cmds[4].main = lbl_0000FD6C;
+    w->cmds[4].dest = lbl_0000FD8C;
+    w->cmds[5].init = lbl_0000FD90;
+    w->cmds[5].main = lbl_0000FDE4;
+    w->cmds[5].dest = lbl_0000FE04;
+    w->cmds[6].init = lbl_0000FE08;
+    w->cmds[6].main = lbl_0000FE5C;
+    w->cmds[6].dest = lbl_0000FE7C;
+    lbl_0000FEC4();
 }
 #pragma force_active reset

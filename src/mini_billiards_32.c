@@ -1,5 +1,5 @@
 /*
- * mini_billiards.c -- REL module: isolated function lbl_0001A074.
+ * mini_billiards.c -- REL module: isolated function lbl_00009F3C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -161,13 +161,19 @@ extern void window_printf_1();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_000001E0(void);
 void lbl_00000614(void);
 void lbl_00000754(void);
 void lbl_00000800(void);
 void lbl_00000E68(void);
 void lbl_00000F34(void);
 void lbl_00000F5C(void);
+void lbl_000023B0(void);
+void lbl_000025B0(void);
 void lbl_00002B4C(void);
+void lbl_00002C80(void);
+void lbl_0000341C(void);
+void lbl_0000367C(void);
 void lbl_00003CC8(void);
 void lbl_00003F4C(void);
 void lbl_00004634(void);
@@ -195,15 +201,22 @@ void lbl_0000D0A4(void);
 void lbl_0000D330(void);
 void lbl_0000D7E8(void);
 void lbl_0000E8D0(void);
+void lbl_00010FD0(void);
+void lbl_000111B4(void);
+void lbl_000115F4(void);
 void lbl_00016D24(void);
 void lbl_00016D9C(void);
 void lbl_0001723C(void);
+void lbl_00017408(void);
 void lbl_00017A00(void);
 void lbl_00018008(void);
 void lbl_00018474(void);
 void lbl_00018608(void);
 void lbl_000186EC(void);
 void lbl_000189B4(void);
+void lbl_00018A98(void);
+void lbl_00018C78(void);
+void lbl_00018F4C(void);
 void lbl_00019264(void);
 void lbl_0001968C(void);
 void lbl_00019F5C(void);
@@ -214,14 +227,29 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-void lbl_0001A074(void)
+void lbl_00009F3C(void)
 {
-    u8 *src = lbl_00020C40;
-    u8 *dst = lbl_1000B418;
-    *(f32 *)(dst + 4) = *(f32 *)(src + 0x18);
-    *(f32 *)(dst + 0) = *(f32 *)(src + 0x18);
-    *(s16 *)(dst + 0xc) = 0;
-    *(f32 *)(dst + 8) = *(f32 *)(src + 0x34);
-    *(u8 *)(dst + 0xe) = 1;
+    s32 o = lbl_802F1C32 * 6;
+    s8 *b = (s8 *)lbl_10000000;
+
+    if (b[o + 0xa66] != 0 || (u8)(*(u8 *)(b + 0xa) - 10) <= 1 ||
+        (u8)(*(u8 *)(b + 0xa) - 7) <= 1) {
+        pauseMenuState.unk16 = -1;
+        lbl_802F0310[0] = 1;
+        lbl_802F0310[1] = 1;
+    } else {
+        pauseMenuState.unk16 = playerControllerIDs[lbl_802F1C32];
+        lbl_802F0310[lbl_802F1C32] = 1;
+        lbl_802F0310[1 - lbl_802F1C32] = 0;
+    }
+
+    if (pauseMenuState.unk4 & 0x10) {
+        pauseMenuState.unk4 &= ~0x10;
+        b[o + 0xa67] ^= 1;
+    }
+    if (b[o + 0xa67] != 0)
+        pauseMenuState.unk4 |= 8;
+    else
+        pauseMenuState.unk4 &= ~8;
 }
 #pragma force_active reset

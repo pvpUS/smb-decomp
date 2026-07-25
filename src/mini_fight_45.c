@@ -112,6 +112,18 @@ extern u8 lbl_0001CCA0[];
 extern u8 lbl_0001CE60[];
 extern u8 lbl_0001D020[];
 extern u8 lbl_0001D624[];
+struct FightCell
+{
+    /*0x00*/ u8 unk0;
+    /*0x01*/ u8 unk1;
+    /*0x02*/ s16 unk2;
+    /*0x04*/ u8 pad4[2];
+    /*0x06*/ s16 unk6;
+    /*0x08*/ u8 pad8[0x2c - 8];
+    /*0x2C*/ struct GMAModel *unk2C;
+    /*0x30*/ struct AnimGroupInfo *unk30;
+};  /* size 0x34; 49 of them live in the buffer at *(lbl_100188E8+0x14) */
+
 extern u8 lbl_0001D678[];
 extern u8 lbl_0001D724[];
 extern u8 lbl_0001D728[];
@@ -330,7 +342,7 @@ void lbl_0000EF8C(void);
 void lbl_0000EF90(void);
 void lbl_0000F078(void);
 void lbl_0000F2C4(void);
-void lbl_0000F2C8(void);
+void lbl_0000F2C8(int arg);
 void lbl_0000F38C(void);
 void lbl_0000F4C8(void);
 void lbl_0000F628(void);
@@ -392,9 +404,18 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_0000F2C8(void)
+void lbl_0000F2C8(int arg)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000F2C8.s"
+    struct FightCell *cell = *(struct FightCell **)(lbl_100188E8 + 0x14);
+    u8 *src;
+    int i;
+
+    lbl_0000F9A0();
+    src = ((u8 **)lbl_0001D624)[arg];
+    for (i = 0; i < 49; i++, src++)
+    {
+        cell[i].unk1 = *src;
+        cell[i].unk2 = 0;
+    }
 }
 #pragma force_active reset

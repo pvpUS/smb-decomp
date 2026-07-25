@@ -30,6 +30,7 @@
 #include "sound.h"
 #include "sprite.h"
 #include "stage.h"
+#include "stobj.h"
 #include "variables.h"
 #include "window.h"
 #include "../data/common.nlobj.h"
@@ -154,10 +155,8 @@ extern u8 lbl_10018FD4[];
 extern u8 lbl_10019040[];
 extern u8 backgroundInfo[];
 extern u8 g_bgLightInfo[];
-extern u8 g_stobjInfo[];
 extern u8 infoWork[];
 extern u8 lbl_801EED98[];
-extern u8 lbl_8028C0B0[];
 extern u8 pauseMenuState[];
 extern u8 polyDisp[];
 extern u8 worldInfo[];
@@ -188,7 +187,6 @@ extern void mathutil_tan();
 extern void mathutil_vec_normalize_len();
 extern void mathutil_vec_set_len();
 extern void mini_commend_free_data();
-extern void spawn_stobj();
 extern void u_math_unk15();
 extern void ape_skel_anim_main();
 extern void avdisp_draw_model_culled_sort_all();
@@ -246,7 +244,6 @@ extern void mathutil_mtxA_tf_point_xyz();
 extern void mathutil_mtxA_translate_neg();
 extern void mathutil_vec_dot_normalized_safe();
 extern void rend_efc_mirror_enable();
-extern void stobj_draw();
 extern void u_ball_init_1();
 extern void GXSetTevAlphaIn_cached();
 extern void avdisp_set_alpha();
@@ -308,7 +305,7 @@ void lbl_0000DC24(void);
 void lbl_0000DCA0(void);
 void lbl_0000DF9C(void);
 void lbl_0000E0C4(void);
-void lbl_0000E1B4(void);
+void lbl_0000E1B4(struct Ball *ball);
 void lbl_0000E2B0(void);
 void lbl_0000E3A8(void);
 void lbl_0000E3E4(void);
@@ -392,9 +389,30 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_0000E1B4(void)
+void lbl_0000E1B4(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000E1B4.s"
+    struct Ball *ballBackup = currentBall;
+    u8 *p;
+    u8 *q;
+    struct Stobj *st;
+
+    currentBall = ball;
+    p = lbl_10017664 + ball->playerId * 0x1b4;
+    q = p + 0x68;
+    *(u32 *)(p + 0x84) |= 2;
+    if (*(s32 *)(p + 0x90) >= 0)
+    {
+        SoundOff(*(s32 *)(p + 0x90));
+        *(s32 *)(q + 0x28) = -1;
+    }
+    st = *(struct Stobj **)(q + 0x24);
+    if (st != NULL)
+    {
+        st->localPos = ball->pos;
+        st->unk7C = st->localPos;
+        st->pos = st->localPos;
+        st->prevPos = st->localPos;
+    }
+    currentBall = ballBackup;
 }
 #pragma force_active reset

@@ -152,6 +152,17 @@ extern u8 lbl_10018D00[];
 extern u8 lbl_10018FD0[];
 extern u8 lbl_10018FD4[];
 extern u8 lbl_10019040[];
+struct FightCam
+{
+    /*0x000*/ struct ControllerInfo input;
+    /*0x03C*/ u8 pad3C[0x118 - 0x3C];
+    /*0x118*/ f32 unk118;
+    /*0x11C*/ u8 pad11C[4];
+    /*0x120*/ f32 unk120;
+    /*0x124*/ s32 unk124;
+    /*0x128*/ u8 pad128[0x14C - 0x128];
+};  /* 0x14C */
+
 extern u8 backgroundInfo[];
 extern u8 g_bgLightInfo[];
 extern u8 g_stobjInfo[];
@@ -387,14 +398,39 @@ void lbl_0001A360(void);
 void lbl_0001A37C(void);
 void lbl_0001A3DC(void);
 void lbl_0001A550(void);
-void lbl_0001A554(void);
+void lbl_0001A554(struct Ball *ball);
 void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_0001A3DC(void)
+void lbl_0001A3DC(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0001A3DC.s"
+    PADStatus pad;
+    int i;
+    struct Ball *ball = ballInfo;
+    u8 *s = lbl_10017664 + 8;
+    struct FightCam *w = (struct FightCam *)lbl_10019040;
+
+    for (i = 4; i > 0; i--, ball++, s += 0x18, w++)
+    {
+        if (*(u16 *)(s + 0x12) & 1)
+        {
+            memset(&pad, 0, sizeof(pad));
+            w->input.prevHeld = w->input.held;
+            lbl_0001A554(ball);
+            pad.stickX = (s8)(*(f32 *)lbl_0001C888 * w->unk118);
+            pad.stickY = (s8)(*(f32 *)lbl_0001C88C * w->unk120);
+            if (w->unk124 != 0)
+            {
+                if (*(u32 *)(lbl_10017664 + ball->playerId * 0x1b4 + 0x84) & 8)
+                    pad.button |= 0x100;
+                else if (powerOnTimer & 4)
+                    pad.button |= 0x100;
+            }
+            w->input.held = pad;
+            w->input.pressed.button = w->input.held.button & ~w->input.prevHeld.button;
+            w->input.released.button = w->input.prevHeld.button & ~w->input.held.button;
+        }
+    }
 }
 #pragma force_active reset

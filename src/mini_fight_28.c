@@ -309,7 +309,7 @@ void lbl_0000DCA0(void);
 void lbl_0000DF9C(void);
 void lbl_0000E0C4(void);
 void lbl_0000E1B4(void);
-void lbl_0000E2B0(void);
+void lbl_0000E2B0(struct Ball *ball, int arg);
 void lbl_0000E3A8(void);
 void lbl_0000E3E4(void);
 void lbl_0000E458(void);
@@ -392,9 +392,31 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_0000E2B0(void)
+void lbl_0000E2B0(struct Ball *ball, int arg)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000E2B0.s"
+    u8 *q = lbl_10017664 + ball->playerId * 0x1b4 + 0x68;
+
+    switch (arg)
+    {
+    case 0:
+        if (*(s16 *)(q + 0x12) < 0x10)
+            *(s16 *)(q + 0x12) += 1;
+        if (*(s16 *)(q + 0x20) != 0)
+        {
+            lbl_802F1DFC = playerCharacterSelection[*(s32 *)q];
+            u_somePlayerId = *(s32 *)q;
+            u_play_sound_0(0x108);
+        }
+        *(s16 *)(q + 0x20) = 0xf;
+        break;
+    case 1:
+        if (*(s16 *)(q + 0x14) < 0x10)
+            *(s16 *)(q + 0x14) += 1;
+        break;
+    case 2:
+        *(u32 *)(q + 0x1c) |= 4;
+        *(s16 *)(q + 0x18) = 0x258;
+        break;
+    }
 }
 #pragma force_active reset

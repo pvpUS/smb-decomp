@@ -1,5 +1,5 @@
 /*
- * mini_billiards.c -- REL module: isolated function lbl_0000D0A4.
+ * mini_billiards.c -- REL module: isolated function lbl_0000939C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -161,13 +161,19 @@ extern void window_printf_1();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_000001E0(void);
 void lbl_00000614(void);
 void lbl_00000754(void);
 void lbl_00000800(void);
 void lbl_00000E68(void);
 void lbl_00000F34(void);
 void lbl_00000F5C(void);
+void lbl_000023B0(void);
+void lbl_000025B0(void);
 void lbl_00002B4C(void);
+void lbl_00002C80(void);
+void lbl_0000341C(void);
+void lbl_0000367C(void);
 void lbl_00003CC8(void);
 void lbl_00003F4C(void);
 void lbl_00004634(void);
@@ -182,7 +188,7 @@ void lbl_00007C74(void);
 void lbl_00007D18(void);
 void lbl_00007D80(void);
 void lbl_00008EC0(void);
-void lbl_0000939C(void);
+s32 lbl_0000939C(s8 mode);
 void lbl_00009540(void);
 void lbl_00009788(void);
 void lbl_00009E34(void);
@@ -191,19 +197,26 @@ void lbl_00009F0C(void);
 void lbl_00009F3C(void);
 void lbl_0000A054(void);
 void lbl_0000C85C(void);
-s32 lbl_0000D0A4(void);
+void lbl_0000D0A4(void);
 void lbl_0000D330(void);
 void lbl_0000D7E8(void);
 void lbl_0000E8D0(void);
+void lbl_00010FD0(void);
+void lbl_000111B4(void);
+void lbl_000115F4(void);
 void lbl_00016D24(void);
 void lbl_00016D9C(void);
 void lbl_0001723C(void);
+void lbl_00017408(void);
 void lbl_00017A00(void);
 void lbl_00018008(void);
 void lbl_00018474(void);
 void lbl_00018608(void);
 void lbl_000186EC(void);
 void lbl_000189B4(void);
+void lbl_00018A98(void);
+void lbl_00018C78(void);
+void lbl_00018F4C(void);
 void lbl_00019264(void);
 void lbl_0001968C(void);
 void lbl_00019F5C(void);
@@ -214,57 +227,42 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-s32 lbl_0000D0A4(void)
+s32 lbl_0000939C(s8 mode)
 {
-    u8 *a = lbl_10009878;
-    u8 *p = lbl_0001CF00;
-    u8 *in;
-    s16 st;
-    s32 delta;
+    u8 *b = lbl_10000000;
 
-    *(f32 *)(lbl_00020DA0 + 0) = *(f32 *)(a + 0x10);
-    *(f32 *)(lbl_00020DA0 + 4) = *(f32 *)(p + 0x28) + *(f32 *)(a + 0x14);
-    *(f32 *)(lbl_00020DA0 + 8) = *(f32 *)(a + 0x18);
-
-    if (*(s16 *)lbl_1000004E == 0)
-        *(s16 *)lbl_1000004C =
-            mathutil_atan2(-*(f32 *)(a + 0x34), -*(f32 *)(a + 0x3c));
-
-    *(s16 *)lbl_1000004A = -0x800;
-
-    in = *(u8 **)lbl_10009C88;
-    st = *(s8 *)(in + 4);
-    if (st < 0xf && st > -15) {
-        if (st > 0)
-            delta = 1;
-        else if (st < 0)
-            delta = -1;
-        else
-            delta = 0;
-    } else if (st == 0x3c || st == -60) {
-        delta = *(f32 *)(p + 0x3c) * (f32)st;
-    } else {
-        delta = *(f32 *)(p + 0x40) *
-                (f32)(s16)((f32)st - *(f32 *)(p + 0x44));
+    if (*(s8 *)(b + 0xa) != *(s8 *)(b + 0xb338)) {
+        *(s8 *)(b + 0xb338) = *(s8 *)(b + 0xa);
+        *(u8 *)(b + 0x16) = 0;
+        return 0;
     }
-    *(s16 *)lbl_1000004E += delta;
+    if (*(s32 *)(b + 0x20) < 30)
+        return 0;
 
-    if (*(s8 *)(in + 5) > 0xf)
-        *(f32 *)lbl_10000050 = *(f32 *)lbl_10000050 - *(f32 *)(p + 0x28);
-    else if (*(s8 *)(in + 5) < -15)
-        *(f32 *)lbl_10000050 = *(f32 *)lbl_10000050 + *(f32 *)(p + 0x28);
-
-    if ((*(u16 *)(in + 0) & 0x800) && *(s8 *)lbl_1000000D == 0) {
-        *(u8 *)lbl_1000000D = 1;
-        u_play_sound_0(0x10c);
-        *(f32 *)(lbl_00020DA0 + 0) = *(f32 *)(p + 0x20);
-        *(f32 *)(lbl_00020DA0 + 4) = *(f32 *)(p + 0x20);
-        *(f32 *)(lbl_00020DA0 + 8) = *(f32 *)(p + 0x20);
-        *(s16 *)lbl_1000004A = -0x4000;
-        *(s16 *)lbl_1000004C = 0;
-        *(s16 *)lbl_1000004E = 0;
-        *(f32 *)lbl_10000050 = *(f32 *)(p + 0x48);
-        return 1;
+    if (*(s8 *)(b + 0xa6c) != 0) {
+        if (controllerInfo[playerControllerIDs[0]].pressed.button & PAD_BUTTON_A)
+            return 1;
+    } else {
+        switch (mode) {
+        case 0:
+            if (controllerInfo[playerControllerIDs[0]].pressed.button & PAD_BUTTON_A)
+                *(s8 *)(b + 0x16) |= 1;
+            if (controllerInfo[playerControllerIDs[1]].pressed.button & PAD_BUTTON_A)
+                *(s8 *)(b + 0x16) |= 2;
+            if (*(s8 *)(b + 0x16) == 3)
+                return 1;
+            break;
+        case 1:
+            if (controllerInfo[playerControllerIDs[lbl_802F1C32]].pressed.button
+                & PAD_BUTTON_A)
+                return 1;
+            break;
+        case 2:
+            if ((controllerInfo[playerControllerIDs[0]].pressed.button & PAD_BUTTON_A)
+                || (controllerInfo[playerControllerIDs[1]].pressed.button & PAD_BUTTON_A))
+                return 1;
+            break;
+        }
     }
     return 0;
 }

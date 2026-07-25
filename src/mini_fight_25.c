@@ -137,7 +137,29 @@ extern u8 lbl_10000000[];
 extern u8 lbl_1000008C[];
 extern u8 lbl_10000118[];
 extern u8 lbl_10017518[];
-extern u8 lbl_10017520[];
+struct FightSub
+{
+    s32 unk0;      /* 0x00 */
+    s16 unk4;      /* 0x04 */
+    u8 unk6[0xA];  /* 0x06 */
+    s16 unk10;     /* 0x10 */
+    u16 unk12;     /* 0x12 */
+    u8 unk14[4];   /* 0x14 */
+};                 /* 0x18 */
+struct FightWork
+{
+    u8 unk0[0x144];          /* 0x000 */
+    u16 unk144;              /* 0x144 */
+    u16 unk146;              /* 0x146 */
+    s16 unk148;              /* 0x148 */
+    u8 unk14A[2];            /* 0x14A */
+    struct FightSub sub[8];  /* 0x14C */
+    u8 unk20C[0x680];        /* 0x20C */
+    u32 unk88C;              /* 0x88C */
+    s32 unk890;              /* 0x890 */
+};
+extern struct FightWork lbl_10017520;
+
 extern u8 lbl_10017578[];
 extern u8 lbl_10017664[];
 extern u8 lbl_10017DC8[];
@@ -392,9 +414,22 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_0000DF9C(void)
+void lbl_0000DF9C(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000DF9C.s"
+    struct FightSub *s = lbl_10017520.sub;
+    s8 *status = g_poolInfo.playerPool.statusList;
+    int i;
+
+    for (i = 0; i < 4; i++, status++, s++)
+    {
+        if (*status == 0)
+            return;
+        if (s->unk10 == 0)
+        {
+            s->unk4++;
+            if (s->unk4 >= lbl_10017520.unk890)
+                lbl_10017520.unk88C |= 1;
+        }
+    }
 }
 #pragma force_active reset

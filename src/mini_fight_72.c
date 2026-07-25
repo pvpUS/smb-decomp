@@ -146,6 +146,14 @@ extern u8 lbl_100188E0[];
 extern u8 lbl_100188E8[];
 extern u8 lbl_10018900[];
 extern u8 lbl_10018920[];
+struct FightRail
+{
+    /*0x00*/ f32 unk0;
+    /*0x04*/ f32 unk4;
+    /*0x08*/ f32 unk8;
+    /*0x0C*/ u8 padC[0x20 - 0x0C];
+};  /* 0x20 */
+
 extern u8 lbl_10018C6C[];
 extern u8 lbl_10018CFC[];
 extern u8 lbl_10018D00[];
@@ -364,7 +372,7 @@ void lbl_00013C1C(void);
 void lbl_00013C6C(void);
 void lbl_00015300(void);
 void lbl_00015998(void);
-void lbl_00015A40(void);
+void lbl_00015A40(int idx, f32 a, f32 b);
 void lbl_00015B98(void);
 void lbl_00015C4C(void);
 void lbl_00015C8C(void);
@@ -392,9 +400,27 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_00015A40(void)
+void lbl_00015A40(int idx, f32 a, f32 b)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00015A40.s"
+    u8 *p = lbl_10018920 + idx * 0xbc;
+    int i;
+    int n;
+    struct FightRail *r;
+
+    *(f32 *)p = a;
+    *(f32 *)(p + 4) = b;
+    *(f32 *)(p + 8) = a;
+    *(f32 *)(p + 0xc) = b;
+    *(s32 *)(p + 0x10) = 0;
+    *(s32 *)(p + 0x14) = 0;
+    memset(p + 0x1c, 0, 0xa0);
+    *(s32 *)(p + 0x18) = *(s16 *)(lbl_10017664 + idx * 0x18 + 0xc);
+    r = (struct FightRail *)(p + 0x1c);
+    n = *(s32 *)(p + 0x18);
+    for (i = 0; i < n; i++, r++)
+    {
+        r->unk0 = *(f32 *)lbl_0001C640;
+        r->unk8 = r->unk0;
+    }
 }
 #pragma force_active reset

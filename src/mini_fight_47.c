@@ -30,6 +30,7 @@
 #include "sound.h"
 #include "sprite.h"
 #include "stage.h"
+#include "stobj.h"
 #include "variables.h"
 #include "window.h"
 #include "../data/common.nlobj.h"
@@ -58,6 +59,27 @@ extern u8 lbl_0001C268[];
 extern u8 lbl_0001C270[];
 extern u8 lbl_0001C2D8[];
 extern u8 lbl_0001C308[];
+struct FightPanel
+{
+    /*0x00*/ u8 unk0;
+    /*0x01*/ u8 unk1;
+    /*0x02*/ s16 state;
+    /*0x04*/ s16 timer;
+    /*0x06*/ s16 unk6;
+    /*0x08*/ u8 pad08[4];
+    /*0x0C*/ f32 unkC;
+    /*0x10*/ u8 pad10[8];
+    /*0x18*/ f32 unk18;
+    /*0x1C*/ u8 pad1C[8];
+    /*0x24*/ f32 unk24;
+    /*0x28*/ u8 pad28[4];
+    /*0x2C*/ u8 *unk2C;
+};
+struct F38CPool
+{
+    f32 unk0, unk4, unk8, unkC, unk10, unk14, unk18, unk1C, unk20, unk24;
+};
+
 extern u8 lbl_0001C320[];
 extern u8 lbl_0001C330[];
 extern u8 lbl_0001C348[];
@@ -154,10 +176,8 @@ extern u8 lbl_10018FD4[];
 extern u8 lbl_10019040[];
 extern u8 backgroundInfo[];
 extern u8 g_bgLightInfo[];
-extern u8 g_stobjInfo[];
 extern u8 infoWork[];
 extern u8 lbl_801EED98[];
-extern u8 lbl_8028C0B0[];
 extern u8 pauseMenuState[];
 extern u8 polyDisp[];
 extern u8 worldInfo[];
@@ -188,7 +208,6 @@ extern void mathutil_tan();
 extern void mathutil_vec_normalize_len();
 extern void mathutil_vec_set_len();
 extern void mini_commend_free_data();
-extern void spawn_stobj();
 extern void u_math_unk15();
 extern void ape_skel_anim_main();
 extern void avdisp_draw_model_culled_sort_all();
@@ -246,7 +265,6 @@ extern void mathutil_mtxA_tf_point_xyz();
 extern void mathutil_mtxA_translate_neg();
 extern void mathutil_vec_dot_normalized_safe();
 extern void rend_efc_mirror_enable();
-extern void stobj_draw();
 extern void u_ball_init_1();
 extern void GXSetTevAlphaIn_cached();
 extern void avdisp_set_alpha();
@@ -332,12 +350,12 @@ void lbl_0000F078(void);
 void lbl_0000F2C4(void);
 void lbl_0000F2C8(void);
 void lbl_0000F38C(void);
-void lbl_0000F4C8(void);
+void lbl_0000F4C8(struct FightPanel *p);
 void lbl_0000F628(void);
 void lbl_0000F6F4(void);
 void lbl_0000F848(void);
 void lbl_0000F9A0(void);
-void lbl_0000F9DC(void);
+int lbl_0000F9DC(u8 *p);
 void lbl_0000FA18(void);
 void lbl_0000FD38(void);
 void lbl_0000FD6C(void);
@@ -392,9 +410,45 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_0000F4C8(void)
+void lbl_0000F4C8(struct FightPanel *p)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000F4C8.s"
+    struct Effect ef;
+    struct Stobj st;
+    struct F38CPool *k = (struct F38CPool *)lbl_0001C308;
+
+    switch (p->state)
+    {
+    case 0:
+        p->state = 1;
+        p->timer = lbl_0000F9DC((u8 *)p) + 0x78;
+        memset(&ef, 0, sizeof(ef));
+        ef.type = 0x19;
+        ef.playerId = p->unk0;
+        spawn_effect(&ef);
+        if (p->unkC < k->unk8)
+            p->unkC = *(f32 *)(lbl_0001C308 + 8);
+        p->unk24 = k->unk14;
+    case 1:
+        p->timer -= 1;
+        if (p->timer < 0)
+            p->state = 2;
+        break;
+    case 2:
+        p->state = 3;
+        p->unkC = k->unk8;
+        memset(&st, 0, sizeof(st));
+        st.type = 5;
+        st.localPos = *(Vec *)(p->unk2C + 8);
+        st.localPos.y += k->unk20;
+        st.unk3C.x = k->unk24;
+        st.unk3C.y = k->unk24;
+        st.unk3C.z = k->unk24;
+        st.animGroupId = (s8)p->unk6;
+        st.extraData = p;
+        spawn_stobj(&st);
+        break;
+    case 3:
+        break;
+    }
 }
 #pragma force_active reset
