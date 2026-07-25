@@ -628,6 +628,15 @@ SOURCES := \
 	src/mini_billiards_12.c \
 	src/mini_billiards_13.c \
 	src/mini_billiards_14.c \
+	src/mini_billiards_15.c \
+	src/mini_billiards_16.c \
+	src/mini_billiards_17.c \
+	src/mini_billiards_18.c \
+	src/mini_billiards_19.c \
+	src/mini_billiards_20.c \
+	src/mini_billiards_21.c \
+	src/mini_billiards_22.c \
+	src/mini_billiards_23.c \
 	asm/mini_billiards.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)

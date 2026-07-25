@@ -1,5 +1,5 @@
 /*
- * mini_billiards.c -- REL module: isolated function lbl_00016D24.
+ * mini_billiards.c -- REL module: isolated function lbl_00007C74.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -162,7 +162,9 @@ void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
 void lbl_00000614(void);
+void lbl_00000754(void);
 void lbl_00000800(void);
+void lbl_00000E68(void);
 void lbl_00000F34(void);
 void lbl_00000F5C(void);
 void lbl_00002B4C(void);
@@ -192,7 +194,7 @@ void lbl_0000D0A4(void);
 void lbl_0000D330(void);
 void lbl_0000E8D0(void);
 void lbl_00016D24(void);
-void lbl_00016D9C(int a, int b);
+void lbl_00016D9C(void);
 void lbl_0001723C(void);
 void lbl_00017A00(void);
 void lbl_00018008(void);
@@ -210,13 +212,12 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-void lbl_00016D24(void)
+void lbl_00007C74(void)
 {
-    s8 v = *(s8 *)(lbl_10009878 + 0x3a8);
-    s8 i;
-    if (v <= 0 && v > -24)
-        return;
-    for (i = 0; i < 10; i++)
-        lbl_00016D9C(i, *(s32 *)lbl_10000020);
+    int i;
+    for (i = 0; i < 64; i++) {
+        *(s16 *)(lbl_1000A5BC + i * 0x10 + 0x0) = -1;
+        *(s32 *)(lbl_1000A5BC + i * 0x10 + 0xc) = 0;
+    }
 }
 #pragma force_active reset

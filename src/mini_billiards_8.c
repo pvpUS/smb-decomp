@@ -1,6 +1,6 @@
 /*
  * mini_billiards.c -- REL module, structurally split for per-function
- * byte-matching (part 8 of 14; contiguous .text range).  Each function
+ * byte-matching (part 8 of 23; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_billiards/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -161,7 +161,9 @@ void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
 void lbl_00000614(void);
+void lbl_00000754(void);
 void lbl_00000800(void);
+void lbl_00000E68(void);
 void lbl_00000F34(void);
 void lbl_00000F5C(void);
 void lbl_00002B4C(void);
@@ -186,17 +188,10 @@ void lbl_00009EC4(void);
 void lbl_00009F0C(void);
 void lbl_00009F3C(void);
 void lbl_0000A054(void);
-static void lbl_0000C10C(void);
 void lbl_0000C85C(void);
 void lbl_0000D0A4(void);
 void lbl_0000D330(void);
-static void lbl_0000D7E8(void);
-static void lbl_0000E3A4(void);
 void lbl_0000E8D0(void);
-static void lbl_00010FD0(void);
-static void lbl_000111B4(void);
-static void lbl_000115F4(void);
-static void lbl_00012D4C(void);
 void lbl_00016D24(void);
 void lbl_00016D9C(void);
 void lbl_0001723C(void);
@@ -216,69 +211,34 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm void lbl_00009F3C(void)
+asm void lbl_00005654(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00009F3C.s"
+#include "../asm/nonmatchings/mini_billiards/lbl_00005654.s"
 }
-asm void lbl_0000A054(void)
+asm void lbl_000059A8(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_0000A054.s"
+#include "../asm/nonmatchings/mini_billiards/lbl_000059A8.s"
 }
-static asm void lbl_0000C10C(void)
+asm void lbl_00005DD0(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_0000C10C.s"
+#include "../asm/nonmatchings/mini_billiards/lbl_00005DD0.s"
 }
-asm void lbl_0000C85C(void)
+asm void lbl_00006DC0(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_0000C85C.s"
+#include "../asm/nonmatchings/mini_billiards/lbl_00006DC0.s"
 }
-asm void lbl_0000D0A4(void)
+asm void lbl_000077D8(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_0000D0A4.s"
+#include "../asm/nonmatchings/mini_billiards/lbl_000077D8.s"
 }
-asm void lbl_0000D330(void)
+asm void lbl_00007974(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_0000D330.s"
-}
-static asm void lbl_0000D7E8(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_0000D7E8.s"
-}
-static asm void lbl_0000E3A4(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_0000E3A4.s"
-}
-asm void lbl_0000E8D0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_0000E8D0.s"
-}
-static asm void lbl_00010FD0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00010FD0.s"
-}
-static asm void lbl_000111B4(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_000111B4.s"
-}
-static asm void lbl_000115F4(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_000115F4.s"
-}
-static asm void lbl_00012D4C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00012D4C.s"
+#include "../asm/nonmatchings/mini_billiards/lbl_00007974.s"
 }
 #pragma force_active reset

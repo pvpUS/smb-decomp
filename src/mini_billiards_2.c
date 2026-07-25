@@ -1,5 +1,5 @@
 /*
- * mini_billiards.c -- REL module: isolated function lbl_00000F34.
+ * mini_billiards.c -- REL module: isolated function lbl_00000754.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -162,7 +162,9 @@ void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
 void lbl_00000614(void);
+void lbl_00000754(void);
 void lbl_00000800(void);
+void lbl_00000E68(void);
 void lbl_00000F34(void);
 void lbl_00000F5C(void);
 void lbl_00002B4C(void);
@@ -210,10 +212,32 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-void lbl_00000F34(void)
+void lbl_00000754(void)
 {
-    lbl_00009F0C();
-    lbl_00000F5C();
-    lbl_00009F3C();
+    int i;
+    int j;
+
+    for (i = 0; i < 5; i++) {
+        for (j = 0; j < 2; j++) {
+            u8 *sub = lbl_10009710 + i * 0x48 + j * 0x24;
+            *(s8 *)(sub + 0x00) = -1;
+            *(s8 *)(sub + 0x01) = 0;
+            *(s16 *)(sub + 0x08) = 0;
+            *(s16 *)(sub + 0x0a) = 0;
+            *(s16 *)(sub + 0x0c) = 0;
+            *(s16 *)(sub + 0x0e) = 0;
+            *(s16 *)(sub + 0x10) = 0;
+            *(s16 *)(sub + 0x12) = 0;
+            *(s16 *)(sub + 0x14) = 0;
+            *(s16 *)(sub + 0x18) = 0;
+            *(s16 *)(sub + 0x16) = 0;
+            *(s8 *)(sub + 0x02) = 0;
+            *(s8 *)(sub + 0x04) = 0;
+            *(s8 *)(sub + 0x03) = 0;
+            *(s32 *)(sub + 0x1c) = 0;
+            *(s32 *)(sub + 0x20) = 0;
+            *(s16 *)(sub + 0x06) = 0;
+        }
+    }
 }
 #pragma force_active reset

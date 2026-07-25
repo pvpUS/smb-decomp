@@ -1,5 +1,5 @@
 /*
- * mini_billiards.c -- REL module: isolated function lbl_00009F0C.
+ * mini_billiards.c -- REL module: isolated function lbl_000189B4.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -212,11 +212,9 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-void lbl_00009F0C(void)
+asm void lbl_000189B4(void)
 {
-    if (!(pauseMenuState.unk4 & 0x20))
-        return;
-    pauseMenuState.unk4 &= ~0x20;
-    *(s8 *)lbl_1000000C = 3;
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_000189B4.s"
 }
 #pragma force_active reset
