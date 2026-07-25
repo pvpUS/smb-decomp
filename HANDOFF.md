@@ -4,6 +4,149 @@
 
 ---
 
+## 0.10 — RUN 5 PREP (2026-07-25). START HERE. sel_ngc is SPLIT and ready.
+
+Everything below is verified and committed at `d32e854`. Working tree clean,
+all 12 artifacts OK.
+
+### SEVEN warm copies, all clean at `d32e854`, ready to hand to agents
+
+`C:/tmp/smbm/<mod>` (full repo incl. `.git`, minus `baserom.*`) with its own CW
+linker temp `C:/tmp/tmp_<mod>`. **`sel_ngc` is new this run.**
+
+| module | golden sha1 | funcs | insn | % |
+|---|---|---|---|---|
+| mini_bowling | `29ded64794215790b8bfd6fc6c2517ca835b6b1a` | 53/120 | 2888/15313 | 18.9% |
+| mini_race | `c600a0f425b42405f27527f57bcba110fffa0431` | 51/157 | 1680/19817 | 8.5% |
+| mini_fight | `233b6073feb2ec293cff024523019225c41f5604` | 64/154 | 1373/28588 | 4.8% |
+| mini_pilot | `cc2b2ef2b1c2bdf613beae9c71ff32d75e03059f` | 30/75 | 1220/12137 | 10.1% |
+| mini_golf | `fc70c4e88e1f22e908bbcc4e263cb45e74310b93` | 72/118 | 3033/38919 | 7.8% |
+| mini_billiards | `4ff9ee4165b581f68848c6a0ce3448baf62b6c73` | 17/70 | 830/28793 | 2.9% |
+| **sel_ngc** | **`e8bbf3075538ec60a275cf70141e36c63f6e5fcd`** | **0/73** | **0/18084** | **0.0%** |
+| **7-MODULE TOTAL** | | | **11024/161651** | **6.8%** |
+
+Note the target name differs from the module name: build **`mkbe.sel_ngc.rel`**,
+module/file stem is **`sel_ngc_rel`**.
+
+### sel_ngc — freshly split, best ROI in the project right now
+
+18,084 insn, 73 functions, **median 75** — a far better size profile than the
+picked-over minigames (whose remaining medians are 120-190). It has genuinely
+small functions again, which is where the hit rate is:
+
+`lbl_0000A634(9) lbl_0000A658(9) lbl_0000A7B0(9) _epilog(12) lbl_0000A840(12)
+lbl_0000A67C(19) lbl_00001910(22) lbl_000101BC(22) lbl_0000A7D4(27)
+lbl_0000D7C0(27) lbl_0000E43C(32) lbl_0000E4BC(33) _prolog(34) lbl_00011688(40)
+lbl_0000A4A0(41) _unresolved(43) lbl_00001D58(46) lbl_00011824(48)
+lbl_0000B0FC(49) lbl_0000DDF4(53) lbl_0000E368(53) lbl_0000EBD4(55)`
+
+The `lbl_0000A4A0..lbl_0000A950` cluster (12 functions, ~9-56 insn each) is one
+obvious TU-ish run to sweep first. mini_fight converted `_prolog`/`_epilog`/
+`_unresolved` in run 4, so those three are known-doable here too.
+
+**Mass is extremely concentrated: the top 10 functions are 68% of the module,
+and `lbl_000030F4` alone is 6,621 insn (37%).** Do NOT open that one early.
+Others: `lbl_000005D4`(1231) `lbl_00010438`(958) `lbl_0000ECB0`(694)
+`lbl_0000C970`(651) `lbl_0000B1C0`(472).
+
+**Re-split reproducer** (needed after any `rel_rematch`; `rel_rematch` calls
+`rel_split`, so normally you do not run this by hand — but this is the exact
+argument set that yields golden, recovered by iterating on the compiler's
+`undefined label` / `illegal use of label` errors):
+
+```
+python tools/rel_split.py sel_ngc_rel \
+  --include stddef.h --include stdio.h --include stdlib.h --include global.h \
+  --include ball.h --include bitmap.h --include camera.h --include event.h \
+  --include functions.h --include game.h --include info.h --include input.h \
+  --include light.h --include mathutil.h --include mode.h --include mot_ape.h \
+  --include polydisp.h --include pool.h --include rend_efc.h --include sound.h \
+  --include sprite.h --include stage.h --include thread.h --include variables.h \
+  --include window.h --include world.h --include pause_menu.h --include string.h \
+  --include avdisp.h --include background.h --include obj_collision.h \
+  --include ord_tbl.h --include stcoli.h \
+  --extern-data g_totalPlayPoints --extern-data lbl_801EED50 \
+  --extern-data lbl_801EED98 --extern-data lbl_8027CE24 \
+  --extern-data lbl_802F1FA8 --extern-data lbl_802F1FAC \
+  --extern-data lbl_802F1FB0 --extern-data lbl_802F1FB4 \
+  --extern-data u_isCompetitionModeCourse \
+  --extern-fn __cvt_fp2unsigned --extern-fn are_all_continues_unlocked \
+  --extern-fn course_first --extern-fn course_floor_count \
+  --extern-fn effect_draw --extern-fn empty_file_cache \
+  --extern-fn empty_load_queue --extern-fn file_preload \
+  --extern-fn floor_to_stage_id --extern-fn func_8009F4C4 \
+  --extern-fn func_80067310 --extern-fn is_floor_visited \
+  --extern-fn is_load_queue_not_empty --extern-fn is_minigame_unlocked \
+  --extern-fn item_draw --extern-fn lens_flare_draw \
+  --extern-fn lens_flare_draw_mask --extern-fn memcard_set_mode \
+  --extern-fn nl2ngc_draw_model_sort_translucent_alt2 --extern-fn preview_create \
+  --extern-fn preview_create_with_allocated_tex --extern-fn preview_draw \
+  --extern-fn preview_free --extern-fn preview_main \
+  --extern-fn spend_play_points --extern-fn start_preview_image_read \
+  --extern-fn stobj_draw --extern-fn textbox_add_text \
+  --extern-fn textbox_set_properties
+```
+Restore the monolithic blob first: `git show d32e854^:asm/sel_ngc_rel.s > asm/sel_ngc_rel.s`
+(HEAD's copy is the data-only split). **Do not use `5138d8f` for sel_ngc** —
+that commit's `src/sel_ngc_rel.c` is the bad draft.
+
+### The splitter bug sel_ngc exposed (fixed in `d32e854`, read before splitting anything new)
+
+`rel_split` un-`.if 0`s the module's alignment stub so the `.s` owns all data,
+then adds `.balign 8` at the section start. That is right when the stub is a
+4/8-byte word (`const u32 lbl_X = 0x4B;` — every minigame) and **wrong when it is
+a STRING**: mwcc pads `char lbl_X[] = "..."` to a 4-byte boundary, `.asciz` does
+not, so sel_ngc's `.data` came out 26 bytes where the original had 28 and the REL
+was 4 bytes short. Now the guard is dropped only when the block's emitted size is
+a multiple of 4; otherwise it stays and the generated `.c` keeps defining the
+symbol. **And the `.balign 8` must then also be skipped for that section** — with
+the stub C-owned the `.s` contribution follows the `.c`'s bytes, so forcing it to
+8 rounds its start 28 -> 32 and re-creates the same 4-byte shift. That second
+half is what made the first fix still hash non-golden. Verified a strict no-op
+for all six minigames (byte-identical resolver output, 0 C-owned stubs each).
+
+**Expect the same class of problem when splitting `option` and `test_mode`.**
+Check `.if 0` stub size vs 4 before assuming the tool is right.
+
+### `option` / `test_mode` — the other two unsplit modules
+
+`option` 12,375 insn, `test_mode` 16,231 insn. Both still have their unverified
+2026-07-24 draft `.c` wired into the Makefile next to the monolithic `asm/<mod>.s`,
+which is why **`make all` still fails** (it now gets past sel_ngc and dies at
+`test_mode` with `multiply-defined: '_prolog'`). Splitting them the same way
+fixes `make all` outright and opens 28,606 more insn. Their pre-draft stubs are at
+`git show 5138d8f^:src/<mod>.c`. Procedure that worked for sel_ngc:
+1. Restore the pre-draft stub, build the target, confirm it hashes golden
+   **before touching anything** (this is the all-asm baseline).
+2. `rel_split.py <mod>` with no args, build, and harvest the
+   `undefined label` / `illegal use of label` names from the compiler output.
+   They arrive in WAVES (the compiler aborts early) — loop until no new name
+   appears. ~10 iterations for sel_ngc.
+3. Named symbols are almost all covered by the standard game-header set above;
+   only `lbl_*` addresses and a handful of functions need explicit
+   `--extern-data` / `--extern-fn`.
+4. **Delete the `.rel` before every build.** A failed compile leaves the previous
+   object AND the previous `.rel` in place, and the stale all-asm `.rel` hashes
+   GOLDEN — a fictional match. This bit me live during the sel_ngc split.
+5. Re-splitting consumes `asm/<mod>.s` (it becomes data-only), so restore it from
+   git before each re-split attempt.
+
+### Reminders for whoever runs run 5
+
+- Priorities by untapped mass: **sel_ngc (18,084, easiest)**, mini_billiards
+  (27,963), mini_fight (27,215), mini_golf (35,886).
+- All six minigames now carry a COMMITTED carve, so `rel_carve --from HEAD` is
+  wrong everywhere: `rel_rematch` first, then `--from worktree`. sel_ngc has no
+  carve yet.
+- `rel_rematch`'s file-loss bug is fixed at the root, but still back up and assert
+  `ls src/<mod>*.c | wc -l` goes UP.
+- **Namespace scratchpad paths per module.** The scratchpad is shared between
+  parallel agents; run 4's fight agent `rm -rf`'d a shared path and destroyed the
+  race agent's backups.
+- Use `tools/rel_fdiff.py` for per-function feedback rather than rebuilding one.
+
+---
+
 ## 0.9 — RUN 4 DONE (2026-07-25): +4,155 insn, 4.8% -> 7.7%. MERGED + all 12 artifacts OK.
 
 Six parallel agents, one per minigame REL. Each merged into the main tree, rebuilt
@@ -460,7 +603,7 @@ Each module's remaining functions are the harder ones (physics/draw/dispatch, re
 
 - This is a **matching decompilation** of Super Monkey Ball (GameCube). Goal: C that compiles (with CodeWarrior 1.1) to **byte-identical** original binaries.
 - **The DOL is essentially done.** We matched 2 more stub functions in an earlier session; 6 remaining stubs are genuine CodeWarrior register-allocator tie-breaks (documented, low ROI).
-- **CURRENT STATE: see §0.9 (run 4, 7.7%, merged, committed `68ec41e`, all 12 artifacts OK). §0.6/§0.7/§0.8 are history; §0.7's fail-fast rule is WRONG (§0.8 corrects it) and §0.8's tool-bug list is superseded by §0.9's fixes.**
+- **START AT §0.10 (run-5 prep: 7 warm copies ready, sel_ngc freshly split and golden).** Then §0.9 for run 4's results and the mwcc idiom list. §0.6/§0.7/§0.8 are history; §0.7's fail-fast rule is WRONG (§0.8 corrects it) and §0.8's tool-bug list is superseded by §0.9's fixes.
 - **The RELs (minigames) are the big remaining surface.** They ARE verifiable (per-REL sha1s in `supermonkeyball.sha1`). We built a **splitter** (`tools/rel_split.py`) that carves a monolithic REL into per-function pieces so functions can be matched one at a time, validated a **byte-neutral split of `mini_bowling`**, added **multi-file output + `--isolate`/`--isolate-range`**, and **matched 6 functions in the real `mini_bowling.rel` (golden `29ded64...`)**: `lbl_000076D0`, `lbl_00007740`, `lbl_00007778`, `lbl_00007964`, `lbl_000079E8`, `lbl_000086E4`.
 - **CRITICAL FINDING — CORRECTED THIS SESSION:** the real cause of the "deopt" is **NOT a TU-size threshold**. mwcc's inline assembler **turns off the instruction scheduler + peephole optimizer for EVERY C function that shares a translation unit with an `asm` block** — it is the *presence* of inline asm, not the amount. Verified directly: `lbl_00007778` compiles byte-perfect in isolation (`extsb.`, `blr` guards); adding **a single `static asm` sibling** to its TU flips it to `extsb`+`cmpwi` / `b <epilogue>` (no match); a 4-function chunk deopts identically to the 120-function one. **Fix = put each to-be-converted C function in its OWN pure-C file with no asm-include siblings.** (Uniform "chunking" by function count does NOT help — that was the earlier, wrong hypothesis.) See §6.
 - **Immediate next task:** continue matching mini_bowling functions with the proven workflow — `python tools/rel_split.py mini_bowling <same --extern-fn args> --isolate <lbl> [--isolate <lbl> ...]`, convert each isolated singleton file's body to C, keep the Makefile `SOURCES` in `.text` order, rebuild, confirm `29ded64...`. Then generalize + roll out to the other modules (mini_race/fight/golf/billiards/pilot, option, test_mode, sel_ngc).
