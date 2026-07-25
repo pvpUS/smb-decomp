@@ -4,6 +4,153 @@
 
 ---
 
+## 0.9 — RUN 4 DONE (2026-07-25): +4,155 insn, 4.8% -> 7.7%. MERGED + all 12 artifacts OK.
+
+Six parallel agents, one per minigame REL. Each merged into the main tree, rebuilt
+**there** to its golden sha1, `sha1sum -c supermonkeyball.sha1` = all 12 OK.
+Committed as `68ec41e` (work) + `fcbeeab` (tool fixes).
+
+| module | funcs | insn | % | gained |
+|---|---|---|---|---|
+| mini_bowling | 53/120 | 2888/15313 | 18.9% | +16 fns / +1244 |
+| mini_golf | 72/118 | 3033/38919 | 7.8% | +10 fns / +1058 |
+| mini_fight | 64/154 | 1373/28588 | 4.8% | +19 fns / +681 |
+| mini_race | 51/157 | 1680/19817 | 8.5% | +12 fns / +477 |
+| mini_pilot | 30/75 | 1220/12137 | 10.1% | +7 fns / +417 |
+| mini_billiards | 17/70 | 830/28793 | 2.9% | +3 fns / +278 |
+| **TOTAL** | **287/694** | **11024/143567** | **7.7%** | **+67 fns / +4155** |
+
+Run 3 was +3,147, so run 4 was ~32% better on harder functions. **The rate is NOT
+declining yet** — §0.8 predicted it would.
+
+### TOOL FIXES — all committed in `fcbeeab`, read this before touching the tools
+
+- **The `rel_rematch` file-loss bug is ROOT-CAUSED AND FIXED.** It detected a
+  still-asm file by the bare substring `nonmatchings/<mod>/`, but `rel_split`'s
+  multi-function **header comment** contains `asm/nonmatchings/<mod>/.` — so a
+  fully-converted pure-C file that kept that header was classified as a stub and
+  silently reverted. Now matches the real `#include "../asm/nonmatchings/<mod>/`
+  directive. **This was live at merge time: 14 of run 4's 16 new mini_bowling
+  files carry that comment; one `rel_rematch` would have reverted 1,244 insn.**
+  Keep asserting the file count goes UP anyway.
+- `rel_rematch` also now re-applies committed `#include`s the regenerated preamble
+  drops, and finds the SOURCES block end by continuation lines (it used to look
+  for `asm/<mod>.s` as terminator — `rel_carve` moves that to the front, and the
+  old code raised `StopIteration` *after* rewriting src, leaving a half-updated tree).
+- **`rel_carve` now hard-guards the already-carved-HEAD trap** and accepts
+  `--from worktree`. **ALL SIX modules now carry committed carve segments**, so
+  `--from HEAD` is wrong everywhere. Correct order: `rel_rematch` (regenerates a
+  complete blob) → `rel_carve <mod> --from worktree --hole … --into …`.
+  `--undo` is not usable on a committed carve and now says so.
+- **`tools/rel_fdiff.py` is new** — per-function objdump-vs-`asm/nonmatchings`
+  diff, addresses from the fresh `.map` (they shift as soon as one converted
+  function changes size), masks unrelocated `0x48000001` `bl` placeholders.
+  Three agents built equivalents independently; use this one.
+
+### TWO STRUCTURAL BLOCKERS CLEARED
+
+1. **The §0.8 "isolate-range can't be bootstrapped" item is SOLVED** (golf,
+   +322 insn). Recipe: `rel_rematch --add` each range member as a **separate
+   singleton**. Each then emits its own magic double so the REL hash is NOT
+   golden — **but extra `.rodata` only shifts DATA sections, `.text` addresses
+   are unaffected, so per-function objdump diffs stay valid.** Drive every member
+   to 0 text diffs, merge the objects by hand (concatenate the
+   `#pragma force_active on … reset` bodies in `.text` order into the first file,
+   delete the others, drop their SOURCES lines), then carve ONE hole. Re-diff
+   after merging: the merge can deopt a previously-clean member.
+2. **Hand-splitting beats `rel_rematch` when the tools are in a bad state**
+   (bowling 18.9%, fight). Split multi-function asm files, verify the all-asm
+   split still hashes golden **before** writing any C. Gotcha: `rel_split` emits
+   `static void lbl_X(void);` forward decls for labels not referenced cross-file,
+   so splitting such a label away from its caller makes the symbol vanish at
+   `elf2rel` — promote those decls to non-static in ALL files. De-`static`ing
+   split-out `asm` functions is byte-neutral (verified twice).
+
+### NEW MWCC IDIOMS — ranked, all proven by a golden build
+
+1. **`mathutil_vec_sq_len(&v)` / `mathutil_vec_len(&v)` are NOT interchangeable
+   with `mathutil_sum_of_sq_3(v.x,v.y,v.z)`.** The Vec-pointer forms load x,y,z
+   in ascending address order from memory; the 3-arg form evaluates right-to-left
+   and keeps components in registers. Took bowling `lbl_0000D650` 27/106 → 106/106.
+   `mathutil_vec_dot_prod` / `vec_cross_prod` reproduce their chains exactly too.
+2. **mwcc's front-end CSE is SYNTACTIC.** Spelling one pooled constant two ways
+   (`*(f32 *)(p + 0xC)` vs `((f32 *)p)[3]`) suppresses CSE; a later peephole still
+   collapses it to ONE load, but allocation flips from a real register to scratch.
+   Unlocked two fight functions after ~8 failed formulations each.
+3. **`-O4,p` UNROLLS small constant-trip loops** (×2 for a 10-trip, keeping one
+   induction increment; a 4-trip becomes `mtctr 2`). Repetitive-store runs are
+   unrolled loops, not straight-line source.
+4. **Do NOT introduce pointer locals for array/struct bases — let CSE do it.**
+   `struct Ball *b = &ballInfo[i];` forces the index `mulli` up front and permutes
+   every register. Writing the subscript out in full took golf `lbl_00009538`
+   21 diffs → 0. (Opposite case: an explicit local for an intermediate ADDRESS,
+   `struct FightSub *s = &g.sub[i];`, fixed a fight function no declaration order
+   could. Try both.)
+5. **Compound assignment picks the FRA slot:** `t = a; t *= b;` where neither
+   plain source order reproduces `fmul fD,fD,fX`.
+6. **Float `if (a >= b)` NEVER compiles to `blt`** (mwcc emits `cror eq,gt,eq` +
+   `bne`). A bare `blt` guarding a whole body means an early `if (a < b) return;`.
+   Float `MIN` is `bge/b/fmr` — the ternary's empty then-branch, not `if (a>=b) a=b;`.
+7. **`lbz`+`cmpwi` with no `extsb` ⇒ the field is `s8`.** `u8` gives `cmplwi`.
+   Loop counters: `cmplwi` ⇒ `u32`, `cmpw` ⇒ signed.
+8. **A `(u32)` cast on a call result is FOLDED** — assign to a `u32` local instead
+   (`cmplwi rX,0` after a `bl` means an unsigned return type in that TU).
+9. **Declaration order and STATEMENT order are independent levers**; one fight
+   function needed a specific pair of both. Builds are ~8 s, so brute-force
+   sweeps over all 24/120 permutations are cheap and were decisive several times.
+10. **Single vs double precision is decided by the OPERANDS, not the destination**
+    — `f32 - f32` emits `fsubs` even when assigned to a `double`; cast one operand
+    to get `fsub`. Relatedly, `double` *parameters* (K&R promotion) reproduce
+    functions that do all math in double.
+11. `n = A - B; n--;` writes in place where `n = A - B - 1;` adds a temp + `mr`.
+    `!x` and `x == 0` differ (`x == 0` adds a redundant `neg`).
+12. For aggregates the **LAST-declared local gets the LOWEST stack offset**
+    (FPRs/GPRs still descend with declaration order).
+
+### DEAD ENDS — confirmed, do not re-derive
+
+- **Hand-rolled int→float via type-punning cannot dodge the magic double.**
+  It does emit zero `.rodata`, but produces `fsub`+`frsp` where mwcc's built-in
+  idiom gives one `fsubs`, plus a larger frame. This escape hatch does not exist.
+- **An empty `switch` case adjacent to a non-empty one is not recoverable** —
+  mwcc folds it into `default` and re-pivots. 13 shapes tried. The matching source
+  for that asm is usually an `int`-promoted signed range guard instead.
+- `.data` switch jump tables remain structurally unreachable (`rel_carve` only
+  holes `.rodata`). Add bowling `lbl_0000664C` to the known-blocked list.
+
+### KNOWN-BLOCKED ADDITIONS (beyond §0.8's, which all still hold)
+
+- fight `lbl_00018154`/`lbl_000181A8`: need the magic at `lbl_0001C648`, whose
+  hole is owned by `src/mini_fight_71.c` and is far away in `.text`. Only a
+  whole-TU conversion of `0x154B0..0x18F00` (17 magic users) reaches them.
+- fight `lbl_0000FF34`: body is now CERTAIN (documented in the run-4 agent notes);
+  store order `unk148,state` gives the right instruction order but puts `t` in r0,
+  the swap gives r3 but the wrong store order. Mutually exclusive. Stop.
+- golf `lbl_0000FA18`: the original carries 4 DEAD instructions (`subfc`/`subfze`
+  computing an unread `(u64)counter - 0xFFFFFFFF00000000`) — the only `subfze` in
+  the module — plus 8 unaccounted frame bytes. Some 64-bit construct not identified.
+- billiards: the `lbl_00020B58` pool TU is exactly `lbl_00018474`, `lbl_00018608`,
+  `lbl_000186EC`, `lbl_000189B4`, `lbl_00018A98`, `lbl_00018C78`, `lbl_00018F4C`,
+  `lbl_00019264` (1158 insn). A whole-TU carve is the ONLY route to real float
+  literals there, but all 8 must match at once and 3 are allocator-stuck.
+
+### Process notes for the next run
+
+- **Namespace scratchpad paths per module.** The session scratchpad is SHARED
+  between parallel agents; run 4's fight agent `rm -rf`'d a path and destroyed the
+  race agent's backups. (No loss — race was already merged and golden.)
+- **A build-failure guard is mandatory**, not advisory. Golf hit §0.8's fictional-
+  match trap live: a missing forward decl failed one `.o`, the stale asm-include
+  object stayed, and the per-function diff reported a false 0/70 match. Hard-fail
+  on `^# Error` before diffing.
+- **The hash proves nothing about file integrity.** A fight helper's bad regex
+  deleted `#pragma force_active on` plus every following forward decl in 5 files
+  and the REL still hashed golden. Diff structure too.
+- Remaining: 132,543 insn. Median remaining function is now larger again; billiards
+  (2.9%) and fight (4.8%) hold the most untapped mass.
+
+---
+
 ## 0.8 — RUN 3 DONE (2026-07-25): +3,147 insn, 2.6% -> 4.8%. MERGED + all 12 artifacts OK.
 
 Six parallel agents, one per minigame REL. **Merged into the main tree, each REL
@@ -313,7 +460,7 @@ Each module's remaining functions are the harder ones (physics/draw/dispatch, re
 
 - This is a **matching decompilation** of Super Monkey Ball (GameCube). Goal: C that compiles (with CodeWarrior 1.1) to **byte-identical** original binaries.
 - **The DOL is essentially done.** We matched 2 more stub functions in an earlier session; 6 remaining stubs are genuine CodeWarrior register-allocator tie-breaks (documented, low ROI).
-- **CURRENT STATE: see §0.8 (run 3, 4.8%, merged, all 12 artifacts OK). §0.6/§0.7 are history and §0.7's fail-fast rule is WRONG — §0.8 corrects it.**
+- **CURRENT STATE: see §0.9 (run 4, 7.7%, merged, committed `68ec41e`, all 12 artifacts OK). §0.6/§0.7/§0.8 are history; §0.7's fail-fast rule is WRONG (§0.8 corrects it) and §0.8's tool-bug list is superseded by §0.9's fixes.**
 - **The RELs (minigames) are the big remaining surface.** They ARE verifiable (per-REL sha1s in `supermonkeyball.sha1`). We built a **splitter** (`tools/rel_split.py`) that carves a monolithic REL into per-function pieces so functions can be matched one at a time, validated a **byte-neutral split of `mini_bowling`**, added **multi-file output + `--isolate`/`--isolate-range`**, and **matched 6 functions in the real `mini_bowling.rel` (golden `29ded64...`)**: `lbl_000076D0`, `lbl_00007740`, `lbl_00007778`, `lbl_00007964`, `lbl_000079E8`, `lbl_000086E4`.
 - **CRITICAL FINDING — CORRECTED THIS SESSION:** the real cause of the "deopt" is **NOT a TU-size threshold**. mwcc's inline assembler **turns off the instruction scheduler + peephole optimizer for EVERY C function that shares a translation unit with an `asm` block** — it is the *presence* of inline asm, not the amount. Verified directly: `lbl_00007778` compiles byte-perfect in isolation (`extsb.`, `blr` guards); adding **a single `static asm` sibling** to its TU flips it to `extsb`+`cmpwi` / `b <epilogue>` (no match); a 4-function chunk deopts identically to the 120-function one. **Fix = put each to-be-converted C function in its OWN pure-C file with no asm-include siblings.** (Uniform "chunking" by function count does NOT help — that was the earlier, wrong hypothesis.) See §6.
 - **Immediate next task:** continue matching mini_bowling functions with the proven workflow — `python tools/rel_split.py mini_bowling <same --extern-fn args> --isolate <lbl> [--isolate <lbl> ...]`, convert each isolated singleton file's body to C, keep the Makefile `SOURCES` in `.text` order, rebuild, confirm `29ded64...`. Then generalize + roll out to the other modules (mini_race/fight/golf/billiards/pilot, option, test_mode, sel_ngc).
