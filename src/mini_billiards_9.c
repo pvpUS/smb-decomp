@@ -1,5 +1,5 @@
 /*
- * mini_billiards.c -- REL module: isolated function lbl_00007C74.
+ * mini_billiards.c -- REL module: isolated function lbl_000055FC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -46,7 +46,7 @@
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_billiards.s) or imported.  Declared so mwcc accepts `@ha/@l`.
-extern u8 lbl_0001C2B8[4]; /* TYPED-TEST */
+extern u8 lbl_0001C2B8[];
 extern u8 lbl_0001CAD8[];
 extern u8 lbl_0001CBD0[];
 extern u8 lbl_0001CC88[];
@@ -170,6 +170,7 @@ void lbl_00000F5C(void);
 void lbl_00002B4C(void);
 void lbl_00003CC8(void);
 void lbl_00003F4C(void);
+void lbl_00004634(void);
 void lbl_000055FC(void);
 void lbl_00005654(void);
 void lbl_000059A8(void);
@@ -213,12 +214,24 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-void lbl_00007C74(void)
+struct W55FC {
+    u8 _0[0xa];
+    s8 fA;      /* 0xa */
+    s8 fB;      /* 0xb */
+    u8 _c[0x20 - 0xc];
+    s32 f20;    /* 0x20 */
+    u8 _24[0x2c - 0x24];
+    s32 f2C;    /* 0x2c */
+};
+
+void lbl_000055FC(void)
 {
-    int i;
-    for (i = 0; i < 64; i++) {
-        *(s16 *)(lbl_1000A5BC + i * 0x10 + 0x0) = -1;
-        *(s32 *)(lbl_1000A5BC + i * 0x10 + 0xc) = 0;
-    }
+    struct W55FC *w = (struct W55FC *)lbl_10000000;
+    lbl_00000800();
+    w->f20 = 0;
+    w->fB = w->fA;
+    lbl_00003F4C();
+    w->fA = 0xe;
+    w->f2C = 0;
 }
 #pragma force_active reset

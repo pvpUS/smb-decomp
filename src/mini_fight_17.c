@@ -1,5 +1,5 @@
 /*
- * mini_fight.c -- REL module: isolated function lbl_0000E3E4.
+ * mini_fight.c -- REL module: isolated function lbl_0000ABA8.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -389,33 +389,17 @@ void lbl_0001A37C(void);
 void lbl_0001A3DC(void);
 void lbl_0001A550(void);
 void lbl_0001A554(void);
-void lbl_0001B910(void);
+void lbl_0001B910();
 void lbl_0001BA8C(void);
 
-struct FightTblE3E4 {
-    s8 bytes[4];
-    s16 shorts[4];
-};
-
 #pragma force_active on
-void lbl_0000E3E4(void)
+void lbl_0000ABA8(void)
 {
-    struct FightTblE3E4 *p;
-    int i;
-    u8 unused[16];
-
-    memset(lbl_10017DC8, 0, 0xcc);
-    p = (struct FightTblE3E4 *)lbl_10017DC8;
-    for (i = 0; i < 17; i++, p++)
-    {
-        p->bytes[0] = -1;
-        p->shorts[0] = -1;
-        p->bytes[1] = -1;
-        p->shorts[1] = -1;
-        p->bytes[2] = -1;
-        p->shorts[2] = -1;
-        p->bytes[3] = -1;
-        p->shorts[3] = -1;
-    }
+    lbl_0000E4D4();
+    if (*(s32*)lbl_10018CFC & 1)
+        lbl_0000AD9C();
+    else
+        lbl_0000ABE8();
+    lbl_00019B40();
 }
 #pragma force_active reset

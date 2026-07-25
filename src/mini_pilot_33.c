@@ -1,5 +1,5 @@
 /*
- * mini_pilot.c -- REL module: isolated function lbl_0000AE94.
+ * mini_pilot.c -- REL module: isolated function lbl_00008134.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -194,6 +194,7 @@ void lbl_00005824(void);
 void lbl_00006124(void);
 void lbl_00006490(void);
 void lbl_0000669C(void);
+void lbl_00006A94(void);
 void lbl_00006B5C(void);
 void lbl_00006B94(void);
 void lbl_00006BF4(void);
@@ -223,7 +224,7 @@ void lbl_0000A098(void);
 void lbl_0000A69C(void);
 void lbl_0000A754(void);
 void lbl_0000AD6C(void);
-s32 lbl_0000AE94(s32 x);
+void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
 void lbl_0000B000(void);
@@ -232,19 +233,9 @@ void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-s32 lbl_0000AE94(s32 x)
+asm void lbl_00008134(void)
 {
-    switch (x)
-    {
-    case 3:
-        return 0;
-    case 1:
-        return 1;
-    case 0:
-        return 2;
-    case 2:
-        return 3;
-    }
-    return 0;
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_00008134.s"
 }
 #pragma force_active reset

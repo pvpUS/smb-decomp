@@ -217,7 +217,7 @@ void lbl_0000C1D0(void);
 void lbl_0000CAA8(void);
 void lbl_0000D4D4(void);
 void lbl_0000D598(void);
-void lbl_0000D650(void);
+void lbl_0000D650(f32 *outMin, f32 *outEnd, Vec *a0, Vec *a1, Vec *b0, Vec *b1);
 void lbl_0000D7F8(void);
 void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
@@ -237,9 +237,46 @@ void lbl_0000E870(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
-asm void lbl_0000D650(void)
+// lbl_0000D650 (0xD650): swept closest-approach between two moving points.
+// a0/a1 and b0/b1 are the two points at the start and end of the frame;
+// *outMin gets the squared separation at the closest approach inside the frame
+// (or the end-of-frame separation if the closest approach falls outside it) and
+// *outEnd always gets the end-of-frame squared separation.
+// lbl_00014C00 is the double 0.0.
+void lbl_0000D650(f32 *outMin, f32 *outEnd, Vec *a0, Vec *a1, Vec *b0, Vec *b1)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000D650.s"
+    Vec sp44;
+    Vec sp38;
+    Vec sp2c;
+    Vec sp20;
+    f32 speedSq;
+    f32 t;
+
+    sp38.x = b0->x - a0->x;
+    sp38.y = b0->y - a0->y;
+    sp38.z = b0->z - a0->z;
+    sp2c.x = b1->x - a1->x;
+    sp2c.y = b1->y - a1->y;
+    sp2c.z = b1->z - a1->z;
+    sp44.x = sp2c.x - sp38.x;
+    sp44.y = sp2c.y - sp38.y;
+    sp44.z = sp2c.z - sp38.z;
+
+    speedSq = mathutil_vec_sq_len(&sp44);
+    if (speedSq > *(f64 *)lbl_00014C00) {
+        t = -(sp44.x * sp38.x) - sp44.y * sp38.y - sp44.z * sp38.z;
+        if (*(f64 *)lbl_00014C00 <= t && t <= speedSq) {
+            t = t / speedSq;
+            sp20.x = sp38.x + sp44.x * t;
+            sp20.y = sp38.y + sp44.y * t;
+            sp20.z = sp38.z + sp44.z * t;
+            *outMin = mathutil_vec_sq_len(&sp20);
+            *outEnd = mathutil_vec_sq_len(&sp2c);
+        } else {
+            *outEnd = *outMin = mathutil_vec_sq_len(&sp2c);
+        }
+    } else {
+        *outEnd = *outMin = mathutil_vec_sq_len(&sp2c);
+    }
 }
 #pragma force_active reset

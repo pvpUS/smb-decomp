@@ -1,5 +1,5 @@
 /*
- * mini_fight.c -- REL module: isolated function lbl_0000D954.
+ * mini_fight.c -- REL module: isolated function lbl_000058A0.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -393,24 +393,9 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-void lbl_0000D954(void)
+asm void lbl_000058A0(void)
 {
-    int i;
-    u8 *p;
-    s8 *status;
-
-    status = g_poolInfo.playerPool.statusList;
-    p = lbl_10017664 + 8;
-    for (i = 4; i > 0; i--, status++, p += 0x18)
-    {
-        if (*status != 0)
-            *(u32 *)p = 0;
-        else
-            *(u32 *)p = -1;
-        *(u16 *)(p + 6) = 0;
-        memset(p + 8, 0, 8);
-        *(u16 *)(p + 0x14) = 0;
-        *(u16 *)(p + 0x16) = 0;
-    }
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_000058A0.s"
 }
 #pragma force_active reset

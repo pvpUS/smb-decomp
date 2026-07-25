@@ -47,6 +47,15 @@
 #include "shadow.h"
 #include "vibration.h"
 
+// Per-player bowling scorecard.  Layout is read off the code; field NAMES are
+// INVENTED.  `state[b]` is 0 = ball not thrown, 2 = strike, 3 = spare.
+struct BowlScore {
+    u8 filler0[0xa];
+    s16 total[11];   // 0x0a -- running score, total[0] unused, -1 = not scored yet
+    s8 pins[21];     // 0x20 -- pins felled per ball (10 frames x 2 + bonus)
+    s8 state[21];    // 0x35
+};
+
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_bowling.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000F020[];
@@ -155,7 +164,7 @@ void lbl_00004BD8(void);
 void lbl_00004D10(void);
 void lbl_00004DF8(void);
 void lbl_00005128(void);
-void lbl_000051E0(void);
+void lbl_000051E0(struct BowlScore *p);
 void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
@@ -238,9 +247,63 @@ void lbl_0000E870(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
-asm void lbl_000051E0(void)
+// lbl_000051E0 (0x51E0): recompute the running total for the first frame that
+// has not been scored yet, once all the balls it depends on have been thrown.
+void lbl_000051E0(struct BowlScore *p)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_000051E0.s"
+    int frame;
+    int ball;
+
+    for (frame = 1; frame <= 10; frame++) {
+        if (p->total[frame] == -1)
+            break;
+    }
+
+    if (frame == 10) {
+        if (p->state[18] == 0)
+            return;
+        if (p->state[19] == 0)
+            return;
+        if (p->state[18] == 2 || p->state[19] == 2 || p->state[19] == 3) {
+            if (p->state[20] == 0)
+                return;
+        }
+        p->total[frame] =
+            p->total[frame - 1] + p->pins[18] + p->pins[19] + p->pins[20];
+        return;
+    }
+
+    ball = (frame - 1) * 2;
+    if (p->state[ball] == 2) {
+        if (frame == 9) {
+            if (p->state[ball + 2] == 0)
+                return;
+            if (p->state[ball + 3] == 0)
+                return;
+            p->total[frame] =
+                p->total[frame - 1] + p->pins[ball] + p->pins[ball + 2] + p->pins[ball + 3];
+        } else if (p->state[ball + 2] == 0) {
+            return;
+        } else if (p->state[ball + 2] == 2) {
+            if (p->state[ball + 4] == 0)
+                return;
+            p->total[frame] =
+                p->total[frame - 1] + p->pins[ball] + p->pins[ball + 2] + p->pins[ball + 4];
+        } else {
+            if (p->state[ball + 3] == 0)
+                return;
+            p->total[frame] =
+                p->total[frame - 1] + p->pins[ball] + p->pins[ball + 2] + p->pins[ball + 3];
+        }
+    } else if (p->state[ball + 1] == 3) {
+        if (p->state[ball + 2] == 0)
+            return;
+        p->total[frame] =
+            p->total[frame - 1] + p->pins[ball] + p->pins[ball + 1] + p->pins[ball + 2];
+    } else {
+        if (p->state[ball + 1] == 0)
+            return;
+        p->total[frame] = p->total[frame - 1] + p->pins[ball] + p->pins[ball + 1];
+    }
 }
 #pragma force_active reset

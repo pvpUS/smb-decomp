@@ -231,15 +231,64 @@ void lbl_0000E22C(void);
 void lbl_0000E2E0(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
-void lbl_0000E5D4(void);
+void lbl_0000E5D4(s8 *alive, struct Sprite *sprite);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
-asm void lbl_0000E5D4(void)
+// lbl_0000E5D4 (0xE5D4): sprite mainFunc for the "3..2..1" style countdown --
+// at each 60-frame boundary it restamps the text (strs+0x48.. are the one-char
+// strings "1".."4"), colour and start scale (tbl+0x78.. = 1.3/1.1/0.9/0.7),
+// then every frame grows the scale by 0.01 and fades opacity by 1/60.
+void lbl_0000E5D4(s8 *alive, struct Sprite *sprite)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000E5D4.s"
+    u8 *strs = lbl_00015428;
+    u8 *tbl = lbl_00014D70;
+
+    if (sprite->counter == 60) {
+        sprite->mulR = 0xff;
+        sprite->mulG = 0;
+        sprite->mulB = 0;
+        sprite->scaleX = *(f32 *)(tbl + 0x78);
+        sprite->scaleY = *(f32 *)(tbl + 0x78);
+        sprite->opacity = *(f32 *)(tbl + 4);
+        strcpy(sprite->text, (char *)(strs + 0x48));
+        u_play_sound_0(6);
+    } else if (sprite->counter == 120) {
+        sprite->mulR = 0xff;
+        sprite->mulG = 0x7f;
+        sprite->mulB = 0;
+        sprite->scaleX = *(f32 *)(tbl + 0x7c);
+        sprite->scaleY = *(f32 *)(tbl + 0x7c);
+        sprite->opacity = *(f32 *)(tbl + 4);
+        strcpy(sprite->text, (char *)(strs + 0x4c));
+        u_play_sound_0(6);
+    } else if (sprite->counter == 180) {
+        sprite->mulR = 0xff;
+        sprite->mulG = 0xff;
+        sprite->mulB = 0;
+        sprite->scaleX = *(f32 *)(tbl + 0x80);
+        sprite->scaleY = *(f32 *)(tbl + 0x80);
+        sprite->opacity = *(f32 *)(tbl + 4);
+        strcpy(sprite->text, (char *)(strs + 0x50));
+        u_play_sound_0(6);
+    } else if (sprite->counter == 240) {
+        sprite->mulR = 0;
+        sprite->mulG = 0xff;
+        sprite->mulB = 0;
+        sprite->scaleX = *(f32 *)(tbl + 0x84);
+        sprite->scaleY = *(f32 *)(tbl + 0x84);
+        sprite->opacity = *(f32 *)(tbl + 4);
+        strcpy(sprite->text, (char *)(strs + 0x54));
+        u_play_sound_0(6);
+    }
+
+    sprite->scaleX = sprite->scaleX + *(f64 *)(tbl + 0x88);
+    sprite->scaleY = sprite->scaleY + *(f64 *)(tbl + 0x88);
+    sprite->opacity = sprite->opacity - *(f64 *)(tbl + 0x68);
+    sprite->counter--;
+    if (sprite->counter <= 0)
+        *alive = 0;
 }
 #pragma force_active reset

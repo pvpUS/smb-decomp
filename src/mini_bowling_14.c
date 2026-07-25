@@ -166,14 +166,14 @@ void lbl_00007650(void);
 void lbl_000076D0(void);
 void lbl_00007740(void);
 void lbl_00007778(void);
-void lbl_00007878(void);
+void lbl_00007878(struct Ball *ball);
 void lbl_00007964(void);
 void lbl_000079E8(void);
-void lbl_00007A6C(void);
-void lbl_00007C54(void);
-void lbl_00007E74(void);
-void lbl_00007FE0(void);
-void lbl_000080E0(void);
+void lbl_00007A6C(struct Ball *ball);
+void lbl_00007C54(struct Ball *ball);
+void lbl_00007E74(struct Ball *ball);
+void lbl_00007FE0(struct Ball *ball);
+void lbl_000080E0(struct Ball *ball);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
 void lbl_000087CC(void);
@@ -237,9 +237,37 @@ void lbl_0000E870(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
-asm void lbl_00007878(void)
+// lbl_00007878 (0x7878): the module's per-frame ball callback.  Dispatches on the
+// ball's bowling substate, plays the "ball fell off the lane" sound once, and
+// bumps the ball's frame counter.
+void lbl_00007878(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00007878.s"
+    switch (ball->unk148)
+    {
+    case 0:
+        lbl_00007A6C(ball);
+        break;
+    case 1:
+        lbl_00007C54(ball);
+        break;
+    case 2:
+        lbl_00007E74(ball);
+        break;
+    case 3:
+        lbl_00007FE0(ball);
+        break;
+    case 4:
+        lbl_000080E0(ball);
+        break;
+    }
+
+    if (ball->pos.y < *(f64 *)lbl_00011258 && !(ball->flags & 0x1000)
+        && *(s32 *)lbl_000153E4 == -1)
+    {
+        u_play_sound_0(0x1D);
+        *(s32 *)lbl_000153E4 = u_play_sound_2(0x15);
+    }
+
+    ball->unk80++;
 }
 #pragma force_active reset

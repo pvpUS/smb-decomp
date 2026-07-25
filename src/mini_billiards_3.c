@@ -1,6 +1,6 @@
 /*
  * mini_billiards.c -- REL module, structurally split for per-function
- * byte-matching (part 3 of 24; contiguous .text range).  Each function
+ * byte-matching (part 3 of 34; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_billiards/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -169,6 +169,7 @@ void lbl_00000F5C(void);
 void lbl_00002B4C(void);
 void lbl_00003CC8(void);
 void lbl_00003F4C(void);
+void lbl_00004634(void);
 void lbl_000055FC(void);
 void lbl_00005654(void);
 void lbl_000059A8(void);

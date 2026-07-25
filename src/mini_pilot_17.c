@@ -1,6 +1,6 @@
 /*
  * mini_pilot.c -- REL module, structurally split for per-function
- * byte-matching (part 17 of 38; contiguous .text range).  Each function
+ * byte-matching (part 17 of 53; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_pilot/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -193,7 +193,7 @@ void lbl_00005824(void);
 void lbl_00006124(void);
 void lbl_00006490(void);
 void lbl_0000669C(void);
-static void lbl_00006A94(void);
+void lbl_00006A94(void);
 void lbl_00006B5C(void);
 void lbl_00006B94(void);
 void lbl_00006BF4(void);
@@ -232,29 +232,9 @@ void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-asm void lbl_00005824(void)
+asm void lbl_00004570(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00005824.s"
-}
-asm void lbl_00006124(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00006124.s"
-}
-asm void lbl_00006490(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00006490.s"
-}
-asm void lbl_0000669C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_0000669C.s"
-}
-static asm void lbl_00006A94(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00006A94.s"
+#include "../asm/nonmatchings/mini_pilot/lbl_00004570.s"
 }
 #pragma force_active reset

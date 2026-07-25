@@ -262,14 +262,4 @@ asm void lbl_0000A878(void)
     nofralloc
 #include "../asm/nonmatchings/mini_bowling/lbl_0000A878.s"
 }
-asm void lbl_0000AAAC(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000AAAC.s"
-}
-asm void lbl_0000AB98(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000AB98.s"
-}
 #pragma force_active reset

@@ -227,7 +227,7 @@ void lbl_0000DBB8(void);
 void lbl_0000DD4C(void);
 void lbl_0000DE10(void);
 void lbl_0000DFA4(void);
-static void lbl_0000E098(void);
+void lbl_0000E098(void);
 void lbl_0000E22C(void);
 void lbl_0000E2E0(void);
 void lbl_0000E3A0(void);
@@ -242,15 +242,5 @@ asm void lbl_0000DE10(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_bowling/lbl_0000DE10.s"
-}
-asm void lbl_0000DFA4(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000DFA4.s"
-}
-static asm void lbl_0000E098(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000E098.s"
 }
 #pragma force_active reset

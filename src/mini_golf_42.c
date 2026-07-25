@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_00022524.
+ * mini_golf.c -- REL module: isolated function lbl_000100D4.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -147,6 +147,8 @@ void lbl_0000027C(void);
 void lbl_000002A8(void);
 void lbl_000005CC(void);
 void lbl_000056C4(void);
+void lbl_00007F34(void);
+void lbl_00008A44(void);
 void lbl_00008C78(void);
 void lbl_00008D34(void);
 void lbl_00008F44(void);
@@ -208,7 +210,7 @@ void lbl_0000F7E8(void);
 void lbl_0000FA18(void);
 void lbl_0000FBC8(void);
 void lbl_0000FCE0(void);
-void lbl_000100D4(void);
+void lbl_000100D4(struct PhysicsBall *, struct Stage *);
 void lbl_00010304(void);
 void lbl_000106B8(void);
 void lbl_00010808(void);
@@ -237,6 +239,7 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
+void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -255,32 +258,86 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-void lbl_00022524(void)
+void lbl_000100D4(struct PhysicsBall *ball, struct Stage *stage)
 {
-    u8 *tbl = (u8 *)lbl_00026E28;
+    struct StageAnimGroup *stageAg;
+    int i;
+    s16 *cellTris;
+    s16 *cellTriIdx;
+    struct StageColiCone *cone;
+    int coneCount;
+    struct StageColiSphere *sphere;
+    int sphereCount;
+    struct StageColiCylinder *cylinder;
+    int cylinderCount;
 
-    nlSprPut((NLsprarg *)(tbl + 0x690));
-    nlSprPut((NLsprarg *)(tbl + 0x6e0));
-    if ((s8)lbl_802F1BE8.unk4 == 0) {
-        if ((s32)lbl_802F1BE8.unk0 == 0) {
-            nlSprPut((NLsprarg *)(tbl + 0x730));
-        } else if ((s32)lbl_802F1BE8.unk0 == 1) {
-            nlSprPut((NLsprarg *)(tbl + 0x7d0));
+    stageAg = stage->animGroups;
+    for (i = 0; i < stage->animGroupCount; i++, stageAg++)
+    {
+        if (i != ball->animGroupId)
+            tf_physball_to_anim_group_space(ball, i);
+
+        cellTris = coligrid_lookup(stageAg, ball->prevPos.x, ball->prevPos.z);
+        if (cellTris != NULL2)
+        {
+            cellTriIdx = cellTris;
+            while (*cellTriIdx >= 0)
+            {
+                collide_ball_with_tri_face(ball, &stageAg->triangles[*cellTriIdx]);
+                cellTriIdx++;
+            }
         }
-        nlSprPut((NLsprarg *)(tbl + 0x870));
-        nlSprPut((NLsprarg *)(tbl + 0x910));
-        nlSprPut((NLsprarg *)(tbl + 0x9b0));
-    } else if ((s8)lbl_802F1BE8.unk4 != 0) {
-        if ((s32)lbl_802F1BE8.unk0 == 0) {
-            nlSprPut((NLsprarg *)(tbl + 0x780));
-        } else if ((s32)lbl_802F1BE8.unk0 == 1) {
-            nlSprPut((NLsprarg *)(tbl + 0x820));
-        }
-        nlSprPut((NLsprarg *)(tbl + 0x8c0));
-        nlSprPut((NLsprarg *)(tbl + 0x960));
-        nlSprPut((NLsprarg *)(tbl + 0xa00));
+
+        cone = stageAg->coliCones;
+        for (coneCount = stageAg->coliConeCount; coneCount > 0; coneCount--, cone++)
+            collide_ball_with_cone(ball, cone);
+
+        sphere = stageAg->coliSpheres;
+        for (sphereCount = stageAg->coliSphereCount; sphereCount > 0; sphereCount--, sphere++)
+            collide_ball_with_sphere(ball, sphere);
+
+        cylinder = stageAg->coliCylinders;
+        for (cylinderCount = stageAg->coliCylinderCount; cylinderCount > 0; cylinderCount--, cylinder++)
+            collide_ball_with_cylinder(ball, cylinder);
     }
-    nlSprPut((NLsprarg *)(tbl + 0xa50));
-    nlSprPut((NLsprarg *)(tbl + 0xaa0));
+
+    stageAg = stage->animGroups;
+    for (i = 0; i < stage->animGroupCount; i++, stageAg++)
+    {
+        if (i != ball->animGroupId)
+            tf_physball_to_anim_group_space(ball, i);
+
+        cellTris = coligrid_lookup(stageAg, ball->prevPos.x, ball->prevPos.z);
+        if (cellTris != NULL2)
+        {
+            s16 *idx = cellTris;
+            while (*idx >= 0)
+            {
+                collide_ball_with_tri_edges(ball, &stageAg->triangles[*idx]);
+                idx++;
+            }
+        }
+    }
+
+    stageAg = stage->animGroups;
+    for (i = 0; i < stage->animGroupCount; i++, stageAg++)
+    {
+        if (i != ball->animGroupId)
+            tf_physball_to_anim_group_space(ball, i);
+
+        cellTris = coligrid_lookup(stageAg, ball->prevPos.x, ball->prevPos.z);
+        if (cellTris != NULL2)
+        {
+            s16 *idx = cellTris;
+            while (*idx >= 0)
+            {
+                collide_ball_with_tri_verts(ball, &stageAg->triangles[*idx]);
+                idx++;
+            }
+        }
+    }
+
+    if (ball->animGroupId != 0)
+        tf_physball_to_anim_group_space(ball, 0);
 }
 #pragma force_active reset

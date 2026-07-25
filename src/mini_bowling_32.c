@@ -46,6 +46,15 @@
 #include "shadow.h"
 #include "vibration.h"
 
+struct BowlPin {
+    u32 flags;         // 0x000
+    u8 unk4[0x120];
+    f32 unk124;        // 0x124
+    u8 unk128[0x50];
+    u32 unk178;        // 0x178
+    u8 unk17c[8];
+};                     // 0x184
+
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_bowling.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000F020[];
@@ -108,7 +117,7 @@ extern u8 lbl_100004C0[];
 extern u8 lbl_100004E0[];
 extern u8 lbl_10012140[];
 extern u8 lbl_10012180[];
-extern u8 lbl_10018510[];
+extern struct BowlPin lbl_10018510[];
 
 // Imported functions the code calls that no included header declares.
 extern void draw_test_camera_target();
@@ -203,7 +212,7 @@ void lbl_0000A878(void);
 void lbl_0000AAAC(void);
 void lbl_0000AB98(void);
 void lbl_0000AC60(void);
-void lbl_0000AD8C(void);
+int lbl_0000AD8C(u8 *outCount);
 void lbl_0000AF18(void);
 void lbl_0000AFEC(void);
 void lbl_0000B0AC(void);
@@ -237,9 +246,37 @@ void lbl_0000E870(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
-asm void lbl_0000AD8C(void)
+// lbl_0000AD8C (0xAD8C): scan the ten pins for ones that have just gone down.
+// Returns a bitmask of the pins counted this frame and stores the count in
+// *outCount.  tbl+0x378 / +0x3f0 / +0x3f8 are 0x380, 2.39 and -2.39.
+int lbl_0000AD8C(u8 *outCount)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000AD8C.s"
+    u8 *tbl = lbl_00014800;
+    u32 mask = 0;
+    int count = 0;
+    int i;
+    struct BowlPin *pin = lbl_10018510;
+
+    for (i = 0; i < 10; i++, pin++) {
+        if (pin->flags & 1) {
+            pin->flags &= ~0x10;
+            if (!(pin->flags & 4)) {
+                mask |= 1 << i;
+                count++;
+                pin->flags |= 2;
+            } else if (pin->unk178 == *(u32 *)(tbl + 0x378) && (pin->flags & 2)
+                       && pin->unk124 < *(f64 *)(tbl + 0x3f0)
+                       && pin->unk124 > *(f64 *)(tbl + 0x3f8)) {
+                pin->flags |= 2;
+                mask |= 1 << i;
+                count++;
+                pin->flags &= ~4;
+            } else {
+                pin->flags |= 4;
+            }
+        }
+    }
+    *outCount = count;
+    return mask;
 }
 #pragma force_active reset

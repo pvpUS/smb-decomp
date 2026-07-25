@@ -1,6 +1,6 @@
 /*
  * mini_pilot.c -- REL module, structurally split for per-function
- * byte-matching (part 1 of 38; contiguous .text range).  Each function
+ * byte-matching (part 1 of 53; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_pilot/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -194,6 +194,7 @@ void lbl_00005824(void);
 void lbl_00006124(void);
 void lbl_00006490(void);
 void lbl_0000669C(void);
+void lbl_00006A94(void);
 void lbl_00006B5C(void);
 void lbl_00006B94(void);
 void lbl_00006BF4(void);

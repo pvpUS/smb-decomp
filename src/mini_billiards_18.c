@@ -1,5 +1,5 @@
 /*
- * mini_billiards.c -- REL module: isolated function lbl_00016D24.
+ * mini_billiards.c -- REL module: isolated function lbl_0000939C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -170,6 +170,7 @@ void lbl_00000F5C(void);
 void lbl_00002B4C(void);
 void lbl_00003CC8(void);
 void lbl_00003F4C(void);
+void lbl_00004634(void);
 void lbl_000055FC(void);
 void lbl_00005654(void);
 void lbl_000059A8(void);
@@ -181,7 +182,7 @@ void lbl_00007C74(void);
 void lbl_00007D18(void);
 void lbl_00007D80(void);
 void lbl_00008EC0(void);
-void lbl_0000939C(void);
+s32 lbl_0000939C(s8 mode);
 void lbl_00009540(void);
 void lbl_00009788(void);
 void lbl_00009E34(void);
@@ -195,7 +196,7 @@ void lbl_0000D330(void);
 void lbl_0000D7E8(void);
 void lbl_0000E8D0(void);
 void lbl_00016D24(void);
-void lbl_00016D9C(int a, int b);
+void lbl_00016D9C(void);
 void lbl_0001723C(void);
 void lbl_00017A00(void);
 void lbl_00018008(void);
@@ -213,13 +214,43 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-void lbl_00016D24(void)
+s32 lbl_0000939C(s8 mode)
 {
-    s8 v = *(s8 *)(lbl_10009878 + 0x3a8);
-    s8 i;
-    if (v <= 0 && v > -24)
-        return;
-    for (i = 0; i < 10; i++)
-        lbl_00016D9C(i, *(s32 *)lbl_10000020);
+    u8 *b = lbl_10000000;
+
+    if (*(s8 *)(b + 0xa) != *(s8 *)(b + 0xb338)) {
+        *(s8 *)(b + 0xb338) = *(s8 *)(b + 0xa);
+        *(u8 *)(b + 0x16) = 0;
+        return 0;
+    }
+    if (*(s32 *)(b + 0x20) < 30)
+        return 0;
+
+    if (*(s8 *)(b + 0xa6c) != 0) {
+        if (controllerInfo[playerControllerIDs[0]].pressed.button & PAD_BUTTON_A)
+            return 1;
+    } else {
+        switch (mode) {
+        case 0:
+            if (controllerInfo[playerControllerIDs[0]].pressed.button & PAD_BUTTON_A)
+                *(s8 *)(b + 0x16) |= 1;
+            if (controllerInfo[playerControllerIDs[1]].pressed.button & PAD_BUTTON_A)
+                *(s8 *)(b + 0x16) |= 2;
+            if (*(s8 *)(b + 0x16) == 3)
+                return 1;
+            break;
+        case 1:
+            if (controllerInfo[playerControllerIDs[lbl_802F1C32]].pressed.button
+                & PAD_BUTTON_A)
+                return 1;
+            break;
+        case 2:
+            if ((controllerInfo[playerControllerIDs[0]].pressed.button & PAD_BUTTON_A)
+                || (controllerInfo[playerControllerIDs[1]].pressed.button & PAD_BUTTON_A))
+                return 1;
+            break;
+        }
+    }
+    return 0;
 }
 #pragma force_active reset

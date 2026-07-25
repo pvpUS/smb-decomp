@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_00025A44.
+ * mini_golf.c -- REL module: isolated function lbl_00011DAC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -147,6 +147,8 @@ void lbl_0000027C(void);
 void lbl_000002A8(void);
 void lbl_000005CC(void);
 void lbl_000056C4(void);
+void lbl_00007F34(void);
+void lbl_00008A44(void);
 void lbl_00008C78(void);
 void lbl_00008D34(void);
 void lbl_00008F44(void);
@@ -237,6 +239,7 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
+void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -246,7 +249,7 @@ void lbl_0002544C(void);
 void lbl_000255CC(void);
 void lbl_0002572C(void);
 void lbl_00025928(void);
-s32 lbl_00025A44(void *arg);
+void lbl_00025A44(void);
 void lbl_00025B10(void);
 void lbl_00025B70(void);
 void lbl_00025BD0(void);
@@ -254,26 +257,10 @@ void lbl_00025EA8(void);
 void lbl_0002609C(void);
 void lbl_000260C0(void);
 
-struct Struct25A44 {
-    s32 w[8];
-};
-
 #pragma force_active on
-s32 lbl_00025A44(void *arg)
+asm void lbl_00011DAC(void)
 {
-    u8 *cfg = (u8 *)lbl_00026AA0;
-    u8 *st = (u8 *)lbl_10000248;
-
-    *(struct Struct25A44 *)st = *(struct Struct25A44 *)arg;
-    *(s32 *)(st + 0x20) = *(s32 *)(*(u8 **)st + 0x24);
-
-    mathutil_mtxA_push();
-    mathutil_mtxA_from_translate_xyz(*(f32 *)(cfg + 8), *(f32 *)(cfg + 8), *(f32 *)(cfg + 4));
-    mathutil_mtxA_scale_xyz(*(f32 *)cfg, *(f32 *)cfg, *(f32 *)(cfg + 4));
-    mathutil_mtxA_rotate_x(0x4000);
-    mathutil_mtxA_translate_neg((Vec *)(st + 8));
-    mathutil_mtxA_to_mtx((f32 (*)[4])(st + 0x28));
-    mathutil_mtxA_pop();
-    return 1;
+    nofralloc
+#include "../asm/nonmatchings/mini_golf/lbl_00011DAC.s"
 }
 #pragma force_active reset

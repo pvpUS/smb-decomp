@@ -1,5 +1,5 @@
 /*
- * mini_fight.c -- REL module: isolated function lbl_0001B910.
+ * mini_fight.c -- REL module: isolated function lbl_0000FFC4.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -354,7 +354,7 @@ void lbl_0000FEC4(void);
 void lbl_0000FEC8(void);
 void lbl_0000FF30(void);
 void lbl_0000FF34(void);
-void lbl_0000FFC4(void);
+void lbl_0000FFC4(u8 *p, int unused, int arg);
 void lbl_00010018(void);
 void lbl_0001181C(void);
 void lbl_0001199C(void);
@@ -389,13 +389,19 @@ void lbl_0001A37C(void);
 void lbl_0001A3DC(void);
 void lbl_0001A550(void);
 void lbl_0001A554(void);
-void lbl_0001B910(void);
+void lbl_0001B910();
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_0001B910(void)
+void lbl_0000FFC4(u8 *p, int unused, int arg)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0001B910.s"
+    u32 v = *(u32*)(p + 0x94);
+    if (!(v & 0x400000)) {
+        *(u32*)(p + 0x94) = v | 0x400000;
+        p[0x148] = 0x25;
+        *(worldInfo + (s8)p[0x2e] * 0x40 + 8) = 6;
+    }
+    if (*(s16*)(p + 0x14c) < arg)
+        *(s16*)(p + 0x14c) = (s16)arg;
 }
 #pragma force_active reset

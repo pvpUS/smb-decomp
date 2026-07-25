@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_000091BC.
+ * mini_golf.c -- REL module: isolated function lbl_0000907C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -147,12 +147,14 @@ void lbl_0000027C(void);
 void lbl_000002A8(void);
 void lbl_000005CC(void);
 void lbl_000056C4(void);
+void lbl_00007F34(void);
+void lbl_00008A44(void);
 void lbl_00008C78(void);
 void lbl_00008D34(void);
 void lbl_00008F44(void);
 void lbl_0000907C(void);
 void lbl_00009178(void);
-u8 lbl_000091BC(void);
+void lbl_000091BC(void);
 void lbl_000092C4(void);
 void lbl_000092D0(void);
 void lbl_000092E0(void);
@@ -237,6 +239,7 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
+void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -255,23 +258,35 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-u8 lbl_000091BC(void)
+void lbl_0000907C(void)
 {
+    f32 *cfg = (f32 *)lbl_000260F0;
     int i;
-    int res = 0;
 
-    for (i = 0; i < modeCtrl.playerCount; i++)
-    {
-        if (((u8 *)lbl_00026AF8 + i * 0x12)[*(s16 *)lbl_1000003A] == 0)
-            res = 1;
-        if (mathutil_sqrt(mathutil_sum_of_sq_3(
-                ballInfo[i].pos.x - decodedStageLzPtr->startPos->pos.x,
-                *(f32 *)lbl_000260F0,
-                ballInfo[i].pos.z - decodedStageLzPtr->startPos->pos.z)) <
-                *(f64 *)lbl_00026158 &&
-            ((u8 *)lbl_00026AF0)[i] == 0)
-            res = 1;
+    event_finish_all();
+    free_all_bitmap_groups_except_com();
+    u_free_minigame_graphics();
+    SoundGroupFree();
+    load_stage(*(s16 *)(lbl_00026AC4 + 0x22));
+    event_start(0xf);
+    event_start(0x12);
+    event_start(0x13);
+    event_start(0xd);
+    event_start(0x10);
+
+    g_poolInfo.playerPool.statusList[0] = 2;
+    g_poolInfo.playerPool.statusList[1] = 0;
+    g_poolInfo.playerPool.statusList[2] = 0;
+    g_poolInfo.playerPool.statusList[3] = 0;
+    modeCtrl.currPlayer = 0;
+
+    for (i = 0; i < 4; i++) {
+        setup_camera_viewport(i, cfg[0], cfg[0], cfg[0], cfg[0]);
     }
-    return res;
+    {
+        f32 lt = cfg[0];
+        f32 wh = cfg[1];
+        setup_camera_viewport(0, lt, lt, wh, wh);
+    }
 }
 #pragma force_active reset

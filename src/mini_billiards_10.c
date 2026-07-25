@@ -1,5 +1,5 @@
 /*
- * mini_billiards.c -- REL module: isolated function lbl_00007D18.
+ * mini_billiards.c -- REL module: isolated function lbl_00005654.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -170,6 +170,7 @@ void lbl_00000F5C(void);
 void lbl_00002B4C(void);
 void lbl_00003CC8(void);
 void lbl_00003F4C(void);
+void lbl_00004634(void);
 void lbl_000055FC(void);
 void lbl_00005654(void);
 void lbl_000059A8(void);
@@ -178,7 +179,7 @@ void lbl_00006DC0(void);
 void lbl_000077D8(void);
 void lbl_00007974(void);
 void lbl_00007C74(void);
-void lbl_00007D18(s16 arg0, s32 arg1);
+void lbl_00007D18(void);
 void lbl_00007D80(void);
 void lbl_00008EC0(void);
 void lbl_0000939C(void);
@@ -212,33 +213,10 @@ void lbl_0001A0B0(void);
 void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
-struct Rec7D18 {
-    s16 unk0;
-    s16 unk2;
-    s32 unk4;
-    s32 unk8;
-    s32 unkC;
-};
-
-struct Work7D18 {
-    u8 pad[0xA5BC];
-    struct Rec7D18 recs[64];
-};
-
 #pragma force_active on
-void lbl_00007D18(s16 arg0, s32 arg1)
+asm void lbl_00005654(void)
 {
-    struct Work7D18 *w = (struct Work7D18 *)lbl_10000000;
-    struct Rec7D18 *p = w->recs;
-    int i;
-    for (i = 0; i < 64; p++, i++) {
-        if (p->unk0 == -1) {
-            w->recs[i].unk0 = arg0;
-            w->recs[i].unkC = arg1;
-            w->recs[i].unk4 = lbl_802F1DFC;
-            w->recs[i].unk8 = u_somePlayerId;
-            return;
-        }
-    }
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_00005654.s"
 }
 #pragma force_active reset

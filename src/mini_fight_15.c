@@ -1,6 +1,6 @@
 /*
  * mini_fight.c -- REL module, structurally split for per-function
- * byte-matching (part 15 of 57; contiguous .text range).  Each function
+ * byte-matching (part 15 of 94; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_fight/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -292,6 +292,13 @@ void lbl_00004498(void);
 void lbl_00004D14(void);
 void lbl_000057FC(void);
 void lbl_000058A0(void);
+void lbl_00005A08(void);
+void lbl_00007444(void);
+void lbl_000074DC(void);
+void lbl_00007640(void);
+void lbl_00007AD4(void);
+void lbl_00007F7C(void);
+void lbl_000080D4(void);
 void lbl_0000A690(void);
 void lbl_0000A974(void);
 void lbl_0000AAD0(void);
@@ -392,29 +399,39 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_0000DCA0(void)
+asm void lbl_000074DC(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000DCA0.s"
+#include "../asm/nonmatchings/mini_fight/lbl_000074DC.s"
 }
-asm void lbl_0000DF9C(void)
+asm void lbl_00007640(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000DF9C.s"
+#include "../asm/nonmatchings/mini_fight/lbl_00007640.s"
 }
-asm void lbl_0000E0C4(void)
+asm void lbl_00007AD4(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000E0C4.s"
+#include "../asm/nonmatchings/mini_fight/lbl_00007AD4.s"
 }
-asm void lbl_0000E1B4(void)
+asm void lbl_00007F7C(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000E1B4.s"
+#include "../asm/nonmatchings/mini_fight/lbl_00007F7C.s"
 }
-asm void lbl_0000E2B0(void)
+asm void lbl_000080D4(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000E2B0.s"
+#include "../asm/nonmatchings/mini_fight/lbl_000080D4.s"
+}
+asm void lbl_0000A690(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_0000A690.s"
+}
+asm void lbl_0000A974(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_0000A974.s"
 }
 #pragma force_active reset

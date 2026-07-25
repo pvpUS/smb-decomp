@@ -1,6 +1,6 @@
 /*
  * mini_fight.c -- REL module, structurally split for per-function
- * byte-matching (part 40 of 57; contiguous .text range).  Each function
+ * byte-matching (part 40 of 94; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_fight/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -141,9 +141,20 @@ extern u8 lbl_10017520[];
 extern u8 lbl_10017578[];
 extern u8 lbl_10017664[];
 extern u8 lbl_10017DC8[];
-extern u8 lbl_10017E98[];
+struct FightSubModeFuncs
+{
+    void (*init)(void);  // 0x0
+    void (*main)(void);  // 0x4
+    void (*dest)(void);  // 0x8
+};
+extern struct FightSubModeFuncs lbl_10017E98[];
 extern u8 lbl_100188E0[];
-extern u8 lbl_100188E8[];
+struct FightSubModeCtrl
+{
+    int mode;           // 0x00
+    struct Sphere sph;  // 0x04
+};
+extern struct FightSubModeCtrl lbl_100188E8;
 extern u8 lbl_10018900[];
 extern u8 lbl_10018920[];
 extern u8 lbl_10018C6C[];
@@ -319,8 +330,9 @@ void lbl_0000EA10(void);
 void lbl_0000EBF4(void);
 void lbl_0000EC58(void);
 void lbl_0000EDA8(void);
+void lbl_0000EE28(void);
 void lbl_0000EE80(void);
-void lbl_0000EEE4(void);
+void lbl_0000EEE4(int);
 void lbl_0000EF78(void);
 void lbl_0000EF7C(void);
 void lbl_0000EF80(void);
@@ -363,9 +375,6 @@ void lbl_00012248(void);
 void lbl_00013C1C(void);
 void lbl_00013C6C(void);
 void lbl_00015300(void);
-static void lbl_000154B0(void);
-static void lbl_0001582C(void);
-static void lbl_000158AC(void);
 void lbl_00015998(void);
 void lbl_00015A40(void);
 void lbl_00015B98(void);
@@ -395,29 +404,13 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_00013C6C(void)
+void lbl_0000EEE4(int mode)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00013C6C.s"
-}
-asm void lbl_00015300(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00015300.s"
-}
-static asm void lbl_000154B0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000154B0.s"
-}
-static asm void lbl_0001582C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0001582C.s"
-}
-static asm void lbl_000158AC(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000158AC.s"
+    if (lbl_100188E8.mode != 0)
+        lbl_10017E98[lbl_100188E8.mode].dest();
+    get_curr_stage_fly_in_position(&lbl_100188E8.sph);
+    lbl_100188E8.mode = mode;
+    if (mode != 0)
+        lbl_10017E98[mode].init();
 }
 #pragma force_active reset

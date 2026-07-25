@@ -1,5 +1,5 @@
 /*
- * mini_fight.c -- REL module: isolated function lbl_000033AC.
+ * mini_fight.c -- REL module: isolated function lbl_00000210.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -389,13 +389,16 @@ void lbl_0001A37C(void);
 void lbl_0001A3DC(void);
 void lbl_0001A550(void);
 void lbl_0001A554(void);
-void lbl_0001B910(void);
+void lbl_0001B910();
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_000033AC(void)
+void lbl_00000210(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000033AC.s"
+    func_8006B3E8(5, lbl_0001C9D8 + 0x1c);
+    func_8006B3E8(6, lbl_0001C9D8 + 0x34);
+    func_8006B3E8(7, lbl_0001C9D8 + 0x4c);
+    func_8006B3E8(8, lbl_0001C9D8 + 0x64);
+    lbl_00004314();
 }
 #pragma force_active reset

@@ -46,6 +46,13 @@
 #include "shadow.h"
 #include "vibration.h"
 
+// The module's camera-tuning block at lbl_00011338.  Only the fields this
+// file needs are named; the NAME is INVENTED.
+struct BowlCamCfg {
+    u8 filler0[8];
+    f32 zero;                  // 0x08 == 0.0f
+};
+
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_bowling.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000F020[];
@@ -177,7 +184,7 @@ void lbl_000080E0(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
 void lbl_000087CC(void);
-void lbl_000089FC(void);
+void lbl_000089FC(struct Camera *camera, struct Ball *ball);
 void lbl_00008B8C(void);
 void lbl_00008C68(void);
 void lbl_00008D2C(void);
@@ -236,35 +243,39 @@ void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
 
+static inline void camera_face_direction(struct Camera *camera, Vec *lookDir)
+{
+    camera->rotY = mathutil_atan2(lookDir->x, lookDir->z) - 32768;
+    camera->rotX = mathutil_atan2(lookDir->y, mathutil_sqrt(mathutil_sum_of_sq_2(lookDir->x, lookDir->z)));
+    camera->rotZ = 0;
+}
+
 #pragma force_active on
-asm void lbl_000089FC(void)
+// lbl_000089FC (0x89FC): camera substate 0 -- reset the camera onto the ball,
+// aim it at the fixed lane target and hand control to substate 2.
+void lbl_000089FC(struct Camera *camera, struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_000089FC.s"
-}
-asm void lbl_00008B8C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00008B8C.s"
-}
-asm void lbl_00008C68(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00008C68.s"
-}
-asm void lbl_00008D2C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00008D2C.s"
-}
-asm void lbl_00008DF0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00008DF0.s"
-}
-asm void lbl_00008EC0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00008EC0.s"
+    struct BowlCamCfg *cfg = (struct BowlCamCfg *)lbl_00011338;
+    Vec sp10;
+
+    camera_clear(camera);
+    camera->unkAC = ball->pos;
+    camera->eye = ball->pos;
+    camera->lookAt = *(Vec *)lbl_000153E8;
+    camera->eyeVel.x = cfg->zero;
+    camera->eyeVel.y = cfg->zero;
+    camera->eyeVel.z = cfg->zero;
+    camera->lookAtVel.x = cfg->zero;
+    camera->lookAtVel.y = cfg->zero;
+    camera->lookAtVel.z = cfg->zero;
+    sp10.x = camera->lookAt.x - camera->eye.x;
+    sp10.y = camera->lookAt.y - camera->eye.y;
+    sp10.z = camera->lookAt.z - camera->eye.z;
+    camera_face_direction(camera, &sp10);
+    camera->unk26 = 9;
+    camera->sub28.fov = 0x1300;
+    cameraInfo[ball->playerId].flags &= ~4;
+    cameraInfo[ball->playerId].flags |= 8;
+    camera->subState = 2;
 }
 #pragma force_active reset

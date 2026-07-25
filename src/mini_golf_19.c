@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_00009B68.
+ * mini_golf.c -- REL module: isolated function lbl_00009880.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -147,6 +147,8 @@ void lbl_0000027C(void);
 void lbl_000002A8(void);
 void lbl_000005CC(void);
 void lbl_000056C4(void);
+void lbl_00007F34(void);
+void lbl_00008A44(void);
 void lbl_00008C78(void);
 void lbl_00008D34(void);
 void lbl_00008F44(void);
@@ -182,11 +184,11 @@ void lbl_000095C4(void);
 void lbl_000097D8(void);
 void lbl_00009800(void);
 void lbl_0000982C(void);
-void lbl_00009880(void);
+int lbl_00009880(u8 a);
 void lbl_00009968(void);
 void lbl_000099B4(void);
-f32 lbl_000099E0(Vec *);
-f32 lbl_00009B68(Vec *);
+void lbl_000099E0(void);
+void lbl_00009B68(void);
 void lbl_00009C10(void);
 void lbl_00009C50(void);
 void lbl_0000B280(void);
@@ -237,6 +239,7 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
+void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -255,18 +258,49 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-f32 lbl_00009B68(Vec *v)
+int lbl_00009880(u8 a)
 {
     u8 *st = (u8 *)lbl_10000000;
+    u8 *base = (u8 *)lbl_00026AB0;
+    u8 A, B, v;
 
-    if (*(s16 *)(st + 0x3A) == 4)
-    {
-        if (__fabs(*(f32 *)(st + 0x60) - ballInfo[modeCtrl.currPlayer].pos.y) >
-            *(f64 *)lbl_000262F0)
-            return lbl_000099E0(v);
+    if ((s32)lbl_802F1BE8.unk0 == 0) {
+        u8 *p = base + a * 0x12;
+        p += *(s16 *)(st + 0x3a);
+        v = p[0x48];
+        if (v < 2) {
+            return 0;
+        }
+        if (v < 4) {
+            return 1;
+        }
+        return 2;
     }
-    return mathutil_sqrt(mathutil_sum_of_sq_3(*(f32 *)(st + 0x5C) - v->x,
-                                              *(f32 *)(st + 0x60) - v->y,
-                                              *(f32 *)(st + 0x64) - v->z));
+    if (a == 0) {
+        A = base[*(s16 *)(st + 0x3a) + 0x48];
+        B = base[*(s16 *)(st + 0x3a) + 0x5a];
+        if (A < B) {
+            return 0;
+        }
+        if (A == B) {
+            return 1;
+        }
+        if (A > B) {
+            return 2;
+        }
+    } else if (a == 1) {
+        A = base[*(s16 *)(st + 0x3a) + 0x5a];
+        B = base[*(s16 *)(st + 0x3a) + 0x48];
+        if (A < B) {
+            return 0;
+        }
+        if (A == B) {
+            return 1;
+        }
+        if (A > B) {
+            return 2;
+        }
+    }
+    return 3;
 }
 #pragma force_active reset

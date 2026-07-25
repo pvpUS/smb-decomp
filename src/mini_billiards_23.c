@@ -1,5 +1,5 @@
 /*
- * mini_billiards.c -- REL module: isolated function lbl_0001A0B0.
+ * mini_billiards.c -- REL module: isolated function lbl_00009F0C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -170,6 +170,7 @@ void lbl_00000F5C(void);
 void lbl_00002B4C(void);
 void lbl_00003CC8(void);
 void lbl_00003F4C(void);
+void lbl_00004634(void);
 void lbl_000055FC(void);
 void lbl_00005654(void);
 void lbl_000059A8(void);
@@ -213,21 +214,11 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-void lbl_0001A0B0(void)
+void lbl_00009F0C(void)
 {
-    u8 *src = lbl_00020C40;
-    u8 *dst = lbl_1000B418;
-    f32 d;
-
-    *(f32 *)(dst + 0) = *(f32 *)(src + 0x18);
-    *(f32 *)(dst + 4) = *(f32 *)(src + 0x18);
-    d = *(f32 *)(src + 0x70) *
-            (*(f32 *)(src + 0x74) * (f32)(0xf - *(s8 *)(dst + 0x20))) -
-        *(f32 *)(src + 0x70) *
-            (*(f32 *)(src + 0x78) * (f32)(0xf - *(s8 *)(dst + 0x20)));
-    if (rand() & 1)
-        d = -d;
-    *(f32 *)(dst + 8) = *(f32 *)(src + 0x7c) + d;
-    *(u8 *)(dst + 0xe) = 0;
+    if (!(pauseMenuState.unk4 & 0x20))
+        return;
+    pauseMenuState.unk4 &= ~0x20;
+    *(s8 *)lbl_1000000C = 3;
 }
 #pragma force_active reset

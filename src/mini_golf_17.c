@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function run lbl_00009968 .. lbl_000099B4.
+ * mini_golf.c -- REL module: isolated function run lbl_000097D8 .. lbl_00009800.
  * This file holds one contiguous run of functions, meant to be a single
  * pure-C file once ALL of them are converted from the asm-includes below.
  * Until the last stub becomes C this file still contains an `asm` block,
@@ -147,6 +147,8 @@ void lbl_0000027C(void);
 void lbl_000002A8(void);
 void lbl_000005CC(void);
 void lbl_000056C4(void);
+void lbl_00007F34(void);
+void lbl_00008A44(void);
 void lbl_00008C78(void);
 void lbl_00008D34(void);
 void lbl_00008F44(void);
@@ -237,6 +239,7 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 u8 lbl_00023DC4(void);
 void lbl_00023DD4(void);
+void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -255,19 +258,17 @@ int lbl_0002609C(void);
 int lbl_000260C0(void);
 
 #pragma force_active on
-int lbl_00009968(u8 a)
+int lbl_000097D8(void)
 {
-    u8* p = (u8*)lbl_00026AF8 + a * 0x12;
-    u8 v = p[*(s16*)lbl_1000003A];
-    if (v < 2)
-        return 0;
-    if (v < 4)
+    u32 v = *(u32*)lbl_10000000;
+    if (v == 0x800 || v == 0x1000)
         return 1;
-    return 2;
+    return 0;
 }
-void lbl_000099B4(Mtx m)
+int lbl_00009800(void)
 {
-    mathutil_mtxA_from_mtx(m);
-    mathutil_mtxA_to_mtx((f32(*)[4])lbl_10000100);
+    if (*(s16*)lbl_1000003A == *(s16*)lbl_1000003E)
+        return 1;
+    return 0;
 }
 #pragma force_active reset

@@ -1,5 +1,5 @@
 /*
- * mini_billiards.c -- REL module: isolated function lbl_000055FC.
+ * mini_billiards.c -- REL module: isolated function lbl_00003CC8.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -170,6 +170,7 @@ void lbl_00000F5C(void);
 void lbl_00002B4C(void);
 void lbl_00003CC8(void);
 void lbl_00003F4C(void);
+void lbl_00004634(void);
 void lbl_000055FC(void);
 void lbl_00005654(void);
 void lbl_000059A8(void);
@@ -213,24 +214,9 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-struct W55FC {
-    u8 _0[0xa];
-    s8 fA;      /* 0xa */
-    s8 fB;      /* 0xb */
-    u8 _c[0x20 - 0xc];
-    s32 f20;    /* 0x20 */
-    u8 _24[0x2c - 0x24];
-    s32 f2C;    /* 0x2c */
-};
-
-void lbl_000055FC(void)
+asm void lbl_00003CC8(void)
 {
-    struct W55FC *w = (struct W55FC *)lbl_10000000;
-    lbl_00000800();
-    w->f20 = 0;
-    w->fB = w->fA;
-    lbl_00003F4C();
-    w->fA = 0xe;
-    w->f2C = 0;
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_00003CC8.s"
 }
 #pragma force_active reset

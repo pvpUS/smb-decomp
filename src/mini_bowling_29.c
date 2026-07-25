@@ -195,7 +195,7 @@ void lbl_000097B4(void);
 void lbl_00009AA8(void);
 void lbl_00009D18(void);
 void lbl_00009F60(void);
-void lbl_0000A138(void);
+int lbl_0000A138(void);
 void lbl_0000A23C(void);
 void lbl_0000A610(void);
 void lbl_0000A778(void);
@@ -237,10 +237,60 @@ void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
 
-#pragma force_active on
-asm void lbl_0000A138(void)
+// One "impact spark" slot.  Field NAMES are INVENTED; the layout (0x10 bytes,
+// a Vec then an s16 timer then an s8 kind) is read off lbl_00009F60, which
+// spawns into lbl_10012140[] with ctr=4 and stride 0x10.
+struct BowlSpark
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000A138.s"
+    Vec pos;    // 0x00
+    s16 timer;  // 0x0C
+    s8 kind;    // 0x0E
+    u8 pad;     // 0x0F
+};
+
+#pragma force_active on
+// lbl_0000A138 (0xA138): is any of the four spark slots (in either bank) alive
+// and of a "blocking" kind?
+int lbl_0000A138(void)
+{
+    struct BowlSpark *b;
+    struct BowlSpark *a;
+    int ret;
+    int i;
+
+    a = (struct BowlSpark *)lbl_10012140;
+    b = (struct BowlSpark *)lbl_10012180;
+    ret = 0;
+
+    for (i = 0; i < 4; i++, a++, b++)
+    {
+        if (a->timer > 0)
+        {
+            switch (a->kind)
+            {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+                ret = 1;
+                break;
+            }
+        }
+        if (b->timer > 0)
+        {
+            switch (b->kind)
+            {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+                ret = 1;
+                break;
+            }
+        }
+        if (ret != 0)
+            return ret;
+    }
+    return ret;
 }
 #pragma force_active reset

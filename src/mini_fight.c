@@ -1,6 +1,6 @@
 /*
  * mini_fight.c -- REL module, structurally split for per-function
- * byte-matching (part 1 of 57; contiguous .text range).  Each function
+ * byte-matching (part 1 of 94; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_fight/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -392,19 +392,13 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void _prolog(void)
+void _prolog(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/_prolog.s"
-}
-asm void _epilog(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/_epilog.s"
-}
-asm void _unresolved(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/_unresolved.s"
+    set_minigame_callbacks(lbl_0000AAD0, lbl_0000ABA8,
+                           (void (*)(struct Ball *))lbl_0000FF34,
+                           (void (*)(struct Camera *, struct Ball *))lbl_00012248);
+    puts((char *)lbl_0001C918);
+    lbl_0000A690();
+    gameSubmodeRequest = 0x95;
 }
 #pragma force_active reset

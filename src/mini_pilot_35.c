@@ -1,5 +1,5 @@
 /*
- * mini_pilot.c -- REL module: isolated function lbl_0000AF68.
+ * mini_pilot.c -- REL module: isolated function lbl_00008568.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -194,6 +194,7 @@ void lbl_00005824(void);
 void lbl_00006124(void);
 void lbl_00006490(void);
 void lbl_0000669C(void);
+void lbl_00006A94(void);
 void lbl_00006B5C(void);
 void lbl_00006B94(void);
 void lbl_00006BF4(void);
@@ -225,23 +226,22 @@ void lbl_0000A754(void);
 void lbl_0000AD6C(void);
 void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
-void lbl_0000AF68(void *, u32);
+void lbl_0000AF68(void);
 void lbl_0000B000(void);
 void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-void lbl_0000AF68(void *buf, u32 count)
+void lbl_00008568(void)
 {
-    u32 *hdr = buf;
-    u8 *rec = (u8 *)buf + 0xc;
-    u32 i;
+    struct Sprite *sprite = create_sprite();
 
-    hdr[0] = count;
-    hdr[1] = 0;
-    *(f32 *)((u8 *)buf + 8) = *(f32 *)lbl_0000C690;
-    for (i = 0; i < count; i++, rec += 0x28)
-        *(f32 *)(rec + 0x20) = *(f32 *)lbl_0000C690;
+    if (sprite != NULL)
+    {
+        sprite->x = *(f32 *)lbl_0000C3C8;
+        sprite->y = *(f32 *)lbl_0000C3CC;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_000085B4;
+    }
 }
 #pragma force_active reset

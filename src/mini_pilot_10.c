@@ -1,5 +1,5 @@
 /*
- * mini_pilot.c -- REL module: isolated function lbl_00003B6C.
+ * mini_pilot.c -- REL module: isolated function lbl_000021B4.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -127,7 +127,16 @@ extern u8 neutralFaceTable[];
 extern u8 smileFaceTable[];
 extern u8 lbl_80285A58[];
 extern u8 lbl_80285A68[];
-extern u8 lbl_80285A80[];
+struct PilotTgtRow
+{
+    s16 unk0;
+    s16 unk2;
+    s16 unk4;
+    s16 unk6;
+    s16 unk8;
+    s16 unkA;
+};
+extern struct PilotTgtRow lbl_80285A80[];
 extern u8 lbl_802F1F10[];
 extern u8 lbl_802F1FD0[];
 extern u8 lbl_802F1FD8[];
@@ -194,6 +203,7 @@ void lbl_00005824(void);
 void lbl_00006124(void);
 void lbl_00006490(void);
 void lbl_0000669C(void);
+void lbl_00006A94(void);
 void lbl_00006B5C(void);
 void lbl_00006B94(void);
 void lbl_00006BF4(void);
@@ -232,21 +242,9 @@ void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-void lbl_00003B6C(void)
+asm void lbl_000021B4(void)
 {
-    switch (lbl_802F1FF6) {
-    case 0x1c:
-        break;
-    case 0x1b:
-    default:
-        lbl_00003BDC();
-        break;
-    case 0x1a:
-        lbl_00003BDC();
-        func_8009CD5C();
-        if (((s8 *)eventInfo)[0x138] == 2)
-            effect_draw();
-        break;
-    }
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_000021B4.s"
 }
 #pragma force_active reset

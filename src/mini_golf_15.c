@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_0000982C.
+ * mini_golf.c -- REL module: isolated function lbl_00009538.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -147,6 +147,8 @@ void lbl_0000027C(void);
 void lbl_000002A8(void);
 void lbl_000005CC(void);
 void lbl_000056C4(void);
+void lbl_00007F34(void);
+void lbl_00008A44(void);
 void lbl_00008C78(void);
 void lbl_00008D34(void);
 void lbl_00008F44(void);
@@ -177,11 +179,11 @@ void lbl_00009448(void);
 void lbl_00009458(void);
 void lbl_00009478(void);
 void lbl_00009488(void);
-void lbl_00009538(void);
+f32 lbl_00009538(void);
 void lbl_000095C4(void);
 void lbl_000097D8(void);
 void lbl_00009800(void);
-s32 lbl_0000982C(void);
+void lbl_0000982C(void);
 void lbl_00009880(void);
 void lbl_00009968(void);
 void lbl_000099B4(void);
@@ -237,6 +239,7 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
+void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -255,19 +258,10 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-s32 lbl_0000982C(void)
+f32 lbl_00009538(void)
 {
-    s16 *tbl = (s16 *)lbl_00026AB0;
-    s16 *p = (s16 *)(lbl_00026AB0 + 0x10);
-    u8 count = *(u8 *)(lbl_00026AB0 + 0x12);
-    s16 target = tbl[*(s16 *)lbl_1000003A + 0x0A];
-    s32 i;
-
-    for (i = 0; i < count; i++, p++) {
-        if (*p == target) {
-            return 1;
-        }
-    }
-    return 0;
+    return mathutil_sqrt(mathutil_sum_of_sq_3(ballInfo[modeCtrl.currPlayer].pos.x - cameraInfo[modeCtrl.currPlayer].lookAt.x,
+                                              *(double *)lbl_00026118 + (ballInfo[modeCtrl.currPlayer].pos.y - cameraInfo[modeCtrl.currPlayer].lookAt.y),
+                                              ballInfo[modeCtrl.currPlayer].pos.z - cameraInfo[modeCtrl.currPlayer].lookAt.z));
 }
 #pragma force_active reset

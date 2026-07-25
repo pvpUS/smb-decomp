@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_00008F44.
+ * mini_golf.c -- REL module: isolated function lbl_00008C78.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -147,6 +147,8 @@ void lbl_0000027C(void);
 void lbl_000002A8(void);
 void lbl_000005CC(void);
 void lbl_000056C4(void);
+void lbl_00007F34(void);
+void lbl_00008A44(void);
 void lbl_00008C78(void);
 void lbl_00008D34(void);
 void lbl_00008F44(void);
@@ -181,7 +183,7 @@ void lbl_00009538(void);
 void lbl_000095C4(void);
 void lbl_000097D8(void);
 void lbl_00009800(void);
-void lbl_0000982C(void);
+u8 lbl_0000982C(void);
 void lbl_00009880(void);
 void lbl_00009968(void);
 void lbl_000099B4(void);
@@ -237,6 +239,7 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
+void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -255,43 +258,32 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-void lbl_00008F44(void)
+void lbl_00008C78(void)
 {
-    s16 *tbl = (s16 *)lbl_00026AB0;
-    struct World *w;
-    s8 *status;
-    int i;
+    u8 *st = (u8 *)lbl_10000000;
+    struct DecodedStageLzPtr_child6 *p;
 
-    event_finish_all();
-    load_stage(tbl[*(s16 *)lbl_1000003A + 0x0A]);
-    if (*(s16 *)lbl_1000003A < 0x11) {
-        preload_stage_files(tbl[*(s16 *)lbl_1000003A + 0x0B]);
-    } else {
-        preload_stage_files(tbl[0x1B]);
+    *(s16 *)(st + 0x3a) += 1;
+    if (*(s16 *)(st + 0x3a) > *(s16 *)(st + 0x3e)) {
+        *(s32 *)st = 0x2000;
+        lbl_0000907C();
+        return;
     }
 
-    event_start(1);
-    event_start(2);
-    event_start(3);
-    event_start(4);
-    event_start(9);
-    event_start(7);
-    event_start(0xf);
-    event_start(0x10);
-    event_start(0x12);
-    event_start(0xd);
-    event_start(0x13);
-    event_start(0xb);
+    *(s32 *)st = 2;
+    *(u8 *)(st + 0xed) = 0;
+    lbl_00008F44();
 
-    status = g_poolInfo.playerPool.statusList;
-    w = worldInfo;
-    for (i = 0; i < g_poolInfo.playerPool.count; i++, w++, status++) {
-        if (*status == 2) {
-            w->state = 1;
-        }
+    p = decodedStageLzPtr->unk88;
+    if (p == NULL) {
+        return;
     }
 
-    camera_set_state_all(0x40);
-    set_text_font(0xb1);
+    *(Vec *)(st + 0x5c) = *(Vec *)p;
+    if (lbl_0000982C() == 0) {
+        lbl_000106B8();
+        lbl_00010808();
+        mathutil_mtxA_tf_point((Vec *)(st + 0x5c), (Vec *)(st + 0x5c));
+    }
 }
 #pragma force_active reset

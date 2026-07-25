@@ -1,6 +1,6 @@
 /*
  * mini_billiards.c -- REL module, structurally split for per-function
- * byte-matching (part 6 of 24; contiguous .text range).  Each function
+ * byte-matching (part 6 of 34; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_billiards/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -174,7 +174,7 @@ static void lbl_0000341C(void);
 static void lbl_0000367C(void);
 void lbl_00003CC8(void);
 void lbl_00003F4C(void);
-static void lbl_00004634(void);
+void lbl_00004634(void);
 void lbl_000055FC(void);
 void lbl_00005654(void);
 void lbl_000059A8(void);
@@ -252,20 +252,5 @@ static asm void lbl_0000367C(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_billiards/lbl_0000367C.s"
-}
-asm void lbl_00003CC8(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00003CC8.s"
-}
-asm void lbl_00003F4C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00003F4C.s"
-}
-static asm void lbl_00004634(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00004634.s"
 }
 #pragma force_active reset

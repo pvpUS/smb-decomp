@@ -1,6 +1,6 @@
 /*
  * mini_fight.c -- REL module, structurally split for per-function
- * byte-matching (part 57 of 57; contiguous .text range).  Each function
+ * byte-matching (part 57 of 94; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_fight/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -355,6 +355,13 @@ void lbl_0000FF30(void);
 void lbl_0000FF34(void);
 void lbl_0000FFC4(void);
 void lbl_00010018(void);
+void lbl_000107B4(void);
+void lbl_00010ADC(void);
+void lbl_00010B98(void);
+void lbl_0001106C(void);
+void lbl_00011270(void);
+void lbl_00011684(void);
+void lbl_000117CC(void);
 void lbl_0001181C(void);
 void lbl_0001199C(void);
 void lbl_0001212C(void);
@@ -392,9 +399,14 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_0001BA8C(void)
+asm void lbl_00010018(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0001BA8C.s"
+#include "../asm/nonmatchings/mini_fight/lbl_00010018.s"
+}
+asm void lbl_000107B4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_000107B4.s"
 }
 #pragma force_active reset

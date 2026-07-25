@@ -1,6 +1,6 @@
 /*
  * mini_golf.c -- REL module, structurally split for per-function
- * byte-matching (part 43 of 55; contiguous .text range).  Each function
+ * byte-matching (part 43 of 75; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_golf/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -146,6 +146,8 @@ void lbl_0000027C(void);
 void lbl_000002A8(void);
 void lbl_000005CC(void);
 void lbl_000056C4(void);
+void lbl_00007F34(void);
+void lbl_00008A44(void);
 void lbl_00008C78(void);
 void lbl_00008D34(void);
 void lbl_00008F44(void);
@@ -236,6 +238,7 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
+void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -254,34 +257,9 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-asm void lbl_00022610(void)
+asm void lbl_00010304(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_00022610.s"
-}
-asm void lbl_00022904(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_00022904.s"
-}
-asm void lbl_00022D4C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_00022D4C.s"
-}
-asm void lbl_000230E4(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_000230E4.s"
-}
-asm void lbl_00023AB4(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_00023AB4.s"
-}
-asm void lbl_00023C68(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_00023C68.s"
+#include "../asm/nonmatchings/mini_golf/lbl_00010304.s"
 }
 #pragma force_active reset
