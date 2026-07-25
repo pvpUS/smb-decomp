@@ -1,5 +1,5 @@
 /*
- * mini_pilot.c -- REL module: isolated function lbl_0000A69C.
+ * mini_pilot.c -- REL module: isolated function lbl_0000AE94.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -164,6 +164,7 @@ extern void thread_create();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_000001F8(void);
 void lbl_000003B4(void);
 void lbl_0000044C(void);
 void lbl_000004E0(void);
@@ -224,27 +225,27 @@ void lbl_0000A098(void);
 void lbl_0000A69C(void);
 void lbl_0000A754(void);
 void lbl_0000AD6C(void);
-void lbl_0000AE94(void);
+s32 lbl_0000AE94(s32 x);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
-void lbl_0000B000(void);
 void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-void lbl_0000A69C(void)
+s32 lbl_0000AE94(s32 x)
 {
-    struct Sprite *sprite = create_sprite();
-    s32 i;
-
-    if (sprite != NULL)
-        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000A754;
-
-    for (i = 0; i < 4; i++)
-        ((s16 *)lbl_100000A8)[i] =
-            (s32)(*(f64 *)lbl_0000C430
-                  * mathutil_sqrt((f32)((s32 *)lbl_10000044)[i]))
-            + 0x5A;
+    switch (x)
+    {
+    case 3:
+        return 0;
+    case 1:
+        return 1;
+    case 0:
+        return 2;
+    case 2:
+        return 3;
+    }
+    return 0;
 }
 #pragma force_active reset

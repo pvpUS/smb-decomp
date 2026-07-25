@@ -1,5 +1,5 @@
 /*
- * mini_pilot.c -- REL module: isolated function lbl_0000215C.
+ * mini_pilot.c -- REL module: isolated function lbl_000008AC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -50,6 +50,24 @@
 #include "world.h"
 #include "stdlib.h"
 
+struct PilotRodata0
+{
+    /*0x00*/ u8 filler0[0x58];
+    /*0x58*/ f32 randMax;    // 32767.0f
+    /*0x5C*/ u8 filler5C[0xC];
+    /*0x68*/ f64 half;       // 0.5
+    /*0x70*/ f64 four;       // 4.0
+    /*0x78*/ f64 forty;      // 40.0
+};
+struct PilotBananaSpawn
+{
+    /*0x00*/ f32 x;
+    /*0x04*/ f32 y;
+    /*0x08*/ f32 z;
+    /*0x0C*/ f32 spread;
+    /*0x10*/ s8 count;
+    /*0x11*/ u8 pad[3];
+};  // size = 0x14
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_pilot.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000BE80[];
@@ -164,6 +182,7 @@ extern void thread_create();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_000001F8(void);
 void lbl_000003B4(void);
 void lbl_0000044C(void);
 void lbl_000004E0(void);
@@ -227,19 +246,38 @@ void lbl_0000AD6C(void);
 void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
-void lbl_0000B000(void);
 void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-void lbl_0000215C(void)
+void lbl_000008AC(void)
 {
-    s32 player = modeCtrl.currPlayer;
-    s16 *p = &((s16 *)lbl_802F1FE4)[player];
+    struct PilotRodata0 *k = (struct PilotRodata0 *)lbl_0000BE80;
+    struct Item item;
+    struct PilotBananaSpawn *sp;
+    int i;
+    int j;
+    // The original reserves one more 4-byte frame slot after `item` for a local
+    // it never reads or writes.  Its name/type are unrecoverable; without it the
+    // whole local block sits 4 bytes lower.
+    s32 unused;
 
-    if (*p != 0)
-        ((s16 *)((u8 *)lbl_80285A80 + player * 12))[*p]++;
-    *p = 0;
+    memset(&item, 0, sizeof(item));
+    item.type = 5;
+    item.subType = 4;
+    item.animGroupId = 0;
+
+    sp = ((struct PilotBananaSpawn **)lbl_0000CBCC)[*(s16 *)lbl_10000040];
+    for (i = 0; i < 3; i++, sp++)
+    {
+        for (j = 0; j < sp->count; j++)
+        {
+            item.pos.x = sp->x + sp->spread * (rand() / k->randMax - k->half);
+            item.pos.y = k->four + sp->y + k->forty * (rand() / k->randMax);
+            item.pos.z = sp->z + sp->spread * (rand() / k->randMax - k->half);
+            item_create(&item);
+        }
+    }
 }
 #pragma force_active reset

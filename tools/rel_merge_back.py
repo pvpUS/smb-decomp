@@ -139,23 +139,41 @@ def merge(module, dry):
     for p in warm_asm:
         shutil.copy2(p, os.path.join(REPO, 'asm', os.path.basename(p)))
 
-    # Per-function bodies. For a module already split in main these are
-    # deterministic and identical, so this is a no-op -- but the FIRST time a
-    # module is split they only exist in the warm copy, and without them every
-    # asm-include stub fails with "cannot be opened".
+    # Per-function bodies.  Usually deterministic and identical, but NOT always:
+    #   - the first split of a module creates all of them, and without them
+    #     every asm-include stub fails with "cannot be opened";
+    #   - rel_rematch can re-split a fn-ptr-table handler out of the neighbour
+    #     it had been merged into, which CHANGES that neighbour's body.
+    # So sync by content, not by existence.  A copy-if-missing pass would leave
+    # the shrunken neighbour stale in main while also adding the new handler --
+    # the same instructions twice.  Compare with line endings normalised so the
+    # warm copy's LF does not rewrite the whole tree as churn.
     warm_nm = os.path.join(src_root, 'asm', 'nonmatchings', stem)
     main_nm = os.path.join(REPO, 'asm', 'nonmatchings', stem)
     if os.path.isdir(warm_nm):
         os.makedirs(main_nm, exist_ok=True)
-        added = 0
+        added = changed = 0
         for name in os.listdir(warm_nm):
-            dst = os.path.join(main_nm, name)
-            if not os.path.exists(dst):
-                shutil.copy2(os.path.join(warm_nm, name), dst)
+            src_p = os.path.join(warm_nm, name)
+            dst_p = os.path.join(main_nm, name)
+            if not os.path.exists(dst_p):
+                shutil.copy2(src_p, dst_p)
                 added += 1
+                continue
+            a = open(src_p, 'rb').read().replace(b'\r\n', b'\n')
+            b = open(dst_p, 'rb').read().replace(b'\r\n', b'\n')
+            if a != b:
+                shutil.copy2(src_p, dst_p)
+                changed += 1
+        stale = sorted(set(os.listdir(main_nm)) - set(os.listdir(warm_nm)))
         if added:
-            print('  copied %d new per-function asm bodies (first split of this '
-                  'module in the main tree)' % added)
+            print('  copied %d new per-function asm bodies' % added)
+        if changed:
+            print('  updated %d per-function asm bodies whose content changed '
+                  '(a re-split moved functions between them)' % changed)
+        if stale:
+            print('  !! %d body file(s) exist in main but not in the warm copy: '
+                  '%s' % (len(stale), ', '.join(stale[:6])))
 
     replace_sources(module, items)
     return True

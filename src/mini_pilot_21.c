@@ -1,5 +1,5 @@
 /*
- * mini_pilot.c -- REL module: isolated function run lbl_00004F68 .. lbl_00005008.
+ * mini_pilot.c -- REL module: isolated function run lbl_00005044 .. lbl_0000509C.
  * This file holds one contiguous run of functions, meant to be a single
  * pure-C file once ALL of them are converted from the asm-includes below.
  * Until the last stub becomes C this file still contains an `asm` block,
@@ -164,6 +164,7 @@ extern void thread_create();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_000001F8(void);
 void lbl_000003B4(void);
 void lbl_0000044C(void);
 void lbl_000004E0(void);
@@ -186,16 +187,15 @@ void lbl_00004570(void);
 void lbl_000048C0(void);
 void lbl_00004A14(void);
 void lbl_00004E84(void);
-void lbl_00004F68(struct Ball *ball);
-void lbl_00004FA8(struct Ball *ball);
-void lbl_00005008(struct Ball *ball);
+void lbl_00004F68(void);
 void lbl_00005044(struct Ball *ball);
+void lbl_0000509C(struct Ball *ball);
 void lbl_000051A4(void);
 void lbl_0000580C(void);
-void lbl_00005824(void);
-void lbl_00006124(struct Ball *, struct PhysicsBall *, int);
-void lbl_00006490(void);
-void lbl_0000669C(void);
+void lbl_00005824(struct Ball *ball);
+void lbl_00006124(void);
+void lbl_00006490(struct Ball *, struct PhysicsBall *, int);
+void lbl_0000669C(struct Ball *, struct PhysicsBall *, int);
 void lbl_00006A94(void);
 void lbl_00006B5C(void);
 void lbl_00006B94(void);
@@ -229,32 +229,43 @@ void lbl_0000AD6C(void);
 void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
-void lbl_0000B000(void);
 void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-void lbl_00004F68(struct Ball *ball)
-{
-    ((void (**)(struct Ball *))lbl_0000C7BC)[ball->unk148](ball);
-    lbl_00006B94();
-}
-
-void lbl_00004FA8(struct Ball *ball)
+void lbl_00005044(struct Ball *ball)
 {
     struct PhysicsBall physBall;
 
-    lbl_00006124(ball, &physBall, 0);
-    handle_ball_rotational_kinematics(ball, &physBall, 0);
+    lbl_00005824(ball);
+    lbl_00006490(ball, &physBall, 0);
     update_ball_ape_transform(ball, &physBall, 0);
     ball->unk80++;
 }
 
-void lbl_00005008(struct Ball *ball)
+void lbl_0000509C(struct Ball *ball)
 {
-    lbl_0000580C();
-    ball->unk148 = 2;
-    lbl_00005044(ball);
+    u8 *k = (u8 *)lbl_0000BE80;
+    struct PhysicsBall physBall;
+
+    if (*(f32 *)lbl_802F1FDC > *(f64 *)(k + 0x1B0))
+    {
+        if (*(s16 *)lbl_10000018 == 0)
+            *(f32 *)lbl_802F1FDC = *(f32 *)lbl_802F1FDC - *(f64 *)(k + 0x2A0);
+        else
+            *(f32 *)lbl_802F1FDC = *(f32 *)lbl_802F1FDC - *(f64 *)(k + 0x308);
+        if (*(f32 *)lbl_802F1FDC <= *(f64 *)(k + 0x1B0))
+        {
+            *(f32 *)lbl_802F1FDC = *(f32 *)(k + 0x30);
+            u_play_sound_0(0xF1);
+            vibration_control(playerControllerIDs[ball->playerId], VIBRATION_STATE_1,
+                              0xA);
+        }
+    }
+    lbl_0000669C(ball, &physBall, 0);
+    handle_ball_rotational_kinematics(ball, &physBall, 0);
+    update_ball_ape_transform(ball, &physBall, 0);
+    ball->unk80++;
 }
 #pragma force_active reset

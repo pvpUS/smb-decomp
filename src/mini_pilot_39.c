@@ -1,5 +1,5 @@
 /*
- * mini_pilot.c -- REL module: isolated function lbl_000097AC.
+ * mini_pilot.c -- REL module: isolated function lbl_000099A4.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -164,6 +164,7 @@ extern void thread_create();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_000001F8(void);
 void lbl_000003B4(void);
 void lbl_0000044C(void);
 void lbl_000004E0(void);
@@ -212,7 +213,7 @@ void lbl_00008C40(void);
 void lbl_000090A0(void);
 void lbl_000091EC(void);
 void lbl_00009440(void);
-void lbl_000097AC(u8 *);
+void lbl_000097AC(void);
 void lbl_000097C8(void);
 void lbl_000099A4(void);
 void lbl_00009A98(void);
@@ -227,15 +228,47 @@ void lbl_0000AD6C(void);
 void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
-void lbl_0000B000(void);
 void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-void lbl_000097AC(u8 *p)
+void lbl_000099A4(void)
 {
-    if (lbl_802F1FF6 > 2)
-        *p = 0;
+    u8 *k = (u8 *)lbl_0000C360;
+    struct Sprite *sprite;
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->x = *(f32 *)(k + 0x1E8);
+        sprite->y = *(f32 *)(k + 0x5C);
+        sprite->type = 0;
+        sprite->fontId = 9;
+        sprite->textAlign = 4;
+        sprite->flags |= 0x1000;
+        sprintf(sprite->text, (char *)lbl_0000D360);
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->type = 1;
+        sprite->depth = *(f32 *)(k + 0xF0);
+        sprite->bmpId = 0xB31;
+        sprite->x = *(f32 *)(k + 0x1E8);
+        sprite->y = *(f32 *)(k + 0x1EC);
+        sprite->scaleX = *(f32 *)(k + 0x1F0);
+        sprite->scaleY = *(f32 *)(k + 0x1F4);
+        sprite->textAlign = 4;
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->x = *(f32 *)(k + 0x1F8);
+        sprite->y = *(f32 *)(k + 0x1FC);
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_00009A98;
+    }
 }
 #pragma force_active reset

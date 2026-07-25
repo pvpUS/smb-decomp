@@ -1,5 +1,5 @@
 /*
- * mini_pilot.c -- REL module: isolated function lbl_00006CCC.
+ * mini_pilot.c -- REL module: isolated function lbl_00006D14.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -164,6 +164,7 @@ extern void thread_create();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_000001F8(void);
 void lbl_000003B4(void);
 void lbl_0000044C(void);
 void lbl_000004E0(void);
@@ -198,8 +199,8 @@ void lbl_00006A94(void);
 void lbl_00006B5C(void);
 void lbl_00006B94(void);
 void lbl_00006BF4(void);
-void lbl_00006CCC(f32 *outU, f32 *outV, f32 dist, f32 x, f32 y, f32 fovScale);
-void lbl_00006D14(void);
+void lbl_00006CCC(void);
+s32 lbl_00006D14(void);
 void lbl_00006DFC(void);
 void lbl_00007EF8(void);
 void lbl_00008134(void);
@@ -227,24 +228,22 @@ void lbl_0000AD6C(void);
 void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
-void lbl_0000B000(void);
 void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-void lbl_00006CCC(f32 *outU, f32 *outV, f32 dist, f32 x, f32 y, f32 fovScale)
+s32 lbl_00006D14(void)
 {
-    u8 *k = (u8 *)lbl_0000BE80;
-    f32 scale;
-    f64 t;
+    s8 *status = g_poolInfo.playerPool.statusList;
+    s32 *ids = playerControllerIDs;
+    s32 i;
 
-    scale = *(f64 *)(k + 0x430) * (dist * fovScale);
-    t = x - *(f64 *)(k + 0x438);
-    t *= scale;
-    *outU = t;
-    t = -(y - *(f64 *)(k + 0x440));
-    t *= scale;
-    *outV = t;
+    for (i = 0; i < 4; i++, status++, ids++)
+    {
+        if (*status != 0 && (controllerInfo[*ids].pressed.button & PAD_BUTTON_A))
+            return 1;
+    }
+    return 0;
 }
 #pragma force_active reset

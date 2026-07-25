@@ -1,5 +1,5 @@
 /*
- * mini_pilot.c -- REL module: isolated function lbl_00008568.
+ * mini_pilot.c -- REL module: isolated function lbl_0000893C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -164,6 +164,7 @@ extern void thread_create();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_000001F8(void);
 void lbl_000003B4(void);
 void lbl_0000044C(void);
 void lbl_000004E0(void);
@@ -227,21 +228,14 @@ void lbl_0000AD6C(void);
 void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
-void lbl_0000B000(void);
 void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-void lbl_00008568(void)
+asm void lbl_0000893C(void)
 {
-    struct Sprite *sprite = create_sprite();
-
-    if (sprite != NULL)
-    {
-        sprite->x = *(f32 *)lbl_0000C3C8;
-        sprite->y = *(f32 *)lbl_0000C3CC;
-        sprite->drawFunc = (void (*)(struct Sprite *))lbl_000085B4;
-    }
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_0000893C.s"
 }
 #pragma force_active reset

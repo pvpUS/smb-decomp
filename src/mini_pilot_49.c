@@ -1,5 +1,5 @@
 /*
- * mini_pilot.c -- REL module: isolated function lbl_0000AE94.
+ * mini_pilot.c -- REL module: isolated function lbl_0000AF68.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -164,6 +164,7 @@ extern void thread_create();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_000001F8(void);
 void lbl_000003B4(void);
 void lbl_0000044C(void);
 void lbl_000004E0(void);
@@ -224,28 +225,24 @@ void lbl_0000A098(void);
 void lbl_0000A69C(void);
 void lbl_0000A754(void);
 void lbl_0000AD6C(void);
-s32 lbl_0000AE94(s32 x);
+void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
-void lbl_0000AF68(void);
-void lbl_0000B000(void);
+void lbl_0000AF68(void *, u32);
 void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-s32 lbl_0000AE94(s32 x)
+void lbl_0000AF68(void *buf, u32 count)
 {
-    switch (x)
-    {
-    case 3:
-        return 0;
-    case 1:
-        return 1;
-    case 0:
-        return 2;
-    case 2:
-        return 3;
-    }
-    return 0;
+    u32 *hdr = buf;
+    u8 *rec = (u8 *)buf + 0xc;
+    u32 i;
+
+    hdr[0] = count;
+    hdr[1] = 0;
+    *(f32 *)((u8 *)buf + 8) = *(f32 *)lbl_0000C690;
+    for (i = 0; i < count; i++, rec += 0x28)
+        *(f32 *)(rec + 0x20) = *(f32 *)lbl_0000C690;
 }
 #pragma force_active reset

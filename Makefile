@@ -786,9 +786,9 @@ SOURCES := \
 	src/mini_pilot_5.c \
 	src/mini_pilot_6.c \
 	src/mini_pilot_7.c \
-	asm/mini_pilot_d1.s \
 	src/mini_pilot_8.c \
 	src/mini_pilot_9.c \
+	asm/mini_pilot_d1.s \
 	src/mini_pilot_10.c \
 	src/mini_pilot_11.c \
 	src/mini_pilot_12.c \
@@ -811,8 +811,8 @@ SOURCES := \
 	src/mini_pilot_29.c \
 	src/mini_pilot_30.c \
 	src/mini_pilot_31.c \
-	src/mini_pilot_32.c \
 	asm/mini_pilot_d2.s \
+	src/mini_pilot_32.c \
 	src/mini_pilot_33.c \
 	src/mini_pilot_34.c \
 	src/mini_pilot_35.c \
@@ -831,9 +831,6 @@ SOURCES := \
 	src/mini_pilot_48.c \
 	src/mini_pilot_49.c \
 	src/mini_pilot_50.c \
-	src/mini_pilot_51.c \
-	src/mini_pilot_52.c \
-	src/mini_pilot_53.c \
 	asm/mini_pilot_d3.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)

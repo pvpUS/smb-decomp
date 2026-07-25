@@ -1,5 +1,5 @@
 /*
- * mini_pilot.c -- REL module: isolated function lbl_000090A0.
+ * mini_pilot.c -- REL module: isolated function lbl_000097AC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -164,6 +164,7 @@ extern void thread_create();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_000001F8(void);
 void lbl_000003B4(void);
 void lbl_0000044C(void);
 void lbl_000004E0(void);
@@ -212,7 +213,7 @@ void lbl_00008C40(void);
 void lbl_000090A0(void);
 void lbl_000091EC(void);
 void lbl_00009440(void);
-void lbl_000097AC(void);
+void lbl_000097AC(u8 *);
 void lbl_000097C8(void);
 void lbl_000099A4(void);
 void lbl_00009A98(void);
@@ -227,15 +228,14 @@ void lbl_0000AD6C(void);
 void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
-void lbl_0000B000(void);
 void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-asm void lbl_000090A0(void)
+void lbl_000097AC(u8 *p)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_000090A0.s"
+    if (lbl_802F1FF6 > 2)
+        *p = 0;
 }
 #pragma force_active reset

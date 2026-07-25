@@ -1,5 +1,5 @@
 /*
- * mini_pilot.c -- REL module: isolated function lbl_000004E0.
+ * mini_pilot.c -- REL module: isolated function _unresolved.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -164,6 +164,7 @@ extern void thread_create();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_000001F8(void);
 void lbl_000003B4(void);
 void lbl_0000044C(void);
 void lbl_000004E0(void);
@@ -227,15 +228,28 @@ void lbl_0000AD6C(void);
 void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
-void lbl_0000B000(void);
 void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-asm void lbl_000004E0(void)
+void _unresolved(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_000004E0.s"
+    char *s;
+    u32 i;
+    u32 *sp;
+
+    s = (char *)lbl_0000C740;
+    puts(s + 0xCC);
+    puts(s + 0xF4);
+
+    i = 0;
+    sp = (u32 *)OSGetStackPointer();
+    while (sp != NULL && (u32)sp != 0xFFFFFFFF && i++ < 16)
+    {
+        printf(s + 0x11C, (u32)sp, sp[0], sp[1]);
+        sp = (u32 *)sp[0];
+    }
+    OSPanic(s + 0x138, 0x120, s + 0x148);
 }
 #pragma force_active reset
