@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_00001888.
+ * mini_bowling.c -- REL module: isolated function lbl_00009134.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -170,11 +170,11 @@ void lbl_00007FE0(void);
 void lbl_000080E0(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
-void lbl_000087CC(void);
+void lbl_000087CC(struct Camera *, Vec *, Vec *, int, float);
 void lbl_00008FB0(void);
 void lbl_00009048(void);
 void lbl_000090CC(void);
-void lbl_00009134(void);
+void lbl_00009134(struct Camera *camera, struct Ball *ball);
 void lbl_0000919C(void);
 void lbl_00009230(void);
 void lbl_000097B4(void);
@@ -207,21 +207,18 @@ void lbl_0000E870(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
-void lbl_00001888(void)
+void lbl_00009134(struct Camera *camera, struct Ball *ball)
 {
-    int i;
+    Vec sp1c;
+    Vec sp10;
+    f32 *tbl = (f32 *)lbl_00011338;
 
-    u_clear_buffers_2_and_5();
-    event_finish_all();
-    polyDisp.flags &= ~0x20;
-    u_free_minigame_graphics();
-    bitmap_free_group(6);
-    SoundGroupFree();
-
-    for (i = 15; i >= 0; i--)
-    {
-        if (apeThreadNo[i] != -1)
-            thread_kill(apeThreadNo[i]);
-    }
+    sp1c.x = tbl[0x37];
+    sp1c.y = tbl[0x38];
+    sp1c.z = tbl[0x39];
+    sp10.x = tbl[0x3a];
+    sp10.y = tbl[0x3b];
+    sp10.z = tbl[0x3c];
+    lbl_000087CC(camera, &sp1c, &sp10, 0x1800, tbl[0x26]);
 }
 #pragma force_active reset

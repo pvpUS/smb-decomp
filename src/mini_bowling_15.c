@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_00001888.
+ * mini_bowling.c -- REL module: isolated function lbl_00009048.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -170,9 +170,9 @@ void lbl_00007FE0(void);
 void lbl_000080E0(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
-void lbl_000087CC(void);
+void lbl_000087CC(struct Camera *, Vec *, Vec *, int, float);
 void lbl_00008FB0(void);
-void lbl_00009048(void);
+void lbl_00009048(struct Camera *camera, struct Ball *ball);
 void lbl_000090CC(void);
 void lbl_00009134(void);
 void lbl_0000919C(void);
@@ -207,21 +207,16 @@ void lbl_0000E870(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
-void lbl_00001888(void)
+void lbl_00009048(struct Camera *camera, struct Ball *ball)
 {
-    int i;
+    Vec sp1c;
+    Vec sp10;
+    u8 *tbl = lbl_00011338;
 
-    u_clear_buffers_2_and_5();
-    event_finish_all();
-    polyDisp.flags &= ~0x20;
-    u_free_minigame_graphics();
-    bitmap_free_group(6);
-    SoundGroupFree();
-
-    for (i = 15; i >= 0; i--)
-    {
-        if (apeThreadNo[i] != -1)
-            thread_kill(apeThreadNo[i]);
-    }
+    sp1c.x = ball->pos.x;
+    sp1c.y = *(f32 *)(tbl + 0x98);
+    sp1c.z = *(double *)(tbl + 0x68) + ball->pos.z + *(double *)(tbl + 0xc0) * ball->vel.z;
+    sp10 = ball->pos;
+    lbl_000087CC(camera, &sp1c, &sp10, 0x800, *(f32 *)(tbl + 0x5c));
 }
 #pragma force_active reset

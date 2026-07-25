@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_00001888.
+ * mini_bowling.c -- REL module: isolated function lbl_0000D8CC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -194,7 +194,7 @@ void lbl_0000B1BC(void);
 void lbl_0000B344(void);
 void lbl_0000B460(void);
 void lbl_0000B654(void);
-void lbl_0000D8CC(void);
+void lbl_0000D8CC(register Vec *a, register Vec *b, register Vec *result);
 void lbl_0000D90C(void);
 void lbl_0000DAF4(void);
 void lbl_0000DD4C(void);
@@ -207,21 +207,31 @@ void lbl_0000E870(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
-void lbl_00001888(void)
+void lbl_0000D8CC(register Vec *a, register Vec *b, register Vec *result)
 {
-    int i;
+    register float x1, y1, z1, x2, y2, z2;
+    register float x, y, z;
 
-    u_clear_buffers_2_and_5();
-    event_finish_all();
-    polyDisp.flags &= ~0x20;
-    u_free_minigame_graphics();
-    bitmap_free_group(6);
-    SoundGroupFree();
-
-    for (i = 15; i >= 0; i--)
+    // clang-format off
+    asm
     {
-        if (apeThreadNo[i] != -1)
-            thread_kill(apeThreadNo[i]);
+        lfs y1, a->y
+        lfs z2, b->z
+        lfs z1, a->z
+        lfs x2, b->x
+        lfs x1, a->x
+        lfs y2, b->y
+
+        fmuls x, y1, z2
+        fmuls y, z1, x2
+        fmuls z, x1, y2
+        fnmsubs x, z1, y2, x
+        stfs x, result->x
+        fnmsubs y, x1, z2, y
+        stfs y, result->y
+        fnmsubs z, y1, x2, z
+        stfs z, result->z
     }
+    // clang-format on
 }
 #pragma force_active reset

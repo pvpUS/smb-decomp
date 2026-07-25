@@ -480,6 +480,22 @@ SOURCES := \
 	src/mini_bowling_5.c \
 	src/mini_bowling_6.c \
 	src/mini_bowling_7.c \
+	src/mini_bowling_8.c \
+	src/mini_bowling_9.c \
+	src/mini_bowling_10.c \
+	src/mini_bowling_11.c \
+	src/mini_bowling_12.c \
+	src/mini_bowling_13.c \
+	src/mini_bowling_14.c \
+	src/mini_bowling_15.c \
+	src/mini_bowling_16.c \
+	src/mini_bowling_17.c \
+	src/mini_bowling_18.c \
+	src/mini_bowling_19.c \
+	src/mini_bowling_20.c \
+	src/mini_bowling_21.c \
+	src/mini_bowling_22.c \
+	src/mini_bowling_23.c \
 	asm/mini_bowling.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)

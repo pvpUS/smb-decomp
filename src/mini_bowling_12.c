@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_00001888.
+ * mini_bowling.c -- REL module: isolated function lbl_000086E4.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -168,7 +168,7 @@ void lbl_00007C54(void);
 void lbl_00007E74(void);
 void lbl_00007FE0(void);
 void lbl_000080E0(void);
-void lbl_000086E4(void);
+f32 lbl_000086E4(Vec *v);
 void lbl_0000871C(void);
 void lbl_000087CC(void);
 void lbl_00008FB0(void);
@@ -207,21 +207,21 @@ void lbl_0000E870(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
-void lbl_00001888(void)
+// lbl_000086E4 (0x86E4): magnitude of a Vec -- mathutil_sqrt of the squared length.
+f32 lbl_000086E4(register Vec *v)
 {
-    int i;
-
-    u_clear_buffers_2_and_5();
-    event_finish_all();
-    polyDisp.flags &= ~0x20;
-    u_free_minigame_graphics();
-    bitmap_free_group(6);
-    SoundGroupFree();
-
-    for (i = 15; i >= 0; i--)
+    register float x, y, z, result;
+    // clang-format off
+    asm
     {
-        if (apeThreadNo[i] != -1)
-            thread_kill(apeThreadNo[i]);
+        lfs x, v->x
+        lfs y, v->y
+        lfs z, v->z
+        fmuls result, x, x
+        fmadds result, y, y, result
+        fmadds result, z, z, result
     }
+    // clang-format on
+    return mathutil_sqrt(result);
 }
 #pragma force_active reset

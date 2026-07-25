@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_00001888.
+ * mini_bowling.c -- REL module: isolated function lbl_0000919C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -175,8 +175,8 @@ void lbl_00008FB0(void);
 void lbl_00009048(void);
 void lbl_000090CC(void);
 void lbl_00009134(void);
-void lbl_0000919C(void);
-void lbl_00009230(void);
+void lbl_0000919C(struct Camera *camera, struct Ball *ball);
+void lbl_00009230(struct Camera *camera, struct Ball *ball);
 void lbl_000097B4(void);
 void lbl_00009AA8(void);
 void lbl_00009D18(void);
@@ -207,21 +207,18 @@ void lbl_0000E870(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
-void lbl_00001888(void)
+void lbl_0000919C(struct Camera *camera, struct Ball *ball)
 {
-    int i;
-
-    u_clear_buffers_2_and_5();
-    event_finish_all();
-    polyDisp.flags &= ~0x20;
-    u_free_minigame_graphics();
-    bitmap_free_group(6);
-    SoundGroupFree();
-
-    for (i = 15; i >= 0; i--)
-    {
-        if (apeThreadNo[i] != -1)
-            thread_kill(apeThreadNo[i]);
-    }
+    camera_clear(camera);
+    camera->unk26 = 9;
+    camera->sub28.unk28 = *(f32 *)lbl_00011340;
+    camera->sub28.unk2C = *(f32 *)lbl_00011340;
+    camera->sub28.fov = 0x1c71;
+    if (func_8009D7CC() == 0)
+        camera->timerCurr = func_8009D7E8() * 0x110;
+    else
+        camera->timerCurr = 0;
+    camera->subState = 0xb;
+    lbl_00009230(camera, ball);
 }
 #pragma force_active reset

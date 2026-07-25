@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_000086E4.
+ * mini_bowling.c -- REL module: isolated function lbl_00006E64.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -133,6 +133,30 @@ extern void u_set_minigame_callbacks_2();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_00001888(void);
+void lbl_00001908(void);
+void lbl_00001B14(void);
+void lbl_00001C84(void);
+void lbl_00001F1C(void);
+void lbl_000021B4(void);
+void lbl_00002454(void);
+void lbl_000027B0(void);
+void lbl_00002DE0(void);
+void lbl_00003574(void);
+void lbl_00003A10(void);
+void lbl_00003D24(void);
+void lbl_00003DC0(void);
+void lbl_000042A4(void);
+void lbl_000045E8(void);
+void lbl_00004BD8(void);
+void lbl_000054BC(void);
+void lbl_00005564(void);
+void lbl_00005B0C(void);
+void lbl_000066C4(void);
+void lbl_00006E64(u32 color, char *str, float x, float y);
+void lbl_00006F0C(void);
+void lbl_00007518(void);
+void lbl_00007650(void);
 void lbl_000076D0(void);
 void lbl_00007740(void);
 void lbl_00007778(void);
@@ -144,8 +168,15 @@ void lbl_00007C54(void);
 void lbl_00007E74(void);
 void lbl_00007FE0(void);
 void lbl_000080E0(void);
-f32 lbl_000086E4(Vec *v);
+void lbl_000086E4(void);
 void lbl_0000871C(void);
+void lbl_000087CC(void);
+void lbl_00008FB0(void);
+void lbl_00009048(void);
+void lbl_000090CC(void);
+void lbl_00009134(void);
+void lbl_0000919C(void);
+void lbl_00009230(void);
 void lbl_000097B4(void);
 void lbl_00009AA8(void);
 void lbl_00009D18(void);
@@ -163,6 +194,7 @@ void lbl_0000B1BC(void);
 void lbl_0000B344(void);
 void lbl_0000B460(void);
 void lbl_0000B654(void);
+void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
 void lbl_0000DAF4(void);
 void lbl_0000DD4C(void);
@@ -171,24 +203,21 @@ void lbl_0000E22C(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
 void lbl_0000E7B0(void);
+void lbl_0000E870(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
-// lbl_000086E4 (0x86E4): magnitude of a Vec -- mathutil_sqrt of the squared length.
-f32 lbl_000086E4(register Vec *v)
+void lbl_00006E64(u32 color, char *str, float x, float y)
 {
-    register float x, y, z, result;
-    // clang-format off
-    asm
-    {
-        lfs x, v->x
-        lfs y, v->y
-        lfs z, v->z
-        fmuls result, x, x
-        fmadds result, y, y, result
-        fmadds result, z, z, result
-    }
-    // clang-format on
-    return mathutil_sqrt(result);
+    f32 *tbl = (f32 *)lbl_0000F020;
+
+    func_80071B1C(tbl[0x85a]);
+    set_text_pos(tbl[0x840] + x, tbl[0x840] + y);
+    set_text_mul_color(0);
+    sprite_puts(str);
+    func_80071B1C(tbl[0x73f]);
+    set_text_pos(x, y);
+    set_text_mul_color(color);
+    sprite_puts(str);
 }
 #pragma force_active reset

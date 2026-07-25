@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_00001888.
+ * mini_bowling.c -- REL module: isolated function lbl_0000E870.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -203,25 +203,14 @@ void lbl_0000E22C(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
 void lbl_0000E7B0(void);
-void lbl_0000E870(void);
+void lbl_0000E870(s8 *status, struct Sprite *sprite);
 void lbl_0000E894(void);
 
 #pragma force_active on
-void lbl_00001888(void)
+void lbl_0000E870(s8 *status, struct Sprite *sprite)
 {
-    int i;
-
-    u_clear_buffers_2_and_5();
-    event_finish_all();
-    polyDisp.flags &= ~0x20;
-    u_free_minigame_graphics();
-    bitmap_free_group(6);
-    SoundGroupFree();
-
-    for (i = 15; i >= 0; i--)
-    {
-        if (apeThreadNo[i] != -1)
-            thread_kill(apeThreadNo[i]);
-    }
+    sprite->counter--;
+    if (sprite->counter <= 0)
+        *status = 0;
 }
 #pragma force_active reset
