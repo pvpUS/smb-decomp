@@ -1,5 +1,5 @@
 /*
- * mini_fight.c -- REL module: isolated function lbl_0001A37C.
+ * mini_fight.c -- REL module: isolated function lbl_000121FC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -375,19 +375,22 @@ void lbl_0001A37C(void);
 void lbl_0001A3DC(void);
 void lbl_0001A550(void);
 void lbl_0001A554(void);
-void lbl_0001B910();
+void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-void lbl_0001A37C(void)
+void lbl_000121FC(void)
 {
+    struct Camera *camera;
+    struct Camera *cameraBackup = currentCamera;
     int i;
-    u8 *p;
-    memset(lbl_10019040, 0, 0x530);
-    p = lbl_10019040;
-    for (i = 4; i > 0; i--) {
-        lbl_0001B910(p);
-        p += 0x14c;
+
+    camera = &cameraInfo[0];
+    for (i = 0; i < 4; i++, camera++)
+    {
+        currentCamera = camera;
+        currentCamera->subState = -1;
     }
+    currentCamera = cameraBackup;
 }
 #pragma force_active reset

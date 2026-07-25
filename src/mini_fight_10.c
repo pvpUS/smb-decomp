@@ -1,5 +1,5 @@
 /*
- * mini_fight.c -- REL module: isolated function lbl_0000E9D8.
+ * mini_fight.c -- REL module: isolated function lbl_0000DC24.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -296,7 +296,7 @@ void lbl_0000D8B4(void);
 void lbl_0000D8D8(void);
 void lbl_0000D954(void);
 void lbl_0000D9E0(void);
-void lbl_0000DC24(void);
+void lbl_0000DC24(struct Ball *ball);
 void lbl_0000DCA0(void);
 void lbl_0000DF9C(void);
 void lbl_0000E0C4(void);
@@ -375,12 +375,22 @@ void lbl_0001A37C(void);
 void lbl_0001A3DC(void);
 void lbl_0001A550(void);
 void lbl_0001A554(void);
-void lbl_0001B910();
+void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-void lbl_0000E9D8(void)
+void lbl_0000DC24(struct Ball *ball)
 {
-    MTEfcChangeAttributeITI(*(struct NlModel **)((u8 *)g_commonNlObj + 0x30), 0x1BFFFFFF, 0x24000000);
+    s16 *p;
+    int i;
+
+    if (!(ball->flags & 1))
+        return;
+    p = (s16 *)(lbl_10017664 + ball->playerId * 0x18 + 0x10);
+    for (i = 0; i < 4; i++, p++)
+    {
+        if (*p > 0)
+            (*p)--;
+    }
 }
 #pragma force_active reset

@@ -1,5 +1,5 @@
 /*
- * mini_fight.c -- REL module: isolated function lbl_0000E3A8.
+ * mini_fight.c -- REL module: isolated function lbl_0000D954.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -302,7 +302,7 @@ void lbl_0000DF9C(void);
 void lbl_0000E0C4(void);
 void lbl_0000E1B4(void);
 void lbl_0000E2B0(void);
-void lbl_0000E3A8(u8 *p);
+void lbl_0000E3A8(void);
 void lbl_0000E3E4(void);
 void lbl_0000E458(void);
 void lbl_0000E4D4(void);
@@ -375,16 +375,28 @@ void lbl_0001A37C(void);
 void lbl_0001A3DC(void);
 void lbl_0001A550(void);
 void lbl_0001A554(void);
-void lbl_0001B910();
+void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-void lbl_0000E3A8(u8 *p)
+void lbl_0000D954(void)
 {
-    u8 *q = lbl_10017664 + (s8)p[0x2e] * 0x1b4 + 0x68;
-    *(s16*)(q + 0x12) = 0;
-    *(s16*)(q + 0x14) = 0;
-    *(u32*)(q + 0x1c) &= ~0x4;
-    *(s16*)(q + 0x18) = 0;
+    int i;
+    u8 *p;
+    s8 *status;
+
+    status = g_poolInfo.playerPool.statusList;
+    p = lbl_10017664 + 8;
+    for (i = 4; i > 0; i--, status++, p += 0x18)
+    {
+        if (*status != 0)
+            *(u32 *)p = 0;
+        else
+            *(u32 *)p = -1;
+        *(u16 *)(p + 6) = 0;
+        memset(p + 8, 0, 8);
+        *(u16 *)(p + 0x14) = 0;
+        *(u16 *)(p + 0x16) = 0;
+    }
 }
 #pragma force_active reset

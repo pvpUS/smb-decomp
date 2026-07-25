@@ -1,5 +1,5 @@
 /*
- * mini_fight.c -- REL module: isolated function lbl_00015C4C.
+ * mini_fight.c -- REL module: isolated function lbl_0000FEC8.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -354,7 +354,7 @@ void lbl_00012248(void);
 void lbl_00013C1C(void);
 void lbl_00013C6C(void);
 void lbl_00015300(void);
-void lbl_00015C4C(int a, u8 *p);
+void lbl_00015C4C(void);
 void lbl_00015C8C(void);
 void lbl_00015E00(void);
 void lbl_00016414(void);
@@ -375,14 +375,14 @@ void lbl_0001A37C(void);
 void lbl_0001A3DC(void);
 void lbl_0001A550(void);
 void lbl_0001A554(void);
-void lbl_0001B910();
+void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-void lbl_00015C4C(int a, u8 *p)
+void lbl_0000FEC8(void)
 {
-    u8 *e = lbl_10018920 + *(s32*)(p + 0x48) * 0xbc;
-    *(f32*)(p + 4) = *(f32*)lbl_0001C67C + *(f32*)(e + 8);
-    *(f32*)(p + 8) = *(f32*)(e + 0xc) - *(f32*)lbl_0001C680;
+    BALL_FOREACH(
+        currentBall->unk148 = 0x1d;
+    )
 }
 #pragma force_active reset

@@ -523,6 +523,15 @@ SOURCES := \
 	src/mini_fight_32.c \
 	src/mini_fight_33.c \
 	src/mini_fight_34.c \
+	src/mini_fight_35.c \
+	src/mini_fight_36.c \
+	src/mini_fight_37.c \
+	src/mini_fight_38.c \
+	src/mini_fight_39.c \
+	src/mini_fight_40.c \
+	src/mini_fight_41.c \
+	src/mini_fight_42.c \
+	src/mini_fight_43.c \
 	asm/mini_fight.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
