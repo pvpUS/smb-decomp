@@ -1,5 +1,5 @@
 /*
- * mini_fight.c -- REL module: isolated function lbl_0000EBF4.
+ * mini_fight.c -- REL module: isolated function lbl_0000E3E4.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -283,7 +283,16 @@ void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
 void lbl_00000210(void);
+void lbl_00000270(void);
+void lbl_000033AC(void);
+void lbl_0000351C(void);
+void lbl_00003CC8(void);
+void lbl_00003DE0(void);
 void lbl_00004314(void);
+void lbl_00004498(void);
+void lbl_00004D14(void);
+void lbl_000057FC(void);
+void lbl_000058A0(void);
 void lbl_0000A690(void);
 void lbl_0000A974(void);
 void lbl_0000AAD0(void);
@@ -349,11 +358,15 @@ void lbl_0000FFC4(void);
 void lbl_00010018(void);
 void lbl_0001181C(void);
 void lbl_0001199C(void);
+void lbl_0001212C(void);
 void lbl_000121FC(void);
 void lbl_00012248(void);
 void lbl_00013C1C(void);
 void lbl_00013C6C(void);
 void lbl_00015300(void);
+void lbl_00015998(void);
+void lbl_00015A40(void);
+void lbl_00015B98(void);
 void lbl_00015C4C(void);
 void lbl_00015C8C(void);
 void lbl_00015E00(void);
@@ -363,6 +376,7 @@ void lbl_00016B8C(void);
 void lbl_00017230(void);
 void lbl_000177C8(void);
 void lbl_00017DC0(void);
+void lbl_00017EE4(void);
 void lbl_0001824C(void);
 void lbl_00019340(void);
 void lbl_00019464(void);
@@ -378,10 +392,30 @@ void lbl_0001A554(void);
 void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
+struct FightTblE3E4 {
+    s8 bytes[4];
+    s16 shorts[4];
+};
+
 #pragma force_active on
-asm void lbl_0000EBF4(void)
+void lbl_0000E3E4(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000EBF4.s"
+    struct FightTblE3E4 *p;
+    int i;
+    u8 unused[16];
+
+    memset(lbl_10017DC8, 0, 0xcc);
+    p = (struct FightTblE3E4 *)lbl_10017DC8;
+    for (i = 0; i < 17; i++, p++)
+    {
+        p->bytes[0] = -1;
+        p->shorts[0] = -1;
+        p->bytes[1] = -1;
+        p->shorts[1] = -1;
+        p->bytes[2] = -1;
+        p->shorts[2] = -1;
+        p->bytes[3] = -1;
+        p->shorts[3] = -1;
+    }
 }
 #pragma force_active reset

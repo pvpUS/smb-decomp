@@ -803,6 +803,7 @@ lbl_00026AA0:
 
 # 5
 .section .data
+.balign 8
 lbl_00026AB0:
     # 0x26AB0
     .4byte 0x000F0019

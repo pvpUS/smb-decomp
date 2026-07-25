@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_0001199C.
+ * mini_golf.c -- REL module: isolated function lbl_0000C230.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -151,7 +151,7 @@ void lbl_00008C78(void);
 void lbl_00008D34(void);
 void lbl_00008F44(void);
 void lbl_0000907C(void);
-u8 lbl_00009178(void);
+void lbl_00009178(void);
 void lbl_000091BC(void);
 void lbl_000092C4(void);
 void lbl_000092D0(void);
@@ -169,31 +169,47 @@ void lbl_000093B4(void);
 void lbl_000093C4(void);
 void lbl_000093D4(void);
 void lbl_000093F0(void);
-int lbl_00009404(void);
+void lbl_00009404(void);
 void lbl_00009414(void);
 void lbl_00009424(void);
-int lbl_00009438(void);
-void lbl_00009448(int a);
+void lbl_00009438(void);
+void lbl_00009448(void);
 void lbl_00009458(void);
 void lbl_00009478(void);
 void lbl_00009488(void);
 void lbl_00009538(void);
 void lbl_000095C4(void);
 void lbl_000097D8(void);
-u8 lbl_00009800(void);
+void lbl_00009800(void);
 void lbl_0000982C(void);
 void lbl_00009880(void);
 void lbl_00009968(void);
 void lbl_000099B4(void);
+void lbl_000099E0(void);
 void lbl_00009B68(void);
 void lbl_00009C10(void);
 void lbl_00009C50(void);
 void lbl_0000B280(void);
 void lbl_0000B36C(void);
+void lbl_0000B754(void);
+void lbl_0000B8A8(void);
+void lbl_0000BDEC(void);
+void lbl_0000C128(void);
+void lbl_0000C230(struct Camera *);
+void lbl_0000C33C(void);
+void lbl_0000D64C(void);
+void lbl_0000E8AC(void);
 void lbl_0000E998(void);
 void lbl_0000E99C(void);
 void lbl_0000F11C(void);
 void lbl_0000F194(void);
+void lbl_0000F750(void);
+void lbl_0000F7E8(void);
+void lbl_0000FA18(void);
+void lbl_0000FBC8(void);
+void lbl_0000FCE0(void);
+void lbl_000100D4(void);
+void lbl_00010304(void);
 void lbl_000106B8(void);
 void lbl_00010808(void);
 void lbl_000109CC(void);
@@ -239,42 +255,25 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-void lbl_0001199C(void)
+void lbl_0000C230(struct Camera *camera)
 {
-    u8 *st = (u8 *)lbl_100001C8;
-    int sel = -1;
+    camera->lookAt = stageBoundSphere.pos;
+    camera->eye.x = stageBoundSphere.radius;
+    camera->eye.y = *(f32 *)lbl_00026390;
+    camera->eye.z = *(f32 *)lbl_00026390;
 
-    switch (*(s16 *)(st + 0x3c)) {
-    case 1:
-        if (*(u32 *)(st + 8) == 0) {
-            *(u32 *)(st + 8) = globalAnimTimer;
-        }
+    mathutil_mtxA_from_identity();
+    mathutil_mtxA_translate((Vec *)&stageBoundSphere);
+    mathutil_mtxA_rotate_y((s16)globalAnimTimer * 64);
+    mathutil_mtxA_rotate_z(0x1000);
+    mathutil_mtxA_tf_point(&camera->eye, &camera->eye);
 
-        if ((s8)lbl_00009438() != -1) {
-            sel = lbl_00009404();
-            lbl_00009448(lbl_00009438());
-        }
-
-        lbl_00022524();
-        lbl_0001B5B8();
-        if ((s8)sel != -1) {
-            lbl_00009448(sel);
-        }
-
-        if (lbl_00009178() == 0) {
-            return;
-        }
-        if (lbl_00009800() == 0) {
-            return;
-        }
-        if (modeCtrl.playerCount == 1) {
-            return;
-        }
-        lbl_00012EEC();
-        break;
-    default:
-        *(s32 *)(st + 8) = 0;
-        break;
-    }
+    camera->rotY = mathutil_atan2(camera->lookAt.x - camera->eye.x,
+                                  camera->lookAt.z - camera->eye.z) - 0x8000;
+    camera->rotX = mathutil_atan2(
+        camera->lookAt.y - camera->eye.y,
+        mathutil_sqrt(mathutil_sum_of_sq_2(camera->lookAt.x - camera->eye.x,
+                                           camera->lookAt.z - camera->eye.z)));
+    camera->rotZ = 0;
 }
 #pragma force_active reset

@@ -1,5 +1,5 @@
 /*
- * mini_pilot.c -- REL module: isolated function lbl_00008568.
+ * mini_pilot.c -- REL module: isolated function lbl_00006BF4.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -140,7 +140,7 @@ extern u8 lbl_802F1FF4[];
 // Imported functions the code calls that no included header declares.
 extern void ball_8003BBF4();
 extern void draw_test_camera_target();
-extern void func_80042214();
+extern int func_80042214(u32);
 extern void func_8009C5E4();
 extern void func_8009CD5C();
 extern void func_8009D794();
@@ -170,8 +170,10 @@ void lbl_000004E0(void);
 void lbl_00000648(void);
 void lbl_0000066C(void);
 void lbl_00000698(void);
+void lbl_000007B8(void);
 void lbl_000008AC(void);
 void lbl_00000A30(void);
+void lbl_00000BFC(void);
 void lbl_0000215C(void);
 void lbl_000021B4(void);
 void lbl_000022D8(void);
@@ -194,10 +196,11 @@ void lbl_00006490(void);
 void lbl_0000669C(void);
 void lbl_00006B5C(void);
 void lbl_00006B94(void);
-void lbl_00006BF4(void);
+void lbl_00006BF4(void *arg);
 void lbl_00006CCC(void);
 void lbl_00006D14(void);
 void lbl_00006DFC(void);
+void lbl_00007EF8(void);
 void lbl_00008134(void);
 void lbl_000082C0(void);
 void lbl_00008568(void);
@@ -218,24 +221,40 @@ void lbl_00009F4C(void);
 void lbl_00009FB0(void);
 void lbl_0000A098(void);
 void lbl_0000A69C(void);
+void lbl_0000A754(void);
 void lbl_0000AD6C(void);
 void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
+void lbl_0000B000(void);
 void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-void lbl_00008568(void)
+void lbl_00006BF4(void *arg)
 {
-    struct Sprite *sprite = create_sprite();
+    struct RaycastHit hit;
+    u8 *g = lbl_10000000;
+    s32 mult = 1;
+    s32 player;
+    s16 *row;
+    u32 hitResult;
 
-    if (sprite != NULL)
-    {
-        sprite->x = *(f32 *)lbl_0000C3C8;
-        sprite->y = *(f32 *)lbl_0000C3CC;
-        sprite->drawFunc = (void (*)(struct Sprite *))lbl_000085B4;
-    }
+    hitResult = raycast_stage_down((Point3d *)((u8 *)arg + 4), &hit, NULL);
+    if (hitResult)
+        *(s32 *)(g + 0x74) = func_80042214(hit.flags);
+    else
+        *(s32 *)(g + 0x74) = 0xF;
+
+    player = modeCtrl.currPlayer;
+    row = (s16 *)((u8 *)lbl_80285A80 + player * 12);
+    if (row[3] != 0)
+        mult = 2;
+    else if (row[5] != 0)
+        mult = 3;
+
+    ((u32 *)lbl_80285A58)[player] += *(s32 *)(g + 0x74) * mult;
+    *(s16 *)lbl_802F1FEC = 0xB4;
 }
 #pragma force_active reset

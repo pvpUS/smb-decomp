@@ -1,5 +1,5 @@
 /*
- * mini_pilot.c -- REL module: isolated function lbl_0000AE94.
+ * mini_pilot.c -- REL module: isolated function lbl_00009A98.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -170,8 +170,10 @@ void lbl_000004E0(void);
 void lbl_00000648(void);
 void lbl_0000066C(void);
 void lbl_00000698(void);
+void lbl_000007B8(void);
 void lbl_000008AC(void);
 void lbl_00000A30(void);
+void lbl_00000BFC(void);
 void lbl_0000215C(void);
 void lbl_000021B4(void);
 void lbl_000022D8(void);
@@ -198,6 +200,7 @@ void lbl_00006BF4(void);
 void lbl_00006CCC(void);
 void lbl_00006D14(void);
 void lbl_00006DFC(void);
+void lbl_00007EF8(void);
 void lbl_00008134(void);
 void lbl_000082C0(void);
 void lbl_00008568(void);
@@ -211,35 +214,32 @@ void lbl_00009440(void);
 void lbl_000097AC(void);
 void lbl_000097C8(void);
 void lbl_000099A4(void);
-void lbl_00009A98(void);
+void lbl_00009A98(struct Sprite *sprite);
 void lbl_00009B04(void);
 void lbl_00009C18(void);
 void lbl_00009F4C(void);
 void lbl_00009FB0(void);
 void lbl_0000A098(void);
 void lbl_0000A69C(void);
-void lbl_0000AD6C(void);
-s32 lbl_0000AE94(s32 x);
+void lbl_0000A754(void);
+void lbl_0000AD6C(s32 color, s32 arg2, const char *fmt, ...);
+void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
+void lbl_0000B000(void);
 void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-s32 lbl_0000AE94(s32 x)
+void lbl_00009A98(struct Sprite *sprite)
 {
-    switch (x)
-    {
-    case 3:
-        return 0;
-    case 1:
-        return 1;
-    case 0:
-        return 2;
-    case 2:
-        return 3;
-    }
-    return 0;
+    f32 x = sprite->x;
+    f32 y = sprite->y;
+
+    reset_text_draw_settings();
+    set_text_font(0xB1);
+    func_80071B50(0x200000);
+    lbl_0000AD6C(0xFFFFFF, 0, (char *)lbl_0000D368, x, y);
 }
 #pragma force_active reset

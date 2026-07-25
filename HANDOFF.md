@@ -4,6 +4,265 @@
 
 ---
 
+## 0.8 — RUN 3 DONE (2026-07-25): +3,147 insn, 2.6% -> 4.8%. MERGED + all 12 artifacts OK.
+
+Six parallel agents, one per minigame REL. **Merged into the main tree, each REL
+rebuilt in-tree to its golden sha1, `sha1sum -c supermonkeyball.sha1` = all 12 OK.**
+
+| module | funcs | insn | % | gained |
+|---|---|---|---|---|
+| mini_bowling | 37/120 | 1644/15313 | 10.7% | +19 fns / +1157 |
+| mini_golf | 62/118 | 1975/38919 | 5.1% | +11 fns / +929 |
+| mini_race | 39/157 | 1203/19817 | 6.1% | +6 fns / +363 |
+| mini_pilot | 23/75 | 803/12137 | 6.6% | +5 fns / +286 |
+| mini_billiards | 14/70 | 552/28793 | 1.9% | +2 fns / +218 |
+| mini_fight | 45/154 | 692/28588 | 2.4% | +3 fns / +194 |
+| **TOTAL** | | **6869/143567** | **4.8%** | **+3,147** |
+
+Run 2 was +1,841 insn, so run 3 was ~70% better on *harder* functions.
+Merge-back tool: `tools/rel_merge_back.py` (handles the `asm/<mod>_d*.s` carve
+segments that run 2's version knew nothing about).
+
+### THE BIG LESSON: carving was NOT what produced this. mwcc idiom knowledge was.
+
+Run 3 was designed around `rel_carve.py`. **Only ~2 of the ~46 matches used it.**
+mini_golf matched 11 functions with the carve fully UNDONE. Ranked levers:
+
+1. **`mathutil_sum_of_sq_2()` / `mathutil_sum_of_sq_3()` / `mathutil_vec_len()`
+   (inline asm in `src/mathutil.h`) are the ONLY source of `fmuls`/`fmadds`
+   contraction** — mwcc does NOT contract `a*a+b*b+c*c` itself. Unlocked 4 of
+   golf's 11. Highest-value single fact in this document.
+2. **Declaration order maps to DESCENDING callee-saved registers** (first-declared
+   gets the highest GPR) and to descending stack offsets for aggregates.
+3. **Frame arithmetic is an oracle:** `locals = frame - 8 - saved_bytes`. A
+   smaller frame than the original means the original had real locals — add them.
+4. **Typed globals**: `extern struct FightWork lbl_10017664;` + `.sub[i].unk12`
+   changed base-register selection from r0 to r3 where every raw-`u8*` phrasing
+   failed.
+5. `__fabs` works without `<math.h>`. Hand-added `extern`s and structs survive
+   `rel_rematch`; hand-added `#include`s do NOT.
+
+### Corrections to §0.7 — believe these over anything above
+
+- **The "hoisted literal-pool base" FAIL-FAST rule is TOO STRICT.** Three of six
+  agents said so independently. `u8 *p = (u8 *)lbl_XXXX;` then
+  `*(f32 *)(p + 0xNN)` reproduces `lis/addi` into a callee-saved reg plus literal
+  offsets EXACTLY, including offsets reaching past the base label into
+  neighbouring pool entries. It applies ONLY to mwcc's own generated literal
+  pool. Do not skip on this signature alone — it suppressed real matches.
+- **The asm-sibling deopt is sometimes REQUIRED.** bowling `lbl_000087CC`: plain
+  C promoted a local `Vec` into f28-f30; the original keeps it in memory.
+  Routing through `mathutil_sum_of_sq_2` (which contains an `asm` block)
+  reproduced the original exactly.
+- **Incremental carving ceiling ≈ 58 functions, not ~200.** Only ONE .c object
+  can emit a given 8-byte magic double, and one object contributes exactly ONE
+  CONTIGUOUS `.rodata` block. 58 magic anchors vs 217 direct-magic functions.
+  Often even less: pilot `lbl_00009C18` needs two non-adjacent constants
+  (`0xC3C0` + `0xC5B8`) so its anchor is structurally unusable.
+- **A second user of an already-carved magic CAN be matched — put it in the SAME
+  object.** bowling merged `lbl_0000E2E0`+`lbl_0000E3A0`+`lbl_0000E450` into one
+  range file; `.rodata` stayed exactly 8 bytes.
+
+### TOOL BUGS — two fixed, two still live
+
+- **FIXED** `rel_rematch.py` silently deleted struct members whose line began
+  with a comment (`/*0x00*/ u8 filler0[0x58];`), so hand-added structs came back
+  as `struct X { };`. `is_scaffold()` now uses a real comment-only test.
+  Workaround if you hit an old copy: write offsets as TRAILING comments.
+- **FIXED** `rel_carve.py` prefix-carves (`--hole lbl:8`) lost the zero-size
+  alias, so still-asm users failed to link.
+- **LIVE** `rel_rematch.py` can LOSE newly-converted files. In mini_race it
+  reported "re-applied 33 pure-C files", did not see the 6 converted that
+  session, reverted all 6, and dropped 79 -> 76 files. In mini_golf an earlier
+  run took 41 -> 40 and silently broke the module. **Back up before every
+  `rel_rematch`, and assert `ls src/<mod>*.c | wc -l` goes UP.**
+- **LIVE** `rel_carve.py` only holes `.rodata`. Switch jump tables live in
+  `.data` (bowling `lbl_0000871C`/`lbl_00009230`, golf `lbl_0000F194`) and are
+  structurally unreachable until it handles `.data` too.
+
+### Two build traps that produce FALSE results
+
+1. `make src/<file>.c.o` compiles with the WRONG flags. `%.plf: CFLAGS +=
+   $(REL_FLAGS)` means `-sdata 0 -sdata2 0 -g` only apply when the GOAL is the
+   `.plf`. A direct object build puts constants in `.sdata2` with SDA21
+   addressing instead of `@ha/@l` — code that can never match, and it leaves a
+   wrongly-flagged `.o` the REL build considers up to date. Always
+   `make mkbe.rel_<mod>.plf`.
+2. **A failed compile leaves the previous object in place.** If that object was
+   the asm-include build, a per-function diff reports a PERFECT MATCH that is
+   fiction. Any diff harness must assert the `.o` is newer than the `.c`.
+
+### Known-blocked, do not re-derive
+
+- bowling `lbl_0000A808`/`lbl_0000B460`/`lbl_0000B654` (278 insn): all three
+  originals carry a redundant loop-entry guard (`li rX,0; cmpwi rX,10; bgelr`)
+  that mwcc folds away. 7 formulations tried. One shared unexplained root cause.
+- bowling `lbl_0000A778`: `src/sound.h` declares `SoundVol(u16,u8)` where the
+  original TU used `int` params. Fixing it perturbs the DOL and every module.
+- golf `lbl_000252C0`/`lbl_0002544C`/`lbl_0002572C` share magic `lbl_00026A98`
+  with `lbl_000255CC` interleaved in `.text` — needs
+  `--isolate-range lbl_000252C0 lbl_0002572C`, which `rel_rematch --add`
+  (singletons only) cannot bootstrap. Do it by hand.
+
+### Where the wall is
+
+Every agent reported the same shape: functions driven to 1-4 instruction
+differences, then lost to register-allocator tie-breaks. billiards
+`lbl_0000341C` reached 149/152, `lbl_00018608` 47/57; fight `lbl_0000FF34`
+reached ONE diff over ~20 variants; pilot `lbl_0000B130` 199/201. 136,698 insn
+remain in the minigame RELs; at run-3 rate that is ~43 more runs, and the rate
+declines as tractable functions deplete.
+
+---
+
+## 0.7 — 2026-07-25: THE RODATA CEILING IS GONE. Read this before anything else.
+
+The previous "ceiling" (§0.6) capped the project at ~33% of the minigame RELs:
+68.8% of the remaining 139,845 instructions sat in functions needing a
+compiler-generated constant (192 fns / 67.1% of mass need the int->float magic
+double; 18 fns / 13.7% need a switch jump table). **That cap was a property of
+the tooling, not of the binary.** All of it is now reachable.
+
+### What was actually wrong
+
+`rel_split.py` keeps ALL module data in one blob (`asm/<mod>.s`, last in
+SOURCES) and splits only `.text`. A converted function's mwcc-emitted constants
+therefore land *ahead* of the whole original blob instead of *replacing* the
+original bytes. The tool comments say rodata must stay one contiguous blob
+because an earlier attempt to split it failed. **That attempt failed for a
+fixable reason:** labels referenced *within* the blob were local symbols, so
+splitting orphaned them and `elf2rel` died with `could not find symbol`. Promote
+those to `.global` and the blob splits byte-neutrally.
+
+### Proven, each gated on golden `cc2b2ef2…` (mkbe.rel_mini_pilot.rel)
+
+1. **rodata spans multiple objects byte-neutrally** once cross-object refs are
+   `.global`.
+2. **A pure-C object's emitted `.rodata` fills a carved hole.** Done twice:
+   `lbl_00008568` with real `200.0f`/`170.0f` literals, and `lbl_0000A69C` with
+   a genuine `(f32)` int->float cast emitting the magic double. Built uncarved
+   first to reproduce the documented failure (`1e7464b3…`, object emitted
+   exactly `43300000 80000000`), then carved -> golden.
+3. **Shared constants survive**: a constant used by N functions keeps its symbol
+   as a **zero-size label at the end of the preceding segment**. It resolves to
+   the hole's address (`00000540 g .rodata 00000000 lbl_0000C3C0`, == 0xC3C0),
+   so the 8 still-asm users keep linking while the C object supplies the bytes.
+
+### THE TWO RULES
+
+- **ORDERING.** Objects contribute `.rodata` in SOURCES order, and SOURCES
+  follows `.text` order. A constant must be emitted by the .c file holding its
+  **first user in .text order**. Verified by deliberately breaking it: emitting
+  `0xC3C8`/`0xC3CC` from the `0x8568` file while `0xC3C0`'s magic came from the
+  `0xA69C` file gave `[200.0f][170.0f][magic]` where the original has
+  `[magic][200.0f][170.0f]` — same bytes, swapped, nothing else moved.
+  `rel_carve.py` refuses this.
+- **ONE OBJECT PER TU POOL.** mwcc emits the magic double **once per translation
+  unit**, not per function, and pools/dedups literals across the whole TU in
+  first-use order. Confirmed by compiling a probe with the real REL flags:
+  three functions, the second doing its own int->float, produced ONE magic and
+  emitted `[0.99][magic][0.75][1.25][2.5][3.75]` — first-use order, no second
+  magic. So **two .c files can never split one TU's pool.**
+
+### What that means for the workflow
+
+The endgame unit is a **whole TU in one pure-C file, with its entire rodata pool
+carved as a single hole** — mwcc then regenerates the pool itself, in the right
+order, with the right dedup. No per-constant negotiation. The per-constant
+carving still works for the *incremental* case (convert one function of a TU
+while the rest stay asm — that is what got `lbl_0000A69C` to golden), and that
+is the cheap way to keep scoring.
+
+### Tools (both untracked, working)
+
+- **`tools/rel_carve.py`** — `--list` shows every rodata constant with its
+  first-use function and the .c that must own it (MAGIC flagged).
+  `--hole <label>[:<bytes>] --into <src.c>` carves one constant (repeatable);
+  `--hole-range <first>:<last> --into <src.c>` carves a whole TU pool;
+  `--undo` restores. Restores the pristine blob from `git show HEAD:asm/<mod>.s`
+  every run, so it is **idempotent — pass ALL holes on one command line**.
+  Validates before writing, so a rejected request leaves the tree untouched.
+  Run it **after** `rel_rematch.py`; `--undo` first if re-running rematch
+  (rematch finds the SOURCES block by looking for `asm/<mod>.s` as the last line).
+- **`tools/rel_tu_map.py`** — TU partition + magic anchors per module.
+  **47 TUs across the 6 modules**, median ~1.1-2.2k insn.
+
+Recover TU boundaries from **magic doubles only**. A first attempt treating
+every rodata reference as TU-local was wrong: a named `const` table defined in
+one .c is legitimately referenced from another via `extern`, and mini_billiards
+has several spanning most of the module, which collapsed it to a bogus single
+28,723-insn TU. Group functions around magic anchors, merging anchors whose user
+ranges overlap (the signed `…80000000` and unsigned `…00000000` forms sit 8
+bytes apart in one pool).
+
+### Honest scope (measured, not estimated)
+
+Whole-project, by instructions of game code: **~50% done**, not 2.6%. The 2.6%
+counts only the 6 split minigame RELs. Remaining game code = 204,484 insn
+(143,567 minigame RELs + 46,690 option/sel_ngc/test_mode, unsplit + 11,526
+credits/mini_ranking + 2,701 DOL stubs). A further 57,736 insn of Dolphin SDK /
+MusyX / MSL asm under `libraries/` is conventionally out of scope.
+
+Duplication is NOT a lever: hashing all 694 REL function bodies (exact shape,
+mnemonic-only, and 5-gram Jaccard) found only 15 exact clone groups worth
+**1,354 insn (~1%)**, and 55 near-duplicate pairs. Don't plan around it.
+
+The remaining functions are big: matched median **19** insn, remaining median
+**118**, mean 268, max 7,131. 30 functions >=800 insn hold 44% of the remaining
+mass. Progress per function will keep falling; progress per *TU converted* is
+the metric that now matters.
+
+---
+
+## 0.6 — RUN 2 (2026-07-24): +50 functions, 1.3% -> 2.6%  [superseded by §0.8]
+
+**RESULT — all 6 modules merged to main, each rebuilt in-tree to its golden sha1, committed on `wip/rel-drafts-and-dol-matches`; `sha1sum -c supermonkeyball.sha1` = all 12 artifacts OK.**
+
+| module | funcs was->now | insns was->now | commit |
+|---|---|---|---|
+| mini_bowling | 6->16 | 186->487 | 279e705 |
+| mini_race | 23->32 | 624->840 | 1647d978 |
+| mini_fight | 36->42 | 327->498 | cf95f8f |
+| mini_pilot | 12->20 | 262->517 | 4030db1 |
+| mini_golf | 39->51 | 345->1046 | 52e5508 |
+| mini_billiards | 7->12 | 137->334 | 7d7576f |
+| **TOTAL** | **123->173 (+50)** | **1881->3722 (+1841; 1.3%->2.6%)** | tool fix: 0536c4e |
+
+Merge-back used `scratchpad/merge_back.py` (swaps `src/<mod>*.c`, splices the module's Makefile SOURCES block preserving main's CRLF) then an in-tree rebuild gated on golden — validated on all 6. Warm copies remain under `C:/tmp/smbm/<mod>` (each still builds golden) until cleaned up.
+
+> **⚠ THE "CEILING" BELOW WAS DISPROVED ON 2026-07-25 — see §0.7.** The
+> rodata-duplication blocker is solved; `tools/rel_carve.py` carves a hole in the
+> data blob so a pure-C object supplies its own constants. Read §0.7 FIRST; the
+> bullet immediately below is kept only to explain what the old workarounds were.
+
+**FINDINGS / CEILINGS (recurred across EVERY agent — read before the next run):**
+- **~~Magic-double `.rodata` duplication is the dominant blocker.~~ SOLVED — see §0.7.** Any function whose C needs a *compiler-generated* int->float constant (`0x4330000080000000`), or emits its own float/double *literal*, makes mwcc write that constant into the per-function TU's `.rodata`, duplicating the module's shared pool (kept verbatim in `asm/<mod>.s`) and shifting the data layout — `.text` matches perfectly, layout doesn't. Old workaround: read existing constants as `*(double*)lbl_XXXX` instead of a literal (still fine, still used in committed code). The real fix is to carve the constant OUT of `asm/<mod>.s` and let the C object emit it — §0.7.
+- **Typed-global opportunity (unlocks ~4+ more in fight alone) — TOOL SUPPORT DONE (f338d48):** some functions match only when a `.bss`/`.data` table is declared as a *typed struct/array global* (so mwcc uses base-in-`@ha` + `addi @l` addressing) instead of `extern u8 …[]`. `rel_rematch` now PRESERVES a hand-typed data extern (`extern struct S d;` / `extern T d[8];`) in its pure-C file across re-splits, plus any struct/typedef the extern needs. So: convert a fight function, hand-type its data extern in that pure-C file, gate on golden — it survives. (The remaining work is doing those conversions.)
+- **Imported-fn signatures — DONE (f338d48):** `rel_split` emits the generic `extern void <fn>();`; `rel_rematch` now re-applies a hand-typed imported-fn extern (`extern int func_80042214(u32);`, pilot `_17.c`) over it (keyed by symbol). Verified: pilot round-trips through `rel_rematch` to golden with the typed extern intact (the old tool clobbered it).
+- **fn-ptr-table sub-handlers — DONE (f338d48):** `rel_rematch` now passes every reconstructed pure-C label (and `--add`) as `--extra-start`, so a handler reached only through a `.data` fn-ptr table (`blrl`, not a `bl`/`@ha` target) is isolable and valid as a range endpoint. This fixed the `rel_rematch mini_pilot` "unknown end label lbl_00005008" crash and the earlier `--add lbl_00004E84` crash.
+- **Splitter crash caveats that REMAIN (recover via `git show HEAD:<path> > <path>`; whole-tree `git checkout` is blocked by the sandbox classifier, use per-file):** never `rel_rematch --add` (a) an already-matched label, or (b) a label INSIDE an existing matched `--isolate-range` — either still crashes `rel_split` mid-run and wipes the uncommitted `src/<mod>*.c`. The "smallest asm file" scan lists already-matched stubs too, so filter against what is already C.
+- Remaining skips are ordinary CW register-allocator / instruction-scheduler tie-breaks (documented per module in the commit bodies + agent notes) — low ROI.
+
+---
+
+### Run-2 setup (kept for reference)
+
+Launched **one background `decompiler` (Opus) agent per minigame REL** to extend matching beyond the run-1 baseline (§0.5). Setup validated end-to-end before launch:
+
+- **Isolation:** each agent owns a full warm copy at `C:/tmp/smbm/<module>` (robocopy of the repo **including `.git`** — needed because `rel_rematch.py` does `git show 5138d8f:asm/<mod>.s` — excluding only `baserom.*`; ~47MB real bytes each) with its own CW linker temp `C:/tmp/tmp_<module>`. `du` over-reports these ~10x (Windows allocation units); real tree+`.git` ≈ 47MB. Verified: `mini_pilot` warm copy builds `cc2b2ef…` golden from the isolated path.
+- **TOOL FIX (committed-worthy, applied to `tools/rel_rematch.py`):** the old rematch regenerated each pure-C file's preamble and **dropped any hand-typed forward declaration for a function DEFINED IN ANOTHER file** (e.g. `void lbl_00016D9C(int a, int b);` in `mini_billiards_9.c`, whose body is an asm stub in `_10.c`) — its sig-rewrite only covered labels defined *in the same file*, so a typed call reverted to the generic `void lbl_X(void);` and no longer compiled. Fix: capture each committed file's forward-decl lines (`saved_fwd`) and re-apply them verbatim over the regenerated preamble (committed decl > local-def sig > generic). Verified: `rel_rematch mini_billiards` with no `--add` now reproduces `4ff9ee…` golden (it previously **failed to compile** `_9.c`). The fixed tool is copied into all 6 warm copies.
+- **`python` gotcha:** `rel_rematch.py` must run via the **Bash-tool default python** (`Python 3.13.5`, has `git`) — NOT inside the msys2 `-lc` build wrapper (msys2 mingw has no `python`). Only `make` runs inside the msys2 wrapper.
+
+**Golden hashes (the per-agent gate):** bowling `29ded64794215790b8bfd6fc6c2517ca835b6b1a` · race `c600a0f425b42405f27527f57bcba110fffa0431` · fight `233b6073feb2ec293cff024523019225c41f5604` · pilot `cc2b2ef2b1c2bdf613beae9c71ff32d75e03059f` · golf `fc70c4e88e1f22e908bbcc4e263cb45e74310b93` · billiards `4ff9ee4165b581f68848c6a0ce3448baf62b6c73`.
+
+**Per-agent loop:** `python tools/rel_rematch.py <mod> --add <lbl>` → convert the new stub file to pure C (template = an already-matched pure-C sibling in the same module + the run-1 draft `git show 5138d8f:src/<mod>.c`) → `make … mkbe.rel_<mod>.rel` → gate on golden sha1 → confirm `grep -c '#include "../asm/nonmatchings' src/<mod>_N.c` == 0 on the new file. Match smallest-first; skip reg-allocator tie-breaks after ~2 tries.
+
+**Seed candidates (smallest unmatched, insn count):** bowling `lbl_0000E870(9) lbl_0000D8CC(16) lbl_000090CC(26) …` · race `lbl_0000FC8C(14) lbl_000007EC(19) lbl_00007900(20) …` · fight `lbl_000121FC(19) lbl_000117CC(20) lbl_00018154(21) …` · pilot `lbl_00006CCC(18) lbl_00008568(19) lbl_0000AE94(19) …` · golf `lbl_0000982C(21) lbl_00009538(35) lbl_0000F750(38) …` · billiards `lbl_00007D18(26) lbl_00009E34(36) lbl_00019FD4(40) …`.
+
+**MERGE-BACK (orchestrator does this after agents finish):** for each module copy `C:/tmp/smbm/<mod>/src/<mod>*.c` → repo `src/` (delete repo `src/<mod>_*.c` first so removed split files don't linger), then copy that module's `SOURCES` block from the copy's `Makefile`, rebuild the REL **in the main tree**, confirm golden, and `grep`-confirm the new C survived. `asm/<mod>.s` + `asm/nonmatchings/<mod>/` are deterministic from the split (unchanged content) — no need to copy. Then re-measure with the §0.5 script and commit per-module. **NEVER copy `*.rel/.plf/.elf/.map/.o`.**
+
+---
+
 ## 0.5 — PARALLEL ROLLOUT DONE + NEXT-RUN PLAYBOOK
 
 All six minigame RELs are split + partially matched to pure C, each building to its golden sha1, committed + pushed on `wip/rel-drafts-and-dol-matches`. The 5 non-bowling modules were done by 5 parallel Opus subagents (one per module) in isolated warm copies.
@@ -54,6 +313,7 @@ Each module's remaining functions are the harder ones (physics/draw/dispatch, re
 
 - This is a **matching decompilation** of Super Monkey Ball (GameCube). Goal: C that compiles (with CodeWarrior 1.1) to **byte-identical** original binaries.
 - **The DOL is essentially done.** We matched 2 more stub functions in an earlier session; 6 remaining stubs are genuine CodeWarrior register-allocator tie-breaks (documented, low ROI).
+- **CURRENT STATE: see §0.8 (run 3, 4.8%, merged, all 12 artifacts OK). §0.6/§0.7 are history and §0.7's fail-fast rule is WRONG — §0.8 corrects it.**
 - **The RELs (minigames) are the big remaining surface.** They ARE verifiable (per-REL sha1s in `supermonkeyball.sha1`). We built a **splitter** (`tools/rel_split.py`) that carves a monolithic REL into per-function pieces so functions can be matched one at a time, validated a **byte-neutral split of `mini_bowling`**, added **multi-file output + `--isolate`/`--isolate-range`**, and **matched 6 functions in the real `mini_bowling.rel` (golden `29ded64...`)**: `lbl_000076D0`, `lbl_00007740`, `lbl_00007778`, `lbl_00007964`, `lbl_000079E8`, `lbl_000086E4`.
 - **CRITICAL FINDING — CORRECTED THIS SESSION:** the real cause of the "deopt" is **NOT a TU-size threshold**. mwcc's inline assembler **turns off the instruction scheduler + peephole optimizer for EVERY C function that shares a translation unit with an `asm` block** — it is the *presence* of inline asm, not the amount. Verified directly: `lbl_00007778` compiles byte-perfect in isolation (`extsb.`, `blr` guards); adding **a single `static asm` sibling** to its TU flips it to `extsb`+`cmpwi` / `b <epilogue>` (no match); a 4-function chunk deopts identically to the 120-function one. **Fix = put each to-be-converted C function in its OWN pure-C file with no asm-include siblings.** (Uniform "chunking" by function count does NOT help — that was the earlier, wrong hypothesis.) See §6.
 - **Immediate next task:** continue matching mini_bowling functions with the proven workflow — `python tools/rel_split.py mini_bowling <same --extern-fn args> --isolate <lbl> [--isolate <lbl> ...]`, convert each isolated singleton file's body to C, keep the Makefile `SOURCES` in `.text` order, rebuild, confirm `29ded64...`. Then generalize + roll out to the other modules (mini_race/fight/golf/billiards/pilot, option, test_mode, sel_ngc).
@@ -183,5 +443,7 @@ These DOL stubs use the pattern `#ifdef NONMATCHING <C attempt> #else asm void F
 - The REL **drafts break `make all`** (dup symbols vs monolithic `.s`) — expected; `supermonkeyball.dol` is unaffected and still matches.
 - Some functions are genuine **CW allocator tie-breaks** — byte-identical schedule, different register numbering; not reachable by source reformulation. Don't over-invest; document and move on.
 - **The asm-sibling deopt** (§6) — the single most important REL gotcha: a C function reproduces the original schedule ONLY in a pure-C file (no `asm` block anywhere in its TU). Not a size threshold.
+- **Anything in §5-§9 claiming compiler-generated `.rodata` is an unavoidable ceiling is OUT OF DATE — see §0.7.** Use `tools/rel_carve.py`. The two rules that still bind: a constant must be emitted by the .c file holding its first user in `.text` order, and one TU's pool cannot be split across two .c files (mwcc emits the magic double once per TU and pools literals TU-wide in first-use order).
+- `rel_carve.py` and `rel_rematch.py` fight over the Makefile SOURCES block: rematch expects `asm/<mod>.s` to be the LAST line, carve moves it first and appends `asm/<mod>_dN.s`. Always `rel_carve <mod> --undo` before re-running rematch.
 - `mkbe.rel_sample.rel` is a template/sample module, not real game code.
 - Auto-memory (`MEMORY.md` + files under the memory dir) loads automatically in a new session in this repo — the durable facts here are also captured there.

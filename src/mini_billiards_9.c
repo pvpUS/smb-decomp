@@ -46,7 +46,7 @@
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_billiards.s) or imported.  Declared so mwcc accepts `@ha/@l`.
-extern u8 lbl_0001C2B8[];
+extern u8 lbl_0001C2B8[4]; /* TYPED-TEST */
 extern u8 lbl_0001CAD8[];
 extern u8 lbl_0001CBD0[];
 extern u8 lbl_0001CC88[];
@@ -192,6 +192,7 @@ void lbl_0000A054(void);
 void lbl_0000C85C(void);
 void lbl_0000D0A4(void);
 void lbl_0000D330(void);
+void lbl_0000D7E8(void);
 void lbl_0000E8D0(void);
 void lbl_00016D24(void);
 void lbl_00016D9C(void);

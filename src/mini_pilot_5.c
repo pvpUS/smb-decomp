@@ -1,6 +1,6 @@
 /*
  * mini_pilot.c -- REL module, structurally split for per-function
- * byte-matching (part 5 of 30; contiguous .text range).  Each function
+ * byte-matching (part 5 of 38; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_pilot/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -169,11 +169,10 @@ void lbl_000004E0(void);
 void lbl_00000648(void);
 void lbl_0000066C(void);
 void lbl_00000698(void);
-static void lbl_000007B8(void);
+void lbl_000007B8(void);
 void lbl_000008AC(void);
 void lbl_00000A30(void);
-static void lbl_00000BFC(void);
-static void lbl_00000DC8(void);
+void lbl_00000BFC(void);
 void lbl_0000215C(void);
 void lbl_000021B4(void);
 void lbl_000022D8(void);
@@ -200,6 +199,7 @@ void lbl_00006BF4(void);
 void lbl_00006CCC(void);
 void lbl_00006D14(void);
 void lbl_00006DFC(void);
+void lbl_00007EF8(void);
 void lbl_00008134(void);
 void lbl_000082C0(void);
 void lbl_00008568(void);
@@ -220,10 +220,12 @@ void lbl_00009F4C(void);
 void lbl_00009FB0(void);
 void lbl_0000A098(void);
 void lbl_0000A69C(void);
+void lbl_0000A754(void);
 void lbl_0000AD6C(void);
 void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
+void lbl_0000B000(void);
 void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
@@ -234,29 +236,9 @@ asm void lbl_00000698(void)
     nofralloc
 #include "../asm/nonmatchings/mini_pilot/lbl_00000698.s"
 }
-static asm void lbl_000007B8(void)
+asm void lbl_000007B8(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_pilot/lbl_000007B8.s"
-}
-asm void lbl_000008AC(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_000008AC.s"
-}
-asm void lbl_00000A30(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00000A30.s"
-}
-static asm void lbl_00000BFC(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00000BFC.s"
-}
-static asm void lbl_00000DC8(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00000DC8.s"
 }
 #pragma force_active reset

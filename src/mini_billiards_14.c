@@ -192,6 +192,7 @@ void lbl_0000A054(void);
 void lbl_0000C85C(void);
 void lbl_0000D0A4(void);
 void lbl_0000D330(void);
+void lbl_0000D7E8(void);
 void lbl_0000E8D0(void);
 void lbl_00016D24(void);
 void lbl_00016D9C(void);

@@ -18,7 +18,7 @@ supermonkeyball.dol: `sha1: 424e8ce10135686de0709a147e6a3a5a3fda02f1`
 
 ### Steps
 
-* Create a directory called `mwcc_compiler/<VERSION>` where `<VERSION>` is the version of CodeWarrior for GameCube you have (1.0, 1.1, or 1.2.5).
+* Create a directory called `mwcc_compiler/<VERSION>` where `<VERSION>` is the version of CodeWarrior for GameCube you have (1.1, or 1.2.5).
 * Place the following CodeWarrior compiler executables in the aforementioned directory:
   - mwcceppc.exe
   - mwldeppc.exe

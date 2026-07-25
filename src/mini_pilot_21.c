@@ -1,5 +1,5 @@
 /*
- * mini_pilot.c -- REL module: isolated function lbl_000097AC.
+ * mini_pilot.c -- REL module: isolated function lbl_00007EF8.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -49,6 +49,34 @@
 #include "stobj.h"
 #include "world.h"
 #include "stdlib.h"
+
+// The fly-in camera TU's .rodata pool, reached through one hoisted base
+// register in the original.  Only the constants this function reads are named;
+// everything else in the run belongs to its siblings, still in asm.
+struct PilotCamConsts
+{
+    /*0x00*/ u8 filler0[0x8];
+    /*0x08*/ f32 zeroF;        // 0.0f
+    /*0x0C*/ u8 filler0C[0x58 - 0x0C];
+    /*0x58*/ f64 startFrame;   // 50.0
+    /*0x60*/ f64 zero;         // 0.0
+    /*0x68*/ f64 endFrame;     // 480.0
+    /*0x70*/ f32 endFrameF;    // 480.0f
+    /*0x74*/ u8 filler74[4];
+    /*0x78*/ f64 pullBack;     // 1.2
+};
+
+// Tail of lbl_0000CCF8: the per-difficulty spline tables the fly-in camera
+// samples.  eye[i]/lookAt[i] each point at a 3-entry array of `struct Spline *`
+// (x, y, z); zoom is a spline segment list read directly.  Field names are
+// reconstructed from the uses below -- the originals are unknown.
+struct PilotCamSplines
+{
+    /*0x000*/ u8 filler0[0x488];
+    /*0x488*/ struct Spline **eye[3];
+    /*0x494*/ struct Spline **lookAt[3];
+    /*0x4A0*/ struct Spline zoom[3];
+};
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_pilot.s) or imported.  Declared so mwcc accepts `@ha/@l`.
@@ -170,8 +198,10 @@ void lbl_000004E0(void);
 void lbl_00000648(void);
 void lbl_0000066C(void);
 void lbl_00000698(void);
+void lbl_000007B8(void);
 void lbl_000008AC(void);
 void lbl_00000A30(void);
+void lbl_00000BFC(void);
 void lbl_0000215C(void);
 void lbl_000021B4(void);
 void lbl_000022D8(void);
@@ -198,6 +228,7 @@ void lbl_00006BF4(void);
 void lbl_00006CCC(void);
 void lbl_00006D14(void);
 void lbl_00006DFC(void);
+void lbl_00007EF8(struct Camera *camera);
 void lbl_00008134(void);
 void lbl_000082C0(void);
 void lbl_00008568(void);
@@ -208,7 +239,7 @@ void lbl_00008C40(void);
 void lbl_000090A0(void);
 void lbl_000091EC(void);
 void lbl_00009440(void);
-void lbl_000097AC(u8 *);
+void lbl_000097AC(void);
 void lbl_000097C8(void);
 void lbl_000099A4(void);
 void lbl_00009A98(void);
@@ -218,18 +249,64 @@ void lbl_00009F4C(void);
 void lbl_00009FB0(void);
 void lbl_0000A098(void);
 void lbl_0000A69C(void);
+void lbl_0000A754(void);
 void lbl_0000AD6C(void);
 void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
+void lbl_0000B000(void);
 void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-void lbl_000097AC(u8 *p)
+void lbl_00007EF8(struct Camera *camera)
 {
-    if (lbl_802F1FF6 > 2)
-        *p = 0;
+    struct PilotCamSplines *tbl = (struct PilotCamSplines *)lbl_0000CCF8;
+    struct PilotCamConsts *k = (struct PilotCamConsts *)lbl_0000C2C8;
+    struct Spline **eyeSpline;
+    struct Spline **lookAtSpline;
+    Vec delta;
+    f32 scale;
+    f32 t;
+    s32 unused;
+
+    t = (f32)lbl_802F1FF0 - k->startFrame;
+    eyeSpline = tbl->eye[*(s16 *)lbl_10000040];
+    lookAtSpline = tbl->lookAt[*(s16 *)lbl_10000040];
+    if (t < k->zero)
+        t = k->zeroF;
+    if (t > k->endFrame)
+        t = k->endFrameF;
+
+    camera->eye.x = calc_spline(t, eyeSpline[0]);
+    camera->eye.y = calc_spline(t, eyeSpline[1]);
+    camera->eye.z = calc_spline(t, eyeSpline[2]);
+    camera->lookAt.x = calc_spline(t, lookAtSpline[0]);
+    camera->lookAt.y = calc_spline(t, lookAtSpline[1]);
+    camera->lookAt.z = calc_spline(t, lookAtSpline[2]);
+
+    if ((s32)((u8 *)lbl_10000078)[*(s8 *)lbl_10000090] == 1)
+    {
+        scale = calc_spline(t, tbl->zoom);
+        scale *= k->pullBack;
+        delta.x = camera->eye.x - camera->lookAt.x;
+        delta.y = camera->eye.y - camera->lookAt.y;
+        delta.z = camera->eye.z - camera->lookAt.z;
+        delta.x *= scale;
+        delta.y *= scale;
+        delta.z *= scale;
+        camera->eye.x += delta.x;
+        camera->eye.y += delta.y;
+        camera->eye.z += delta.z;
+    }
+
+    delta.x = camera->lookAt.x - camera->eye.x;
+    delta.y = camera->lookAt.y - camera->eye.y;
+    delta.z = camera->lookAt.z - camera->eye.z;
+    camera->rotY = mathutil_atan2(delta.x, delta.z) - 0x8000;
+    camera->rotX =
+        mathutil_atan2(delta.y, mathutil_sqrt(mathutil_sum_of_sq_2(delta.x, delta.z)));
+    camera->rotZ = 0;
 }
 #pragma force_active reset

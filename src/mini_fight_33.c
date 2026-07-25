@@ -1,5 +1,5 @@
 /*
- * mini_fight.c -- REL module: isolated function lbl_00013C1C.
+ * mini_fight.c -- REL module: isolated function lbl_0000FFC4.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -283,7 +283,16 @@ void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
 void lbl_00000210(void);
+void lbl_00000270(void);
+void lbl_000033AC(void);
+void lbl_0000351C(void);
+void lbl_00003CC8(void);
+void lbl_00003DE0(void);
 void lbl_00004314(void);
+void lbl_00004498(void);
+void lbl_00004D14(void);
+void lbl_000057FC(void);
+void lbl_000058A0(void);
 void lbl_0000A690(void);
 void lbl_0000A974(void);
 void lbl_0000AAD0(void);
@@ -345,15 +354,19 @@ void lbl_0000FEC4(void);
 void lbl_0000FEC8(void);
 void lbl_0000FF30(void);
 void lbl_0000FF34(void);
-void lbl_0000FFC4(void);
+void lbl_0000FFC4(u8 *p, int unused, int arg);
 void lbl_00010018(void);
 void lbl_0001181C(void);
 void lbl_0001199C(void);
+void lbl_0001212C(void);
 void lbl_000121FC(void);
 void lbl_00012248(void);
 void lbl_00013C1C(void);
 void lbl_00013C6C(void);
 void lbl_00015300(void);
+void lbl_00015998(void);
+void lbl_00015A40(void);
+void lbl_00015B98(void);
 void lbl_00015C4C(void);
 void lbl_00015C8C(void);
 void lbl_00015E00(void);
@@ -363,6 +376,7 @@ void lbl_00016B8C(void);
 void lbl_00017230(void);
 void lbl_000177C8(void);
 void lbl_00017DC0(void);
+void lbl_00017EE4(void);
 void lbl_0001824C(void);
 void lbl_00019340(void);
 void lbl_00019464(void);
@@ -379,10 +393,15 @@ void lbl_0001B910();
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-void lbl_00013C1C(void)
+void lbl_0000FFC4(u8 *p, int unused, int arg)
 {
-    item_replace_type_funcs(1, lbl_0001D790);
-    item_replace_type_funcs(3, lbl_0001D790 + 0x1c);
-    item_replace_type_funcs(4, lbl_0001D790 + 0x38);
+    u32 v = *(u32*)(p + 0x94);
+    if (!(v & 0x400000)) {
+        *(u32*)(p + 0x94) = v | 0x400000;
+        p[0x148] = 0x25;
+        *(worldInfo + (s8)p[0x2e] * 0x40 + 8) = 6;
+    }
+    if (*(s16*)(p + 0x14c) < arg)
+        *(s16*)(p + 0x14c) = (s16)arg;
 }
 #pragma force_active reset

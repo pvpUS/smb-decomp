@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_00006E64.
+ * mini_bowling.c -- REL module: isolated function lbl_00005128.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -47,6 +47,13 @@
 #include "shadow.h"
 #include "vibration.h"
 
+struct BowlSheet {  // per-player bowling score sheet; only these fields are known
+    u8 unk0[4];
+    s16 score;  // 0x04 running total
+    u8 unk6[0x20 - 0x06];
+    s8 pins[0x15];  // 0x20 pins felled per roll
+    s8 kind[0x15];  // 0x35 roll kind: 2 = strike, 3 = spare
+};
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_bowling.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000F020[];
@@ -141,19 +148,26 @@ void lbl_00001F1C(void);
 void lbl_000021B4(void);
 void lbl_00002454(void);
 void lbl_000027B0(void);
+void lbl_000029A8(void);
 void lbl_00002DE0(void);
 void lbl_00003574(void);
 void lbl_00003A10(void);
 void lbl_00003D24(void);
 void lbl_00003DC0(void);
 void lbl_000042A4(void);
+void lbl_00004410(void);
 void lbl_000045E8(void);
+void lbl_00004A80(void);
 void lbl_00004BD8(void);
+void lbl_00004D10(void);
+void lbl_00004DF8(void);
+void lbl_00005128(struct BowlSheet *);
+void lbl_000051E0(void);
 void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
 void lbl_000066C4(void);
-void lbl_00006E64(u32 color, char *str, float x, float y);
+void lbl_00006E64(void);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
 void lbl_00007650(void);
@@ -171,16 +185,27 @@ void lbl_000080E0(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
 void lbl_000087CC(void);
+void lbl_000089FC(void);
+void lbl_00008B8C(void);
+void lbl_00008C68(void);
+void lbl_00008D2C(void);
+void lbl_00008DF0(void);
+void lbl_00008EC0(void);
 void lbl_00008FB0(void);
 void lbl_00009048(void);
 void lbl_000090CC(void);
 void lbl_00009134(void);
 void lbl_0000919C(void);
 void lbl_00009230(void);
+void lbl_000096B4(void);
 void lbl_000097B4(void);
 void lbl_00009AA8(void);
 void lbl_00009D18(void);
 void lbl_00009F60(void);
+void lbl_0000A138(void);
+void lbl_0000A23C(void);
+void lbl_0000A610(void);
+void lbl_0000A778(void);
 void lbl_0000A808(void);
 void lbl_0000A878(void);
 void lbl_0000AAAC(void);
@@ -194,30 +219,60 @@ void lbl_0000B1BC(void);
 void lbl_0000B344(void);
 void lbl_0000B460(void);
 void lbl_0000B654(void);
+void lbl_0000B848(void);
+void lbl_0000B914(void);
+void lbl_0000C1D0(void);
+void lbl_0000CAA8(void);
+void lbl_0000D4D4(void);
+void lbl_0000D598(void);
+void lbl_0000D650(void);
+void lbl_0000D7F8(void);
 void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
+void lbl_0000DA0C(void);
 void lbl_0000DAF4(void);
+void lbl_0000DBB8(void);
 void lbl_0000DD4C(void);
+void lbl_0000DE10(void);
 void lbl_0000DFA4(void);
 void lbl_0000E22C(void);
+void lbl_0000E2E0(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
+void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
-void lbl_00006E64(u32 color, char *str, float x, float y)
+// lbl_00005128 (0x5128): recompute a player's total bowling score, adding the
+// strike (kind 2) and spare (kind 3) bonuses from the following rolls.
+void lbl_00005128(struct BowlSheet *sheet)
 {
-    f32 *tbl = (f32 *)lbl_0000F020;
+    int i;
+    int total;
+    int j;
+    int n;
 
-    func_80071B1C(tbl[0x85a]);
-    set_text_pos(tbl[0x840] + x, tbl[0x840] + y);
-    set_text_mul_color(0);
-    sprite_puts(str);
-    func_80071B1C(tbl[0x73f]);
-    set_text_pos(x, y);
-    set_text_mul_color(color);
-    sprite_puts(str);
+    for (i = 0, total = 0; i < 21; i++) {
+        total += sheet->pins[i];
+        if (i < 18) {
+            if (sheet->kind[i] == 2) {
+                n = 0;
+                for (j = i + 1; n < 2; j++) {
+                    if (sheet->kind[j] != 0) {
+                        n++;
+                        total += sheet->pins[j];
+                    }
+                }
+            } else if (sheet->kind[i] == 3) {
+                if (sheet->kind[i + 1] != 0)
+                    total += sheet->pins[i + 1];
+                else
+                    total += sheet->pins[i + 2];
+            }
+        }
+    }
+    sheet->score = total;
 }
 #pragma force_active reset

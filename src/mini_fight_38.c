@@ -1,6 +1,6 @@
 /*
  * mini_fight.c -- REL module, structurally split for per-function
- * byte-matching (part 38 of 43; contiguous .text range).  Each function
+ * byte-matching (part 38 of 57; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_fight/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -282,7 +282,16 @@ void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
 void lbl_00000210(void);
+void lbl_00000270(void);
+void lbl_000033AC(void);
+void lbl_0000351C(void);
+void lbl_00003CC8(void);
+void lbl_00003DE0(void);
 void lbl_00004314(void);
+void lbl_00004498(void);
+void lbl_00004D14(void);
+void lbl_000057FC(void);
+void lbl_000058A0(void);
 void lbl_0000A690(void);
 void lbl_0000A974(void);
 void lbl_0000AAD0(void);
@@ -348,11 +357,19 @@ void lbl_0000FFC4(void);
 void lbl_00010018(void);
 void lbl_0001181C(void);
 void lbl_0001199C(void);
+void lbl_0001212C(void);
 void lbl_000121FC(void);
 void lbl_00012248(void);
+static void lbl_000122C8(void);
+static void lbl_00012E00(void);
+static void lbl_000131C4(void);
+static void lbl_000135DC(void);
 void lbl_00013C1C(void);
 void lbl_00013C6C(void);
 void lbl_00015300(void);
+void lbl_00015998(void);
+void lbl_00015A40(void);
+void lbl_00015B98(void);
 void lbl_00015C4C(void);
 void lbl_00015C8C(void);
 void lbl_00015E00(void);
@@ -362,14 +379,12 @@ void lbl_00016B8C(void);
 void lbl_00017230(void);
 void lbl_000177C8(void);
 void lbl_00017DC0(void);
+void lbl_00017EE4(void);
 void lbl_0001824C(void);
 void lbl_00019340(void);
 void lbl_00019464(void);
 void lbl_00019B3C(void);
 void lbl_00019B40(void);
-static void lbl_00019C94(void);
-static void lbl_00019E2C(void);
-static void lbl_0001A0A8(void);
 void lbl_0001A330(void);
 void lbl_0001A348(void);
 void lbl_0001A360(void);
@@ -381,24 +396,29 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_00019B40(void)
+asm void lbl_00012248(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00019B40.s"
+#include "../asm/nonmatchings/mini_fight/lbl_00012248.s"
 }
-static asm void lbl_00019C94(void)
+static asm void lbl_000122C8(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00019C94.s"
+#include "../asm/nonmatchings/mini_fight/lbl_000122C8.s"
 }
-static asm void lbl_00019E2C(void)
+static asm void lbl_00012E00(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00019E2C.s"
+#include "../asm/nonmatchings/mini_fight/lbl_00012E00.s"
 }
-static asm void lbl_0001A0A8(void)
+static asm void lbl_000131C4(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0001A0A8.s"
+#include "../asm/nonmatchings/mini_fight/lbl_000131C4.s"
+}
+static asm void lbl_000135DC(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_000135DC.s"
 }
 #pragma force_active reset

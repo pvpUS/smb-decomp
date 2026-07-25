@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_000054BC.
+ * mini_bowling.c -- REL module: isolated function lbl_00003D24.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -121,7 +121,7 @@ extern void func_8009DB40();
 extern void func_8009DDC4();
 extern void func_800AB2A0();
 extern void func_800AB444();
-extern void func_800AB6F8();
+extern int func_800AB6F8();
 extern void func_800AC43C();
 extern void func_800AC5E0();
 extern void mini_commend_free_data();
@@ -141,15 +141,22 @@ void lbl_00001F1C(void);
 void lbl_000021B4(void);
 void lbl_00002454(void);
 void lbl_000027B0(void);
+void lbl_000029A8(void);
 void lbl_00002DE0(void);
 void lbl_00003574(void);
 void lbl_00003A10(void);
 void lbl_00003D24(void);
 void lbl_00003DC0(void);
 void lbl_000042A4(void);
+void lbl_00004410(void);
 void lbl_000045E8(void);
+void lbl_00004A80(void);
 void lbl_00004BD8(void);
-char *lbl_000054BC(void);
+void lbl_00004D10(void);
+void lbl_00004DF8(void);
+void lbl_00005128(void);
+void lbl_000051E0(void);
+void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
 void lbl_000066C4(void);
@@ -159,7 +166,7 @@ void lbl_00007518(void);
 void lbl_00007650(void);
 void lbl_000076D0(void);
 void lbl_00007740(void);
-void lbl_00007778(void);
+int lbl_00007778(void);
 void lbl_00007878(void);
 void lbl_00007964(void);
 void lbl_000079E8(void);
@@ -171,16 +178,27 @@ void lbl_000080E0(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
 void lbl_000087CC(void);
+void lbl_000089FC(void);
+void lbl_00008B8C(void);
+void lbl_00008C68(void);
+void lbl_00008D2C(void);
+void lbl_00008DF0(void);
+void lbl_00008EC0(void);
 void lbl_00008FB0(void);
 void lbl_00009048(void);
 void lbl_000090CC(void);
 void lbl_00009134(void);
 void lbl_0000919C(void);
 void lbl_00009230(void);
+void lbl_000096B4(void);
 void lbl_000097B4(void);
 void lbl_00009AA8(void);
 void lbl_00009D18(void);
 void lbl_00009F60(void);
+void lbl_0000A138(void);
+void lbl_0000A23C(void);
+void lbl_0000A610(void);
+void lbl_0000A778(void);
 void lbl_0000A808(void);
 void lbl_0000A878(void);
 void lbl_0000AAAC(void);
@@ -194,54 +212,46 @@ void lbl_0000B1BC(void);
 void lbl_0000B344(void);
 void lbl_0000B460(void);
 void lbl_0000B654(void);
+void lbl_0000B848(void);
+void lbl_0000B914(void);
+void lbl_0000C1D0(void);
+void lbl_0000CAA8(void);
+void lbl_0000D4D4(void);
+void lbl_0000D598(void);
+void lbl_0000D650(void);
+void lbl_0000D7F8(void);
 void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
+void lbl_0000DA0C(void);
 void lbl_0000DAF4(void);
+void lbl_0000DBB8(void);
 void lbl_0000DD4C(void);
+void lbl_0000DE10(void);
 void lbl_0000DFA4(void);
 void lbl_0000E22C(void);
+void lbl_0000E2E0(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
+void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
 
-struct PatEntry
-{
-    char *name;
-    u16 key;
-    u8 pad[2];
-};
-
-struct BowlConfig
-{
-    u8 pad0[0x1fcc];
-    struct PatEntry arr2[27];
-};
-
 #pragma force_active on
-char *lbl_000054BC(void)
+// lbl_00003D24 (0x3D24): result-screen tick -- wait for an A press, then fade out
+// and hand control back to the mode dispatcher after 60 frames.
+void lbl_00003D24(void)
 {
-    u8 *base = lbl_0000F020;
-    struct BowlConfig *cfg = (struct BowlConfig *)base;
-    struct PatEntry *p2;
-    u16 *p1;
-    u16 key;
-    int i;
-
-    if (*(s8 *)lbl_1000013E < 2)
-        return 0;
-    key = *(u16 *)lbl_1000013C;
-    if (key & 1)
-        return 0;
-    p1 = (u16 *)(base + 0x1f78);
-    for (i = 0; i < 41; i++)
-        if (key == p1[i])
-            return 0;
-    p2 = cfg->arr2;
-    for (i = 0; i < 27; i++)
-        if (key == p2[i].key)
-            return cfg->arr2[i].name;
-    return (char *)lbl_00015380;
+    if (modeCtrl.submodeTimer == 0) {
+        if (lbl_00007778() && func_800AB6F8() == 0) {
+            u_play_sound_0(0xd1);
+            modeCtrl.submodeTimer = 60;
+            start_screen_fade(0x101, 0xffffff, 60);
+            u_play_music(60, 2);
+        }
+    } else if (--modeCtrl.submodeTimer == 0) {
+        func_800AB444();
+        func_80012434(modeCtrl.gameType);
+    }
 }
 #pragma force_active reset

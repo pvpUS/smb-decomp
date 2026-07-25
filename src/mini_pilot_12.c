@@ -1,5 +1,5 @@
 /*
- * mini_pilot.c -- REL module: isolated function lbl_00004F68.
+ * mini_pilot.c -- REL module: isolated function lbl_00004024.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -170,8 +170,10 @@ void lbl_000004E0(void);
 void lbl_00000648(void);
 void lbl_0000066C(void);
 void lbl_00000698(void);
+void lbl_000007B8(void);
 void lbl_000008AC(void);
 void lbl_00000A30(void);
+void lbl_00000BFC(void);
 void lbl_0000215C(void);
 void lbl_000021B4(void);
 void lbl_000022D8(void);
@@ -184,14 +186,12 @@ void lbl_00004570(void);
 void lbl_000048C0(void);
 void lbl_00004A14(void);
 void lbl_00004E84(void);
-void lbl_00004F68(struct Ball *ball);
-void lbl_00004FA8(struct Ball *ball);
-void lbl_00005008(struct Ball *ball);
-void lbl_00005044(struct Ball *ball);
+void lbl_00004F68(void);
+void lbl_00005044(void);
 void lbl_000051A4(void);
 void lbl_0000580C(void);
 void lbl_00005824(void);
-void lbl_00006124(struct Ball *, struct PhysicsBall *, int);
+void lbl_00006124(void);
 void lbl_00006490(void);
 void lbl_0000669C(void);
 void lbl_00006B5C(void);
@@ -200,6 +200,7 @@ void lbl_00006BF4(void);
 void lbl_00006CCC(void);
 void lbl_00006D14(void);
 void lbl_00006DFC(void);
+void lbl_00007EF8(void);
 void lbl_00008134(void);
 void lbl_000082C0(void);
 void lbl_00008568(void);
@@ -220,35 +221,40 @@ void lbl_00009F4C(void);
 void lbl_00009FB0(void);
 void lbl_0000A098(void);
 void lbl_0000A69C(void);
+void lbl_0000A754(void);
 void lbl_0000AD6C(void);
 void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
+void lbl_0000B000(void);
 void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-void lbl_00004F68(struct Ball *ball)
-{
-    ((void (**)(struct Ball *))lbl_0000C7BC)[ball->unk148](ball);
-    lbl_00006B94();
-}
+struct PilotDrawNode { struct OrdTblNode node; u32 lightGroup; int ballId; };
 
-void lbl_00004FA8(struct Ball *ball)
+void lbl_00004024(void)
 {
-    struct PhysicsBall physBall;
+    struct Ball *ball = ballInfo;
+    s8 *status = g_poolInfo.playerPool.statusList;
+    int i;
 
-    lbl_00006124(ball, &physBall, 0);
-    handle_ball_rotational_kinematics(ball, &physBall, 0);
-    update_ball_ape_transform(ball, &physBall, 0);
-    ball->unk80++;
-}
+    for (i = 0; i < g_poolInfo.playerPool.count; i++, ball++, status++) {
+        struct PilotDrawNode *node;
+        struct OrdTblNode *entry;
 
-void lbl_00005008(struct Ball *ball)
-{
-    lbl_0000580C();
-    ball->unk148 = 2;
-    lbl_00005044(ball);
+        if (*status == STAT_NULL || *status == STAT_FREEZE)
+            continue;
+        if (ball->unk148 != 2 && ball->unk148 != 3)
+            continue;
+        mathutil_mtxA_from_mtxB();
+        entry = ord_tbl_get_entry_for_pos(&ball->pos);
+        node = ord_tbl_alloc_node(sizeof(*node));
+        node->node.drawFunc = (OrdTblDrawFunc)lbl_000040EC;
+        node->lightGroup = peek_light_group();
+        node->ballId = i;
+        ord_tbl_insert_node(entry, &node->node);
+    }
 }
 #pragma force_active reset

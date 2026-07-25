@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_00009C10.
+ * mini_golf.c -- REL module: isolated function lbl_00009B68.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -139,7 +139,7 @@ extern void mini_commend_free_data();
 
 // Forward declarations so mwcc accepts `<fn>@ha/@l` and cross-function
 // branches before each function is defined below.
-struct GMAModel* lbl_000000C8(struct GMA* gma, char* name);
+void lbl_000000C8(void);
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
@@ -151,53 +151,69 @@ void lbl_00008C78(void);
 void lbl_00008D34(void);
 void lbl_00008F44(void);
 void lbl_0000907C(void);
-u8 lbl_00009178(void);
+void lbl_00009178(void);
 void lbl_000091BC(void);
-f32 lbl_000092C4(void);
-f32 lbl_000092D0(void);
-f32 lbl_000092E0(void);
-s16 lbl_000092F0(void);
-u8 lbl_00009300(void);
-u8 lbl_00009310(void);
-void lbl_00009320(Vec* p);
-void lbl_00009340(Vec* p);
-void lbl_00009360(Vec* p);
-void lbl_00009384(s16* p);
-void lbl_00009394(s16* p);
-void lbl_000093A4(s16* p);
-int lbl_000093B4(void);
-int lbl_000093C4(void);
-u8 lbl_000093D4(int a, int b);
-u8 lbl_000093F0(int i);
-u8 lbl_00009404(void);
-u16 lbl_00009414(void);
-u8 lbl_00009424(void);
-u8 lbl_00009438(void);
-void lbl_00009448(s8 a);
-u8 lbl_00009458(void);
-u8 lbl_00009478(void);
+void lbl_000092C4(void);
+void lbl_000092D0(void);
+void lbl_000092E0(void);
+void lbl_000092F0(void);
+void lbl_00009300(void);
+void lbl_00009310(void);
+void lbl_00009320(void);
+void lbl_00009340(void);
+void lbl_00009360(void);
+void lbl_00009384(void);
+void lbl_00009394(void);
+void lbl_000093A4(void);
+void lbl_000093B4(void);
+void lbl_000093C4(void);
+void lbl_000093D4(void);
+void lbl_000093F0(void);
+void lbl_00009404(void);
+void lbl_00009414(void);
+void lbl_00009424(void);
+void lbl_00009438(void);
+void lbl_00009448(void);
+void lbl_00009458(void);
+void lbl_00009478(void);
 void lbl_00009488(void);
 void lbl_00009538(void);
 void lbl_000095C4(void);
-int lbl_000097D8(void);
-int lbl_00009800(void);
+void lbl_000097D8(void);
+void lbl_00009800(void);
 void lbl_0000982C(void);
 void lbl_00009880(void);
-int lbl_00009968(u8 a);
-void lbl_000099B4(Mtx m);
-void lbl_00009B68(void);
+void lbl_00009968(void);
+void lbl_000099B4(void);
+f32 lbl_000099E0(Vec *);
+f32 lbl_00009B68(Vec *);
 void lbl_00009C10(void);
 void lbl_00009C50(void);
 void lbl_0000B280(void);
 void lbl_0000B36C(void);
+void lbl_0000B754(void);
+void lbl_0000B8A8(void);
+void lbl_0000BDEC(void);
+void lbl_0000C128(void);
+void lbl_0000C230(void);
+void lbl_0000C33C(void);
+void lbl_0000D64C(void);
+void lbl_0000E8AC(void);
 void lbl_0000E998(void);
 void lbl_0000E99C(void);
-void lbl_0000F11C(u8* s, Vec* out, f32 t);
+void lbl_0000F11C(void);
 void lbl_0000F194(void);
+void lbl_0000F750(void);
+void lbl_0000F7E8(void);
+void lbl_0000FA18(void);
+void lbl_0000FBC8(void);
+void lbl_0000FCE0(void);
+void lbl_000100D4(void);
+void lbl_00010304(void);
 void lbl_000106B8(void);
 void lbl_00010808(void);
 void lbl_000109CC(void);
-void lbl_00010E68(s16 x);
+void lbl_00010E68(void);
 void lbl_00010E74(void);
 void lbl_00011254(void);
 void lbl_000115F8(void);
@@ -219,7 +235,7 @@ void lbl_00022D4C(void);
 void lbl_000230E4(void);
 void lbl_00023AB4(void);
 void lbl_00023C68(void);
-u8 lbl_00023DC4(void);
+void lbl_00023DC4(void);
 void lbl_00023DD4(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
@@ -231,18 +247,26 @@ void lbl_000255CC(void);
 void lbl_0002572C(void);
 void lbl_00025928(void);
 void lbl_00025A44(void);
-void lbl_00025B10(void (*fn)(void));
-void lbl_00025B70(void (*fn)(void));
+void lbl_00025B10(void);
+void lbl_00025B70(void);
 void lbl_00025BD0(void);
 void lbl_00025EA8(void);
-int lbl_0002609C(void);
-int lbl_000260C0(void);
+void lbl_0002609C(void);
+void lbl_000260C0(void);
 
 #pragma force_active on
-void lbl_00009C10(void)
+f32 lbl_00009B68(Vec *v)
 {
-    s8 v = *(s8*)((u8*)eventInfo + 0x18);
-    if (v == 2 || v == 4)
-        lbl_0000B280();
+    u8 *st = (u8 *)lbl_10000000;
+
+    if (*(s16 *)(st + 0x3A) == 4)
+    {
+        if (__fabs(*(f32 *)(st + 0x60) - ballInfo[modeCtrl.currPlayer].pos.y) >
+            *(f64 *)lbl_000262F0)
+            return lbl_000099E0(v);
+    }
+    return mathutil_sqrt(mathutil_sum_of_sq_3(*(f32 *)(st + 0x5C) - v->x,
+                                              *(f32 *)(st + 0x60) - v->y,
+                                              *(f32 *)(st + 0x64) - v->z));
 }
 #pragma force_active reset

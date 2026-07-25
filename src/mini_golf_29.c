@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_00022524.
+ * mini_golf.c -- REL module: isolated function lbl_0000E8AC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -185,15 +185,31 @@ void lbl_0000982C(void);
 void lbl_00009880(void);
 void lbl_00009968(void);
 void lbl_000099B4(void);
+void lbl_000099E0(void);
 void lbl_00009B68(void);
 void lbl_00009C10(void);
 void lbl_00009C50(void);
 void lbl_0000B280(void);
 void lbl_0000B36C(void);
+void lbl_0000B754(void);
+void lbl_0000B8A8(void);
+void lbl_0000BDEC(void);
+void lbl_0000C128(void);
+void lbl_0000C230(void);
+void lbl_0000C33C(void);
+void lbl_0000D64C(void);
+void lbl_0000E8AC(struct Camera *);
 void lbl_0000E998(void);
 void lbl_0000E99C(void);
 void lbl_0000F11C(void);
 void lbl_0000F194(void);
+void lbl_0000F750(void);
+void lbl_0000F7E8(void);
+void lbl_0000FA18(void);
+void lbl_0000FBC8(void);
+void lbl_0000FCE0(void);
+void lbl_000100D4(void);
+void lbl_00010304(void);
 void lbl_000106B8(void);
 void lbl_00010808(void);
 void lbl_000109CC(void);
@@ -239,32 +255,23 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-void lbl_00022524(void)
+void lbl_0000E8AC(struct Camera *camera)
 {
-    u8 *tbl = (u8 *)lbl_00026E28;
+    u8 *p = (u8 *)lbl_00026378;
 
-    nlSprPut((NLsprarg *)(tbl + 0x690));
-    nlSprPut((NLsprarg *)(tbl + 0x6e0));
-    if ((s8)lbl_802F1BE8.unk4 == 0) {
-        if ((s32)lbl_802F1BE8.unk0 == 0) {
-            nlSprPut((NLsprarg *)(tbl + 0x730));
-        } else if ((s32)lbl_802F1BE8.unk0 == 1) {
-            nlSprPut((NLsprarg *)(tbl + 0x7d0));
-        }
-        nlSprPut((NLsprarg *)(tbl + 0x870));
-        nlSprPut((NLsprarg *)(tbl + 0x910));
-        nlSprPut((NLsprarg *)(tbl + 0x9b0));
-    } else if ((s8)lbl_802F1BE8.unk4 != 0) {
-        if ((s32)lbl_802F1BE8.unk0 == 0) {
-            nlSprPut((NLsprarg *)(tbl + 0x780));
-        } else if ((s32)lbl_802F1BE8.unk0 == 1) {
-            nlSprPut((NLsprarg *)(tbl + 0x820));
-        }
-        nlSprPut((NLsprarg *)(tbl + 0x8c0));
-        nlSprPut((NLsprarg *)(tbl + 0x960));
-        nlSprPut((NLsprarg *)(tbl + 0xa00));
-    }
-    nlSprPut((NLsprarg *)(tbl + 0xa50));
-    nlSprPut((NLsprarg *)(tbl + 0xaa0));
+    camera_clear(camera);
+    camera->subState = 0xA;
+    camera->lookAt.x = *(f32 *)(p + 0xE4) * stageBoundSphere.pos.x;
+    camera->lookAt.y = *(f32 *)(p + 0xE4) * stageBoundSphere.pos.y;
+    camera->lookAt.z = *(f32 *)(p + 0xE4) * stageBoundSphere.pos.z;
+    camera->eye.x = *(f32 *)(p + 0xE4) * stageBoundSphere.pos.x;
+    camera->eye.z = *(f32 *)(p + 0xE4) * stageBoundSphere.pos.z;
+    camera->eye.y = *(f32 *)(p + 0xE8);
+    camera->rotX = -0x4000;
+    camera->rotY = 0;
+    camera->rotZ = 0;
+    camera->sub28.fov = (s16)(mathutil_atan(
+        (*(f64 *)(p + 0x58) + stageBoundSphere.radius * *(f32 *)(p + 0xB0)) /
+        *(f64 *)(p + 0xF0)) * 2);
 }
 #pragma force_active reset

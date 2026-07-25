@@ -53,7 +53,30 @@ DEFSIG = re.compile(r'^(?:static\s+)?(?:asm\s+)?[A-Za-z_][\w\s\*]*?\b'
                     r'(lbl_[0-9A-Fa-f]+|_prolog|_epilog|_unresolved)\s*\([^;{]*\)\s*$')
 
 EXTERN_RE = re.compile(r'^\s*extern\b')
-COMMENT_RE = re.compile(r'^\s*(/\*|\*|//)')
+INLINE_COMMENT = re.compile(r'/\*.*?\*/')
+
+
+def is_comment_only(line):
+    """True only when the line carries NO code.
+
+    The old test was ``^\\s*(/\\*|\\*|//)``, which also matched an
+    offset-annotated struct field like ``    /*0x00*/ u8 filler0[0x58];``.
+    Those were then treated as regenerable scaffold and dropped, so every
+    hand-added struct in a pure-C preamble came back as an empty
+    ``struct X { };`` -- silently, and the file no longer compiled.
+    """
+    s = line.strip()
+    if not s:
+        return False                       # blank is handled by the caller
+    if s.startswith('//'):
+        return True
+    if s.startswith('*'):                  # ' * body' or ' */' continuation
+        return True
+    if s.startswith('/*'):
+        if '*/' not in s:
+            return True                    # opens a multi-line comment
+        return INLINE_COMMENT.sub('', s).strip() == ''
+    return False
 
 
 def extern_name(line):
@@ -76,7 +99,7 @@ def is_scaffold(line):
     #include, an extern, or a function forward-decl) -- i.e. NOT a hand-added
     struct/typedef/#define a match introduced in the preamble."""
     s = line.strip()
-    if s == '' or COMMENT_RE.match(line) or s.startswith('#include'):
+    if s == '' or is_comment_only(line) or s.startswith('#include'):
         return True
     if extern_name(line) is not None:
         return True

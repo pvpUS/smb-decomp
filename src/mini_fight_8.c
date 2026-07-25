@@ -1,5 +1,5 @@
 /*
- * mini_fight.c -- REL module: isolated function lbl_0000D954.
+ * mini_fight.c -- REL module: isolated function lbl_0000ABA8.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -283,7 +283,16 @@ void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
 void lbl_00000210(void);
+void lbl_00000270(void);
+void lbl_000033AC(void);
+void lbl_0000351C(void);
+void lbl_00003CC8(void);
+void lbl_00003DE0(void);
 void lbl_00004314(void);
+void lbl_00004498(void);
+void lbl_00004D14(void);
+void lbl_000057FC(void);
+void lbl_000058A0(void);
 void lbl_0000A690(void);
 void lbl_0000A974(void);
 void lbl_0000AAD0(void);
@@ -349,11 +358,15 @@ void lbl_0000FFC4(void);
 void lbl_00010018(void);
 void lbl_0001181C(void);
 void lbl_0001199C(void);
+void lbl_0001212C(void);
 void lbl_000121FC(void);
 void lbl_00012248(void);
 void lbl_00013C1C(void);
 void lbl_00013C6C(void);
 void lbl_00015300(void);
+void lbl_00015998(void);
+void lbl_00015A40(void);
+void lbl_00015B98(void);
 void lbl_00015C4C(void);
 void lbl_00015C8C(void);
 void lbl_00015E00(void);
@@ -363,6 +376,7 @@ void lbl_00016B8C(void);
 void lbl_00017230(void);
 void lbl_000177C8(void);
 void lbl_00017DC0(void);
+void lbl_00017EE4(void);
 void lbl_0001824C(void);
 void lbl_00019340(void);
 void lbl_00019464(void);
@@ -375,28 +389,17 @@ void lbl_0001A37C(void);
 void lbl_0001A3DC(void);
 void lbl_0001A550(void);
 void lbl_0001A554(void);
-void lbl_0001B910(void);
+void lbl_0001B910();
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-void lbl_0000D954(void)
+void lbl_0000ABA8(void)
 {
-    int i;
-    u8 *p;
-    s8 *status;
-
-    status = g_poolInfo.playerPool.statusList;
-    p = lbl_10017664 + 8;
-    for (i = 4; i > 0; i--, status++, p += 0x18)
-    {
-        if (*status != 0)
-            *(u32 *)p = 0;
-        else
-            *(u32 *)p = -1;
-        *(u16 *)(p + 6) = 0;
-        memset(p + 8, 0, 8);
-        *(u16 *)(p + 0x14) = 0;
-        *(u16 *)(p + 0x16) = 0;
-    }
+    lbl_0000E4D4();
+    if (*(s32*)lbl_10018CFC & 1)
+        lbl_0000AD9C();
+    else
+        lbl_0000ABE8();
+    lbl_00019B40();
 }
 #pragma force_active reset

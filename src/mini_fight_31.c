@@ -1,5 +1,5 @@
 /*
- * mini_fight.c -- REL module: isolated function lbl_000121FC.
+ * mini_fight.c -- REL module: isolated function lbl_0000FF30.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -283,7 +283,16 @@ void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
 void lbl_00000210(void);
+void lbl_00000270(void);
+void lbl_000033AC(void);
+void lbl_0000351C(void);
+void lbl_00003CC8(void);
+void lbl_00003DE0(void);
 void lbl_00004314(void);
+void lbl_00004498(void);
+void lbl_00004D14(void);
+void lbl_000057FC(void);
+void lbl_000058A0(void);
 void lbl_0000A690(void);
 void lbl_0000A974(void);
 void lbl_0000AAD0(void);
@@ -349,11 +358,15 @@ void lbl_0000FFC4(void);
 void lbl_00010018(void);
 void lbl_0001181C(void);
 void lbl_0001199C(void);
+void lbl_0001212C(void);
 void lbl_000121FC(void);
 void lbl_00012248(void);
 void lbl_00013C1C(void);
 void lbl_00013C6C(void);
 void lbl_00015300(void);
+void lbl_00015998(void);
+void lbl_00015A40(void);
+void lbl_00015B98(void);
 void lbl_00015C4C(void);
 void lbl_00015C8C(void);
 void lbl_00015E00(void);
@@ -363,6 +376,7 @@ void lbl_00016B8C(void);
 void lbl_00017230(void);
 void lbl_000177C8(void);
 void lbl_00017DC0(void);
+void lbl_00017EE4(void);
 void lbl_0001824C(void);
 void lbl_00019340(void);
 void lbl_00019464(void);
@@ -375,22 +389,11 @@ void lbl_0001A37C(void);
 void lbl_0001A3DC(void);
 void lbl_0001A550(void);
 void lbl_0001A554(void);
-void lbl_0001B910(void);
+void lbl_0001B910();
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-void lbl_000121FC(void)
+void lbl_0000FF30(void)
 {
-    struct Camera *camera;
-    struct Camera *cameraBackup = currentCamera;
-    int i;
-
-    camera = &cameraInfo[0];
-    for (i = 0; i < 4; i++, camera++)
-    {
-        currentCamera = camera;
-        currentCamera->subState = -1;
-    }
-    currentCamera = cameraBackup;
 }
 #pragma force_active reset

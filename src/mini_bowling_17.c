@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_00009134.
+ * mini_bowling.c -- REL module: isolated function lbl_000086E4.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -141,14 +141,21 @@ void lbl_00001F1C(void);
 void lbl_000021B4(void);
 void lbl_00002454(void);
 void lbl_000027B0(void);
+void lbl_000029A8(void);
 void lbl_00002DE0(void);
 void lbl_00003574(void);
 void lbl_00003A10(void);
 void lbl_00003D24(void);
 void lbl_00003DC0(void);
 void lbl_000042A4(void);
+void lbl_00004410(void);
 void lbl_000045E8(void);
+void lbl_00004A80(void);
 void lbl_00004BD8(void);
+void lbl_00004D10(void);
+void lbl_00004DF8(void);
+void lbl_00005128(void);
+void lbl_000051E0(void);
 void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
@@ -168,19 +175,30 @@ void lbl_00007C54(void);
 void lbl_00007E74(void);
 void lbl_00007FE0(void);
 void lbl_000080E0(void);
-void lbl_000086E4(void);
+f32 lbl_000086E4(Vec *v);
 void lbl_0000871C(void);
-void lbl_000087CC(struct Camera *, Vec *, Vec *, int, float);
+void lbl_000087CC(void);
+void lbl_000089FC(void);
+void lbl_00008B8C(void);
+void lbl_00008C68(void);
+void lbl_00008D2C(void);
+void lbl_00008DF0(void);
+void lbl_00008EC0(void);
 void lbl_00008FB0(void);
 void lbl_00009048(void);
 void lbl_000090CC(void);
-void lbl_00009134(struct Camera *camera, struct Ball *ball);
+void lbl_00009134(void);
 void lbl_0000919C(void);
 void lbl_00009230(void);
+void lbl_000096B4(void);
 void lbl_000097B4(void);
 void lbl_00009AA8(void);
 void lbl_00009D18(void);
 void lbl_00009F60(void);
+void lbl_0000A138(void);
+void lbl_0000A23C(void);
+void lbl_0000A610(void);
+void lbl_0000A778(void);
 void lbl_0000A808(void);
 void lbl_0000A878(void);
 void lbl_0000AAAC(void);
@@ -194,31 +212,47 @@ void lbl_0000B1BC(void);
 void lbl_0000B344(void);
 void lbl_0000B460(void);
 void lbl_0000B654(void);
+void lbl_0000B848(void);
+void lbl_0000B914(void);
+void lbl_0000C1D0(void);
+void lbl_0000CAA8(void);
+void lbl_0000D4D4(void);
+void lbl_0000D598(void);
+void lbl_0000D650(void);
+void lbl_0000D7F8(void);
 void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
+void lbl_0000DA0C(void);
 void lbl_0000DAF4(void);
+void lbl_0000DBB8(void);
 void lbl_0000DD4C(void);
+void lbl_0000DE10(void);
 void lbl_0000DFA4(void);
 void lbl_0000E22C(void);
+void lbl_0000E2E0(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
+void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
 
 #pragma force_active on
-void lbl_00009134(struct Camera *camera, struct Ball *ball)
+// lbl_000086E4 (0x86E4): magnitude of a Vec -- mathutil_sqrt of the squared length.
+f32 lbl_000086E4(register Vec *v)
 {
-    Vec sp1c;
-    Vec sp10;
-    f32 *tbl = (f32 *)lbl_00011338;
-
-    sp1c.x = tbl[0x37];
-    sp1c.y = tbl[0x38];
-    sp1c.z = tbl[0x39];
-    sp10.x = tbl[0x3a];
-    sp10.y = tbl[0x3b];
-    sp10.z = tbl[0x3c];
-    lbl_000087CC(camera, &sp1c, &sp10, 0x1800, tbl[0x26]);
+    register float x, y, z, result;
+    // clang-format off
+    asm
+    {
+        lfs x, v->x
+        lfs y, v->y
+        lfs z, v->z
+        fmuls result, x, x
+        fmadds result, y, y, result
+        fmadds result, z, z, result
+    }
+    // clang-format on
+    return mathutil_sqrt(result);
 }
 #pragma force_active reset
