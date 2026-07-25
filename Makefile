@@ -411,6 +411,46 @@ ALL_RELS += mkbe.sel_stage.rel
 # mkbe.rel_mini_race.rel sources
 SOURCES := \
 	src/mini_race.c \
+	src/mini_race_2.c \
+	src/mini_race_3.c \
+	src/mini_race_4.c \
+	src/mini_race_5.c \
+	src/mini_race_6.c \
+	src/mini_race_7.c \
+	src/mini_race_8.c \
+	src/mini_race_9.c \
+	src/mini_race_10.c \
+	src/mini_race_11.c \
+	src/mini_race_12.c \
+	src/mini_race_13.c \
+	src/mini_race_14.c \
+	src/mini_race_15.c \
+	src/mini_race_16.c \
+	src/mini_race_17.c \
+	src/mini_race_18.c \
+	src/mini_race_19.c \
+	src/mini_race_20.c \
+	src/mini_race_21.c \
+	src/mini_race_22.c \
+	src/mini_race_23.c \
+	src/mini_race_24.c \
+	src/mini_race_25.c \
+	src/mini_race_26.c \
+	src/mini_race_27.c \
+	src/mini_race_28.c \
+	src/mini_race_29.c \
+	src/mini_race_30.c \
+	src/mini_race_31.c \
+	src/mini_race_32.c \
+	src/mini_race_33.c \
+	src/mini_race_34.c \
+	src/mini_race_35.c \
+	src/mini_race_36.c \
+	src/mini_race_37.c \
+	src/mini_race_38.c \
+	src/mini_race_39.c \
+	src/mini_race_40.c \
+	src/mini_race_41.c \
 	asm/mini_race.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)

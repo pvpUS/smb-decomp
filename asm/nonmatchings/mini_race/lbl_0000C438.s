@@ -1,0 +1,87 @@
+/* 0000C438 7C0802A6 */ mflr r0
+/* 0000C43C 3C800000 */ lis r4, lbl_00015C08@ha
+/* 0000C440 90010004 */ stw r0, 4(r1)
+/* 0000C444 3C600000 */ lis r3, lbl_00013C48@ha
+/* 0000C448 9421FFD0 */ stwu r1, -0x30(r1)
+/* 0000C44C DBE10028 */ stfd f31, 0x28(r1)
+/* 0000C450 FFE01090 */ fmr f31, f2
+/* 0000C454 DBC10020 */ stfd f30, 0x20(r1)
+/* 0000C458 FFC00890 */ fmr f30, f1
+/* 0000C45C 93E1001C */ stw r31, 0x1c(r1)
+/* 0000C460 93C10018 */ stw r30, 0x18(r1)
+/* 0000C464 3BC30000 */ addi r30, r3, lbl_00013C48@l
+/* 0000C468 93A10014 */ stw r29, 0x14(r1)
+/* 0000C46C 3BA40000 */ addi r29, r4, lbl_00015C08@l
+/* 0000C470 93810010 */ stw r28, 0x10(r1)
+/* 0000C474 4BFF3D09 */ bl create_sprite
+/* 0000C478 7C7C1B79 */ or. r28, r3, r3
+/* 0000C47C 418200EC */ beq lbl_0000C568
+/* 0000C480 38000001 */ li r0, 1
+/* 0000C484 4CC63182 */ crclr 6
+/* 0000C488 981C0000 */ stb r0, 0(r28)
+/* 0000C48C 38A0071B */ li r5, 0x71b
+/* 0000C490 38000004 */ li r0, 4
+/* 0000C494 D3DC0004 */ stfs f30, 4(r28)
+/* 0000C498 387C008C */ addi r3, r28, 0x8c
+/* 0000C49C 389D003C */ addi r4, r29, 0x3c
+/* 0000C4A0 D3FC0008 */ stfs f31, 8(r28)
+/* 0000C4A4 B0BC003C */ sth r5, 0x3c(r28)
+/* 0000C4A8 981C0003 */ stb r0, 3(r28)
+/* 0000C4AC C01E00D0 */ lfs f0, 0xd0(r30)
+/* 0000C4B0 D01C004C */ stfs f0, 0x4c(r28)
+/* 0000C4B4 4BFF3CC9 */ bl sprintf
+/* 0000C4B8 7F83E378 */ mr r3, r28
+/* 0000C4BC 4BFF3CC1 */ bl create_child_sprite
+/* 0000C4C0 7C7C1B79 */ or. r28, r3, r3
+/* 0000C4C4 418200A4 */ beq lbl_0000C568
+/* 0000C4C8 3BE00000 */ li r31, 0
+/* 0000C4CC 4CC63182 */ crclr 6
+/* 0000C4D0 9BFC0000 */ stb r31, 0(r28)
+/* 0000C4D4 3C600000 */ lis r3, lbl_0000C590@ha
+/* 0000C4D8 38A0004A */ li r5, 0x4a
+/* 0000C4DC C01E00D4 */ lfs f0, 0xd4(r30)
+/* 0000C4E0 38030000 */ addi r0, r3, lbl_0000C590@l
+/* 0000C4E4 387C008C */ addi r3, r28, 0x8c
+/* 0000C4E8 D01C0004 */ stfs f0, 4(r28)
+/* 0000C4EC 389D0048 */ addi r4, r29, 0x48
+/* 0000C4F0 C01E003C */ lfs f0, 0x3c(r30)
+/* 0000C4F4 D01C0008 */ stfs f0, 8(r28)
+/* 0000C4F8 98BC0001 */ stb r5, 1(r28)
+/* 0000C4FC 9BFC0003 */ stb r31, 3(r28)
+/* 0000C500 C01E00D8 */ lfs f0, 0xd8(r30)
+/* 0000C504 D01C004C */ stfs f0, 0x4c(r28)
+/* 0000C508 901C0034 */ stw r0, 0x34(r28)
+/* 0000C50C 4BFF3C71 */ bl sprintf
+/* 0000C510 7F83E378 */ mr r3, r28
+/* 0000C514 4BFF3C69 */ bl create_child_sprite
+/* 0000C518 7C671B79 */ or. r7, r3, r3
+/* 0000C51C 4182004C */ beq lbl_0000C568
+/* 0000C520 9BE70000 */ stb r31, 0(r7)
+/* 0000C524 3C600000 */ lis r3, lbl_0000C5EC@ha
+/* 0000C528 38C0004C */ li r6, 0x4c
+/* 0000C52C 4CC63182 */ crclr 6
+/* 0000C530 C01E00DC */ lfs f0, 0xdc(r30)
+/* 0000C534 38A00002 */ li r5, 2
+/* 0000C538 D0070004 */ stfs f0, 4(r7)
+/* 0000C53C 38030000 */ addi r0, r3, lbl_0000C5EC@l
+/* 0000C540 3867008C */ addi r3, r7, 0x8c
+/* 0000C544 C01E00DC */ lfs f0, 0xdc(r30)
+/* 0000C548 389D004C */ addi r4, r29, 0x4c
+/* 0000C54C D0070008 */ stfs f0, 8(r7)
+/* 0000C550 98C70001 */ stb r6, 1(r7)
+/* 0000C554 98A70003 */ stb r5, 3(r7)
+/* 0000C558 C01E00D8 */ lfs f0, 0xd8(r30)
+/* 0000C55C D007004C */ stfs f0, 0x4c(r7)
+/* 0000C560 90070034 */ stw r0, 0x34(r7)
+/* 0000C564 4BFF3C19 */ bl sprintf
+lbl_0000C568:
+/* 0000C568 80010034 */ lwz r0, 0x34(r1)
+/* 0000C56C CBE10028 */ lfd f31, 0x28(r1)
+/* 0000C570 CBC10020 */ lfd f30, 0x20(r1)
+/* 0000C574 7C0803A6 */ mtlr r0
+/* 0000C578 83E1001C */ lwz r31, 0x1c(r1)
+/* 0000C57C 83C10018 */ lwz r30, 0x18(r1)
+/* 0000C580 83A10014 */ lwz r29, 0x14(r1)
+/* 0000C584 83810010 */ lwz r28, 0x10(r1)
+/* 0000C588 38210030 */ addi r1, r1, 0x30
+/* 0000C58C 4E800020 */ blr 

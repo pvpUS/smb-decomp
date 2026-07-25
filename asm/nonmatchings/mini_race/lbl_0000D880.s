@@ -1,0 +1,27 @@
+/* 0000D880 7C0802A6 */ mflr r0
+/* 0000D884 90010004 */ stw r0, 4(r1)
+/* 0000D888 9421FFF8 */ stwu r1, -8(r1)
+/* 0000D88C 4BFF28F1 */ bl create_sprite
+/* 0000D890 28030000 */ cmplwi r3, 0
+/* 0000D894 41820044 */ beq lbl_0000D8D8
+/* 0000D898 3C800000 */ lis r4, lbl_00013DB0@ha
+/* 0000D89C 4CC63182 */ crclr 6
+/* 0000D8A0 C0040000 */ lfs f0, lbl_00013DB0@l(r4)
+/* 0000D8A4 3C800000 */ lis r4, lbl_00015CE4@ha
+/* 0000D8A8 3C000004 */ lis r0, 4
+/* 0000D8AC D003004C */ stfs f0, 0x4c(r3)
+/* 0000D8B0 3CC00000 */ lis r6, lbl_0000D8E8@ha
+/* 0000D8B4 3CA00000 */ lis r5, lbl_0000D8EC@ha
+/* 0000D8B8 90030074 */ stw r0, 0x74(r3)
+/* 0000D8BC 38060000 */ addi r0, r6, lbl_0000D8E8@l
+/* 0000D8C0 38840000 */ addi r4, r4, lbl_00015CE4@l
+/* 0000D8C4 90030034 */ stw r0, 0x34(r3)
+/* 0000D8C8 38050000 */ addi r0, r5, lbl_0000D8EC@l
+/* 0000D8CC 90030038 */ stw r0, 0x38(r3)
+/* 0000D8D0 3863008C */ addi r3, r3, 0x8c
+/* 0000D8D4 4BFF28A9 */ bl sprintf
+lbl_0000D8D8:
+/* 0000D8D8 8001000C */ lwz r0, 0xc(r1)
+/* 0000D8DC 38210008 */ addi r1, r1, 8
+/* 0000D8E0 7C0803A6 */ mtlr r0
+/* 0000D8E4 4E800020 */ blr 

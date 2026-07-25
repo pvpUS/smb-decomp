@@ -1,0 +1,27 @@
+/* 0000FE90 9421FFE8 */ stwu r1, -0x18(r1)
+/* 0000FE94 3C600000 */ lis r3, lbl_00013C70@ha
+/* 0000FE98 A8A40010 */ lha r5, 0x10(r4)
+/* 0000FE9C C8430000 */ lfd f2, lbl_00013C70@l(r3)
+/* 0000FEA0 3C600000 */ lis r3, lbl_00013C48@ha
+/* 0000FEA4 6CA08000 */ xoris r0, r5, 0x8000
+/* 0000FEA8 90010014 */ stw r0, 0x14(r1)
+/* 0000FEAC 3C004330 */ lis r0, 0x4330
+/* 0000FEB0 38630000 */ addi r3, r3, lbl_00013C48@l
+/* 0000FEB4 90010010 */ stw r0, 0x10(r1)
+/* 0000FEB8 7CA00735 */ extsh. r0, r5
+/* 0000FEBC C00300AC */ lfs f0, 0xac(r3)
+/* 0000FEC0 C8210010 */ lfd f1, 0x10(r1)
+/* 0000FEC4 EC211028 */ fsubs f1, f1, f2
+/* 0000FEC8 EC410024 */ fdivs f2, f1, f0
+/* 0000FECC 4081000C */ ble lbl_0000FED8
+/* 0000FED0 3805FFFF */ addi r0, r5, -1
+/* 0000FED4 B0040010 */ sth r0, 0x10(r4)
+lbl_0000FED8:
+/* 0000FED8 C80301D8 */ lfd f0, 0x1d8(r3)
+/* 0000FEDC C8230288 */ lfd f1, 0x288(r3)
+/* 0000FEE0 FC001028 */ fsub f0, f0, f2
+/* 0000FEE4 FC010032 */ fmul f0, f1, f0
+/* 0000FEE8 FC000018 */ frsp f0, f0
+/* 0000FEEC D0040044 */ stfs f0, 0x44(r4)
+/* 0000FEF0 38210018 */ addi r1, r1, 0x18
+/* 0000FEF4 4E800020 */ blr 

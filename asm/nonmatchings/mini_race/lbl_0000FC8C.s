@@ -1,0 +1,15 @@
+/* 0000FC8C A8640010 */ lha r3, 0x10(r4)
+/* 0000FC90 2C030000 */ cmpwi r3, 0
+/* 0000FC94 4180000C */ blt lbl_0000FCA0
+/* 0000FC98 3803FFFF */ addi r0, r3, -1
+/* 0000FC9C B0040010 */ sth r0, 0x10(r4)
+lbl_0000FCA0:
+/* 0000FCA0 A8040010 */ lha r0, 0x10(r4)
+/* 0000FCA4 2C000000 */ cmpwi r0, 0
+/* 0000FCA8 4C800020 */ bgelr 
+/* 0000FCAC 3C600000 */ lis r3, lbl_0000FCC4@ha
+/* 0000FCB0 38030000 */ addi r0, r3, lbl_0000FCC4@l
+/* 0000FCB4 90040034 */ stw r0, 0x34(r4)
+/* 0000FCB8 38000014 */ li r0, 0x14
+/* 0000FCBC B0040010 */ sth r0, 0x10(r4)
+/* 0000FCC0 4E800020 */ blr 

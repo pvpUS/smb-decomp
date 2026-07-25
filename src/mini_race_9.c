@@ -1,6 +1,6 @@
 /*
  * mini_race.c -- REL module, structurally split for per-function
- * byte-matching (part 1 of 41; contiguous .text range).  Each function
+ * byte-matching (part 9 of 41; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_race/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -235,22 +235,8 @@ extern void u_draw_ball_shadow();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
-static void lbl_00000228(void);
-static void lbl_0000048C(void);
-static void lbl_0000056C(void);
-static void lbl_000007EC(void);
-static void lbl_00000838(void);
 void lbl_000008B4(void);
-static void lbl_00002018(void);
-static void lbl_000020A4(void);
-static void lbl_000021C8(void);
 void lbl_000024A0(void);
-static void lbl_000025E4(void);
-static void lbl_00002968(void);
-static void lbl_00002B54(void);
-static void lbl_00002BBC(void);
-static void lbl_00002E04(void);
-static void lbl_00002FA4(void);
 void lbl_00003094(void);
 void lbl_000030DC(void);
 void lbl_00003120(void);
@@ -260,8 +246,48 @@ void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+static void lbl_000040C0(void);
+static void lbl_00004284(void);
+static void lbl_000044AC(void);
+static void lbl_00004634(void);
+static void lbl_0000480C(void);
+static void lbl_00004D78(void);
+static void lbl_0000528C(void);
+static void lbl_000055CC(void);
+static void lbl_00005A84(void);
+static void lbl_00005CEC(void);
+static void lbl_00005DDC(void);
+static void lbl_00005FC4(void);
+static void lbl_0000612C(void);
+static void lbl_000061D0(void);
+static void lbl_00006248(void);
+static void lbl_000062F8(void);
+static void lbl_000065A0(void);
 void lbl_000068E8(void);
+static void lbl_000069D0(void);
+static void lbl_00006CF0(void);
+static void lbl_00006FF4(void);
+static void lbl_000070FC(void);
+static void lbl_00007688(void);
+static void lbl_00007710(void);
+static void lbl_00007800(void);
+static void lbl_00007900(void);
+static void lbl_00007950(void);
+static void lbl_000079B8(void);
+static void lbl_00007A9C(void);
+static void lbl_00007D4C(void);
+static void lbl_00007F88(void);
+static void lbl_00008160(void);
+static void lbl_00008324(void);
+static void lbl_000084A0(void);
+static void lbl_000085D8(void);
+static void lbl_00008A10(void);
+static void lbl_00008B60(void);
 void lbl_00008C4C(void);
+static void lbl_00009A08(void);
+static void lbl_00009D3C(void);
+static void lbl_0000A364(void);
+static void lbl_0000A4DC(void);
 void lbl_0000A9C4(void);
 void lbl_0000A9EC(void);
 void lbl_0000ACF4(void);
@@ -319,99 +345,219 @@ void lbl_0001157C(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void _prolog(void)
+asm void lbl_00003474(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/_prolog.s"
+#include "../asm/nonmatchings/mini_race/lbl_00003474.s"
 }
-asm void _epilog(void)
+static asm void lbl_000040C0(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/_epilog.s"
+#include "../asm/nonmatchings/mini_race/lbl_000040C0.s"
 }
-asm void _unresolved(void)
+static asm void lbl_00004284(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/_unresolved.s"
+#include "../asm/nonmatchings/mini_race/lbl_00004284.s"
 }
-static asm void lbl_00000228(void)
+static asm void lbl_000044AC(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00000228.s"
+#include "../asm/nonmatchings/mini_race/lbl_000044AC.s"
 }
-static asm void lbl_0000048C(void)
+static asm void lbl_00004634(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000048C.s"
+#include "../asm/nonmatchings/mini_race/lbl_00004634.s"
 }
-static asm void lbl_0000056C(void)
+static asm void lbl_0000480C(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000056C.s"
+#include "../asm/nonmatchings/mini_race/lbl_0000480C.s"
 }
-static asm void lbl_000007EC(void)
+static asm void lbl_00004D78(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000007EC.s"
+#include "../asm/nonmatchings/mini_race/lbl_00004D78.s"
 }
-static asm void lbl_00000838(void)
+static asm void lbl_0000528C(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00000838.s"
+#include "../asm/nonmatchings/mini_race/lbl_0000528C.s"
 }
-asm void lbl_000008B4(void)
+static asm void lbl_000055CC(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000008B4.s"
+#include "../asm/nonmatchings/mini_race/lbl_000055CC.s"
 }
-static asm void lbl_00002018(void)
+static asm void lbl_00005A84(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00002018.s"
+#include "../asm/nonmatchings/mini_race/lbl_00005A84.s"
 }
-static asm void lbl_000020A4(void)
+static asm void lbl_00005CEC(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000020A4.s"
+#include "../asm/nonmatchings/mini_race/lbl_00005CEC.s"
 }
-static asm void lbl_000021C8(void)
+static asm void lbl_00005DDC(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000021C8.s"
+#include "../asm/nonmatchings/mini_race/lbl_00005DDC.s"
 }
-asm void lbl_000024A0(void)
+static asm void lbl_00005FC4(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000024A0.s"
+#include "../asm/nonmatchings/mini_race/lbl_00005FC4.s"
 }
-static asm void lbl_000025E4(void)
+static asm void lbl_0000612C(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000025E4.s"
+#include "../asm/nonmatchings/mini_race/lbl_0000612C.s"
 }
-static asm void lbl_00002968(void)
+static asm void lbl_000061D0(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00002968.s"
+#include "../asm/nonmatchings/mini_race/lbl_000061D0.s"
 }
-static asm void lbl_00002B54(void)
+static asm void lbl_00006248(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00002B54.s"
+#include "../asm/nonmatchings/mini_race/lbl_00006248.s"
 }
-static asm void lbl_00002BBC(void)
+static asm void lbl_000062F8(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00002BBC.s"
+#include "../asm/nonmatchings/mini_race/lbl_000062F8.s"
 }
-static asm void lbl_00002E04(void)
+static asm void lbl_000065A0(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00002E04.s"
+#include "../asm/nonmatchings/mini_race/lbl_000065A0.s"
 }
-static asm void lbl_00002FA4(void)
+asm void lbl_000068E8(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00002FA4.s"
+#include "../asm/nonmatchings/mini_race/lbl_000068E8.s"
+}
+static asm void lbl_000069D0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_000069D0.s"
+}
+static asm void lbl_00006CF0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00006CF0.s"
+}
+static asm void lbl_00006FF4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00006FF4.s"
+}
+static asm void lbl_000070FC(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_000070FC.s"
+}
+static asm void lbl_00007688(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00007688.s"
+}
+static asm void lbl_00007710(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00007710.s"
+}
+static asm void lbl_00007800(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00007800.s"
+}
+static asm void lbl_00007900(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00007900.s"
+}
+static asm void lbl_00007950(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00007950.s"
+}
+static asm void lbl_000079B8(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_000079B8.s"
+}
+static asm void lbl_00007A9C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00007A9C.s"
+}
+static asm void lbl_00007D4C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00007D4C.s"
+}
+static asm void lbl_00007F88(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00007F88.s"
+}
+static asm void lbl_00008160(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00008160.s"
+}
+static asm void lbl_00008324(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00008324.s"
+}
+static asm void lbl_000084A0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_000084A0.s"
+}
+static asm void lbl_000085D8(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_000085D8.s"
+}
+static asm void lbl_00008A10(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00008A10.s"
+}
+static asm void lbl_00008B60(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00008B60.s"
+}
+asm void lbl_00008C4C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00008C4C.s"
+}
+static asm void lbl_00009A08(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00009A08.s"
+}
+static asm void lbl_00009D3C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00009D3C.s"
+}
+static asm void lbl_0000A364(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_0000A364.s"
+}
+static asm void lbl_0000A4DC(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_0000A4DC.s"
 }
 #pragma force_active reset
