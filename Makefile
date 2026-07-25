@@ -549,6 +549,19 @@ SOURCES := \
 	src/mini_pilot_15.c \
 	src/mini_pilot_16.c \
 	src/mini_pilot_17.c \
+	src/mini_pilot_18.c \
+	src/mini_pilot_19.c \
+	src/mini_pilot_20.c \
+	src/mini_pilot_21.c \
+	src/mini_pilot_22.c \
+	src/mini_pilot_23.c \
+	src/mini_pilot_24.c \
+	src/mini_pilot_25.c \
+	src/mini_pilot_26.c \
+	src/mini_pilot_27.c \
+	src/mini_pilot_28.c \
+	src/mini_pilot_29.c \
+	src/mini_pilot_30.c \
 	asm/mini_pilot.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)

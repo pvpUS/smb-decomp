@@ -1,5 +1,5 @@
 /*
- * mini_pilot.c -- REL module: isolated function lbl_00003B6C.
+ * mini_pilot.c -- REL module: isolated function lbl_0000215C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -170,6 +170,11 @@ void lbl_000004E0(void);
 void lbl_00000648(void);
 void lbl_0000066C(void);
 void lbl_00000698(void);
+void lbl_000008AC(void);
+void lbl_00000A30(void);
+void lbl_0000215C(void);
+void lbl_000021B4(void);
+void lbl_000022D8(void);
 void lbl_00003B6C(void);
 void lbl_00003BDC(void);
 void lbl_00004024(void);
@@ -180,6 +185,7 @@ void lbl_000048C0(void);
 void lbl_00004A14(void);
 void lbl_00004E84(void);
 void lbl_00004F68(void);
+void lbl_00005044(void);
 void lbl_000051A4(void);
 void lbl_0000580C(void);
 void lbl_00005824(void);
@@ -195,12 +201,22 @@ void lbl_00006DFC(void);
 void lbl_00008134(void);
 void lbl_000082C0(void);
 void lbl_00008568(void);
+void lbl_000085B4(void);
+void lbl_0000893C(void);
+void lbl_000089F8(void);
+void lbl_00008C40(void);
+void lbl_000090A0(void);
+void lbl_000091EC(void);
+void lbl_00009440(void);
 void lbl_000097AC(void);
 void lbl_000097C8(void);
 void lbl_000099A4(void);
+void lbl_00009A98(void);
 void lbl_00009B04(void);
 void lbl_00009C18(void);
 void lbl_00009F4C(void);
+void lbl_00009FB0(void);
+void lbl_0000A098(void);
 void lbl_0000A69C(void);
 void lbl_0000AD6C(void);
 void lbl_0000AE94(void);
@@ -211,21 +227,13 @@ void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-void lbl_00003B6C(void)
+void lbl_0000215C(void)
 {
-    switch (lbl_802F1FF6) {
-    case 0x1c:
-        break;
-    case 0x1b:
-    default:
-        lbl_00003BDC();
-        break;
-    case 0x1a:
-        lbl_00003BDC();
-        func_8009CD5C();
-        if (((s8 *)eventInfo)[0x138] == 2)
-            effect_draw();
-        break;
-    }
+    s32 player = modeCtrl.currPlayer;
+    s16 *p = &((s16 *)lbl_802F1FE4)[player];
+
+    if (*p != 0)
+        ((s16 *)((u8 *)lbl_80285A80 + player * 12))[*p]++;
+    *p = 0;
 }
 #pragma force_active reset

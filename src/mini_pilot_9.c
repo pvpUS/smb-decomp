@@ -1,6 +1,6 @@
 /*
  * mini_pilot.c -- REL module, structurally split for per-function
- * byte-matching (part 9 of 17; contiguous .text range).  Each function
+ * byte-matching (part 9 of 30; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_pilot/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -169,6 +169,11 @@ void lbl_000004E0(void);
 void lbl_00000648(void);
 void lbl_0000066C(void);
 void lbl_00000698(void);
+void lbl_000008AC(void);
+void lbl_00000A30(void);
+void lbl_0000215C(void);
+void lbl_000021B4(void);
+void lbl_000022D8(void);
 void lbl_00003B6C(void);
 void lbl_00003BDC(void);
 void lbl_00004024(void);
@@ -179,9 +184,8 @@ void lbl_000048C0(void);
 void lbl_00004A14(void);
 void lbl_00004E84(void);
 void lbl_00004F68(void);
-static void lbl_00005044(void);
+void lbl_00005044(void);
 void lbl_000051A4(void);
-static void lbl_00005414(void);
 void lbl_0000580C(void);
 void lbl_00005824(void);
 void lbl_00006124(void);
@@ -196,12 +200,22 @@ void lbl_00006DFC(void);
 void lbl_00008134(void);
 void lbl_000082C0(void);
 void lbl_00008568(void);
+void lbl_000085B4(void);
+void lbl_0000893C(void);
+void lbl_000089F8(void);
+void lbl_00008C40(void);
+void lbl_000090A0(void);
+void lbl_000091EC(void);
+void lbl_00009440(void);
 void lbl_000097AC(void);
 void lbl_000097C8(void);
 void lbl_000099A4(void);
+void lbl_00009A98(void);
 void lbl_00009B04(void);
 void lbl_00009C18(void);
 void lbl_00009F4C(void);
+void lbl_00009FB0(void);
+void lbl_0000A098(void);
 void lbl_0000A69C(void);
 void lbl_0000AD6C(void);
 void lbl_0000AE94(void);
@@ -212,54 +226,9 @@ void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-asm void lbl_000040EC(void)
+asm void lbl_00003BDC(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_000040EC.s"
-}
-asm void lbl_00004450(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00004450.s"
-}
-asm void lbl_00004570(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00004570.s"
-}
-asm void lbl_000048C0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_000048C0.s"
-}
-asm void lbl_00004A14(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00004A14.s"
-}
-asm void lbl_00004E84(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00004E84.s"
-}
-asm void lbl_00004F68(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00004F68.s"
-}
-static asm void lbl_00005044(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00005044.s"
-}
-asm void lbl_000051A4(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_000051A4.s"
-}
-static asm void lbl_00005414(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00005414.s"
+#include "../asm/nonmatchings/mini_pilot/lbl_00003BDC.s"
 }
 #pragma force_active reset
