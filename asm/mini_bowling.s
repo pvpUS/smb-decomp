@@ -6251,6 +6251,7 @@ lbl_00014E10:
 
 # 5
 .section .data
+.balign 8
 lbl_00014F20:
     # 0x14F20
     .4byte 0x00000001

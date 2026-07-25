@@ -1,0 +1,314 @@
+/* 00004A14 7C0802A6 */ mflr r0
+/* 00004A18 3C600000 */ lis r3, currentBall@ha
+/* 00004A1C 90010004 */ stw r0, 4(r1)
+/* 00004A20 9421FFE8 */ stwu r1, -0x18(r1)
+/* 00004A24 93E10014 */ stw r31, 0x14(r1)
+/* 00004A28 93C10010 */ stw r30, 0x10(r1)
+/* 00004A2C 93A1000C */ stw r29, 0xc(r1)
+/* 00004A30 93810008 */ stw r28, 8(r1)
+/* 00004A34 83A30000 */ lwz r29, currentBall@l(r3)
+/* 00004A38 3C600000 */ lis r3, lbl_0000BE80@ha
+/* 00004A3C 3BE30000 */ addi r31, r3, lbl_0000BE80@l
+/* 00004A40 C03D0008 */ lfs f1, 8(r29)
+/* 00004A44 3C600000 */ lis r3, lbl_10000000@ha
+/* 00004A48 C81F02C8 */ lfd f0, 0x2c8(r31)
+/* 00004A4C 3BC30000 */ addi r30, r3, lbl_10000000@l
+/* 00004A50 FC010040 */ fcmpo cr0, f1, f0
+/* 00004A54 41800014 */ blt lbl_00004A68
+/* 00004A58 3C600000 */ lis r3, lbl_802F1FD0@ha
+/* 00004A5C 80030000 */ lwz r0, lbl_802F1FD0@l(r3)
+/* 00004A60 540005AD */ rlwinm. r0, r0, 0, 0x16, 0x16
+/* 00004A64 41820284 */ beq lbl_00004CE8
+lbl_00004A68:
+/* 00004A68 A81E0018 */ lha r0, 0x18(r30)
+/* 00004A6C 2C000000 */ cmpwi r0, 0
+/* 00004A70 40820070 */ bne lbl_00004AE0
+/* 00004A74 801E002C */ lwz r0, 0x2c(r30)
+/* 00004A78 2C00FFFF */ cmpwi r0, -1
+/* 00004A7C 41820014 */ beq lbl_00004A90
+/* 00004A80 5403043E */ clrlwi r3, r0, 0x10
+/* 00004A84 4BFFB6C9 */ bl SoundOff
+/* 00004A88 3800FFFF */ li r0, -1
+/* 00004A8C 901E002C */ stw r0, 0x2c(r30)
+lbl_00004A90:
+/* 00004A90 3C600000 */ lis r3, lbl_802F1FF6@ha
+/* 00004A94 A8030000 */ lha r0, lbl_802F1FF6@l(r3)
+/* 00004A98 2C00000E */ cmpwi r0, 0xe
+/* 00004A9C 40820010 */ bne lbl_00004AAC
+/* 00004AA0 386000F6 */ li r3, 0xf6
+/* 00004AA4 4BFFB6A9 */ bl u_play_sound_0
+/* 00004AA8 4800000C */ b lbl_00004AB4
+lbl_00004AAC:
+/* 00004AAC 386000F5 */ li r3, 0xf5
+/* 00004AB0 4BFFB69D */ bl u_play_sound_0
+lbl_00004AB4:
+/* 00004AB4 889D002E */ lbz r4, 0x2e(r29)
+/* 00004AB8 3C600000 */ lis r3, playerControllerIDs@ha
+/* 00004ABC 38030000 */ addi r0, r3, playerControllerIDs@l
+/* 00004AC0 7C830774 */ extsb r3, r4
+/* 00004AC4 5463103A */ slwi r3, r3, 2
+/* 00004AC8 7C601A14 */ add r3, r0, r3
+/* 00004ACC 80630000 */ lwz r3, 0(r3)
+/* 00004AD0 38800001 */ li r4, 1
+/* 00004AD4 38A00014 */ li r5, 0x14
+/* 00004AD8 4BFFB675 */ bl vibration_control
+/* 00004ADC 48000080 */ b lbl_00004B5C
+lbl_00004AE0:
+/* 00004AE0 2C00000A */ cmpwi r0, 0xa
+/* 00004AE4 40820078 */ bne lbl_00004B5C
+/* 00004AE8 807D00FC */ lwz r3, 0xfc(r29)
+/* 00004AEC 80030010 */ lwz r0, 0x10(r3)
+/* 00004AF0 2C000002 */ cmpwi r0, 2
+/* 00004AF4 4182002C */ beq lbl_00004B20
+/* 00004AF8 40800010 */ bge lbl_00004B08
+/* 00004AFC 2C000001 */ cmpwi r0, 1
+/* 00004B00 40800014 */ bge lbl_00004B14
+/* 00004B04 48000050 */ b lbl_00004B54
+lbl_00004B08:
+/* 00004B08 2C000004 */ cmpwi r0, 4
+/* 00004B0C 40800048 */ bge lbl_00004B54
+/* 00004B10 4800001C */ b lbl_00004B2C
+lbl_00004B14:
+/* 00004B14 386000EE */ li r3, 0xee
+/* 00004B18 4BFFB635 */ bl u_play_sound_0
+/* 00004B1C 48000040 */ b lbl_00004B5C
+lbl_00004B20:
+/* 00004B20 386000EA */ li r3, 0xea
+/* 00004B24 4BFFB629 */ bl u_play_sound_0
+/* 00004B28 48000034 */ b lbl_00004B5C
+lbl_00004B2C:
+/* 00004B2C 38600161 */ li r3, 0x161
+/* 00004B30 4BFFB61D */ bl u_play_sound_1_dupe
+/* 00004B34 3B830000 */ addi r28, r3, 0
+/* 00004B38 5463043E */ clrlwi r3, r3, 0x10
+/* 00004B3C 38800060 */ li r4, 0x60
+/* 00004B40 4BFFB60D */ bl SoundRev
+/* 00004B44 5783043E */ clrlwi r3, r28, 0x10
+/* 00004B48 38800040 */ li r4, 0x40
+/* 00004B4C 4BFFB601 */ bl SoundCho
+/* 00004B50 4800000C */ b lbl_00004B5C
+lbl_00004B54:
+/* 00004B54 386000EC */ li r3, 0xec
+/* 00004B58 4BFFB5F5 */ bl u_play_sound_0
+lbl_00004B5C:
+/* 00004B5C A89E0018 */ lha r4, 0x18(r30)
+/* 00004B60 3C600000 */ lis r3, lbl_802F1FD0@ha
+/* 00004B64 38040001 */ addi r0, r4, 1
+/* 00004B68 B01E0018 */ sth r0, 0x18(r30)
+/* 00004B6C 80030000 */ lwz r0, lbl_802F1FD0@l(r3)
+/* 00004B70 540005AD */ rlwinm. r0, r0, 0, 0x16, 0x16
+/* 00004B74 40820078 */ bne lbl_00004BEC
+/* 00004B78 C01D0024 */ lfs f0, 0x24(r29)
+/* 00004B7C C03D001C */ lfs f1, 0x1c(r29)
+/* 00004B80 EC210072 */ fmuls f1, f1, f1
+/* 00004B84 EC20083A */ fmadds f1, f0, f0, f1
+/* 00004B88 4BFFB5C5 */ bl mathutil_sqrt
+/* 00004B8C C81F02D0 */ lfd f0, 0x2d0(r31)
+/* 00004B90 FC010040 */ fcmpo cr0, f1, f0
+/* 00004B94 40800014 */ bge lbl_00004BA8
+/* 00004B98 C03D0008 */ lfs f1, 8(r29)
+/* 00004B9C C81F02D8 */ lfd f0, 0x2d8(r31)
+/* 00004BA0 FC010040 */ fcmpo cr0, f1, f0
+/* 00004BA4 41800014 */ blt lbl_00004BB8
+lbl_00004BA8:
+/* 00004BA8 C03D0008 */ lfs f1, 8(r29)
+/* 00004BAC C81F02E0 */ lfd f0, 0x2e0(r31)
+/* 00004BB0 FC010040 */ fcmpo cr0, f1, f0
+/* 00004BB4 40800038 */ bge lbl_00004BEC
+lbl_00004BB8:
+/* 00004BB8 3C600000 */ lis r3, lbl_802F1FD0@ha
+/* 00004BBC 38830000 */ addi r4, r3, lbl_802F1FD0@l
+/* 00004BC0 80040000 */ lwz r0, 0(r4)
+/* 00004BC4 386000B4 */ li r3, 0xb4
+/* 00004BC8 60000200 */ ori r0, r0, 0x200
+/* 00004BCC 90040000 */ stw r0, 0(r4)
+/* 00004BD0 4BFFB57D */ bl hud_show_fallout_banner
+/* 00004BD4 3860016A */ li r3, 0x16a
+/* 00004BD8 3880016B */ li r4, 0x16b
+/* 00004BDC 4BFFB571 */ bl func_8002BFCC
+/* 00004BE0 38600000 */ li r3, 0
+/* 00004BE4 38800008 */ li r4, 8
+/* 00004BE8 4BFFB565 */ bl u_play_music
+lbl_00004BEC:
+/* 00004BEC A81E001A */ lha r0, 0x1a(r30)
+/* 00004BF0 2C000050 */ cmpwi r0, 0x50
+/* 00004BF4 40820010 */ bne lbl_00004C04
+/* 00004BF8 3860000C */ li r3, 0xc
+/* 00004BFC 4BFFB551 */ bl u_play_sound_0
+/* 00004C00 48000018 */ b lbl_00004C18
+lbl_00004C04:
+/* 00004C04 2C0000B4 */ cmpwi r0, 0xb4
+/* 00004C08 40810010 */ ble lbl_00004C18
+/* 00004C0C 3C600000 */ lis r3, lbl_802F1FF4@ha
+/* 00004C10 38000000 */ li r0, 0
+/* 00004C14 B0030000 */ sth r0, lbl_802F1FF4@l(r3)
+lbl_00004C18:
+/* 00004C18 3C600000 */ lis r3, lbl_802F1FD0@ha
+/* 00004C1C 80030000 */ lwz r0, lbl_802F1FD0@l(r3)
+/* 00004C20 540005AD */ rlwinm. r0, r0, 0, 0x16, 0x16
+/* 00004C24 41820010 */ beq lbl_00004C34
+/* 00004C28 A87E001A */ lha r3, 0x1a(r30)
+/* 00004C2C 38030001 */ addi r0, r3, 1
+/* 00004C30 B01E001A */ sth r0, 0x1a(r30)
+lbl_00004C34:
+/* 00004C34 3C600000 */ lis r3, lbl_802F1FDC@ha
+/* 00004C38 C81F01B0 */ lfd f0, 0x1b0(r31)
+/* 00004C3C C0230000 */ lfs f1, lbl_802F1FDC@l(r3)
+/* 00004C40 FC010040 */ fcmpo cr0, f1, f0
+/* 00004C44 40810044 */ ble lbl_00004C88
+/* 00004C48 C83F02E8 */ lfd f1, 0x2e8(r31)
+/* 00004C4C C01D001C */ lfs f0, 0x1c(r29)
+/* 00004C50 FC010032 */ fmul f0, f1, f0
+/* 00004C54 FC000018 */ frsp f0, f0
+/* 00004C58 D01D001C */ stfs f0, 0x1c(r29)
+/* 00004C5C C83F02E8 */ lfd f1, 0x2e8(r31)
+/* 00004C60 C01D0020 */ lfs f0, 0x20(r29)
+/* 00004C64 FC010032 */ fmul f0, f1, f0
+/* 00004C68 FC000018 */ frsp f0, f0
+/* 00004C6C D01D0020 */ stfs f0, 0x20(r29)
+/* 00004C70 C83F02E8 */ lfd f1, 0x2e8(r31)
+/* 00004C74 C01D0024 */ lfs f0, 0x24(r29)
+/* 00004C78 FC010032 */ fmul f0, f1, f0
+/* 00004C7C FC000018 */ frsp f0, f0
+/* 00004C80 D01D0024 */ stfs f0, 0x24(r29)
+/* 00004C84 48000040 */ b lbl_00004CC4
+lbl_00004C88:
+/* 00004C88 C83F02F0 */ lfd f1, 0x2f0(r31)
+/* 00004C8C C01D001C */ lfs f0, 0x1c(r29)
+/* 00004C90 FC010032 */ fmul f0, f1, f0
+/* 00004C94 FC000018 */ frsp f0, f0
+/* 00004C98 D01D001C */ stfs f0, 0x1c(r29)
+/* 00004C9C C83F02F0 */ lfd f1, 0x2f0(r31)
+/* 00004CA0 C01D0020 */ lfs f0, 0x20(r29)
+/* 00004CA4 FC010032 */ fmul f0, f1, f0
+/* 00004CA8 FC000018 */ frsp f0, f0
+/* 00004CAC D01D0020 */ stfs f0, 0x20(r29)
+/* 00004CB0 C83F02F0 */ lfd f1, 0x2f0(r31)
+/* 00004CB4 C01D0024 */ lfs f0, 0x24(r29)
+/* 00004CB8 FC010032 */ fmul f0, f1, f0
+/* 00004CBC FC000018 */ frsp f0, f0
+/* 00004CC0 D01D0024 */ stfs f0, 0x24(r29)
+lbl_00004CC4:
+/* 00004CC4 C03D0020 */ lfs f1, 0x20(r29)
+/* 00004CC8 C81F01B0 */ lfd f0, 0x1b0(r31)
+/* 00004CCC FC010040 */ fcmpo cr0, f1, f0
+/* 00004CD0 40800054 */ bge lbl_00004D24
+/* 00004CD4 C81F02F8 */ lfd f0, 0x2f8(r31)
+/* 00004CD8 FC010032 */ fmul f0, f1, f0
+/* 00004CDC FC000018 */ frsp f0, f0
+/* 00004CE0 D01D0020 */ stfs f0, 0x20(r29)
+/* 00004CE4 48000040 */ b lbl_00004D24
+lbl_00004CE8:
+/* 00004CE8 A81E0018 */ lha r0, 0x18(r30)
+/* 00004CEC 2C000000 */ cmpwi r0, 0
+/* 00004CF0 4182002C */ beq lbl_00004D1C
+/* 00004CF4 386000EE */ li r3, 0xee
+/* 00004CF8 4BFFB455 */ bl SoundOffID
+/* 00004CFC 386000EA */ li r3, 0xea
+/* 00004D00 4BFFB44D */ bl SoundOffID
+/* 00004D04 38600161 */ li r3, 0x161
+/* 00004D08 4BFFB445 */ bl SoundOffID
+/* 00004D0C 386000EC */ li r3, 0xec
+/* 00004D10 4BFFB43D */ bl SoundOffID
+/* 00004D14 38000000 */ li r0, 0
+/* 00004D18 B01E0018 */ sth r0, 0x18(r30)
+lbl_00004D1C:
+/* 00004D1C 38000000 */ li r0, 0
+/* 00004D20 B01E001A */ sth r0, 0x1a(r30)
+lbl_00004D24:
+/* 00004D24 C03D0008 */ lfs f1, 8(r29)
+/* 00004D28 C81F0300 */ lfd f0, 0x300(r31)
+/* 00004D2C FC010040 */ fcmpo cr0, f1, f0
+/* 00004D30 4080002C */ bge lbl_00004D5C
+/* 00004D34 A81E0018 */ lha r0, 0x18(r30)
+/* 00004D38 2C000000 */ cmpwi r0, 0
+/* 00004D3C 40820020 */ bne lbl_00004D5C
+/* 00004D40 3C600000 */ lis r3, lbl_802F1FF6@ha
+/* 00004D44 A8030000 */ lha r0, lbl_802F1FF6@l(r3)
+/* 00004D48 2C000016 */ cmpwi r0, 0x16
+/* 00004D4C 41820010 */ beq lbl_00004D5C
+/* 00004D50 386000F9 */ li r3, 0xf9
+/* 00004D54 4BFFB3F9 */ bl u_play_sound_0
+/* 00004D58 4800000C */ b lbl_00004D64
+lbl_00004D5C:
+/* 00004D5C 386000F9 */ li r3, 0xf9
+/* 00004D60 4BFFB3ED */ bl SoundOffID
+lbl_00004D64:
+/* 00004D64 3C600000 */ lis r3, lbl_802F1FD0@ha
+/* 00004D68 80030000 */ lwz r0, lbl_802F1FD0@l(r3)
+/* 00004D6C 540004E7 */ rlwinm. r0, r0, 0, 0x13, 0x13
+/* 00004D70 41820020 */ beq lbl_00004D90
+/* 00004D74 801E0030 */ lwz r0, 0x30(r30)
+/* 00004D78 2C00FFFF */ cmpwi r0, -1
+/* 00004D7C 40820030 */ bne lbl_00004DAC
+/* 00004D80 386000F3 */ li r3, 0xf3
+/* 00004D84 4BFFB3C9 */ bl u_play_sound_2
+/* 00004D88 907E0030 */ stw r3, 0x30(r30)
+/* 00004D8C 48000020 */ b lbl_00004DAC
+lbl_00004D90:
+/* 00004D90 801E0030 */ lwz r0, 0x30(r30)
+/* 00004D94 2C00FFFF */ cmpwi r0, -1
+/* 00004D98 41820014 */ beq lbl_00004DAC
+/* 00004D9C 5403043E */ clrlwi r3, r0, 0x10
+/* 00004DA0 4BFFB3AD */ bl SoundOff
+/* 00004DA4 3800FFFF */ li r0, -1
+/* 00004DA8 901E0030 */ stw r0, 0x30(r30)
+lbl_00004DAC:
+/* 00004DAC 3C600000 */ lis r3, modeCtrl@ha
+/* 00004DB0 38630000 */ addi r3, r3, modeCtrl@l
+/* 00004DB4 8083002C */ lwz r4, 0x2c(r3)
+/* 00004DB8 3C600000 */ lis r3, lbl_80285A58@ha
+/* 00004DBC 38030000 */ addi r0, r3, lbl_80285A58@l
+/* 00004DC0 5483103A */ slwi r3, r4, 2
+/* 00004DC4 7C601A14 */ add r3, r0, r3
+/* 00004DC8 80830000 */ lwz r4, 0(r3)
+/* 00004DCC 2C040000 */ cmpwi r4, 0
+/* 00004DD0 4081005C */ ble lbl_00004E2C
+/* 00004DD4 3C600000 */ lis r3, lbl_802F1FEC@ha
+/* 00004DD8 A8030000 */ lha r0, lbl_802F1FEC@l(r3)
+/* 00004DDC 7CC403D6 */ divw r6, r4, r0
+/* 00004DE0 2C060001 */ cmpwi r6, 1
+/* 00004DE4 40800008 */ bge lbl_00004DEC
+/* 00004DE8 38C00001 */ li r6, 1
+lbl_00004DEC:
+/* 00004DEC 3C600000 */ lis r3, modeCtrl@ha
+/* 00004DF0 38A30000 */ addi r5, r3, modeCtrl@l
+/* 00004DF4 8085002C */ lwz r4, 0x2c(r5)
+/* 00004DF8 3C600000 */ lis r3, lbl_80285A58@ha
+/* 00004DFC 38030000 */ addi r0, r3, lbl_80285A58@l
+/* 00004E00 5483103A */ slwi r3, r4, 2
+/* 00004E04 7C601A14 */ add r3, r0, r3
+/* 00004E08 80030000 */ lwz r0, 0(r3)
+/* 00004E0C 7C060050 */ subf r0, r6, r0
+/* 00004E10 90030000 */ stw r0, 0(r3)
+/* 00004E14 8005002C */ lwz r0, 0x2c(r5)
+/* 00004E18 5400103A */ slwi r0, r0, 2
+/* 00004E1C 7C7E0214 */ add r3, r30, r0
+/* 00004E20 80030044 */ lwz r0, 0x44(r3)
+/* 00004E24 7C003214 */ add r0, r0, r6
+/* 00004E28 90030044 */ stw r0, 0x44(r3)
+lbl_00004E2C:
+/* 00004E2C 3C600000 */ lis r3, lbl_802F1FEC@ha
+/* 00004E30 38830000 */ addi r4, r3, lbl_802F1FEC@l
+/* 00004E34 A8640000 */ lha r3, 0(r4)
+/* 00004E38 2C030000 */ cmpwi r3, 0
+/* 00004E3C 4081000C */ ble lbl_00004E48
+/* 00004E40 3803FFFF */ addi r0, r3, -1
+/* 00004E44 B0040000 */ sth r0, 0(r4)
+lbl_00004E48:
+/* 00004E48 3C600000 */ lis r3, lbl_802F1FE0@ha
+/* 00004E4C 38830000 */ addi r4, r3, lbl_802F1FE0@l
+/* 00004E50 A8640000 */ lha r3, 0(r4)
+/* 00004E54 2C030000 */ cmpwi r3, 0
+/* 00004E58 4081000C */ ble lbl_00004E64
+/* 00004E5C 3803FFFF */ addi r0, r3, -1
+/* 00004E60 B0040000 */ sth r0, 0(r4)
+lbl_00004E64:
+/* 00004E64 8001001C */ lwz r0, 0x1c(r1)
+/* 00004E68 83E10014 */ lwz r31, 0x14(r1)
+/* 00004E6C 83C10010 */ lwz r30, 0x10(r1)
+/* 00004E70 7C0803A6 */ mtlr r0
+/* 00004E74 83A1000C */ lwz r29, 0xc(r1)
+/* 00004E78 83810008 */ lwz r28, 8(r1)
+/* 00004E7C 38210018 */ addi r1, r1, 0x18
+/* 00004E80 4E800020 */ blr 

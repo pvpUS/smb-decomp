@@ -327,17 +327,21 @@ def split_module(module, extra_includes, extra_starts, extern_fns, extern_data,
     # keeps rodata a single contiguous blob -- byte-identical, and every load of
     # it becomes a normal data relocation.
     tail = [l for l in tail if l.strip() not in ('.if 0', '.endif')]
-    # Restore the .rodata section alignment.  In the monolithic build the module
-    # .rodata inherited 8-byte alignment from the mwcc-compiled .c contribution
-    # (the alignment stub).  Now that .rodata comes entirely from this .s, GNU as
-    # would default it to align 1; ELF2REL aligns each .rel section by its
-    # sh_addralign, so a wrong alignment shifts every following section.  A
-    # `.balign 8` at the section start emits no bytes (offset 0 is already
-    # aligned) but records the 8-byte alignment.
+    # Restore the .rodata / .data section alignment.  In the monolithic build both
+    # the module .rodata and .data inherited 8-byte alignment from the
+    # mwcc-compiled .c contribution (each section began with an `.if 0`-wrapped
+    # alignment stub that the .c provided as a `const`/plain global).  Now that
+    # both sections come entirely from this .s, GNU as would default them to
+    # align 1; ELF2REL aligns each .rel section by its sh_addralign, so a wrong
+    # alignment shifts every following section (verified on mini_pilot and
+    # mini_billiards: without the .data `.balign 8` the module .data lands 4 bytes
+    # early and the whole REL is 4 bytes short).  A `.balign 8` at the section
+    # start emits no bytes (offset 0 is already aligned) but records the 8-byte
+    # alignment.
     out_tail = []
     for l in tail:
         out_tail.append(l)
-        if l.strip() == '.section .rodata':
+        if l.strip() in ('.section .rodata', '.section .data'):
             out_tail.append('.balign 8')
     tail = out_tail
     # Rewrite jump / function-pointer tables that point into .text.  Their target

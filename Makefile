@@ -480,6 +480,22 @@ ALL_RELS += mkbe.rel_mini_fight.rel
 # mkbe.rel_mini_pilot.rel sources
 SOURCES := \
 	src/mini_pilot.c \
+	src/mini_pilot_2.c \
+	src/mini_pilot_3.c \
+	src/mini_pilot_4.c \
+	src/mini_pilot_5.c \
+	src/mini_pilot_6.c \
+	src/mini_pilot_7.c \
+	src/mini_pilot_8.c \
+	src/mini_pilot_9.c \
+	src/mini_pilot_10.c \
+	src/mini_pilot_11.c \
+	src/mini_pilot_12.c \
+	src/mini_pilot_13.c \
+	src/mini_pilot_14.c \
+	src/mini_pilot_15.c \
+	src/mini_pilot_16.c \
+	src/mini_pilot_17.c \
 	asm/mini_pilot.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
@@ -524,6 +540,19 @@ ALL_RELS += mkbe.rel_mini_golf.rel
 # mkbe.rel_mini_billiards.rel sources
 SOURCES := \
 	src/mini_billiards.c \
+	src/mini_billiards_2.c \
+	src/mini_billiards_3.c \
+	src/mini_billiards_4.c \
+	src/mini_billiards_5.c \
+	src/mini_billiards_6.c \
+	src/mini_billiards_7.c \
+	src/mini_billiards_8.c \
+	src/mini_billiards_9.c \
+	src/mini_billiards_10.c \
+	src/mini_billiards_11.c \
+	src/mini_billiards_12.c \
+	src/mini_billiards_13.c \
+	src/mini_billiards_14.c \
 	asm/mini_billiards.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
