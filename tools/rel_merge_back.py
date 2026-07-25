@@ -39,8 +39,24 @@ import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WARM = 'C:/tmp/smbm'
-MODULES = ['mini_bowling', 'mini_race', 'mini_fight',
-           'mini_pilot', 'mini_golf', 'mini_billiards']
+
+# Three names per module, and they are NOT always the same:
+#   warm dir   the C:/tmp/smbm/<dir> the agent worked in
+#   stem       the src/<stem>*.c / asm/<stem>.s / asm/nonmatchings/<stem>/ prefix
+#   target     the built artifact, which is also the Makefile SOURCES block header
+# sel_ngc is the odd one out on all three counts; option/test_mode drop the
+# "rel_" infix the minigames carry.
+MODULES = {
+    'mini_bowling':   ('mini_bowling',   'mkbe.rel_mini_bowling.rel'),
+    'mini_race':      ('mini_race',      'mkbe.rel_mini_race.rel'),
+    'mini_fight':     ('mini_fight',     'mkbe.rel_mini_fight.rel'),
+    'mini_pilot':     ('mini_pilot',     'mkbe.rel_mini_pilot.rel'),
+    'mini_golf':      ('mini_golf',      'mkbe.rel_mini_golf.rel'),
+    'mini_billiards': ('mini_billiards', 'mkbe.rel_mini_billiards.rel'),
+    'sel_ngc':        ('sel_ngc_rel',    'mkbe.sel_ngc.rel'),
+    'option':         ('option',         'mkbe.option.rel'),
+    'test_mode':      ('test_mode',      'mkbe.test_mode.rel'),
+}
 
 BUILD = (
     "/c/msys64/usr/bin/bash.exe -lc 'export DEVKITPPC=/c/devkitPro/devkitPPC "
@@ -51,7 +67,7 @@ BUILD = (
 
 
 def golden(module):
-    tgt = 'mkbe.rel_%s.rel' % module
+    tgt = MODULES[module][1]
     for line in open(os.path.join(REPO, 'supermonkeyball.sha1')):
         h, _, name = line.strip().partition(' ')
         if name.strip().lstrip('*') == tgt:
@@ -63,7 +79,7 @@ def sources_block(makefile_text, module):
     """The module's SOURCES entries, in order."""
     L = makefile_text.split('\n')
     h = next(i for i, l in enumerate(L)
-             if l.strip() == '# mkbe.rel_%s.rel sources' % module)
+             if l.strip() == '# %s sources' % MODULES[module][1])
     s = h + 1
     e = next(i for i in range(s + 1, len(L)) if not L[i].rstrip().endswith('\\'))
     return [L[i].rstrip().rstrip('\\').strip() for i in range(s + 1, e + 1)]
@@ -75,7 +91,7 @@ def replace_sources(module, items):
     nl = '\r\n' if '\r\n' in raw else '\n'          # main tree may be CRLF
     L = raw.split(nl)
     h = next(i for i, l in enumerate(L)
-             if l.strip() == '# mkbe.rel_%s.rel sources' % module)
+             if l.strip() == '# %s sources' % MODULES[module][1])
     s = h + 1
     e = next(i for i in range(s + 1, len(L)) if not L[i].rstrip().endswith('\\'))
     block = ['SOURCES := \\'] + \
@@ -86,14 +102,15 @@ def replace_sources(module, items):
 
 
 def merge(module, dry):
+    stem = MODULES[module][0]
     src_root = os.path.join(WARM, module)
     if not os.path.isdir(src_root):
         print('  !! no warm copy at %s' % src_root)
         return False
 
-    warm_c = sorted(glob.glob(os.path.join(src_root, 'src', '%s*.c' % module)))
-    warm_asm = sorted(glob.glob(os.path.join(src_root, 'asm', '%s.s' % module)) +
-                      glob.glob(os.path.join(src_root, 'asm', '%s_d*.s' % module)))
+    warm_c = sorted(glob.glob(os.path.join(src_root, 'src', '%s*.c' % stem)))
+    warm_asm = sorted(glob.glob(os.path.join(src_root, 'asm', '%s.s' % stem)) +
+                      glob.glob(os.path.join(src_root, 'asm', '%s_d*.s' % stem)))
     items = sources_block(open(os.path.join(src_root, 'Makefile'),
                                newline='').read().replace('\r\n', '\n'), module)
     print('  %d C files, %d asm data file(s), %d SOURCES entries'
@@ -106,9 +123,9 @@ def merge(module, dry):
         return True
 
     # stale C and stale data segments first, so renumbered splits leave nothing
-    for p in glob.glob(os.path.join(REPO, 'src', '%s_*.c' % module)):
+    for p in glob.glob(os.path.join(REPO, 'src', '%s_*.c' % stem)):
         os.remove(p)
-    for p in glob.glob(os.path.join(REPO, 'asm', '%s_d*.s' % module)):
+    for p in glob.glob(os.path.join(REPO, 'asm', '%s_d*.s' % stem)):
         os.remove(p)
     for p in warm_c:
         shutil.copy2(p, os.path.join(REPO, 'src', os.path.basename(p)))
@@ -119,8 +136,15 @@ def merge(module, dry):
 
 
 def verify(module):
+    stem = MODULES[module][0]
     want, tgt = golden(module)
     print('  rebuilding %s in the main tree...' % tgt)
+    # a failed compile leaves the previous .rel, and a stale all-asm .rel hashes
+    # GOLDEN -- delete it so the hash below can only come from THIS build
+    try:
+        os.remove(os.path.join(REPO, tgt))
+    except FileNotFoundError:
+        pass
     subprocess.run(BUILD.format(target=tgt), shell=True, cwd=REPO)
     got = subprocess.run(['sha1sum', tgt], cwd=REPO, capture_output=True,
                          text=True).stdout.split()
@@ -130,9 +154,9 @@ def verify(module):
 
     # the hash alone is not proof -- an all-asm split hashes golden too
     pure, stubs = 0, 0
-    for p in glob.glob(os.path.join(REPO, 'src', '%s*.c' % module)):
+    for p in glob.glob(os.path.join(REPO, 'src', '%s*.c' % stem)):
         n = open(p, errors='ignore').read().count(
-            '#include "../asm/nonmatchings/%s/' % module)
+            '#include "../asm/nonmatchings/%s/' % stem)
         pure += (n == 0)
         stubs += n
     print('  %d pure-C file(s), %d asm-include stub(s) remaining' % (pure, stubs))
@@ -146,7 +170,11 @@ def main():
     args = sys.argv[1:]
     dry = '--dry-run' in args
     args = [a for a in args if not a.startswith('--')]
-    mods = MODULES if (not args or '--all' in sys.argv[1:]) else args
+    mods = list(MODULES) if (not args or '--all' in sys.argv[1:]) else args
+    unknown = [m for m in mods if m not in MODULES]
+    if unknown:
+        sys.exit('unknown module(s): %s\nknown: %s'
+                 % (', '.join(unknown), ', '.join(MODULES)))
 
     results = {}
     for m in mods:
