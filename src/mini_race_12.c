@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_0000ACF4.
+ * mini_race.c -- REL module: isolated function lbl_00007900.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -236,6 +236,8 @@ extern void u_draw_ball_shadow();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_000007EC(void);
+void lbl_00000838(void);
 void lbl_000008B4(void);
 void lbl_000024A0(void);
 void lbl_00003094(void);
@@ -248,9 +250,22 @@ void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
 void lbl_000068E8(void);
+void lbl_00007900(struct Ball *ball);
+void lbl_00007950(void);
+void lbl_000079B8();
+void lbl_00007A9C(void);
+void lbl_00007D4C(void);
+void lbl_00007F88(void);
+void lbl_00008160(void);
+void lbl_00008324(void);
+void lbl_000084A0(void);
+void lbl_000085D8(void);
+void lbl_00008A10(void);
+void lbl_00008B60(void);
 void lbl_00008C4C(void);
 void lbl_0000A9C4(void);
 void lbl_0000A9EC(void);
+void lbl_0000ACF4(void);
 void lbl_0000AD74(void);
 void lbl_0000ADDC(void);
 void lbl_0000AFF8(void);
@@ -268,6 +283,9 @@ void lbl_0000C590(void);
 void lbl_0000C5EC(void);
 void lbl_0000C668(void);
 void lbl_0000C7E4(void);
+void lbl_0000C93C(void);
+void lbl_0000C9B0(void);
+void lbl_0000CA24(void);
 void lbl_0000CA9C(void);
 void lbl_0000CB3C(void);
 void lbl_0000CE24(void);
@@ -289,6 +307,9 @@ void lbl_0000E7C4(void);
 void lbl_0000E900(void);
 void lbl_0000EC20(void);
 void lbl_0000F3D4(void);
+void lbl_0000FC8C(void);
+void lbl_0000FCC4(void);
+void lbl_0000FD48(void);
 void lbl_0000FDD8(void);
 void lbl_0000FEF8(void);
 void lbl_00010130(void);
@@ -297,24 +318,27 @@ void lbl_00010484(void);
 void lbl_0001053C(void);
 void lbl_000106C4(void);
 void lbl_0001075C(void);
+void lbl_000107D0(void);
 void lbl_000108E8(void);
 void lbl_00010918(void);
 void lbl_00010B70(void);
+void lbl_00010BC8(void);
 void lbl_00011128(void);
 void lbl_0001157C(void);
 void lbl_00012D50(void);
 
-#pragma force_active on
-void lbl_0000ACF4(u8 *obj)
+struct RaceApe
 {
-    Mtx local;
-    mathutil_mtxA_from_quat((Quaternion *)(*(u8 **)(obj + 0x144) + 0x274));
-    mathutil_mtxA_to_mtx(local);
-    mathutil_mtxA_from_mtxB_translate((Vec *)(obj + 4));
-    mathutil_mtxA_mult_right(local);
-    mathutil_mtxA_scale_s(*(f32 *)(obj + 0x74));
-    gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
-    avdisp_draw_model_unculled_sort_translucent(
-        *(void **)(*(u8 **)((u8 *)minigameGma + 8) + 0xa0));
+    u8 filler0[0x274];
+    Quaternion unk274;
+    Quaternion unk284;
+};
+
+#pragma force_active on
+void lbl_00007900(struct Ball *ball)
+{
+    struct RaceApe *obj = (struct RaceApe *)ball->unk144;
+    lbl_000079B8(ball, &obj->unk274);
+    obj->unk284 = obj->unk274;
 }
 #pragma force_active reset

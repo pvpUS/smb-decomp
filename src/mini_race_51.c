@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_0000CA9C.
+ * mini_race.c -- REL module: isolated function lbl_000108E8.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -286,7 +286,7 @@ void lbl_0000C7E4(void);
 void lbl_0000C93C(void);
 void lbl_0000C9B0(void);
 void lbl_0000CA24(void);
-void lbl_0000CA9C(s16 idx, f32 x, f32 y);
+void lbl_0000CA9C(void);
 void lbl_0000CB3C(void);
 void lbl_0000CE24(void);
 void lbl_0000CF44(void);
@@ -319,7 +319,7 @@ void lbl_0001053C(void);
 void lbl_000106C4(void);
 void lbl_0001075C(void);
 void lbl_000107D0(void);
-void lbl_000108E8(void);
+void lbl_000108E8(s8 *str, struct Sprite *sprite);
 void lbl_00010918(void);
 void lbl_00010B70(void);
 void lbl_00010BC8(void);
@@ -327,19 +327,12 @@ void lbl_00011128(void);
 void lbl_0001157C(void);
 void lbl_00012D50(void);
 
-void lbl_0000CA9C(s16 idx, f32 x, f32 y)
+#pragma force_active on
+void lbl_000108E8(s8 *str, struct Sprite *sprite)
 {
-    struct Sprite *sprite = create_sprite();
-    if (sprite == NULL)
+    if (sprite->counter <= 0)
         return;
-    sprite->tag = idx + 0x67;
-    sprite->type = 1;
-    sprite->fontId = 0x45;
-    sprite->x = x;
-    sprite->y = y;
-    sprite->depth = *(f32 *)lbl_00013D18;
-    sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000CB3C;
-    sprite->userVar = idx;
-    sprintf(sprite->text, (char *)lbl_00015CAC);
+    sprite->x -= *(f32 *)lbl_00013C50;
+    sprite->counter--;
 }
 #pragma force_active reset

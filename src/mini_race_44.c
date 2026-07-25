@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_0000CA9C.
+ * mini_race.c -- REL module: isolated function lbl_0000FC8C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -286,7 +286,7 @@ void lbl_0000C7E4(void);
 void lbl_0000C93C(void);
 void lbl_0000C9B0(void);
 void lbl_0000CA24(void);
-void lbl_0000CA9C(s16 idx, f32 x, f32 y);
+void lbl_0000CA9C(void);
 void lbl_0000CB3C(void);
 void lbl_0000CE24(void);
 void lbl_0000CF44(void);
@@ -307,7 +307,7 @@ void lbl_0000E7C4(void);
 void lbl_0000E900(void);
 void lbl_0000EC20(void);
 void lbl_0000F3D4(void);
-void lbl_0000FC8C(void);
+void lbl_0000FC8C(u8 *arg0, struct RaceState *obj);
 void lbl_0000FCC4(void);
 void lbl_0000FD48(void);
 void lbl_0000FDD8(void);
@@ -327,19 +327,23 @@ void lbl_00011128(void);
 void lbl_0001157C(void);
 void lbl_00012D50(void);
 
-void lbl_0000CA9C(s16 idx, f32 x, f32 y)
+struct RaceState
 {
-    struct Sprite *sprite = create_sprite();
-    if (sprite == NULL)
+    u8 filler0[0x10];
+    s16 unk10;
+    u8 filler12[0x22];
+    void *unk34;
+};
+
+#pragma force_active on
+void lbl_0000FC8C(u8 *arg0, struct RaceState *obj)
+{
+    int t = obj->unk10;
+    if (t >= 0)
+        obj->unk10 = t - 1;
+    if (obj->unk10 >= 0)
         return;
-    sprite->tag = idx + 0x67;
-    sprite->type = 1;
-    sprite->fontId = 0x45;
-    sprite->x = x;
-    sprite->y = y;
-    sprite->depth = *(f32 *)lbl_00013D18;
-    sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000CB3C;
-    sprite->userVar = idx;
-    sprintf(sprite->text, (char *)lbl_00015CAC);
+    obj->unk34 = (void *)lbl_0000FCC4;
+    obj->unk10 = 0x14;
 }
 #pragma force_active reset

@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_00003094.
+ * mini_race.c -- REL module: isolated function lbl_000007EC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -236,8 +236,11 @@ extern void u_draw_ball_shadow();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_000007EC(void);
+void lbl_00000838(void);
 void lbl_000008B4(void);
 void lbl_000024A0(void);
+void lbl_00003094(void);
 void lbl_000030DC(void);
 void lbl_00003120(void);
 void lbl_000031C0(void);
@@ -247,6 +250,18 @@ void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
 void lbl_000068E8(void);
+void lbl_00007900(void);
+void lbl_00007950(void);
+void lbl_000079B8(void);
+void lbl_00007A9C(void);
+void lbl_00007D4C(void);
+void lbl_00007F88(void);
+void lbl_00008160(void);
+void lbl_00008324(void);
+void lbl_000084A0(void);
+void lbl_000085D8(void);
+void lbl_00008A10(void);
+void lbl_00008B60(void);
 void lbl_00008C4C(void);
 void lbl_0000A9C4(void);
 void lbl_0000A9EC(void);
@@ -268,6 +283,9 @@ void lbl_0000C590(void);
 void lbl_0000C5EC(void);
 void lbl_0000C668(void);
 void lbl_0000C7E4(void);
+void lbl_0000C93C(void);
+void lbl_0000C9B0(void);
+void lbl_0000CA24(void);
 void lbl_0000CA9C(void);
 void lbl_0000CB3C(void);
 void lbl_0000CE24(void);
@@ -289,6 +307,9 @@ void lbl_0000E7C4(void);
 void lbl_0000E900(void);
 void lbl_0000EC20(void);
 void lbl_0000F3D4(void);
+void lbl_0000FC8C(void);
+void lbl_0000FCC4(void);
+void lbl_0000FD48(void);
 void lbl_0000FDD8(void);
 void lbl_0000FEF8(void);
 void lbl_00010130(void);
@@ -297,18 +318,22 @@ void lbl_00010484(void);
 void lbl_0001053C(void);
 void lbl_000106C4(void);
 void lbl_0001075C(void);
+void lbl_000107D0(void);
 void lbl_000108E8(void);
 void lbl_00010918(void);
 void lbl_00010B70(void);
+void lbl_00010BC8(void);
 void lbl_00011128(void);
 void lbl_0001157C(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-void lbl_00003094(void)
+void lbl_000007EC(void)
 {
-    OSHeapHandle old = OSSetCurrentHeap(stageHeap);
-    u_load_minigame_graphics(1);
-    OSSetCurrentHeap(old);
+    s16 v = *(s16 *)lbl_10000038;
+    if (v >= 0 && v <= 9)
+        lbl_0000A9EC();
+    else if (v == 10)
+        lbl_0000B67C();
 }
 #pragma force_active reset

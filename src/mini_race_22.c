@@ -1,6 +1,6 @@
 /*
  * mini_race.c -- REL module, structurally split for per-function
- * byte-matching (part 22 of 41; contiguous .text range).  Each function
+ * byte-matching (part 22 of 54; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_race/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -235,6 +235,8 @@ extern void u_draw_ball_shadow();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_000007EC(void);
+void lbl_00000838(void);
 void lbl_000008B4(void);
 void lbl_000024A0(void);
 void lbl_00003094(void);
@@ -247,6 +249,18 @@ void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
 void lbl_000068E8(void);
+void lbl_00007900(void);
+void lbl_00007950(void);
+void lbl_000079B8(void);
+void lbl_00007A9C(void);
+void lbl_00007D4C(void);
+void lbl_00007F88(void);
+void lbl_00008160(void);
+void lbl_00008324(void);
+void lbl_000084A0(void);
+void lbl_000085D8(void);
+void lbl_00008A10(void);
+void lbl_00008B60(void);
 void lbl_00008C4C(void);
 void lbl_0000A9C4(void);
 void lbl_0000A9EC(void);
@@ -261,17 +275,19 @@ void lbl_0000B834(void);
 void lbl_0000B8C8(void);
 void lbl_0000B948(void);
 void lbl_0000BB0C(void);
+static void lbl_0000BCE8(void);
+static void lbl_0000C03C(void);
+static void lbl_0000C134(void);
 void lbl_0000C230(void);
 void lbl_0000C2B4(void);
 void lbl_0000C438(void);
 void lbl_0000C590(void);
 void lbl_0000C5EC(void);
 void lbl_0000C668(void);
-static void lbl_0000C76C(void);
 void lbl_0000C7E4(void);
-static void lbl_0000C93C(void);
-static void lbl_0000C9B0(void);
-static void lbl_0000CA24(void);
+void lbl_0000C93C(void);
+void lbl_0000C9B0(void);
+void lbl_0000CA24(void);
 void lbl_0000CA9C(void);
 void lbl_0000CB3C(void);
 void lbl_0000CE24(void);
@@ -293,6 +309,9 @@ void lbl_0000E7C4(void);
 void lbl_0000E900(void);
 void lbl_0000EC20(void);
 void lbl_0000F3D4(void);
+void lbl_0000FC8C(void);
+void lbl_0000FCC4(void);
+void lbl_0000FD48(void);
 void lbl_0000FDD8(void);
 void lbl_0000FEF8(void);
 void lbl_00010130(void);
@@ -301,42 +320,39 @@ void lbl_00010484(void);
 void lbl_0001053C(void);
 void lbl_000106C4(void);
 void lbl_0001075C(void);
+void lbl_000107D0(void);
 void lbl_000108E8(void);
 void lbl_00010918(void);
 void lbl_00010B70(void);
+void lbl_00010BC8(void);
 void lbl_00011128(void);
 void lbl_0001157C(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_0000C668(void)
+asm void lbl_0000B948(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000C668.s"
+#include "../asm/nonmatchings/mini_race/lbl_0000B948.s"
 }
-static asm void lbl_0000C76C(void)
+asm void lbl_0000BB0C(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000C76C.s"
+#include "../asm/nonmatchings/mini_race/lbl_0000BB0C.s"
 }
-asm void lbl_0000C7E4(void)
+static asm void lbl_0000BCE8(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000C7E4.s"
+#include "../asm/nonmatchings/mini_race/lbl_0000BCE8.s"
 }
-static asm void lbl_0000C93C(void)
+static asm void lbl_0000C03C(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000C93C.s"
+#include "../asm/nonmatchings/mini_race/lbl_0000C03C.s"
 }
-static asm void lbl_0000C9B0(void)
+static asm void lbl_0000C134(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000C9B0.s"
-}
-static asm void lbl_0000CA24(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000CA24.s"
+#include "../asm/nonmatchings/mini_race/lbl_0000C134.s"
 }
 #pragma force_active reset
