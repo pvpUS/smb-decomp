@@ -1,0 +1,59 @@
+/* 0000E368 7C0802A6 */ mflr r0
+/* 0000E36C 3860001B */ li r3, 0x1b
+/* 0000E370 90010004 */ stw r0, 4(r1)
+/* 0000E374 9421FFE0 */ stwu r1, -0x20(r1)
+/* 0000E378 93E1001C */ stw r31, 0x1c(r1)
+/* 0000E37C 3BE40000 */ addi r31, r4, 0
+/* 0000E380 4BFF1E09 */ bl find_sprite_with_tag
+/* 0000E384 28030000 */ cmplwi r3, 0
+/* 0000E388 418200A0 */ beq lbl_0000E428
+/* 0000E38C 80030048 */ lwz r0, 0x48(r3)
+/* 0000E390 38A00000 */ li r5, 0
+/* 0000E394 2C000002 */ cmpwi r0, 2
+/* 0000E398 40820018 */ bne lbl_0000E3B0
+/* 0000E39C 3C800000 */ lis r4, u_isCompetitionModeCourse@ha
+/* 0000E3A0 80040000 */ lwz r0, u_isCompetitionModeCourse@l(r4)
+/* 0000E3A4 2C000000 */ cmpwi r0, 0
+/* 0000E3A8 40820008 */ bne lbl_0000E3B0
+/* 0000E3AC 38A00001 */ li r5, 1
+lbl_0000E3B0:
+/* 0000E3B0 2C050000 */ cmpwi r5, 0
+/* 0000E3B4 4182000C */ beq lbl_0000E3C0
+/* 0000E3B8 38000001 */ li r0, 1
+/* 0000E3BC 48000008 */ b lbl_0000E3C4
+lbl_0000E3C0:
+/* 0000E3C0 38000000 */ li r0, 0
+lbl_0000E3C4:
+/* 0000E3C4 901F0048 */ stw r0, 0x48(r31)
+/* 0000E3C8 3C800000 */ lis r4, lbl_00011D44@ha
+/* 0000E3CC C0240000 */ lfs f1, lbl_00011D44@l(r4)
+/* 0000E3D0 3C800000 */ lis r4, modeCtrl@ha
+/* 0000E3D4 C0030004 */ lfs f0, 4(r3)
+/* 0000E3D8 38840000 */ addi r4, r4, modeCtrl@l
+/* 0000E3DC EC01002A */ fadds f0, f1, f0
+/* 0000E3E0 D01F0004 */ stfs f0, 4(r31)
+/* 0000E3E4 80040028 */ lwz r0, 0x28(r4)
+/* 0000E3E8 2C000001 */ cmpwi r0, 1
+/* 0000E3EC 4082000C */ bne lbl_0000E3F8
+/* 0000E3F0 3800002C */ li r0, 0x2c
+/* 0000E3F4 48000008 */ b lbl_0000E3FC
+lbl_0000E3F8:
+/* 0000E3F8 38000042 */ li r0, 0x42
+lbl_0000E3FC:
+/* 0000E3FC 6C008000 */ xoris r0, r0, 0x8000
+/* 0000E400 C0430008 */ lfs f2, 8(r3)
+/* 0000E404 90010014 */ stw r0, 0x14(r1)
+/* 0000E408 3C004330 */ lis r0, 0x4330
+/* 0000E40C 3C600000 */ lis r3, lbl_00011D00@ha
+/* 0000E410 90010010 */ stw r0, 0x10(r1)
+/* 0000E414 C8230000 */ lfd f1, lbl_00011D00@l(r3)
+/* 0000E418 C8010010 */ lfd f0, 0x10(r1)
+/* 0000E41C EC000828 */ fsubs f0, f0, f1
+/* 0000E420 EC02002A */ fadds f0, f2, f0
+/* 0000E424 D01F0008 */ stfs f0, 8(r31)
+lbl_0000E428:
+/* 0000E428 80010024 */ lwz r0, 0x24(r1)
+/* 0000E42C 83E1001C */ lwz r31, 0x1c(r1)
+/* 0000E430 38210020 */ addi r1, r1, 0x20
+/* 0000E434 7C0803A6 */ mtlr r0
+/* 0000E438 4E800020 */ blr 

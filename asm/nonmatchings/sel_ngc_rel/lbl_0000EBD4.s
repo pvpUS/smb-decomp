@@ -1,0 +1,56 @@
+/* 0000EBD4 7C0802A6 */ mflr r0
+/* 0000EBD8 3CA00000 */ lis r5, lbl_00012730@ha
+/* 0000EBDC 90010004 */ stw r0, 4(r1)
+/* 0000EBE0 3C800000 */ lis r4, lbl_00011CB0@ha
+/* 0000EBE4 9421FFE0 */ stwu r1, -0x20(r1)
+/* 0000EBE8 93E1001C */ stw r31, 0x1c(r1)
+/* 0000EBEC 3BE40000 */ addi r31, r4, lbl_00011CB0@l
+/* 0000EBF0 93C10018 */ stw r30, 0x18(r1)
+/* 0000EBF4 3BC50000 */ addi r30, r5, lbl_00012730@l
+/* 0000EBF8 93A10014 */ stw r29, 0x14(r1)
+/* 0000EBFC 3BA30000 */ addi r29, r3, 0
+/* 0000EC00 4BFF1589 */ bl create_sprite
+/* 0000EC04 7C691B79 */ or. r9, r3, r3
+/* 0000EC08 4182008C */ beq lbl_0000EC94
+/* 0000EC0C 381D0032 */ addi r0, r29, 0x32
+/* 0000EC10 4CC63182 */ crclr 6
+/* 0000EC14 9809000F */ stb r0, 0xf(r9)
+/* 0000EC18 38000001 */ li r0, 1
+/* 0000EC1C 57A31838 */ slwi r3, r29, 3
+/* 0000EC20 98090000 */ stb r0, 0(r9)
+/* 0000EC24 7CBE1A14 */ add r5, r30, r3
+/* 0000EC28 3C800000 */ lis r4, lbl_0000ECB0@ha
+/* 0000EC2C C005432C */ lfs f0, 0x432c(r5)
+/* 0000EC30 38C40000 */ addi r6, r4, lbl_0000ECB0@l
+/* 0000EC34 3C600000 */ lis r3, lbl_0000F788@ha
+/* 0000EC38 D0090004 */ stfs f0, 4(r9)
+/* 0000EC3C 38030000 */ addi r0, r3, lbl_0000F788@l
+/* 0000EC40 39000000 */ li r8, 0
+/* 0000EC44 C0054330 */ lfs f0, 0x4330(r5)
+/* 0000EC48 38E00006 */ li r7, 6
+/* 0000EC4C 38BD0000 */ addi r5, r29, 0
+/* 0000EC50 D0090008 */ stfs f0, 8(r9)
+/* 0000EC54 3869008C */ addi r3, r9, 0x8c
+/* 0000EC58 389E43FC */ addi r4, r30, 0x43fc
+/* 0000EC5C C01F03B4 */ lfs f0, 0x3b4(r31)
+/* 0000EC60 D009004C */ stfs f0, 0x4c(r9)
+/* 0000EC64 99090003 */ stb r8, 3(r9)
+/* 0000EC68 C01F0008 */ lfs f0, 8(r31)
+/* 0000EC6C D0090040 */ stfs f0, 0x40(r9)
+/* 0000EC70 C01F0008 */ lfs f0, 8(r31)
+/* 0000EC74 D0090044 */ stfs f0, 0x44(r9)
+/* 0000EC78 C01F0008 */ lfs f0, 8(r31)
+/* 0000EC7C D009006C */ stfs f0, 0x6c(r9)
+/* 0000EC80 90E90048 */ stw r7, 0x48(r9)
+/* 0000EC84 90C90034 */ stw r6, 0x34(r9)
+/* 0000EC88 90090038 */ stw r0, 0x38(r9)
+/* 0000EC8C B3A9003C */ sth r29, 0x3c(r9)
+/* 0000EC90 4BFF14F9 */ bl sprintf
+lbl_0000EC94:
+/* 0000EC94 80010024 */ lwz r0, 0x24(r1)
+/* 0000EC98 83E1001C */ lwz r31, 0x1c(r1)
+/* 0000EC9C 83C10018 */ lwz r30, 0x18(r1)
+/* 0000ECA0 7C0803A6 */ mtlr r0
+/* 0000ECA4 83A10014 */ lwz r29, 0x14(r1)
+/* 0000ECA8 38210020 */ addi r1, r1, 0x20
+/* 0000ECAC 4E800020 */ blr 

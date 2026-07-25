@@ -1,0 +1,50 @@
+/* 00001D58 7C0802A6 */ mflr r0
+/* 00001D5C 3860000A */ li r3, 0xa
+/* 00001D60 90010004 */ stw r0, 4(r1)
+/* 00001D64 9421FFF0 */ stwu r1, -0x10(r1)
+/* 00001D68 93E1000C */ stw r31, 0xc(r1)
+/* 00001D6C 3BE00000 */ li r31, 0
+/* 00001D70 4BFFE419 */ bl find_sprite_with_tag
+/* 00001D74 28030000 */ cmplwi r3, 0
+/* 00001D78 41820008 */ beq lbl_00001D80
+/* 00001D7C 3BE00001 */ li r31, 1
+lbl_00001D80:
+/* 00001D80 28030000 */ cmplwi r3, 0
+/* 00001D84 40820030 */ bne lbl_00001DB4
+/* 00001D88 38600008 */ li r3, 8
+/* 00001D8C 4BFFE849 */ bl lbl_000005D4
+/* 00001D90 2C030000 */ cmpwi r3, 0
+/* 00001D94 4182005C */ beq lbl_00001DF0
+/* 00001D98 3860006E */ li r3, 0x6e
+/* 00001D9C 4BFFE3ED */ bl u_play_sound_0
+/* 00001DA0 3860000C */ li r3, 0xc
+/* 00001DA4 4BFFE3E5 */ bl call_bitmap_load_group
+/* 00001DA8 4BFFE3E1 */ bl func_80081F30
+/* 00001DAC 3BE00001 */ li r31, 1
+/* 00001DB0 48000040 */ b lbl_00001DF0
+lbl_00001DB4:
+/* 00001DB4 38600008 */ li r3, 8
+/* 00001DB8 4BFFE81D */ bl lbl_000005D4
+/* 00001DBC 2C030000 */ cmpwi r3, 0
+/* 00001DC0 40820014 */ bne lbl_00001DD4
+/* 00001DC4 38600007 */ li r3, 7
+/* 00001DC8 4BFFE80D */ bl lbl_000005D4
+/* 00001DCC 2C030000 */ cmpwi r3, 0
+/* 00001DD0 41820020 */ beq lbl_00001DF0
+lbl_00001DD4:
+/* 00001DD4 38600070 */ li r3, 0x70
+/* 00001DD8 4BFFE3B1 */ bl u_play_sound_0
+/* 00001DDC 3860000A */ li r3, 0xa
+/* 00001DE0 4BFFE3A9 */ bl destroy_sprite_with_tag
+/* 00001DE4 3860000C */ li r3, 0xc
+/* 00001DE8 4BFFE3A1 */ bl call_bitmap_free_group
+/* 00001DEC 3BE00001 */ li r31, 1
+lbl_00001DF0:
+/* 00001DF0 3860000A */ li r3, 0xa
+/* 00001DF4 4BFFE395 */ bl find_sprite_with_tag
+/* 00001DF8 80010014 */ lwz r0, 0x14(r1)
+/* 00001DFC 7FE3FB78 */ mr r3, r31
+/* 00001E00 83E1000C */ lwz r31, 0xc(r1)
+/* 00001E04 38210010 */ addi r1, r1, 0x10
+/* 00001E08 7C0803A6 */ mtlr r0
+/* 00001E0C 4E800020 */ blr 

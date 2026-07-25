@@ -326,7 +326,16 @@ def split_module(module, extra_includes, extra_starts, extern_fns, extern_data,
     # .c/.s object-boundary alignment.  Emitting the word from the .s instead
     # keeps rodata a single contiguous blob -- byte-identical, and every load of
     # it becomes a normal data relocation.
-    tail = [l for l in tail if l.strip() not in ('.if 0', '.endif')]
+    #
+    # ...but ONLY when the guarded block emits exactly as many bytes as the gap
+    # to the next label.  That holds when the stub is a single 4/8-byte word
+    # (`const u32 lbl_X = 0x4B;`) -- the minigame case.  It does NOT hold when the
+    # stub is a STRING: mwcc pads `char lbl_X[] = "..."` up to the next 4-byte
+    # boundary, while a bare `.asciz` emits the unpadded bytes, so un-`.if 0`-ing
+    # it silently shortens .data (sel_ngc_rel: 26 vs 28 bytes, and the REL came
+    # out 4 bytes short of golden).  For those, keep the guard and let the .c go
+    # on defining the symbol, exactly as the monolithic build did.
+    tail, c_owned_stubs, guarded_sections = _resolve_stub_guards(tail)
     # Restore the .rodata / .data section alignment.  In the monolithic build both
     # the module .rodata and .data inherited 8-byte alignment from the
     # mwcc-compiled .c contribution (each section began with an `.if 0`-wrapped
@@ -338,10 +347,16 @@ def split_module(module, extra_includes, extra_starts, extern_fns, extern_data,
     # early and the whole REL is 4 bytes short).  A `.balign 8` at the section
     # start emits no bytes (offset 0 is already aligned) but records the 8-byte
     # alignment.
+    # ...but NOT for a section whose alignment stub stayed C-owned: there the .c
+    # object still contributes to that section first, and it already carries the
+    # 8-byte alignment.  Forcing the .s contribution to 8 as well would round its
+    # start up past the .c's bytes and re-introduce the very shift this avoids
+    # (sel_ngc_rel .data: the .s would land at 32 instead of 28).
     out_tail = []
     for l in tail:
         out_tail.append(l)
-        if l.strip() in ('.section .rodata', '.section .data'):
+        if (l.strip() in ('.section .rodata', '.section .data')
+                and l.strip().split()[1] not in guarded_sections):
             out_tail.append('.balign 8')
     tail = out_tail
     # Rewrite jump / function-pointer tables that point into .text.  Their target
@@ -377,9 +392,109 @@ def split_module(module, extra_includes, extra_starts, extern_fns, extern_data,
 
     src_files = write_src_files(module, src_path, funcs, includes,
                                 data_externs, extern_data, extern_fns,
-                                chunk_size, isolate, isolate_ranges)
+                                chunk_size, isolate, isolate_ranges,
+                                c_owned_stubs)
 
     return funcs, starts, text_labels, data_externs, src_files
+
+
+_LBL_ADDR = re.compile(r'^lbl_([0-9A-Fa-f]{8}):')
+
+
+def _emitted_size(body):
+    """Bytes a run of data directives assembles to, or None if unrecognised."""
+    n = 0
+    for l in body:
+        s = l.strip()
+        if not s or s.startswith('#') or s.startswith('.section'):
+            continue
+        m = re.match(r'\.(asciz|ascii)\s+"(.*)"\s*$', s)
+        if m:
+            # count escapes as one byte each; \0 terminator for .asciz
+            txt = re.sub(r'\\[0-7]{1,3}|\\.', 'X', m.group(2))
+            n += len(txt) + (1 if m.group(1) == 'asciz' else 0)
+            continue
+        m = re.match(r'\.(4byte|long)\b', s)
+        if m:
+            n += 4
+            continue
+        m = re.match(r'\.(2byte|short)\b', s)
+        if m:
+            n += 2
+            continue
+        if re.match(r'\.byte\b', s):
+            n += 1
+            continue
+        m = re.match(r'\.(space|skip)\s+(?:0x)?([0-9A-Fa-f]+)', s)
+        if m:
+            n += int(m.group(2), 16 if s.lower().count('0x') else 10)
+            continue
+        m = re.match(r'\.balign\s+(\d+)', s)
+        if m:
+            a = int(m.group(1))
+            n += (-n) % a
+            continue
+        if _LBL_ADDR.match(s):
+            continue
+        return None            # something we cannot size -- stay conservative
+    return n
+
+
+def _resolve_stub_guards(tail):
+    """Drop `.if 0` guards only where doing so is byte-neutral.
+
+    Returns (new_tail, c_owned) where c_owned maps a stub label to the C
+    declaration the generated .c must emit so the symbol keeps coming from the
+    .c object (preserving mwcc's padding) instead of from the .s.
+    """
+    out, c_owned, guarded_sections, i = [], {}, set(), 0
+    cur_section = None
+    while i < len(tail):
+        if tail[i].strip().startswith('.section '):
+            cur_section = tail[i].strip().split()[1]
+        if tail[i].strip() != '.if 0':
+            out.append(tail[i])
+            i += 1
+            continue
+        j = i + 1
+        while j < len(tail) and tail[j].strip() != '.endif':
+            j += 1
+        if j >= len(tail):                       # unterminated -- leave as-is
+            out.append(tail[i])
+            i += 1
+            continue
+        body = tail[i + 1:j]
+
+        # Un-guarding is byte-neutral iff the raw asm emits exactly as many bytes
+        # as the .c definition occupied.  mwcc pads a data object up to a 4-byte
+        # boundary, so a stub whose size is already a multiple of 4 (the
+        # `const u32` minigame case) is safe to un-guard, while a 26-byte string
+        # is not -- the .c contributed 28.
+        lbl = next((_LBL_ADDR.match(l.strip()) for l in body
+                    if _LBL_ADDR.match(l.strip())), None)
+        emitted = _emitted_size(body)
+        keep = bool(lbl) and emitted is not None and emitted % 4 != 0
+
+        if keep:
+            name = 'lbl_%s' % lbl.group(1)
+            strs = [re.match(r'\.asciz\s+"(.*)"\s*$', l.strip())
+                    for l in body if l.strip().startswith('.asciz')]
+            strs = [m.group(1) for m in strs if m]
+            if len(strs) == 1:
+                c_owned[name] = 'char %s[] = "%s";' % (name, strs[0])
+                guarded_sections.add(cur_section)
+                out.extend(tail[i:j + 1])        # keep .if 0 ... .endif verbatim
+                i = j + 1
+                continue
+            sys.stderr.write(
+                'rel_split: WARNING: guarded stub %s emits %d bytes (not a '
+                'multiple of 4, so the .c definition it replaces was padded), '
+                'but its body is not a single string so no C definition can be '
+                'generated. Un-guarding it will shift the section.\n'
+                % (name, emitted))
+        out.extend(body)                         # byte-neutral: drop the guard
+        i = j + 1
+    return out, c_owned, guarded_sections
 
 
 def resolve_pure_ranges(funcs, isolate=(), isolate_ranges=()):
@@ -505,7 +620,7 @@ def compute_globals(funcs, chunks):
 
 def write_src_files(module, src_path, funcs, includes, data_externs,
                     extern_data, extern_fns, chunk_size, isolate=(),
-                    isolate_ranges=()):
+                    isolate_ranges=(), c_owned_stubs=None):
     """Emit ``src/<module>.c`` (+ ``_2.c``, ``_3.c`` ... when split).
 
     Returns the ``src/...`` paths written, in link order.  With a single group
@@ -536,6 +651,9 @@ def write_src_files(module, src_path, funcs, includes, data_externs,
         path = src_path if ci == 0 else os.path.join(src_dir, '%s_%d.c' % (base, ci + 1))
         chunk_names = {name for name, _g, _b in chunk}
         is_isolated = chunk[0][0] in target_starts
+        # the alignment stub is a data definition, so exactly one object may
+        # carry it -- the first, matching the monolithic build's layout
+        owned = (c_owned_stubs or {}) if ci == 0 else {}
         out = []
         out.append('/*')
         if is_isolated and len(chunk) == 1:
@@ -580,9 +698,20 @@ def write_src_files(module, src_path, funcs, includes, data_externs,
             out.append('// (defined in asm/%s.s) or imported.  Declared so mwcc accepts `@ha/@l`.'
                        % module)
             for l in data_externs:
+                if l in owned:
+                    continue          # defined below, not imported
                 out.append('extern u8 %s[];' % l)
             for l in extern_data:
                 out.append('extern u8 %s[];' % l)
+            out.append('')
+        if owned:
+            # Alignment stub(s) the .s deliberately keeps inside `.if 0`: mwcc's
+            # padding of these is part of the original section layout, so the .c
+            # must go on defining them (see _resolve_stub_guards).
+            out.append('// Alignment stub -- must be defined HERE, not in the .s:')
+            out.append('// mwcc pads it to the original section layout.')
+            for l in sorted(owned):
+                out.append(owned[l])
             out.append('')
         if extern_fns:
             out.append('// Imported functions the code calls that no included header declares.')
