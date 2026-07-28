@@ -102,6 +102,38 @@ def msys(path):
     return p
 
 
+def assert_c_definition(target_c, stem, label):
+    """Refuse to score a label the file under test does not define in C.
+
+    Trap 5, found by mini_fight in run 7: point --file at a file that does not
+    contain --label and this prints a clean `MATCH (0 diffs)`. The label's real
+    asm stub sits untouched in some other file and trivially matches itself, so
+    the verdict is about that stub, not about the file you named. A forward
+    declaration does not count -- that is exactly what fooled it.
+    """
+    try:
+        with open(target_c, encoding='utf-8', errors='replace') as f:
+            txt = f.read()
+    except OSError as e:
+        raise BuildError('cannot read %s: %s' % (target_c, e))
+
+    inc = 'nonmatchings/%s/%s.s' % (stem, label)
+    if inc in txt:
+        raise BuildError(
+            '%s still #includes %s, so %s is an ASM STUB here and any MATCH is '
+            'trivial.' % (target_c, inc, label))
+
+    m = re.search(r'(\w[\w \t*]*?)\b%s\s*\([^;{]*\)\s*\{' % re.escape(label), txt)
+    if not m:
+        raise BuildError(
+            '%s does not DEFINE %s -- a forward declaration does not count. '
+            'Scoring would report on whichever other file holds the stub, and '
+            'that reports MATCH (trap 5).' % (target_c, label))
+    if re.search(r'\basm\b', m.group(1)):
+        raise BuildError('%s defines %s as an `asm` function; a MATCH is trivial.'
+                         % (target_c, label))
+
+
 def module_objects(tree, stem):
     """Every object make could link for this module."""
     return (glob.glob(os.path.join(tree, 'src', '%s*.c.o' % stem)) +
@@ -220,6 +252,7 @@ def main():
 
     if not args.sweep:
         try:
+            assert_c_definition(target_c, stem, args.label)
             build(tree, target, tmp, args.file)
         except BuildError as e:
             print('NO RESULT -- %s' % e)
@@ -239,6 +272,7 @@ def main():
         for v in variants:
             shutil.copy2(os.path.join(args.sweep, v), target_c)
             try:
+                assert_c_definition(target_c, stem, args.label)
                 build(tree, target, tmp, args.file)
                 n, _ = score(tree, stem, target, args.label)
             except BuildError as e:
