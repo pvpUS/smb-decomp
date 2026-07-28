@@ -28,12 +28,28 @@ usage:
   python tools/rel_sweep.py <module> --file src/mini_fight_45.c --label lbl_0000F2C8
   python tools/rel_sweep.py <module> --file src/x.c --label lbl_Y --sweep variants/
   python tools/rel_sweep.py <module> --file src/x.c --label lbl_Y --tree C:/tmp/smbm/mini_fight
+  python tools/rel_sweep.py <module> --gate
 
 --sweep takes a directory of candidate bodies, tries each in turn as <file>,
-restores the original afterwards, and prints a ranked table. It exits nonzero
-if every variant scored the same -- that is trap 1's signature, not a result.
+restores the original afterwards, and prints a ranked table.
+
+--gate is the ONLY thing that may be used to claim a match. A per-function diff
+of 0 is necessary, not sufficient: it is computed from a build that reuses every
+sibling object, and run 6 hit a non-golden REL with `git status` completely clean
+because one sibling's stale .o survived make's 1-second granularity. --gate
+deletes EVERY object of the module plus the .rel and .plf, rebuilds from that,
+and compares the sha1 against supermonkeyball.sha1. Nothing else is a gate.
+
+Trap 4, learned in run 6: --sweep's restore used to be shutil.move of a copy2
+backup, so the restored .c carried its ORIGINAL mtime -- older than the last
+variant's .o -- and every subsequent build silently linked the last variant.
+The restore now stamps mtime and drops the object. The general rule: anything
+that copies or restores a .c must stamp its mtime, and any golden gate must
+delete objects first.
 """
 import argparse
+import glob
+import hashlib
 import os
 import re
 import shutil
@@ -58,7 +74,7 @@ MODULES = {
 
 SCRIPT = (
     'export DEVKITPPC=/c/devkitPro/devkitPPC PATH="/mingw64/bin:$PATH" '
-    'TMP={tmp} TEMP={tmp}; cd {tree}; '
+    'TMP={tmp} TEMP={tmp}; cd "{tree}"; '
     'make OS=Windows_NT COMPILER_VERSION=1.1 HOSTCC=gcc CC_CHECK=true {target}'
 )
 
@@ -86,13 +102,24 @@ def msys(path):
     return p
 
 
-def build(tree, target, tmp, watch_file):
-    """Build, and prove it actually compiled watch_file. Returns the log."""
-    for junk in (os.path.join(tree, target),
-                 os.path.join(tree, plf_of(target)),
-                 os.path.join(tree, watch_file + '.o')):
+def module_objects(tree, stem):
+    """Every object make could link for this module."""
+    return (glob.glob(os.path.join(tree, 'src', '%s*.c.o' % stem)) +
+            glob.glob(os.path.join(tree, 'asm', '%s*.s.o' % stem)))
+
+
+def build(tree, target, tmp, watch_file, stem=None):
+    """Build, and prove it actually compiled watch_file. Returns the log.
+
+    With `stem`, drops every object of the module rather than just the one
+    under test -- slow, but the only honest basis for a golden-hash claim.
+    """
+    junk = [os.path.join(tree, target), os.path.join(tree, plf_of(target))]
+    junk += (module_objects(tree, stem) if stem
+             else [os.path.join(tree, watch_file + '.o')])
+    for j in junk:
         try:
-            os.remove(junk)
+            os.remove(j)
         except FileNotFoundError:
             pass
 
@@ -108,11 +135,12 @@ def build(tree, target, tmp, watch_file):
     if re.search(r'^#\s+Error|Errors caused tool to abort', log, re.M):
         tail = '\n'.join(log.strip().split('\n')[-12:])
         raise BuildError('compile error:\n' + tail)
-    stem = watch_file.replace('\\', '/').split('/')[-1]
-    if not re.search(r'Compiling\s+\S*' + re.escape(stem), log):
-        raise BuildError(
-            '%s was never recompiled (trap 2/3: stale object). Any diff now '
-            'describes the PREVIOUS build.' % watch_file)
+    if watch_file:
+        base = watch_file.replace('\\', '/').split('/')[-1]
+        if not re.search(r'Compiling\s+\S*' + re.escape(base), log):
+            raise BuildError(
+                '%s was never recompiled (trap 2/3: stale object). Any diff now '
+                'describes the PREVIOUS build.' % watch_file)
     if not os.path.exists(os.path.join(tree, target)):
         raise BuildError('build finished but %s does not exist' % target)
     return log
@@ -134,19 +162,60 @@ def score(tree, stem, target, label):
     return FAILED, out + '\n(no MATCH/DIFF verdict -- treat as no result)'
 
 
+def golden_sha1(target):
+    """The expected hash for one artifact, from the repo's manifest."""
+    with open(os.path.join(REPO, 'supermonkeyball.sha1')) as f:
+        for line in f:
+            parts = line.split()
+            if len(parts) == 2 and parts[1] == target:
+                return parts[0]
+    return None
+
+
+def gate(tree, stem, target, tmp):
+    """Full rebuild from DELETED objects, then compare against the manifest."""
+    want = golden_sha1(target)
+    if want is None:
+        print('no manifest entry for %s -- cannot gate' % target)
+        return 2
+    n = len(module_objects(tree, stem))
+    print('deleting %d module object(s) and rebuilding %s from scratch...'
+          % (n, target))
+    try:
+        build(tree, target, tmp, None, stem=stem)
+    except BuildError as e:
+        print('NO RESULT -- %s' % e)
+        return 2
+    with open(os.path.join(tree, target), 'rb') as f:
+        got = hashlib.sha1(f.read()).hexdigest()
+    if got == want:
+        print('GOLDEN  %s  %s' % (got, target))
+        return 0
+    print('NOT GOLDEN\n  got  %s\n  want %s' % (got, want))
+    return 1
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('module', choices=sorted(MODULES))
-    ap.add_argument('--file', required=True, help='the .c under test, repo-relative')
-    ap.add_argument('--label', required=True, help='function to score')
+    ap.add_argument('--file', help='the .c under test, repo-relative')
+    ap.add_argument('--label', help='function to score')
     ap.add_argument('--tree', help='defaults to C:/tmp/smbm/<module>')
     ap.add_argument('--tmp', help='defaults to C:/tmp/tmp_<module>')
     ap.add_argument('--sweep', help='directory of candidate bodies to try')
+    ap.add_argument('--gate', action='store_true',
+                    help='rebuild with ALL module objects deleted and check the '
+                         'golden sha1; the only valid proof of a match')
     args = ap.parse_args()
 
     stem, target = MODULES[args.module]
     tree = args.tree or 'C:/tmp/smbm/%s' % args.module
     tmp = args.tmp or 'C:/tmp/tmp_%s' % args.module
+
+    if args.gate:
+        return gate(tree, stem, target, tmp)
+    if not (args.file and args.label):
+        ap.error('--file and --label are required unless --gate is given')
     target_c = os.path.join(tree, args.file)
 
     if not args.sweep:
@@ -179,19 +248,36 @@ def main():
             if n != FAILED:
                 print('  %-40s %s' % (v, 'MATCH' if n == 0 else '%d' % n))
     finally:
-        shutil.move(backup, target_c)
+        # Trap 4.  shutil.move of a copy2 backup restores the ORIGINAL mtime,
+        # which is older than the last variant's .o, so make skips the recompile
+        # and every later build links that variant instead of the file on disk.
+        shutil.copyfile(backup, target_c)
+        os.utime(target_c, None)
+        os.remove(backup)
+        try:
+            os.remove(target_c + '.o')
+        except FileNotFoundError:
+            pass
 
     print('\n=== ranked ===')
     for n, v in sorted(results):
         print('  %-6s %s' % ('MATCH' if n == 0 else (n if n != FAILED else 'FAIL'), v))
 
+    # An all-identical column USED to exit 2 as trap 1's signature. It is a false
+    # alarm: build() already refuses to score a file it cannot see `Compiling` for,
+    # so trap 1 is closed by construction, and canonical variant sets legitimately
+    # score alike -- in run 6 this fired 3-6 times per agent, including on a set
+    # where all 12 permutations MATCHed. Advisory only now; gate on --gate.
     real = [n for n, _ in results if n != FAILED]
-    if len(real) > 1 and len(set(real)) == 1:
-        print('\n!! every variant scored %d. Different sources cannot produce '
-              'identical output -- the builds are not happening. See trap 1.'
-              % real[0])
-        return 2
-    return 0 if any(n == 0 for n, _ in results) else 1
+    if len(real) > 1 and len(set(real)) == 1 and real[0] != 0:
+        print('\n(note: every variant scored %d. Usually means mwcc canonicalises '
+              'these spellings. To prove the builds are real, add a deliberately '
+              'wrong control variant and confirm it scores differently.)' % real[0])
+    if not any(n == 0 for n, _ in results):
+        return 1
+    print('\na MATCH here is NOT a match. Confirm with: '
+          'python tools/rel_sweep.py <module> --gate')
+    return 0
 
 
 if __name__ == '__main__':
