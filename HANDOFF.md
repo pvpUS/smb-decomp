@@ -378,15 +378,22 @@ all line up.
   the new `sqdist.h` applies to. Deliberately outside the repo; none of it
   byte-matches. run5/run6 dirs are still next door and their unconverted entries
   remain valid.
-- **The warm copies at `C:/tmp/smbm/<mod>` are still dirty at their run-7 end
-  state** — they have NOT been reset to the new HEAD. Reset and re-verify them
-  before handing them to run-8 agents, deleting every module object first: run 6
-  proved a preserved `.o` can be linked stale and still hash golden, so an
-  incremental "verified" baseline is worthless.
+- **All NINE warm copies at `C:/tmp/smbm/<mod>` are RESET to `f12f683`, clean
+  (0 dirty), and each rebuilt to its golden sha1 with `rel_sweep --gate`** — i.e.
+  with every module object plus the `.rel`/`.plf` DELETED first, not
+  incrementally. All nine reported GOLDEN. Run 6 proved a preserved `.o` can be
+  linked stale and still hash golden, so an incremental baseline is worthless.
+  Their CW temps `C:/tmp/tmp_<mod>` exist. Re-run with
+  `C:/tmp/smbm/warm_reset_run8.sh`, which fetches from the main working tree by
+  path (the run-7 commits are local only, so the GitHub remotes cannot serve
+  them).
+- **`C:/tmp/smbm/RUN8_BRIEF.md` is written** — hand it to every module agent. It
+  leads with `tools/rel_xref.py` and with **re-deriving reconnaissance**, because
+  five per-module facts in the previous brief were wrong and the agents that
+  checked theirs gained the most. Every path it references was verified to exist.
 - **`C:/tmp/smbm/RUN7_RESULTS.md`** holds the full per-module reports this
   section summarises — every idiom, residual and tool bug in the agents' own
-  words. **`RUN7_BRIEF.md` is now superseded**; write RUN8_BRIEF from §0.13,
-  leading with `tools/rel_xref.py` and the reachability tables.
+  words. `RUN7_BRIEF.md` is superseded.
 - Not pushed. Run 6's push was `fork/wip/rel-drafts-and-dol-matches` at `78bde4a`.
 
 ## 0.12 — RUN 6 DONE (2026-07-27): +3,813 insn, 8.83% -> 10.83%. Superseded by §0.13.
