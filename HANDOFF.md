@@ -4,7 +4,283 @@
 
 ---
 
-## 0.11 — RUN 5 DONE (2026-07-25): +5,768 insn, 5.79% -> 8.83%. START HERE.
+## 0.12 — RUN 6 DONE (2026-07-27): +3,813 insn, 8.83% -> 10.83%. START HERE.
+
+Nine parallel agents, one per module. All merged into the main tree, each rebuilt
+**there** to its golden sha1, then a **from-scratch** `make all` (all 751 REL
+module objects plus every `.rel`/`.plf` deleted first) = all 12 artifacts OK.
+Commits: `5cf8951` (seven modules) `f88915a` (mini_race + tool fix) `9c2c14a`
+(mini_golf). Working tree clean.
+
+| module | funcs | insn | % | gained |
+|---|---|---|---|---|
+| mini_bowling | 69/120 | 3844/15313 | 25.10% | +6 fns / +479 |
+| mini_pilot | — | 2218/12137 | 18.27% | +11 fns / +649 |
+| mini_race | 67/157 | 2586/19817 | 13.05% | +5 fns / +332 |
+| sel_ngc | 38/73 | 2244/18084 | 12.41% | +4 fns / +756 |
+| option | 38/71 | 1338/12375 | 10.81% | +5 fns / +397 |
+| mini_golf | 77/118 | 3547/38919 | 9.11% | +1 fn / +237 |
+| mini_fight | 76/154 | 2195/28588 | 7.68% | +1 fn / +61 |
+| test_mode | 35/94 | 921/16231 | 5.67% | +11 fns / +555 |
+| mini_billiards | 27/70 | 1712/28793 | 5.95% | +3 fns / +347 |
+| **TOTAL** | | **20605/190257** | **10.83%** | **+47 fns / +3,813** |
+
+**The rate HAS declined this time** — run 5 was +5,768. §0.11 predicted this: run 5
+drew 48% of its gain from three freshly-split modules and there are none left.
+Run 6 is ~66% of run 5 on a picked-over field. Per-agent yield now varies 20x
+(pilot +649 from near-misses, fight +61 from four dead ends), and **which
+functions you pick now matters far more than how hard you push on one.**
+
+### THE BIG LESSON: the carve ceiling was mostly imaginary
+
+Runs 3-5 built an elaborate theory around carving `.rodata` holes, whole-TU
+conversions, and a "58-function incremental ceiling". **Most of it was
+unnecessary.** A pure-C object that READS pool constants externally emits **no
+`.rodata` section at all** — mini_billiards proved this with `objdump -h` on the
+`.o`, not by inference, and mini_golf confirmed it independently.
+
+Only an actual **int->float conversion** spends a module's magic-double budget.
+Consequences:
+
+- **Detect blocked functions with `grep 'lis rN, 0x4330'` on the asm. NEVER by
+  grepping for the magic constant's label.** sel_ngc found two functions a label
+  scan called clean that were blocked via a *different* magic. mini_golf found
+  the reverse: counting `lfs/lfd` with a literal `lbl_` operand reports its three
+  biggest reachable functions as "0 pool loads" because they load via a hoisted
+  base register with a displacement. **§0.11's float-pressure numbers for golf
+  are wrong for this reason.**
+- **The "all N members of the TU must match at once" blocker was largely
+  fictional.** Of mini_billiards' 8-member `lbl_00020B58` TU — written off in
+  runs 4 AND 5 — exactly ONE member does an int->float conversion. The other
+  seven (960 insn) are individually attemptable with no carve.
+- **Spell the read with a TYPED pointer local**: `f64 *c = (f64 *)lbl_POOL;
+  c[11]`. The `u8 *c = lbl_POOL; *(f64 *)(c + 0x58)` form rematerialises the base
+  into a volatile register after a call (32 diffs vs 0) in option. **But this is
+  function-dependent** — mini_golf swept all 12 spellings on one function and
+  they scored identically, so try both rather than assuming.
+- **The §0.10 "workaround produces different codegen" dead end is EXPLAINED.**
+  Its symptom was mwcc materialising the pool base early into callee-saved regs
+  where the workaround sank it into the branch. The lever is the local's TYPE:
+  **an integer-typed address local (`u32 src = (u32)lbl_X;`) forces eager
+  materialisation into a callee-saved GPR; a pointer-typed one (`u8 *src =
+  lbl_X;`) lets it sink past a call into a volatile.** `register`,
+  initializer-vs-statement and declaration order had zero effect on that axis.
+
+### REACHABLE-WORK TRIAGE — the most valuable output of this run
+
+Every agent classified its remaining functions by `lis rN, 0x4330`. **Plan run 7
+off this table, not off percentages.** "Reachable" = convertible today with no
+new carve.
+
+| module | remaining | reachable now | magic-blocked | `.data` jump table |
+|---|---|---|---|---|
+| mini_race | 90 fns / 17,231 | **47 fns / 8,253 (48%)** | 40 / 7,509 | 3 / 1,469 |
+| test_mode | 59 fns / 15,310 | **38 fns / 7,608 (47%)** | 21 / 7,702 | — |
+| mini_bowling | 51 fns / 11,469 | **30 fns / 6,420 (56%)** | 18 / 4,742 | 3 / 307 |
+| mini_golf | 41 fns / 35,372 | **13 fns / 2,952 (8%)** | 23 / 28,048 | 4 / 4,077 |
+| sel_ngc | 35 fns | **14 fns / 2,241** | 17 | 1 |
+| mini_billiards | 43 fns | ≥7 fns / 960 in the pool TU alone | — | — |
+| mini_pilot | 32 chunks | — | ~24% of remaining | — |
+
+**mini_race, test_mode and mini_bowling are where run 7 should go**: ~22,300 insn
+of carve-free work between them, in modules whose remaining functions are small.
+**mini_golf is the trap** — 38,919 insn total but only 2,952 reachable; 79% sits
+behind int->float in five huge TUs (`lbl_0001B5B8` alone is 7,131 insn). Its
+per-agent yield was the worst in the run and will stay that way.
+
+Two standing structural buckets: `.data` switch jump tables (`bctr`) remain
+unreachable — `rel_carve` only holes `.rodata` — and now total ~5,850 insn
+project-wide. Magic-blocked work is NOT permanently blocked: mini_race has **8
+magic doubles in its blob and only one carved**, so its 7,509 blocked insn is a
+run-7 carve project, not a ceiling.
+
+### NEW IDIOMS — ranked, all proven by a golden build
+
+1. **Scan already-matched DOL code before decompiling from asm.** mini_golf's
+   `lbl_00010304` (237 insn) is a **verbatim copy of
+   `handle_ball_linear_kinematics` in `src/ball.c`**, changing only float
+   literals -> pool reads and one callee. Ported across: **2 diffs on the first
+   build**, then MATCH. This is the single cheapest match anyone has ever made
+   here and nobody had looked. mini_bowling separately found three
+   byte-identical sibling functions that took one C body verbatim.
+2. **A hidden vararg already sitting in r4.** test_mode's `lbl_00000208` sat at
+   22 diffs for ~20 spellings; the `printf` call sets only r3, but r4 still held
+   `gameSubmode` from the entry `lha` — it IS the second argument.
+   `printf(fmt, gameSubmode)` -> instant MATCH. **A call site with no `li`/`mr`
+   for r4/r5 but a live value there is an invisible argument, not dead code.**
+3. **In a FRAMELESS function mwcc duplicates the epilogue**, so `ret = 1; …
+   return ret;` is NOT `return 1;`. The assignment form emits bare conditional
+   returns (`bnelr`/`bltlr`/`beqlr`) plus one `li r3,0` hoisted to entry:
+   54 diffs -> 2 (mini_race).
+4. **`s32` and `int` are DIFFERENT TYPES to the register allocator** (`s32` is
+   `signed long`). `s32 m = x % 16;` matched where `int m` gave 6 diffs. Also
+   flipped another function 16<->22. Try both spellings anywhere a `%`//` result
+   or assignment target is involved. Separately, **`int i` folds away mwcc's
+   zero-trip loop guard where `s32 i` keeps it** (mini_bowling, 28 diffs -> 0).
+5. **Cast placement decides displacement-vs-index, and the cast must CHANGE the
+   pointer type.** `((s8 *)(q + K))[i*N]` -> `add rX,q,idx; lbz K(rX)`;
+   `(q+K)[i*N]`, `*(s8 *)(q+K+i*N)`, `q[i*N+K]` (11 spellings, one tree) ->
+   `addi rX,idx,K; lbzx`. Float twin: `((f32 *)(base + K))[i]` keeps K as a
+   displacement, `((f32 *)base)[i + K/4]` folds it into the index. **Mixing the
+   two spellings for the same array in one loop** is what reproduces two
+   different addressing forms (mini_race matched first try on this).
+6. **The FRA-slot lever applies to pool-read operands, and splitting a fused
+   multiply-add into statements is catastrophic**: `f1 = pool[17] * -f1 +
+   pool[15];` MATCHes, `f1 = -f1 * pool[17]; f1 += pool[15];` costs **110
+   diffs** — the opposite direction from §0.11 idiom 17's division case.
+7. **The "-1 trick" needs TWO uses to materialise.** A single inline
+   `*((u32 *)(p+0x34) - 1)` folds back to `lwz r4,0x30(r31)`; the same expression
+   at **two** use sites (no variable) materialises the address once, and the
+   FIRST use still folds to base+disp while the second goes through the register.
+   9 -> 0 and 40 -> 0 in test_mode. A declared pointer variable instead puts it
+   in a callee-saved register and hoists it above the call.
+8. **To hoist a global's ADDRESS into the entry block, declare a local
+   pointer-to-the-global**: `struct Camera **cam = &currentCamera;` +
+   `(*cam)->lookAt.x` moved `lis/addi` above an early-return `bnelr` where 9
+   other spellings stalled.
+9. **`mathutil_sqrt(mathutil_vec_sq_len(&v))` is NOT `mathutil_vec_len(&v)`** —
+   same instructions, different callee-saved FPR for the result (8 diffs -> 0
+   after ~20 permutations stalled). And **inline asm inside a `mathutil.h`
+   `static inline` does NOT trigger the asm-sibling deopt**.
+10. **`mathutil_mtxA_set_translate_xyz(x,y,z)` is the only way to get the "load
+    all three, then store all three" mtxA block** — three separate assignments
+    serialize into load/store pairs through one FPR.
+11. **An `int` loop counter with an explicit `(s16)` cast in the loop CONDITION**
+    gives `extsh; cmpwi` for the bound while keeping `j = i` a plain `mr`; a
+    genuine `s16` counter forces `extsh` on every read.
+12. **`.data` fn-ptr-table dispatch** matches as
+    `(*(void (**)(void))(lbl_TABLE + (i - BASE) * 4))();` — the array-index form
+    gives 13 diffs, a pointer local 34.
+13. **Extending a pointer local's live range outranks declaration order.** The
+    same address spelled off an already-declared local rather than
+    module-base + absolute offset took a function 7 diffs -> 0 after NO
+    declaration or statement permutation had moved it — then all 12 permutations
+    matched. Conversely **repeating a module-data base instead of caching it in a
+    local** took another function 72 -> 44 (the opposite of §0.11 idiom 10). Try
+    both.
+14. **Comma-operator init in `for` beats both a declaration initializer and a
+    preceding statement** (8 / 86 / 0 diffs on one function).
+15. **A `switch` with one case + default emits `beq body; b default`** where the
+    equivalent `if/else` emits a single `bne` — a reliable tell for a switch.
+16. **`extsb` + `cmplwi` is `(u32)(s8)x >= K`**, not `(u8)x >= K` (which gives
+    `clrlwi`). **A `(s32)` cast on a `u32` global forces `cmpwi` over `cmplwi`**
+    even against 0.
+17. **`rel_split` merges `.data` fn-ptr-table handlers into their predecessor in
+    mini_pilot too** — §0.11's audit claiming only `option` has this problem is
+    WRONG. No `--extra-start` re-split was needed there: the blob references them
+    as `_prolog + 0xNNNN`, so writing all five as plain C in one file just works.
+
+### CORRECTIONS — the NOT-levers list (§6 of RUN6_BRIEF) is substantially WRONG
+
+Three agents independently falsified entries. **Re-test anything on that list
+that is blocking you.**
+
+- **`T *p = (T *)arr;` is NOT the same as `T *p = arr;`.** Adding a redundant
+  cast to an *unrelated* pointer local's array-decay initializer flipped a
+  DIFFERENT value's parameter home from `mr r30,r3` to `addi r30,r3,0`, 1 diff
+  -> 0. Verified by isolation: `u8 *`, `char *` and `s8 *` casts all match, only
+  the uncast form fails — it is the **cast**, not the type. (But it is not
+  universal: pilot swept 9 combinations at 16 diffs and golf 128 at 14, both
+  unmoved.)
+- **`((f32 *)src)[27]` and `*(f32 *)(src + 0x6c)` are different expressions to
+  mwcc's CSE.** Mixing the two spellings across two occurrences suppresses a
+  pre-call hoist into `f31` while the peephole still coalesces them to one load.
+- **A value-adjacent empty `switch` case is STILL unrecoverable** — mini_race
+  re-tested it hard (10 case-sets, `s8`/`u8`/`int` scrutinees, `goto`, nested
+  `if`) and mwcc folds it into `default` and re-pivots every time. §0.11's
+  softening of this applies only to NON-adjacent cases. Believe §0.9 here.
+- **Declaration order is NOT the universal lever §0.11 claims.** golf swept 720
+  permutations on one branch and 336 scalar/aggregate interleavings for zero
+  movement; race swept **360** declaration permutations on `lbl_0000C7E4` and
+  moved it only by hoisting one statement. For same-sized scalars whose live
+  ranges are pinned by their initialisation points it does nothing — **but
+  moving a variable between block and function scope does** (30 -> 35/54).
+
+### TOOL BUGS — three fixed, read before using the tools
+
+- **`rel_merge_back.py` linked STALE OBJECTS and could report GOLDEN for a tree
+  it never built.** It copied warm-copy files with `shutil.copy2`, preserving the
+  SOURCE mtime — routinely older than the `.o` already in the main tree — so make
+  skipped the recompile. mini_race surfaced it as a bogus
+  `multiply-defined: lbl_00012D50` (only `_117.c` defines it; main still held a
+  `_95.c.o` from the OLD split numbering that did). Fixed in `f88915a`:
+  `copyfile` + `utime(now)`, and it deletes the module's objects before building.
+  **General rule this run kept re-teaching: anything that restores or copies a
+  `.c` must stamp its mtime, and any golden gate must delete objects first.**
+- **`rel_merge_back.py` merged ALL NINE warm copies on a bare or
+  unrecognised-flag invocation** — it stripped every `--`-prefixed argument, so
+  `--help` fell through to "everything". This pulled half-written state from
+  seven still-running agents into the main tree during this run. It now requires
+  an explicit module list or `--all` and rejects unknown flags.
+- **`rel_carve.py` `sources_block()` died with a bare `StopIteration`** on
+  `option`, `test_mode` and `sel_ngc` — it knew only the
+  `# mkbe.rel_<mod>.rel sources` spelling. Same three-spelling trap `rel_rematch`
+  already had. Two agents patched it independently; fixed in `5cf8951`.
+- **`rel_sweep` deletes only the `.o` of the file under test** — a sibling's
+  stale object survives make's 1-second granularity. mini_fight hit a non-golden
+  hash with `git status` COMPLETELY CLEAN; only `rm -f src/mini_fight*.c.o`
+  fixed it. **And `--sweep`'s restore is `shutil.move` of a `copy2` backup**, so
+  the restored `.c` keeps its original mtime, is older than the last variant's
+  `.o`, and every subsequent build silently links that variant. Not yet fixed —
+  `rm -f src/<file>.c.o` after every sweep.
+- **`rel_sweep --sweep`'s "every variant scored the same" nonzero exit is a FALSE
+  ALARM** on canonical variant sets. It fired 3-6 times per agent, including on
+  an all-MATCH set of 12 permutations. Gate on the golden sha1. To prove builds
+  are real, add a **deliberately-wrong control variant** (agents saw 74 vs 1).
+- **`rel_rematch` re-propagates a hand-added `#include` but not the extern
+  deletions that made it compile** — the regenerated `extern u8 X[];` then
+  conflicts with the header, failing in a file you did not touch.
+- **After a rematch, `git checkout src/<file>` is actively dangerous** — it
+  restores the PRE-rematch file and reintroduces functions the re-split moved
+  elsewhere (`multiply-defined`). Snapshot stub files AFTER the rematch.
+- **`rel_rematch` corrupts a tree containing hand-named files.** `src_files()`
+  sorts `<mod>_<digits>.c` numerically and keys everything else 0, so
+  mini_bowling's 33 letter-suffixed files (`_1b.c`, `_5c.c`) sorted to the FRONT
+  of SOURCES, destroying `.text` order, with every function defined twice. **It
+  exits 0.** Any module carrying hand-named files will hit this.
+- The `Makefile` is **CRLF** — a script rewriting SOURCES with an LF pattern
+  dies on a bare `AssertionError`.
+
+### NEXT RUN — ranked, with reconnaissance done
+
+1. **mini_race, test_mode, mini_bowling — ~22,300 insn of carve-free work.**
+   Highest yield in the project by a wide margin. All three have full
+   per-function reachable tables (race's regenerable via
+   `_scratch_mini_race/recon4.py`). race's single biggest item is
+   `lbl_000008B4` (1,497 insn, pool-reads only, 2 pool loads, 15 float ops).
+2. **mini_bowling's two mergeable TUs**: `lbl_000146A0` (5 fns / **854 insn**,
+   span 0x97B4-0xA23C with only one already-C interloper — the top prize) and
+   `lbl_00011338` (289 insn, `_42.c`..`_53.c` are ALL pure C already, a
+   mechanical merge). Two more singletons need a new hole (129 + 98).
+3. **mini_golf `lbl_000109CC` is at 14 diffs and its carve is fully worked out**
+   — draft + generator at `_scratch_mini_golf/nearmiss/`, and the exact command
+   is in the run-6 golf report (note `--from 36fe55d`, since HEAD and worktree
+   are both already carved). Residual is one 3-register rotation.
+4. **mini_billiards' pool TU is open** — 7 of 8 members (960 insn) need no carve.
+   `lbl_000023B0` is at 11 diffs, `lbl_00018474` at 15.
+5. **mini_pilot near-misses**: `lbl_0000893C` at 2 diffs — **recommend dropping
+   it**, the agent showed the identical DAG elsewhere in the module emits the
+   other `crclr` order, so it is a scheduler ready-list tie source cannot reach.
+   `lbl_000097C8` at 16, `lbl_000007B8` at 49 (one instruction, 25+ forms tried).
+6. **option: `lbl_00009BB4` reaches 0 text diffs** but is blocked on the spent
+   magic budget. If anyone lands a hand-punned magic-free form (currently 17
+   diffs, correct frame, correct instruction multiset), **all five decoded
+   functions unlock at once — 211 insn, no carve.**
+7. **mini_fight is exhausted at the small end** — 79 asm functions remain and
+   none are cheap. `lbl_0000F078` (147) and `lbl_0000EA10` (121) both read a pool
+   base at fixed displacements and are the prime `f32 *k = …; k[n]` candidates.
+8. **Deprioritise mini_golf generally** (8% reachable) despite its size.
+
+**Still-unverified inferences to flag if anyone upstreams this:** invented
+structs in sel_ngc (`SelNgcMenu`), mini_fight (`FightCell`, `FightSceneWork`,
+`FightPart`, `FightRail`, `FightCam`), mini_race (`RaceSub`/`RaceSub2`),
+test_mode (`TestModeVecKey`, `struct Preview *` at `sprite + 0x2C` inside
+`sprite.h`'s `filler12`), mini_billiards (`BilliardsPlayer`, `BilliardsApe`).
+All byte-match; none is confirmed against a symbol file.
+
+---
+
+## 0.11 — RUN 5 DONE (2026-07-25): +5,768 insn, 5.79% -> 8.83%. Superseded by §0.12.
 
 Nine parallel agents. **Every REL module in the project is now split** — `option`
 and `test_mode` were the last two monoliths, and splitting them means
