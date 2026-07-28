@@ -48,6 +48,7 @@
 #include "stobj.h"
 #include "world.h"
 #include "stdlib.h"
+#include "thread.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_pilot.s) or imported.  Declared so mwcc accepts `@ha/@l`.
@@ -156,7 +157,6 @@ extern void qsort();
 extern void set_shape_flags_in_model();
 extern void stcoli_sub35();
 extern void u_load_minigame_graphics();
-extern void thread_create();
 
 // Forward declarations so mwcc accepts `<fn>@ha/@l` and cross-function
 // branches before each function is defined below.
@@ -188,8 +188,8 @@ void lbl_00004A14(void);
 void lbl_00004E84(void);
 void lbl_00004F68(void);
 void lbl_00005044(void);
-void lbl_000051A4(void);
-static void lbl_00005414(void);
+void lbl_000051A4(struct Ape *ape, int status);
+void lbl_00005414(struct Ape *ape, float speed);
 void lbl_0000580C(void);
 void lbl_00005824(void);
 void lbl_00006124(void);
@@ -233,14 +233,74 @@ void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-asm void lbl_000051A4(void)
+void lbl_000051A4(struct Ape *ape, int status)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_000051A4.s"
+    u8 *k = (u8 *)lbl_0000BE80;
+    struct Ball *ball = &ballInfo[ape->ballId];
+    struct RaycastHit hit;
+    int r28;
+    float speed;
+
+    switch (status)
+    {
+    case THREAD_STATUS_KILLED:
+        ape_destroy(ape);
+        return;
+    }
+
+    if (debugFlags & 0xA)
+        return;
+    if (ball != currentBall)
+        return;
+
+    raycast_stage_down(&ball->pos, &hit, NULL);
+    ape->flags &= -20;
+    if ((!(hit.flags & 1) && ball->vel.y < *(f32 *)(k + 0x310))
+        || (*(f64 *)(k + 0x1B0) == *(f32 *)lbl_802F1FDC && *(s16 *)lbl_10000018 != 0))
+        ape->flags |= 2;
+    else if (mathutil_vec_len(&ball->unkB8) < *(f32 *)(k + 0x314))
+        ape->flags |= 1;
+
+    if (*(f32 *)lbl_802F1FDC > *(f64 *)(k + 0x1B0))
+    {
+        mathutil_mtxA_from_mtx(ball->unk30);
+        mathutil_mtxA_rotate_y(-0x4000);
+        mathutil_mtxA_to_quat(&ape->unk60);
+    }
+    else
+    {
+        r28 = !(ape->flags & 3);
+        u_ball_something_with_ape_rotation(ape);
+        if (r28)
+        {
+            speed = u_ball_something_with_walking_speed(ape);
+        }
+        else
+        {
+            speed = *(f32 *)(k + 0x30);
+            mathutil_mtxA_from_quat(&ape->unk60);
+            mathutil_mtxA_normalize_basis();
+            if (ape->flags & (1 << 1))
+                func_80037718(ape);
+        }
+    }
+
+    if (ball->flags & BALL_FLAG_05)
+        speed = mathutil_vec_len(&ball->vel);
+
+    if (lbl_802F1FF6 == 12)
+        check_ball_teeter(ape);
+    else
+        ball->flags &= ~BALL_FLAG_TEETER;
+
+    mathutil_mtxA_to_quat(&ape->unk60);
+    lbl_00005414(ape, speed);
+    ape_skel_anim_main(ape);
+    if (!(ape->flags & (1 << 3)))
+        func_8003765C(ape);
+    ape_face_dir(ape, &ball->lookPoint);
+    ball->unk100 = 0;
+    ball->lookPointPrio = *(f32 *)(k + 0x30);
 }
-static asm void lbl_00005414(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00005414.s"
-}
+
 #pragma force_active reset

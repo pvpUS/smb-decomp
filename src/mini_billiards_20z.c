@@ -226,11 +226,6 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm void lbl_00005654(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00005654.s"
-}
 asm void lbl_000059A8(void)
 {
     nofralloc

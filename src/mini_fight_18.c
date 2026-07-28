@@ -32,6 +32,13 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "background.h"
+#include "lens_flare.h"
+#include "ord_tbl.h"
+#include "rend_efc.h"
+#include "polydisp.h"
+#include "shadow.h"
+#include "stobj.h"
 #include "../data/common.nlobj.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
@@ -152,21 +159,15 @@ extern u8 lbl_10018D00[];
 extern u8 lbl_10018FD0[];
 extern u8 lbl_10018FD4[];
 extern u8 lbl_10019040[];
-extern u8 backgroundInfo[];
 extern u8 g_bgLightInfo[];
-extern u8 g_stobjInfo[];
 extern u8 infoWork[];
 extern u8 lbl_801EED98[];
-extern u8 lbl_8028C0B0[];
 extern u8 pauseMenuState[];
-extern u8 polyDisp[];
 extern u8 worldInfo[];
 
 // Imported functions the code calls that no included header declares.
 extern void ape_face_dir();
 extern void collide_ball_with_stage();
-extern void fade_color_base_default();
-extern void func_8000D5B8();
 extern void func_80047518();
 extern void func_8006AD3C();
 extern void func_8006B3E8();
@@ -188,7 +189,6 @@ extern void mathutil_tan();
 extern void mathutil_vec_normalize_len();
 extern void mathutil_vec_set_len();
 extern void mini_commend_free_data();
-extern void spawn_stobj();
 extern void u_math_unk15();
 extern void ape_skel_anim_main();
 extern void avdisp_draw_model_culled_sort_all();
@@ -198,7 +198,6 @@ extern void func_8006A9B8();
 extern void func_8006AAEC();
 extern void func_8009D794();
 extern void func_8009D8A4();
-extern void lens_flare_draw();
 extern void mathutil_mtxA_from_identity();
 extern void mathutil_mtxA_from_quat();
 extern void mathutil_mtxA_from_rotate_x();
@@ -229,7 +228,6 @@ extern void mathutil_mtxA_mult_left();
 extern void mathutil_mtxA_normalize_basis();
 extern void mathutil_mtxA_rigid_inv_tf_point();
 extern void mathutil_mtxA_scale_s();
-extern void ord_tbl_draw_nodes();
 extern void raycast_stage_down();
 extern void set_ape_model_lod();
 extern void thread_create();
@@ -245,12 +243,9 @@ extern void mathutil_mtxA_sq_from_identity();
 extern void mathutil_mtxA_tf_point_xyz();
 extern void mathutil_mtxA_translate_neg();
 extern void mathutil_vec_dot_normalized_safe();
-extern void rend_efc_mirror_enable();
-extern void stobj_draw();
 extern void u_ball_init_1();
 extern void GXSetTevAlphaIn_cached();
 extern void avdisp_set_alpha();
-extern void background_draw();
 extern void light_init();
 extern void mathutil_mtxA_from_mtxB_translate_xyz();
 extern void set_bg_ambient();
@@ -260,17 +255,12 @@ extern void alloc_pool_light();
 extern void avdisp_draw_model_culled_sort_none();
 extern void func_8009CD5C();
 extern void mathutil_mtxA_scale_xyz();
-extern void ord_tbl_set_depth_offset();
 extern void GXSetTevColorIn_cached();
-extern void draw_monkey();
 extern void func_8009C5E4();
 extern void mathutil_mtxA_sq_from_mtx();
 extern void mathutil_mtxA_to_euler_yxz();
-extern void rend_efc_draw();
 extern void GXSetTevKAlphaSel_cached();
-extern void background_light_assign();
 extern void GXSetTevOrder_cached();
-extern void u_draw_ball_shadow();
 extern void GXSetCullMode_cached();
 extern void GXSetFog_cached();
 extern void GXSetBlendMode_cached();
@@ -298,10 +288,10 @@ void lbl_0000AAD0(void);
 void lbl_0000ABA8(void);
 void lbl_0000ABE8(void);
 void lbl_0000AD9C(void);
-static void lbl_0000BC94(void);
-static void lbl_0000CE28(void);
+void lbl_0000BC94(void);
+void lbl_0000CE28(void);
 void lbl_0000CF98(void);
-static void lbl_0000D2F8(void);
+void lbl_0000D2F8(void);
 void lbl_0000D890(void);
 void lbl_0000D8B4(void);
 void lbl_0000D8D8(void);
@@ -395,34 +385,57 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_0000ABE8(void)
+void lbl_0000ABE8(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000ABE8.s"
+    int i;
+    f32 *k = (f32 *)lbl_0001C238;
+    struct Ball *oldBall = currentBall;
+
+    for (i = 0; i < 4; i++)
+    {
+        if (cameraInfo[i].sub28.vp.width > k[3] && cameraInfo[i].sub28.vp.height > k[3])
+        {
+            if (g_poolInfo.playerPool.statusList[i] == STAT_NULL
+             || g_poolInfo.playerPool.statusList[i] == STAT_FREEZE)
+                continue;
+            currentBall = &ballInfo[i];
+            change_current_camera(i);
+            u_draw_ball_shadow();
+            background_light_assign();
+            if (eventInfo[EVENT_REND_EFC].state == EV_STATE_RUNNING)
+                rend_efc_draw(4);
+            draw_monkey();
+            if (eventInfo[EVENT_STAGE].state == EV_STATE_RUNNING
+             || eventInfo[EVENT_STAGE].state == EV_STATE_SUSPENDED)
+                stage_draw();
+            if (eventInfo[EVENT_REND_EFC].state == EV_STATE_RUNNING)
+                rend_efc_draw(16);
+            poly_shadow_draw();
+            if (eventInfo[EVENT_BACKGROUND].state == EV_STATE_RUNNING)
+            {
+                ord_tbl_set_depth_offset(k[9]);
+                background_draw();
+                ord_tbl_set_depth_offset(k[3]);
+            }
+            if (eventInfo[EVENT_ITEM].state == EV_STATE_RUNNING)
+                item_draw();
+            if (eventInfo[EVENT_STOBJ].state == EV_STATE_RUNNING)
+                stobj_draw();
+            if (eventInfo[EVENT_EFFECT].state == EV_STATE_RUNNING)
+                effect_draw();
+            if (eventInfo[EVENT_BALL].state == EV_STATE_RUNNING)
+                ball_draw();
+            lbl_0000D2F8();
+            lbl_0000EA10();
+            ord_tbl_draw_nodes();
+            if (backgroundInfo.unk8 & 1)
+                lens_flare_draw(i);
+            if (eventInfo[EVENT_REND_EFC].state == EV_STATE_RUNNING)
+                rend_efc_draw(8);
+        }
+    }
+    currentBall = oldBall;
+    default_camera_env();
 }
-asm void lbl_0000AD9C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000AD9C.s"
-}
-static asm void lbl_0000BC94(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000BC94.s"
-}
-static asm void lbl_0000CE28(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000CE28.s"
-}
-asm void lbl_0000CF98(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000CF98.s"
-}
-static asm void lbl_0000D2F8(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000D2F8.s"
-}
+
 #pragma force_active reset

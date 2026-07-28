@@ -121,7 +121,7 @@ void lbl_00004260(void);
 void lbl_000042BC(void);
 void lbl_000047D0(void);
 void lbl_00004858(void);
-static void lbl_000048F4(void);
+void lbl_000048F4(void);
 void lbl_00004EB4(void);
 void lbl_00005020(void);
 void lbl_00005340(void);
@@ -151,24 +151,10 @@ void lbl_0000B218(void);
 void lbl_0000C148(void);
 
 #pragma force_active on
-static asm void lbl_000048F4(void)
+asm void lbl_000048F4(void)
 {
     nofralloc
 #include "../asm/nonmatchings/option/lbl_000048F4.s"
 }
-asm void lbl_00004EB4(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00004EB4.s"
-}
-asm void lbl_00005020(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00005020.s"
-}
-asm void lbl_00005340(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00005340.s"
-}
+
 #pragma force_active reset

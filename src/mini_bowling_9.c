@@ -245,10 +245,64 @@ void lbl_0000E894(void);
 void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
+#define CAMERA_FOREACH_2(code) \
+{ \
+    struct Camera **cc = &currentCamera; \
+    struct Camera *camera = &cameraInfo[0]; \
+    struct Camera *cameraBackup = *cc; \
+    int i; \
+    for (i = 0; i < 4; i++, camera++) \
+    { \
+        *cc = camera; \
+        { code } \
+    } \
+    *cc = cameraBackup; \
+}
+
 #pragma force_active on
-asm void lbl_00001F1C(void)
+void lbl_00001F1C(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00001F1C.s"
+    u8 *w = lbl_10000000;
+    u8 *cfg = lbl_0000F020;
+    u8 *p = lbl_00014F20;
+    f32 v;
+
+    if (*(s32 *)w == 0x12c)
+        lbl_0000E510();
+    *(f32 *)(w + 0x160) += (v = *(f32 *)(w + 0x164));
+    if (*(f32 *)(w + 0x160) >= *(f64 *)(cfg + 0x1d28)) {
+        *(f32 *)(w + 0x160) = *(f32 *)(cfg + 0x1c9c);
+        *(f32 *)(w + 0x164) = -v;
+    } else if (*(f32 *)(w + 0x160) <= *(f64 *)(cfg + 0x1dc0)) {
+        *(f32 *)(w + 0x160) = *(f32 *)(cfg + 0x1c98);
+        *(f32 *)(w + 0x164) = -v;
+    }
+    if (*(f32 *)(w + 0x160) <= *(f64 *)(cfg + 0x1dc0))
+        u_play_sound_0(0x104009d);
+    if (*(f32 *)(w + 0x160) >= *(f64 *)(cfg + 0x1d28))
+        u_play_sound_0(0xfc009e);
+    *(f32 *)(w + 0x168) = *(f64 *)(cfg + 0x1e38) * *(f32 *)(w + 0x160) - *(f64 *)(cfg + 0x1d28);
+    if ((controllerInfo[playerControllerIDs[currentBall->playerId]].pressed.button & PAD_BUTTON_A)
+        || *(s32 *)w < 0) {
+        destroy_sprite_with_tag(0x6b);
+        u_play_sound_0(0x11a);
+        *(f32 *)(w + 0x160) = *(f32 *)(cfg + 0x1c98);
+        *(f32 *)(w + 0x164) = *(f32 *)(cfg + 0x1dfc);
+        *(f32 *)(w + 0x16c) = *(f32 *)(cfg + 0x1c98);
+        *(s32 *)w = 0x24c;
+        *(s32 *)p = 0x10;
+        *(s32 *)(p + 4) = 0x4435;
+        CAMERA_FOREACH_2(camera->subState = 4;)
+    }
+    if (controllerInfo[playerControllerIDs[currentBall->playerId]].pressed.button & PAD_BUTTON_B) {
+        destroy_sprite_with_tag(0x6b);
+        u_play_sound_0(0x119);
+        *(f32 *)(w + 0x160) = *(f32 *)(cfg + 0x1c98);
+        *(f32 *)(w + 0x164) = *(f32 *)(cfg + 0x1dfc);
+        *(s32 *)w = 0x2710;
+        *(s32 *)p = 4;
+        *(s32 *)(p + 4) = 0x40a1;
+        CAMERA_FOREACH_2(camera->subState = 2;)
+    }
 }
 #pragma force_active reset

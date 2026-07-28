@@ -206,7 +206,7 @@ void lbl_0000A23C(void);
 void lbl_0000A610(void);
 void lbl_0000A778(void);
 void lbl_0000A808(void);
-void lbl_0000A878(void);
+void lbl_0000A878(int);
 void lbl_0000AAAC(void);
 void lbl_0000AB98(void);
 void lbl_0000AC60(void);
@@ -218,13 +218,13 @@ void lbl_0000B1BC(void);
 void lbl_0000B344(void);
 void lbl_0000B460(void);
 void lbl_0000B654(void);
-void lbl_0000B848(void);
-void lbl_0000B914(void);
+void lbl_0000B848(void *);
+void lbl_0000B914(void *);
 void lbl_0000BDE0(void);
 void lbl_0000BEB8(void);
 void lbl_0000C0D0(void);
-void lbl_0000C1D0(void);
-void lbl_0000CAA8(void);
+void lbl_0000C1D0(void *, int);
+void lbl_0000CAA8(int);
 void lbl_0000D4D4(void);
 void lbl_0000D598(void);
 void lbl_0000D650(void);
@@ -245,10 +245,65 @@ void lbl_0000E894(void);
 void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
-#pragma force_active on
-asm void lbl_0000A878(void)
+struct BowlPin
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000A878.s"
+    u32 flags;
+    Vec a[12];
+    Vec b[12];
+    Vec pos;
+    Vec vel;
+    Vec rot;
+    Mtx mtx;
+    u32 unk178;
+    u32 unk17c;
+    u8 filler180[0x184 - 0x180];
+};
+
+#pragma force_active on
+void lbl_0000A878(int a)
+{
+    u8 *k = lbl_00014800;
+    int i;
+    struct BowlPin *pin;
+
+    if (debugFlags & 0xA)
+        return;
+    for (pin = (struct BowlPin *)lbl_10018510, i = 0; i < 10; i++, pin++) {
+        if (pin->flags == 0)
+            continue;
+        if (pin->flags & 0x18)
+            continue;
+        if (!(pin->flags & 2)) {
+            f32 sq;
+
+            pin->vel.x = *(f64 *)(k + 0x3c0) * pin->vel.x;
+            pin->vel.y = *(f64 *)(k + 0x3c0) * pin->vel.y;
+            pin->vel.z = *(f64 *)(k + 0x3c0) * pin->vel.z;
+            pin->rot.x = *(f64 *)(k + 0x3c0) * pin->rot.x;
+            pin->rot.y = *(f64 *)(k + 0x3c0) * pin->rot.y;
+            pin->rot.z = *(f64 *)(k + 0x3c0) * pin->rot.z;
+            pin->vel.y -= *(f64 *)(k + 0x3c8);
+            pin->pos.x = pin->vel.x + pin->pos.x;
+            pin->pos.y = pin->vel.y + pin->pos.y;
+            pin->pos.z = pin->vel.z + pin->pos.z;
+            sq = mathutil_vec_sq_len(&pin->rot);
+            if (sq > *(f64 *)(k + 0x3d0)) {
+                f32 s = *(f64 *)(k + 0x3d8) * mathutil_rsqrt(sq);
+                pin->rot.x *= s;
+                pin->rot.y *= s;
+                pin->rot.z *= s;
+            }
+            mathutil_mtxA_from_rotate_y(pin->rot.y);
+            mathutil_mtxA_rotate_x((s16)pin->rot.x);
+            mathutil_mtxA_rotate_z((s16)pin->rot.z);
+            mathutil_mtxA_mult_right(pin->mtx);
+            mathutil_mtxA_to_mtx(pin->mtx);
+            lbl_0000B848(pin);
+        }
+        lbl_0000C1D0(pin, a);
+        lbl_0000CAA8(i);
+        if (!(pin->flags & 2))
+            lbl_0000B914(pin);
+    }
 }
 #pragma force_active reset

@@ -220,11 +220,11 @@ void lbl_0000B654(void);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
 void lbl_0000BDE0(void);
-void lbl_0000BEB8(void);
-void lbl_0000C0D0(void);
+void lbl_0000BEB8(struct BowlPin *, Vec *, int);
+void lbl_0000C0D0(struct BowlPin *, int, Vec *, Vec *);
 void lbl_0000C1D0(void);
 void lbl_0000CAA8(void);
-void lbl_0000D4D4(void);
+void lbl_0000D4D4(struct BowlPin *, Vec *);
 void lbl_0000D598(void);
 void lbl_0000D650(void);
 void lbl_0000D7F8(void);
@@ -244,10 +244,57 @@ void lbl_0000E894(void);
 void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
-#pragma force_active on
-asm void lbl_0000BEB8(void)
+struct BowlPin
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000BEB8.s"
+    u32 flags;
+    Vec a[12];
+    Vec b[12];
+    Vec pos;
+    Vec vel;
+    Vec rot;
+    Mtx mtx;
+    u32 unk178;
+    u32 unk17c;
+    u8 filler180[0x184 - 0x180];
+};
+
+#pragma force_active on
+void lbl_0000BEB8(struct BowlPin *pin, Vec *v, int idx)
+{
+    u8 *k = lbl_00014800;
+    Vec sp44;
+    Vec sp38;
+    Vec sp2c;
+    Vec sp20;
+    Vec sp14;
+
+    sp44.x = pin->a[idx].x - pin->b[idx].x;
+    sp44.y = pin->a[idx].y - pin->b[idx].y;
+    sp44.z = pin->a[idx].z - pin->b[idx].z;
+    sp44.x = v->x - sp44.x;
+    sp44.y = v->y - sp44.y;
+    sp44.z = v->z - sp44.z;
+    lbl_0000C0D0(pin, idx, &sp44, &sp38);
+    if (pin->unk17c != pin->unk178) {
+        sp38.x *= *(f32 *)(k + 0x398);
+        sp38.y *= *(f32 *)(k + 0x398);
+        sp38.z *= *(f32 *)(k + 0x398);
+    } else {
+        f32 d;
+
+        sp2c.x = pin->b[idx].x - pin->a[idx].x;
+        sp2c.y = pin->b[idx].y - pin->a[idx].y;
+        sp2c.z = pin->b[idx].z - pin->a[idx].z;
+        sp14 = *v;
+        mathutil_vec_normalize_len(&sp14);
+        d = mathutil_vec_dot_prod(&sp2c, &sp14);
+        sp20.x = *(f64 *)(k + 0x4c0) * (sp2c.x - sp14.x * d);
+        sp20.y = *(f64 *)(k + 0x4c0) * (sp2c.y - sp14.y * d);
+        sp20.z = *(f64 *)(k + 0x4c0) * (sp2c.z - sp14.z * d);
+        lbl_0000D4D4(pin, &sp20);
+    }
+    pin->rot.x = sp38.x + pin->rot.x;
+    pin->rot.y = sp38.y + pin->rot.y;
+    pin->rot.z = sp38.z + pin->rot.z;
 }
 #pragma force_active reset

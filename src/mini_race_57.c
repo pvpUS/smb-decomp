@@ -380,14 +380,5 @@ asm void lbl_0000ADDC(void)
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_0000ADDC.s"
 }
-asm void lbl_0000AFF8(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000AFF8.s"
-}
-asm void lbl_0000B2F0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000B2F0.s"
-}
+
 #pragma force_active reset

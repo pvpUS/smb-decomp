@@ -145,7 +145,7 @@ void lbl_00000234(void);
 void lbl_0000033C(void);
 void lbl_000005D4(void);
 void lbl_00001910(void);
-void lbl_00001968(void);
+int lbl_00001968(void);
 void lbl_00001B38(void);
 void lbl_00001D58(void);
 void lbl_00001E10(void);
@@ -207,15 +207,56 @@ void lbl_00011728(void);
 void lbl_00011824(void);
 void lbl_000118E4(void);
 
-#pragma force_active on
-asm void lbl_00001968(void)
+static inline int u_count_pads(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_00001968.s"
+    int count;
+    int i;
+
+    count = 0;
+    for (i = 0; i < 4; i++)
+    {
+        if (controllerInfo[i].held.err == 0)
+            count++;
+    }
+    return count;
 }
-asm void lbl_00001B38(void)
+
+#pragma force_active on
+int lbl_00001968(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_00001B38.s"
+    int ret;
+    int n;
+    int i;
+
+    ret = 0;
+    switch (modeCtrl.gameType)
+    {
+    case GAMETYPE_MAIN_COMPETITION:
+        n = u_count_pads();
+        *(s32 *)((u8 *)&lbl_801EEDA8 + 0x3C) = n;
+        if (modeCtrl.playerCount > *(s32 *)((u8 *)&lbl_801EEDA8 + 0x3C))
+            modeCtrl.playerCount = *(s32 *)((u8 *)&lbl_801EEDA8 + 0x3C);
+        if (modeCtrl.playerCount < *(s32 *)((u8 *)&lbl_801EEDA8 + 0x40))
+            modeCtrl.playerCount = *(s32 *)((u8 *)&lbl_801EEDA8 + 0x40);
+        if (*(s32 *)((u8 *)&lbl_801EEDA8 + 0x3C) < 2)
+            ret = 1;
+        break;
+    case GAMETYPE_MINI_RACE:
+    case GAMETYPE_MINI_FIGHT:
+        n = u_count_pads();
+        *(s32 *)((u8 *)&lbl_801EEDA8 + 0x3C) = n;
+        if (modeCtrl.playerCount > *(s32 *)((u8 *)&lbl_801EEDA8 + 0x3C))
+            modeCtrl.playerCount = *(s32 *)((u8 *)&lbl_801EEDA8 + 0x3C);
+        if (modeCtrl.playerCount < *(s32 *)((u8 *)&lbl_801EEDA8 + 0x40))
+            modeCtrl.playerCount = *(s32 *)((u8 *)&lbl_801EEDA8 + 0x40);
+        break;
+    default:
+        if (modeCtrl.playerCount > *(s32 *)((u8 *)&lbl_801EEDA8 + 0x3C))
+            modeCtrl.playerCount = *(s32 *)((u8 *)&lbl_801EEDA8 + 0x3C);
+        if (modeCtrl.playerCount < *(s32 *)((u8 *)&lbl_801EEDA8 + 0x40))
+            modeCtrl.playerCount = *(s32 *)((u8 *)&lbl_801EEDA8 + 0x40);
+        break;
+    }
+    return ret;
 }
 #pragma force_active reset

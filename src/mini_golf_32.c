@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_0000C128.
+ * mini_golf.c -- REL module: isolated function lbl_0000BDEC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -196,7 +196,7 @@ void lbl_0000B36C(void);
 void lbl_0000B754(void);
 void lbl_0000B8A8(void);
 void lbl_0000BDEC(void);
-void lbl_0000C128(struct Camera *);
+void lbl_0000C128(void);
 void lbl_0000C230(void);
 void lbl_0000C33C(void);
 void lbl_0000D64C(void);
@@ -240,6 +240,7 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
+void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -257,25 +258,9 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-void lbl_0000C128(struct Camera *camera)
+asm void lbl_0000BDEC(void)
 {
-    camera->lookAt = stageBoundSphere.pos;
-    camera->eye.x = stageBoundSphere.radius;
-    camera->eye.y = *(f32 *)lbl_00026390;
-    camera->eye.z = *(f32 *)lbl_00026390;
-
-    mathutil_mtxA_from_identity();
-    mathutil_mtxA_translate((Vec *)&stageBoundSphere);
-    mathutil_mtxA_rotate_y(globalAnimTimer * 64);
-    mathutil_mtxA_rotate_z(0x1000);
-    mathutil_mtxA_tf_point(&camera->eye, &camera->eye);
-
-    camera->rotY = mathutil_atan2(camera->lookAt.x - camera->eye.x,
-                                  camera->lookAt.z - camera->eye.z) - 0x8000;
-    camera->rotX = mathutil_atan2(
-        camera->lookAt.y - camera->eye.y,
-        mathutil_sqrt(mathutil_sum_of_sq_2(camera->lookAt.x - camera->eye.x,
-                                           camera->lookAt.z - camera->eye.z)));
-    camera->rotZ = 0;
+    nofralloc
+#include "../asm/nonmatchings/mini_golf/lbl_0000BDEC.s"
 }
 #pragma force_active reset

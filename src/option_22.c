@@ -120,7 +120,7 @@ void lbl_00003F10(void);
 void lbl_00003F6C(void);
 void lbl_00003FF0(void);
 void lbl_00004204(void);
-void lbl_00004260(void);
+void lbl_00004260(int);
 void lbl_000042BC(void);
 void lbl_000047D0(void);
 void lbl_00004858(void);
@@ -152,25 +152,48 @@ void lbl_0000B10C(void);
 void lbl_0000B218(void);
 void lbl_0000C148(void);
 
+//@SUB void lbl_00004260(void);|void lbl_00004260(int);
 #pragma force_active on
-static asm void lbl_00002DA4(void)
+void lbl_00002DA4(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00002DA4.s"
-}
-static asm void lbl_00002F14(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00002F14.s"
-}
-static asm void lbl_00003240(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00003240.s"
-}
-asm void lbl_000038A8(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_000038A8.s"
+    u8 *p = &modeCtrl.splitscreenMode;
+    u8 sel;
+    u8 v;
+
+    sel = modeCtrl.splitscreenMode;
+    v = sel;
+    if (sel % 2 != 0)
+    {
+        if ((g_currPlayerButtons[2] & 1) || (g_currPlayerAnalogButtons[2] & 1))
+            v--;
+    }
+    else
+    {
+        if ((g_currPlayerButtons[2] & 2) || (g_currPlayerAnalogButtons[2] & 2))
+            v++;
+    }
+    if (v < 2)
+    {
+        if ((g_currPlayerButtons[2] & 4) || (g_currPlayerAnalogButtons[2] & 4))
+            v += 2;
+    }
+    else
+    {
+        if ((g_currPlayerButtons[2] & 8) || (g_currPlayerAnalogButtons[2] & 8))
+            v -= 2;
+    }
+    if (v > 3)
+        v = 0;
+    if (v != sel)
+    {
+        u_play_sound_0(0x6C);
+        *p = v;
+    }
+    if (g_currPlayerButtons[2] & 0x200)
+    {
+        u_play_sound_0(0x6B);
+        lbl_00004260(0x5D);
+        gameSubmodeRequest = 0xAE;
+    }
 }
 #pragma force_active reset

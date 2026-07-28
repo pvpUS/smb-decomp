@@ -175,7 +175,7 @@ void lbl_00007778(void);
 void lbl_00007878(void);
 void lbl_00007964(void);
 void lbl_000079E8(void);
-void lbl_00007A6C(void);
+void lbl_00007A6C(struct Ball *);
 void lbl_00007C54(void);
 void lbl_00007E74(void);
 void lbl_00007FE0(void);
@@ -246,9 +246,62 @@ void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
 #pragma force_active on
-asm void lbl_00007A6C(void)
+void lbl_00007A6C(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00007A6C.s"
+    s32 *snd = (s32 *)lbl_000153E0;
+    u8 *tbl = lbl_00011258;
+    Vec dir;
+    Vec v;
+    s32 pad;
+
+    u_ball_init_2(ball);
+    ball->pos.x = *(f32 *)(tbl + 0x14);
+    ball->pos.y = *(f32 *)(tbl + 0x18);
+    ball->pos.z = *(f32 *)(tbl + 0x14);
+    ball->prevPos.x = *(f32 *)(tbl + 0x14);
+    ball->prevPos.y = *(f32 *)(tbl + 0x18);
+    ball->prevPos.z = *(f32 *)(tbl + 0x14);
+    ball->vel.x = *(f32 *)(tbl + 0x14);
+    ball->vel.y = *(f32 *)(tbl + 0x14);
+    ball->vel.z = *(f32 *)(tbl + 0x14);
+    ball->rotX = 0;
+    ball->rotY = 0;
+    ball->rotZ = 0;
+    ball->unk60 = 0;
+    ball->unk62 = 0;
+    ball->unk64 = 0;
+    ball->flags &= ~BALL_FLAG_INVISIBLE;
+    ball->ape->flags &= ~(APE_FLAG_14 | APE_FLAG_INVISIBLE);
+    ball->speed = *(f32 *)(tbl + 0x14);
+    ball->unkC4 = *(f32 *)(tbl + 0x14);
+    v = *(Vec *)(tbl + 8);
+    ball->unkB8 = *(Vec *)&v;
+    mathutil_mtxA_from_identity();
+    mathutil_mtxA_to_quat(&ball->unk98);
+    mathutil_mtxA_rotate_z(ball->rotZ);
+    mathutil_mtxA_rotate_y(ball->rotY);
+    mathutil_mtxA_rotate_x(ball->rotX);
+    mathutil_mtxA_to_mtx(ball->unk30);
+    mathutil_mtxA_to_mtx(ball->unkC8);
+    mathutil_mtxA_to_quat(&ball->unkA8);
+    if (modeCtrl.playerCount == 1)
+        ball->colorId = 3;
+    else
+        ball->colorId = ball->playerId;
+    dir.x = *(f32 *)(tbl + 0x14);
+    dir.y = *(f32 *)(tbl + 0x14);
+    dir.z = *(f32 *)(tbl + 0x1c);
+    mot_ape_set_quat_from_vec(ball->ape, &dir);
+    if (snd[0] != -1) {
+        SoundOff(snd[0]);
+        snd[0] = -1;
+    }
+    if (snd[1] != -1) {
+        SoundOff(snd[1]);
+        snd[1] = -1;
+    }
+    ball->unk80 = 0;
+    ball->state = 0x19;
+    ball->unk148 = 2;
 }
 #pragma force_active reset

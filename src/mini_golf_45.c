@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_000106B8.
+ * mini_golf.c -- REL module: isolated function lbl_0000FBC8.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -240,6 +240,7 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
+void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -257,41 +258,9 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-void lbl_000106B8(void)
+asm void lbl_0000FBC8(void)
 {
-    u8 *w = (u8 *)lbl_10000190;
-    struct StageAnimGroup *ag;
-    Mtx sp8;
-
-    *(s16 *)w = (rand() & 0x7FFF) % 64;
-    *(s16 *)(w + 2) = (rand() & 0x7FFF) % 64;
-    {
-        struct StageAnimGroup **agp = &decodedStageLzPtr->animGroups;
-
-        if ((*agp)[1].gridStepX > (*agp)[2].gridStepX)
-        {
-            w[4] = 1;
-            w[5] = 2;
-        }
-        else
-        {
-            w[4] = 2;
-            w[5] = 1;
-        }
-        ag = &(*agp)[w[5]];
-    }
-    mathutil_mtxA_from_translate(&ag->initPos);
-    mathutil_mtxA_rotate_z(ag->initRot.z);
-    mathutil_mtxA_rotate_y(ag->initRot.y);
-    mathutil_mtxA_rotate_x(ag->initRot.x);
-    mathutil_mtxA_to_mtx(sp8);
-    ag = &decodedStageLzPtr->animGroups[w[4]];
-    mathutil_mtxA_from_identity();
-    mathutil_mtxA_rotate_x(-ag->initRot.x);
-    mathutil_mtxA_rotate_y(-ag->initRot.y);
-    mathutil_mtxA_rotate_z(-ag->initRot.z);
-    mathutil_mtxA_translate_neg(&ag->initPos);
-    mathutil_mtxA_mult_right(sp8);
-    mathutil_mtxA_to_mtx((f32 (*)[4])(w + 8));
+    nofralloc
+#include "../asm/nonmatchings/mini_golf/lbl_0000FBC8.s"
 }
 #pragma force_active reset

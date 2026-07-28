@@ -188,7 +188,6 @@ void _epilog(void);
 void _unresolved(void);
 void lbl_00000208(void);
 void lbl_00000270(void);
-void lbl_00000630(void);
 void lbl_00000934(void);
 void lbl_00001B78(void);
 void lbl_00002108(void);
@@ -265,10 +264,51 @@ void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
-#pragma force_active on
-asm void lbl_00000630(void)
+struct TestDipEntry
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00000630.s"
+    /*0x00*/ int type;
+    /*0x04*/ int value;
+    /*0x08*/ int unk8;
+};
+
+#pragma force_active on
+void lbl_00000630(void)
+{
+    u8 *k = lbl_000102B0;
+    struct TestDipEntry *e;
+    u32 i;
+
+    window_set_cursor_pos(1, 1);
+    window_printf_2((char *)(k + 0x3C0));
+    e = (struct TestDipEntry *)(k + 0x27C);
+    for (i = 0; i < 27; i++, e++)
+    {
+        window_set_cursor_pos(14, i + 3);
+        switch (e->type)
+        {
+        case 3:
+            window_set_text_color(2);
+            window_move_cursor(-8, 1);
+            window_printf_2((char *)(k + 0x3CC), e->value);
+            window_set_text_color(0);
+            break;
+        case 0:
+            window_printf_2((char *)(k + 0x3CC), e->value);
+            break;
+        case 1:
+            window_printf_2((char *)(k + 0x3D0), loadingStageIdRequest);
+            break;
+        case 2:
+            window_printf_2((char *)(k + 0x3E0), *(s16 *)&lbl_802F1F40,
+                            ((char **)bgTypeNames)[*(s16 *)&lbl_802F1F40]);
+            break;
+        }
+    }
+    window_set_cursor_pos(12, (u16)(*(int *)lbl_10000000 + 3));
+    window_set_text_color(1);
+    window_printf_2((char *)(k + 0x400));
+    window_set_text_color(0);
 }
 #pragma force_active reset
+
+

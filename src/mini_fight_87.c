@@ -381,9 +381,9 @@ void lbl_00019340(void);
 void lbl_00019464(void);
 void lbl_00019B3C(void);
 void lbl_00019B40(void);
-static void lbl_00019C94(void);
-static void lbl_00019E2C(void);
-static void lbl_0001A0A8(void);
+void lbl_00019C94(void);
+void lbl_00019E2C(void);
+void lbl_0001A0A8(void);
 void lbl_0001A330(void);
 void lbl_0001A348(void);
 void lbl_0001A360(void);
@@ -400,19 +400,5 @@ asm void lbl_00019B40(void)
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_00019B40.s"
 }
-static asm void lbl_00019C94(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00019C94.s"
-}
-static asm void lbl_00019E2C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00019E2C.s"
-}
-static asm void lbl_0001A0A8(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0001A0A8.s"
-}
+
 #pragma force_active reset

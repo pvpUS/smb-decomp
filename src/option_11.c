@@ -158,19 +158,5 @@ static asm void lbl_0000077C(void)
     nofralloc
 #include "../asm/nonmatchings/option/lbl_0000077C.s"
 }
-static asm void lbl_00000AE0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00000AE0.s"
-}
-static asm void lbl_00000C94(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00000C94.s"
-}
-asm void lbl_00001598(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00001598.s"
-}
+
 #pragma force_active reset

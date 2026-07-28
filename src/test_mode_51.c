@@ -237,7 +237,6 @@ void lbl_0000B6B0(void);
 void lbl_0000BE00(void);
 void lbl_0000BE94(void);
 void lbl_0000BE98(void);
-void lbl_0000BEB8(void);
 void lbl_0000BFA0(void);
 void lbl_0000BFE8(void);
 void lbl_0000C00C(void);
@@ -265,9 +264,24 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_0000BEB8(void)
+void lbl_0000BEB8(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000BEB8.s"
+    struct TPL **tpl = (struct TPL **)lbl_10000FA8;
+    u16 w;
+    u16 h;
+    GXTexFmt fmt;
+    void *data;
+
+    if (*tpl == NULL)
+        *tpl = bitmap_load_tpl((char *)lbl_000148D8);
+    w = GXGetTexObjWidth(&(*tpl)->texObjs[1]);
+    h = GXGetTexObjHeight(&(*tpl)->texObjs[1]);
+    fmt = GXGetTexObjFmt(&(*tpl)->texObjs[1]);
+    data = GXGetTexObjData(&(*tpl)->texObjs[1]);
+    GXInitTexObj(&(*tpl)->texObjs[1], data, w, h, fmt, GX_MIRROR, GX_MIRROR, GX_FALSE);
+    lbl_0000C0B0();
+    u_replay_test_init();
+    camera_set_state_all(2);
 }
 #pragma force_active reset
+

@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_00010E68.
+ * mini_golf.c -- REL module: isolated function lbl_00010304.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -139,7 +139,7 @@ extern void mini_commend_free_data();
 
 // Forward declarations so mwcc accepts `<fn>@ha/@l` and cross-function
 // branches before each function is defined below.
-struct GMAModel* lbl_000000C8(struct GMA* gma, char* name);
+void lbl_000000C8(void);
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
@@ -153,40 +153,40 @@ void lbl_00008C78(void);
 void lbl_00008D34(void);
 void lbl_00008F44(void);
 void lbl_0000907C(void);
-u8 lbl_00009178(void);
+void lbl_00009178(void);
 void lbl_000091BC(void);
-f32 lbl_000092C4(void);
-f32 lbl_000092D0(void);
-f32 lbl_000092E0(void);
-s16 lbl_000092F0(void);
-u8 lbl_00009300(void);
-u8 lbl_00009310(void);
-void lbl_00009320(Vec* p);
-void lbl_00009340(Vec* p);
-void lbl_00009360(Vec* p);
-void lbl_00009384(s16* p);
-void lbl_00009394(s16* p);
-void lbl_000093A4(s16* p);
-int lbl_000093B4(void);
-int lbl_000093C4(void);
-u8 lbl_000093D4(int a, int b);
-u8 lbl_000093F0(int i);
-u8 lbl_00009404(void);
-u16 lbl_00009414(void);
-u8 lbl_00009424(void);
-u8 lbl_00009438(void);
-void lbl_00009448(s8 a);
-u8 lbl_00009458(void);
-u8 lbl_00009478(void);
+void lbl_000092C4(void);
+void lbl_000092D0(void);
+void lbl_000092E0(void);
+void lbl_000092F0(void);
+void lbl_00009300(void);
+void lbl_00009310(void);
+void lbl_00009320(void);
+void lbl_00009340(void);
+void lbl_00009360(void);
+void lbl_00009384(void);
+void lbl_00009394(void);
+void lbl_000093A4(void);
+void lbl_000093B4(void);
+void lbl_000093C4(void);
+void lbl_000093D4(void);
+void lbl_000093F0(void);
+void lbl_00009404(void);
+void lbl_00009414(void);
+void lbl_00009424(void);
+void lbl_00009438(void);
+void lbl_00009448(void);
+void lbl_00009458(void);
+void lbl_00009478(void);
 void lbl_00009488(void);
 void lbl_00009538(void);
 void lbl_000095C4(void);
-int lbl_000097D8(void);
-int lbl_00009800(void);
+void lbl_000097D8(void);
+void lbl_00009800(void);
 void lbl_0000982C(void);
 void lbl_00009880(void);
-int lbl_00009968(u8 a);
-void lbl_000099B4(Mtx m);
+void lbl_00009968(void);
+void lbl_000099B4(void);
 void lbl_000099E0(void);
 void lbl_00009B68(void);
 void lbl_00009C10(void);
@@ -203,7 +203,7 @@ void lbl_0000D64C(void);
 void lbl_0000E8AC(void);
 void lbl_0000E998(void);
 void lbl_0000E99C(void);
-void lbl_0000F11C(u8* s, Vec* out, f32 t);
+void lbl_0000F11C(void);
 void lbl_0000F194(void);
 void lbl_0000F290(void);
 void lbl_0000F750(void);
@@ -211,12 +211,12 @@ void lbl_0000F7E8(void);
 void lbl_0000FA18(void);
 void lbl_0000FBC8(void);
 void lbl_0000FCE0(void);
-void lbl_000100D4(void);
-void lbl_00010304(void);
+void lbl_000100D4(struct PhysicsBall *b, struct Stage *s);
+void lbl_00010304(struct Ball *ball, struct PhysicsBall *physBall, int c);
 void lbl_000106B8(void);
 void lbl_00010808(void);
 void lbl_000109CC(void);
-void lbl_00010E68(s16 x);
+void lbl_00010E68(void);
 void lbl_00010E74(void);
 void lbl_00011254(void);
 void lbl_000115F8(void);
@@ -238,8 +238,9 @@ void lbl_00022D4C(void);
 void lbl_000230E4(void);
 void lbl_00023AB4(void);
 void lbl_00023C68(void);
-u8 lbl_00023DC4(void);
+void lbl_00023DC4(void);
 void lbl_00023DD4(void);
+void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -249,16 +250,101 @@ void lbl_0002544C(void);
 void lbl_000255CC(void);
 void lbl_00025928(void);
 void lbl_00025A44(void);
-void lbl_00025B10(void (*fn)(void));
-void lbl_00025B70(void (*fn)(void));
+void lbl_00025B10(void);
+void lbl_00025B70(void);
 void lbl_00025BD0(void);
 void lbl_00025EA8(void);
-int lbl_0002609C(void);
-int lbl_000260C0(void);
+void lbl_0002609C(void);
+void lbl_000260C0(void);
 
 #pragma force_active on
-void lbl_00010E68(s16 x)
+void lbl_00010304(struct Ball *ball, struct PhysicsBall *physBall, int c)
 {
-    *(s16*)lbl_10000204 = x;
+    Vec stageUp;
+    Vec accel;
+    f64 *pool = (f64 *)lbl_000264A8;
+
+    ball->prevPos.x = ball->pos.x;
+    ball->prevPos.y = ball->pos.y;
+    ball->prevPos.z = ball->pos.z;
+
+    ball->speed = mathutil_vec_len(&ball->vel);
+    ball->flags &= ~BALL_FLAG_05;
+
+    mathutil_mtxA_from_identity();
+    mathutil_mtxA_rotate_x(worldInfo[ball->playerId].xrot);
+    mathutil_mtxA_rotate_z(worldInfo[ball->playerId].zrot);
+    stageUp.x = ((f32 *)pool)[12];
+    stageUp.y = ((f32 *)pool)[17];
+    stageUp.z = ((f32 *)pool)[12];
+    mathutil_mtxA_tf_vec(&stageUp, &stageUp);
+
+    accel.x = ((f32 *)pool)[12];
+    accel.y = -ball->accel;
+    accel.z = ((f32 *)pool)[12];
+    if (ball->flags & BALL_FLAG_REVERSE_GRAVITY)
+        accel.y = -accel.y;
+    else if (ball->flags & BALL_FLAG_08)
+        accel.y = ((f32 *)pool)[12];
+
+    if (!(ball->flags & BALL_FLAG_16)
+     && gameSubmode != SMD_ADV_INFO_MAIN
+     && c == 0
+     && (ball->unk120 & 1))
+    {
+        Vec vel = ball->vel;
+        float f1 = mathutil_sum_of_sq_2(vel.x, vel.z);
+
+        if (f1 > ((f32 *)pool)[28])
+        {
+            f1 = pool[15] / mathutil_sqrt(f1);
+            vel.x *= f1;
+            vel.z *= f1;
+            f1 = -mathutil_sin(cameraInfo[ball->playerId].rotY) * vel.x
+               + -mathutil_cos(cameraInfo[ball->playerId].rotY) * vel.z;
+            if (f1 < pool[16])
+            {
+                f1 = pool[17] * -f1 + pool[15];
+                accel.x *= f1;
+                accel.y *= f1;
+                accel.z *= f1;
+            }
+        }
+    }
+
+    mathutil_mtxA_from_identity();
+    mathutil_mtxA_rotate_x(worldInfo[ball->playerId].xrot);
+    mathutil_mtxA_rotate_z(worldInfo[ball->playerId].zrot);
+    mathutil_mtxA_rigid_inv_tf_vec(&accel, &accel);
+
+    ball->vel.x += accel.x;
+    ball->vel.y += accel.y;
+    ball->vel.z += accel.z;
+
+    ball->pos.x += ball->vel.x;
+    ball->pos.y += ball->vel.y;
+    ball->pos.z += ball->vel.z;
+
+    init_physball_from_ball(ball, physBall);
+    lbl_000100D4(physBall, decodedStageLzPtr);
+    set_ball_pos_and_vel_from_physball(ball, physBall);
+
+    if (physBall->flags & 1)
+    {
+        if (physBall->hardestColiAnimGroupId == 0)
+        {
+            ball->unk114.x = -physBall->hardestColiPlane.normal.x;
+            ball->unk114.y = -physBall->hardestColiPlane.normal.y;
+            ball->unk114.z = -physBall->hardestColiPlane.normal.z;
+        }
+        else
+        {
+            mathutil_mtxA_from_mtx(animGroups[physBall->hardestColiAnimGroupId].transform);
+            mathutil_mtxA_tf_vec(&physBall->hardestColiPlane.normal, &ball->unk114);
+            ball->unk114.x = -ball->unk114.x;
+            ball->unk114.y = -ball->unk114.y;
+            ball->unk114.z = -ball->unk114.z;
+        }
+    }
 }
 #pragma force_active reset

@@ -1,6 +1,6 @@
 /*
  * mini_golf.c -- REL module, structurally split for per-function
- * byte-matching (part 27 of 65; contiguous .text range).  Each function
+ * byte-matching (part 27 of 76; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_golf/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -239,6 +239,7 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
+void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);

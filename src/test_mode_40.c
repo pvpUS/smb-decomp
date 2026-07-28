@@ -227,9 +227,7 @@ void lbl_0000A7FC(void);
 void lbl_0000AD30(void);
 void lbl_0000ADEC(void);
 void lbl_0000ADF0(void);
-void lbl_0000AE7C(void);
 void lbl_0000AEB8(void);
-void lbl_0000AEDC(Vec *, int);
 void lbl_0000B364(void);
 void lbl_0000B44C(void);
 void lbl_0000B4A0(void);
@@ -265,10 +263,25 @@ void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
-#pragma force_active on
-asm void lbl_0000AE7C(void)
+struct TestModeVecKey
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000AE7C.s"
+    /*0x00*/ Vec pos;
+    /*0x0C*/ float f;
+};
+
+void lbl_0000AEDC(struct TestModeVecKey *, int);
+
+#pragma force_active on
+void lbl_0000AE7C(void)
+{
+    struct TestModeVecKey *keys = (struct TestModeVecKey *)lbl_10000F60;
+    int i;
+
+    for (i = 0; i < 1; i++)
+    {
+        lbl_0000AEDC(keys, 0);
+        keys++;
+    }
 }
 #pragma force_active reset
+

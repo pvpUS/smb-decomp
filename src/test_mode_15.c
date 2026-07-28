@@ -201,7 +201,6 @@ void lbl_000055E8(void);
 void lbl_000056BC(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
-void lbl_00007D20(void);
 void lbl_00007FE8(void);
 void lbl_00008008(void);
 void lbl_00008808(void);
@@ -264,10 +263,87 @@ void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
-#pragma force_active on
-asm void lbl_00007D20(void)
+
+
+struct TestModelWork
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00007D20.s"
+    /*0x00*/ struct TPL *tpl;
+    /*0x04*/ struct GMA *gma;
+    /*0x08*/ s32 count;
+    /*0x0C*/ s32 sel;
+    /*0x10*/ s32 unk10;
+    /*0x14*/ u32 *unk14;
+    /*0x18*/ u32 *unk18;
+    /*0x1C*/ u32 *unk1C;
+};
+
+#pragma force_active on
+void lbl_00007D20(void)
+{
+    u8 *p = lbl_10000000;
+    u8 *w = lbl_000102B0;
+    u32 b;
+    u32 t;
+    u32 idx;
+    int i;
+
+    window_set_cursor_pos(1, 1);
+    window_printf_2((char *)(w + 0x194));
+    window_set_cursor_pos(3, 3);
+    u_debug_print((char *)(w + 0x43C4));
+    window_set_text_color(1);
+    window_printf_2((char *)(w + 0x43CC), (*(struct TestModelWork **)(p + 0xD5C))->unk10);
+    window_set_text_color(0);
+    window_set_cursor_pos(3, 5);
+    for (i = 0; i < (*(struct TestModelWork **)(p + 0xD5C))->count; i++)
+    {
+        if (i == (*(struct TestModelWork **)(p + 0xD5C))->sel)
+        {
+            window_set_text_color(1);
+            window_move_cursor(-1, 0);
+            u_debug_print((char *)(w + 0x400));
+            window_set_text_color(0);
+        }
+        window_printf_2((char *)(w + 0x43D0),
+                        (*(struct TestModelWork **)(p + 0xD5C))->unk1C[i],
+                        (*(struct TestModelWork **)(p + 0xD5C))->unk18[i]
+                      - (*(struct TestModelWork **)(p + 0xD5C))->unk14[i]);
+    }
+    b = (*(struct TestModelWork **)(p + 0xD5C))->unk14[(*(struct TestModelWork **)(p + 0xD5C))->sel];
+    t = globalAnimTimer / ((*(struct TestModelWork **)(p + 0xD5C))->unk10 + 1);
+    idx = b + t % ((*(struct TestModelWork **)(p + 0xD5C))->unk18[(*(struct TestModelWork **)(p + 0xD5C))->sel] - b);
+    window_set_cursor_pos(1, 0x23);
+    u_debug_print((*(struct TestModelWork **)(p + 0xD5C))->gma->modelEntries[idx].name);
+    mathutil_mtxA_from_mtxB();
+    gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+    avdisp_draw_model_culled_sort_translucent(
+        (*(struct TestModelWork **)(p + 0xD5C))->gma->modelEntries[idx].model);
+}
+
+void lbl_00007EE0(void)
+{
+    DEMOInitROMFont();
+    submodeFinishFunc = lbl_00007FE8;
+    gameSubmodeRequest = 0x81;
+}
+
+void lbl_00007F1C(void)
+{
+    s32 v = *(u16 *)lbl_10000D60;
+
+    if (REPEAT_WITH_R_ACCEL(0, PAD_BUTTON_DOWN))
+    {
+        v++;
+        if (v >= 0x18U)
+            v = 0;
+    }
+    if (REPEAT_WITH_R_ACCEL(0, PAD_BUTTON_UP))
+    {
+        v--;
+        if (v < 0)
+            v = 0x17;
+    }
+    *(u16 *)lbl_10000D60 = v;
 }
 #pragma force_active reset
+

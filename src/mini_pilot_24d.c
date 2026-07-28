@@ -49,6 +49,14 @@
 #include "world.h"
 #include "stdlib.h"
 
+
+struct PilotPlayerSlot
+{
+    /*0x00*/ u8 filler0[8];
+    /*0x08*/ s16 unk8;
+    /*0x0A*/ u8 padA[2];
+};  // size = 0xC
+
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_pilot.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000BE80[];
@@ -134,7 +142,7 @@ extern u8 lbl_802F1FDC[];
 extern u8 lbl_802F1FE0[];
 extern u8 lbl_802F1FE4[];
 extern u8 lbl_802F1FEC[];
-extern u8 lbl_802F1FF4[];
+extern s16 lbl_802F1FF4;
 
 // Imported functions the code calls that no included header declares.
 extern void ball_8003BBF4();
@@ -193,9 +201,9 @@ void lbl_0000580C(void);
 void lbl_00005824(void);
 void lbl_00006124(void);
 void lbl_00006490(void);
-void lbl_0000669C(void);
-void lbl_00006A94(void);
-void lbl_00006B5C(void);
+void lbl_0000669C(struct Ball *ball, struct PhysicsBall *physBall);
+void lbl_00006A94(struct Ball *ball, struct PhysicsBall *physBall);
+void lbl_00006B5C(struct PhysicsBall *b, struct Stage *s);
 void lbl_00006B94(void);
 void lbl_00006BF4(void);
 void lbl_00006CCC(void);
@@ -232,10 +240,103 @@ void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-asm void lbl_0000669C(void)
+void lbl_0000669C(struct Ball *ball, struct PhysicsBall *physBall)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_0000669C.s"
+    u8 *m = (u8 *)lbl_10000000;
+    u8 *k = (u8 *)lbl_0000BE80;
+    Vec accel;
+    Vec drag;
+    Vec vel;
+    f32 speed;
+    int unused;
+
+    ball->prevPos.x = ball->pos.x;
+    ball->prevPos.y = ball->pos.y;
+    ball->prevPos.z = ball->pos.z;
+
+    ball->speed = mathutil_vec_len(&ball->vel);
+    ball->flags &= ~BALL_FLAG_05;
+
+    accel.x = *(f32 *)(k + 0x30);
+    accel.y = -ball->accel;
+    accel.z = *(f32 *)(k + 0x30);
+    if (ball->flags & BALL_FLAG_REVERSE_GRAVITY)
+        accel.y = -accel.y;
+    else if (ball->flags & BALL_FLAG_08)
+        accel.y = *(f32 *)(k + 0x30);
+
+    ball->vel.x += accel.x;
+    ball->vel.y += accel.y;
+    ball->vel.z += accel.z;
+
+    ball->pos.x += ball->vel.x;
+    ball->pos.y += ball->vel.y;
+    ball->pos.z += ball->vel.z;
+
+    lbl_00006A94(ball, physBall);
+    lbl_00006B5C(physBall, decodedStageLzPtr);
+    set_ball_pos_and_vel_from_physball(ball, physBall);
+
+    if (!(physBall->flags & 1))
+    {
+        drag.x = *(f32 *)(m + 0x68) - ball->vel.x;
+        drag.y = *(f32 *)(m + 0x6C) - ball->vel.y;
+        drag.z = *(f32 *)(m + 0x70) - ball->vel.z;
+        drag.x = *(f64 *)(k + 0x408) * drag.x;
+        drag.y = *(f64 *)(k + 0x408) * drag.y;
+        drag.z = *(f64 *)(k + 0x408) * drag.z;
+        ball->vel.x += drag.x;
+        ball->vel.y += drag.y;
+        ball->vel.z += drag.z;
+    }
+
+    if (physBall->flags & 1)
+    {
+        if (physBall->hardestColiAnimGroupId == 0)
+        {
+            ball->unk114.x = -physBall->hardestColiPlane.normal.x;
+            ball->unk114.y = -physBall->hardestColiPlane.normal.y;
+            ball->unk114.z = -physBall->hardestColiPlane.normal.z;
+        }
+        else
+        {
+            mathutil_mtxA_from_mtx(animGroups[physBall->hardestColiAnimGroupId].transform);
+            mathutil_mtxA_tf_vec(&physBall->hardestColiPlane.normal, &ball->unk114);
+            ball->unk114.x = -ball->unk114.x;
+            ball->unk114.y = -ball->unk114.y;
+            ball->unk114.z = -ball->unk114.z;
+        }
+    }
+
+    if (physBall->flags & 1)
+    {
+        vel = ball->vel;
+        ball_8003BBF4(physBall, &vel);
+        speed = mathutil_vec_len(&vel);
+        if (speed < *(f64 *)(k + 0x3B8))
+            *(u16 *)(m + 0x1C) += 1;
+        if (*(u16 *)(m + 0x1C) > 0x96
+         || (((s16 *)(lbl_80285A80 + 8))[modeCtrl.currPlayer * 6] != 0 && *(u16 *)(m + 0x1C) > 0x1E))
+            lbl_802F1FF4 = 0x15;
+        else if (speed < *(f64 *)(k + 0x410)
+              && (*(u16 *)(m + 0x1C) > 0x1C
+                  || (((s16 *)(lbl_80285A80 + 8))[modeCtrl.currPlayer * 6] != 0 && *(u16 *)(m + 0x1C) > 8))
+              && lbl_802F1FF6 < 0x15)
+            lbl_802F1FF4 = 0x15;
+        else if (lbl_802F1FF6 == 0x12)
+        {
+            lbl_802F1FF4 = 0x13;
+            if (lbl_802F1FF4 != -1)
+            {
+                lbl_802F1FF6 = lbl_802F1FF4;
+                lbl_802F1FF4 = -1;
+            }
+        }
+    }
+    else
+    {
+        *(u16 *)(m + 0x1C) = 0;
+    }
 }
 
 #pragma force_active reset

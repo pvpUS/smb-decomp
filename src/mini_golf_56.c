@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_000245D4.
+ * mini_golf.c -- REL module: isolated function lbl_00012A14.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -186,7 +186,7 @@ void lbl_00009800(void);
 void lbl_0000982C(void);
 void lbl_00009880(void);
 void lbl_00009968(void);
-void lbl_000099B4(Mtx m);
+void lbl_000099B4(void);
 void lbl_000099E0(void);
 void lbl_00009B68(void);
 void lbl_00009C10(void);
@@ -225,7 +225,7 @@ void lbl_00011A6C(void);
 void lbl_00011DAC(void);
 void lbl_00011FEC(void);
 void lbl_000123B4(void);
-void lbl_00012A14(void);
+void lbl_00012A14(int a);
 void lbl_00012C80(void);
 void lbl_00012EEC(void);
 void lbl_00013664(void);
@@ -240,6 +240,7 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
+void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -257,23 +258,46 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-void lbl_000245D4(void)
+void lbl_00012A14(int a)
 {
-    u8 *cfg = (u8 *)lbl_00026A38;
+    NLsprarg params;
+    u8 *tbl = (u8 *)lbl_00026E28;
+    u8 *pool = (u8 *)lbl_00026550;
 
-    if (*(u8 *)lbl_0002A9E8 != 0) {
-        *(u8 *)lbl_0002A9E8 = 0;
-        *(s32 *)(lbl_0002A9E8 + 4) = 0;
-        *(u32 *)((u8 *)ballInfo[modeCtrl.currPlayer].ape + 0x14) &= ~0x2000;
-        *(u32 *)((u8 *)ballInfo[modeCtrl.currPlayer].ape + 0x14) &= ~0x1000;
+    params = *(NLsprarg *)(tbl + 0x3250);
+    params.ang = -0x4000;
+    params.x = *(f32 *)(pool + 0x270) + (*(f32 *)(tbl + 0x32a4) - *(f32 *)(pool + 0x274));
+    params.y = *(f32 *)(tbl + 0x32a8);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    nlSprPut(&params);
+    nlSprPut((NLsprarg *)(tbl + 0x3250));
+    nlSprPut((NLsprarg *)(tbl + 0x32a0));
+    if (a < 10)
+    {
+        params = ((NLsprarg *)(tbl + 0x3390))[a];
+        params.x = params.x + *(f32 *)(pool + 0x280);
+        params.y = params.y + *(f32 *)(pool + 0x284);
+        nlSprPut(&params);
+        params = *(NLsprarg *)(tbl + 0x3340);
+        params.x = params.x + *(f32 *)(pool + 0x288);
+        params.y = params.y + *(f32 *)(pool + 0x284);
+        nlSprPut(&params);
     }
-
-    mathutil_mtxA_from_translate_xyz(*(f32 *)(cfg + 0), *(f32 *)(cfg + 4), *(f32 *)(cfg + 8));
-    mathutil_mtxA_rotate_z(0x8000);
-    mathutil_mtxA_rotate_y(-0x4000);
-    mathutil_mtxA_rotate_x(-0x4000);
-    mathutil_mtxA_to_mtx((f32 (*)[4])lbl_10000210);
-    lbl_000099B4((f32 (*)[4])lbl_10000210);
-    new_ape_stat_motion(ballInfo[modeCtrl.currPlayer].ape, 0xd, 0, 0, *(f32 *)(cfg + 0xc));
+    else
+    {
+        params = *(NLsprarg *)(tbl + 0x33e0);
+        params.x = params.x + *(f32 *)(pool + 0x28c);
+        params.y = params.y + *(f32 *)(pool + 0x284);
+        params.z = params.z + *(f64 *)(pool + 0x290);
+        nlSprPut(&params);
+        params = ((NLsprarg *)(tbl + 0x3070))[a];
+        params.x = params.x + *(f32 *)(pool + 0x298);
+        params.y = params.y + *(f32 *)(pool + 0x284);
+        nlSprPut(&params);
+        params = *(NLsprarg *)(tbl + 0x3340);
+        params.x = params.x + *(f32 *)(pool + 0x29c);
+        params.y = params.y + *(f32 *)(pool + 0x284);
+        nlSprPut(&params);
+    }
 }
 #pragma force_active reset

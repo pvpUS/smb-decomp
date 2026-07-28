@@ -400,14 +400,5 @@ asm void lbl_00013C6C(void)
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_00013C6C.s"
 }
-asm void lbl_00015300(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00015300.s"
-}
-asm void lbl_000154B0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000154B0.s"
-}
+
 #pragma force_active reset

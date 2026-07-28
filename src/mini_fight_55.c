@@ -140,7 +140,23 @@ extern u8 lbl_10000118[];
 extern u8 lbl_10017518[];
 extern u8 lbl_10017520[];
 extern u8 lbl_10017578[];
-extern u8 lbl_10017664[];
+struct FightSub
+{
+    s32 unk0;      // 0x00
+    s16 unk4;      // 0x04
+    u8 unk6[0xA];  // 0x06
+    s16 unk10;     // 0x10
+    u16 unk12;     // 0x12
+    u8 unk14[4];   // 0x14
+};                 // 0x18
+struct FightGroup
+{
+    u8 unk0[8];              // 0x000
+    struct FightSub sub[8];  // 0x008
+    u8 unkC8[0x684];         // 0x0C8
+    s32 unk74C;              // 0x74C
+};
+extern struct FightGroup lbl_10017664;
 extern u8 lbl_10017DC8[];
 extern u8 lbl_10017E98[];
 extern u8 lbl_100188E0[];
@@ -353,10 +369,10 @@ void lbl_0000FE80(void);
 void lbl_0000FEC4(void);
 void lbl_0000FEC8(void);
 void lbl_0000FF30(void);
-void lbl_0000FF34(void);
+void lbl_0000FF34(u8 *p);
 void lbl_0000FFC4(void);
 void lbl_00010018(void);
-void lbl_0001181C(void);
+void lbl_0001181C();
 void lbl_0001199C(void);
 void lbl_0001212C(void);
 void lbl_000121FC(void);
@@ -393,9 +409,15 @@ void lbl_0001B910();
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_0000FF34(void)
+void lbl_0000FF34(u8 *p)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000FF34.s"
+    if (lbl_10017664.sub[(s8)p[0x2e]].unk12 & 1)
+        lbl_0001181C(p);
+    (*(void (**)(u8 *))(lbl_0001D678 + p[0x148] * 4))(p);
+    if ((s8)p[3] != 0x18)
+    {
+        p[0x148] = p[3];
+        p[3] = 0x18;
+    }
 }
 #pragma force_active reset

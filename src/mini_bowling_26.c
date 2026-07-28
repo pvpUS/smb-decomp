@@ -163,8 +163,8 @@ void lbl_000051E0(void);
 void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
-void lbl_000066C4(void);
-void lbl_000068C4(void);
+void lbl_000066C4(struct Ape *, int);
+void lbl_000068C4(struct Ape *, float);
 void lbl_00006E64(void);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
@@ -246,9 +246,59 @@ void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
 #pragma force_active on
-asm void lbl_000066C4(void)
+void lbl_000066C4(struct Ape *ape, int status)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_000066C4.s"
+    u8 *cfg = lbl_0000F020;
+    struct Ball *ball = &ballInfo[ape->ballId];
+    struct RaycastHit sp10;
+    int r28;
+    float speed;
+
+    switch (status)
+    {
+    case THREAD_STATUS_KILLED:
+        ape_destroy(ape);
+        return;
+    }
+
+    if (debugFlags & 0xA)
+        return;
+    if (ape->ballId != modeCtrl.currPlayer)
+        return;
+
+    raycast_stage_down(&ball->pos, &sp10, NULL);
+    ape->flags &= -20;
+    if (!(sp10.flags & 1) && ball->vel.y < *(f32 *)(cfg + 0x2144))
+        ape->flags |= 2;
+    else if (mathutil_vec_len(&ball->unkB8) < *(f32 *)(cfg + 0x2148))
+        ape->flags |= 1;
+
+    r28 = !(ape->flags & 3);
+    u_ball_something_with_ape_rotation(ape);
+    if (r28)
+    {
+        speed = u_ball_something_with_walking_speed(ape);
+    }
+    else
+    {
+        speed = *(f32 *)(cfg + 0x1c98);
+        mathutil_mtxA_from_quat(&ape->unk60);
+        mathutil_mtxA_normalize_basis();
+        if (ape->flags & (1 << 1))
+            func_80037718(ape);
+    }
+
+    if (ball->flags & BALL_FLAG_05)
+        speed = mathutil_vec_len(&ball->vel);
+
+    check_ball_teeter(ape);
+    mathutil_mtxA_to_quat(&ape->unk60);
+    lbl_000068C4(ape, speed);
+    ape_skel_anim_main(ape);
+    if (!(ape->flags & (1 << 3)))
+        func_8003765C(ape);
+    ape_face_dir(ape, &ball->lookPoint);
+    ball->unk100 = 0;
+    ball->lookPointPrio = *(f32 *)(cfg + 0x1c98);
 }
 #pragma force_active reset

@@ -191,11 +191,11 @@ void lbl_00005044(void);
 void lbl_000051A4(void);
 void lbl_0000580C(void);
 void lbl_00005824(void);
-void lbl_00006124(void);
+void lbl_00006124(struct Ball *ball, struct PhysicsBall *physBall, int c);
 void lbl_00006490(void);
 void lbl_0000669C(void);
 void lbl_00006A94(void);
-void lbl_00006B5C(void);
+void lbl_00006B5C(struct PhysicsBall *b, struct Stage *s);
 void lbl_00006B94(void);
 void lbl_00006BF4(void);
 void lbl_00006CCC(void);
@@ -232,10 +232,85 @@ void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-asm void lbl_00006124(void)
+void lbl_00006124(struct Ball *ball, struct PhysicsBall *physBall, int c)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00006124.s"
+    u8 *k = (u8 *)lbl_0000BE80;
+    Vec accel;
+
+    ball->prevPos.x = ball->pos.x;
+    ball->prevPos.y = ball->pos.y;
+    ball->prevPos.z = ball->pos.z;
+
+    ball->speed = mathutil_vec_len(&ball->vel);
+    ball->flags &= ~BALL_FLAG_05;
+
+    accel.x = *(f32 *)(k + 0x30);
+    accel.y = -ball->accel;
+    accel.z = *(f32 *)(k + 0x30);
+    if (ball->flags & BALL_FLAG_REVERSE_GRAVITY)
+        accel.y = -accel.y;
+    else if (ball->flags & BALL_FLAG_08)
+        accel.y = *(f32 *)(k + 0x30);
+
+    if (!(ball->flags & BALL_FLAG_16)
+     && gameSubmode != SMD_ADV_INFO_MAIN
+     && c == 0
+     && (ball->unk120 & 1))
+    {
+        Vec vel = ball->vel;
+        float f1 = mathutil_sum_of_sq_2(vel.x, vel.z);
+
+        if (f1 > *(f32 *)(k + 0x3E8))
+        {
+            f1 = *(f64 *)(k + 0x2A0) / mathutil_sqrt(f1);
+            vel.x *= f1;
+            vel.z *= f1;
+            f1 = -mathutil_sin(cameraInfo[ball->playerId].rotY) * vel.x
+               + -mathutil_cos(cameraInfo[ball->playerId].rotY) * vel.z;
+            if (f1 < *(f64 *)(k + 0x1B0))
+            {
+                f1 = *(f64 *)(k + 0x3F0) * -f1 + *(f64 *)(k + 0x2A0);
+                accel.x *= f1;
+                accel.y *= f1;
+                accel.z *= f1;
+            }
+        }
+    }
+
+    mathutil_mtxA_from_identity();
+    mathutil_mtxA_rotate_x(worldInfo[ball->playerId].xrot);
+    mathutil_mtxA_rotate_z(worldInfo[ball->playerId].zrot);
+    mathutil_mtxA_rigid_inv_tf_vec(&accel, &accel);
+
+    ball->vel.x += accel.x;
+    ball->vel.y += accel.y;
+    ball->vel.z += accel.z;
+
+    ball->pos.x += ball->vel.x;
+    ball->pos.y += ball->vel.y;
+    ball->pos.z += ball->vel.z;
+
+    init_physball_from_ball(ball, physBall);
+    lbl_00006B5C(physBall, decodedStageLzPtr);
+    set_ball_pos_and_vel_from_physball(ball, physBall);
+
+    if (physBall->flags & 1)
+    {
+        if (physBall->hardestColiAnimGroupId == 0)
+        {
+            ball->unk114.x = -physBall->hardestColiPlane.normal.x;
+            ball->unk114.y = -physBall->hardestColiPlane.normal.y;
+            ball->unk114.z = -physBall->hardestColiPlane.normal.z;
+        }
+        else
+        {
+            mathutil_mtxA_from_mtx(animGroups[physBall->hardestColiAnimGroupId].transform);
+            mathutil_mtxA_tf_vec(&physBall->hardestColiPlane.normal, &ball->unk114);
+            ball->unk114.x = -ball->unk114.x;
+            ball->unk114.y = -ball->unk114.y;
+            ball->unk114.z = -ball->unk114.z;
+        }
+    }
 }
 
 #pragma force_active reset

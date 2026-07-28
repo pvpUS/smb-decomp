@@ -115,7 +115,7 @@ void lbl_000038A8(void);
 void lbl_00003B90(void);
 void lbl_00003F10(void);
 void lbl_00003F6C(void);
-void lbl_00003FF0(void);
+void lbl_00003FF0(s8 *, struct Sprite *);
 void lbl_00004204(void);
 void lbl_00004260(void);
 void lbl_000042BC(void);
@@ -135,8 +135,8 @@ void lbl_00007F90(void);
 void lbl_00008048(void);
 void lbl_00008068(void);
 void lbl_00008A34(void);
-static void lbl_00008AEC(void);
-static void lbl_00008C40(void);
+void lbl_00008AEC(s8 *, struct Sprite *);
+void lbl_00008C40(void);
 void lbl_0000925C(void);
 void lbl_000093C0(void);
 void lbl_00009454(void);
@@ -151,20 +151,33 @@ void lbl_0000B10C(void);
 void lbl_0000B218(void);
 void lbl_0000C148(void);
 
+//@SUB void lbl_00003FF0(void);|void lbl_00003FF0(s8 *, struct Sprite *);
+//@SUB void lbl_00008AEC(void);|void lbl_00008AEC(s8 *, struct Sprite *);
 #pragma force_active on
-static asm void lbl_00008AEC(void)
+void lbl_00008AEC(s8 *arg0, struct Sprite *sprite)
 {
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00008AEC.s"
-}
-static asm void lbl_00008C40(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00008C40.s"
-}
-asm void lbl_0000925C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_0000925C.s"
+    f64 *c = (f64 *)lbl_0000C370;
+    u8 *w;
+    u8 *q;
+    s32 i;
+    f32 a;
+    f32 b;
+
+    w = *(u8 **)((u8 *)sprite + 0x2C);
+    lbl_00003FF0(arg0, sprite);
+    q = lbl_10000000;
+    for (i = 0; i < 3; i++)
+    {
+        a = ((f32 *)c)[41];
+        b = ((f32 *)c)[116];
+        if (i == *(s32 *)(w + 0x14))
+        {
+            a = ((f32 *)c)[117];
+            b = *(f32 *)c;
+        }
+        *(f32 *)(q + 0x20) = *(f32 *)(q + 0x20) + c[5] * (a - *(f32 *)(q + 0x20));
+        *(f32 *)(q + 0x2C) = *(f32 *)(q + 0x2C) + c[5] * (b - *(f32 *)(q + 0x2C));
+        q += 4;
+    }
 }
 #pragma force_active reset

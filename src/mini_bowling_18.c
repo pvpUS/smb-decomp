@@ -174,7 +174,7 @@ void lbl_00007740(void);
 void lbl_00007778(void);
 void lbl_00007878(void);
 void lbl_00007964(void);
-void lbl_000079E8(void);
+void lbl_000079E8(int, struct Ball *);
 void lbl_00007A6C(void);
 void lbl_00007C54(void);
 void lbl_00007E74(void);
@@ -217,7 +217,7 @@ void lbl_0000B0AC(void);
 void lbl_0000B1BC(void);
 void lbl_0000B344(void);
 void lbl_0000B460(void);
-void lbl_0000B654(void);
+void lbl_0000B654(int);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
 void lbl_0000BDE0(void);
@@ -245,10 +245,33 @@ void lbl_0000E894(void);
 void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
+#define CAMERA_FOREACH_2(code) \
+{ \
+    struct Camera **cc = &currentCamera; \
+    struct Camera *camera = &cameraInfo[0]; \
+    struct Camera *cameraBackup = *cc; \
+    int i; \
+    for (i = 0; i < 4; i++, camera++) \
+    { \
+        *cc = camera; \
+        { code } \
+    } \
+    *cc = cameraBackup; \
+}
+
 #pragma force_active on
-asm void lbl_00004A80(void)
+void lbl_00004A80(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00004A80.s"
+    lbl_000079E8(1, currentBall);
+    lbl_0000B654(1);
+    if (*(s8 *)lbl_1000013F == 0)
+        CAMERA_FOREACH_2(camera->subState = 8;)
+    else if (*(s8 *)lbl_1000013F == 1)
+        CAMERA_FOREACH_2(camera->subState = 9;)
+    else
+        CAMERA_FOREACH_2(camera->subState = 1;)
+    *(s32 *)lbl_10000000 = 300;
+    *(s32 *)lbl_00014F20 = 0x4000;
+    *(s32 *)lbl_00014F24 = 0x40000;
 }
 #pragma force_active reset

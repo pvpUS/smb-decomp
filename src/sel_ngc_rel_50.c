@@ -213,9 +213,4 @@ asm void lbl_00010214(void)
     nofralloc
 #include "../asm/nonmatchings/sel_ngc_rel/lbl_00010214.s"
 }
-asm void lbl_00010438(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_00010438.s"
-}
 #pragma force_active reset

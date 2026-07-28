@@ -124,17 +124,17 @@ extern u8 lbl_100000B0[];
 extern u8 lbl_100000B8[];
 extern u8 neutralFaceTable[];
 extern u8 smileFaceTable[];
-extern u8 lbl_80285A58[];
+extern s32 lbl_80285A58[];
 extern u8 lbl_80285A68[];
 extern u8 lbl_80285A80[];
 extern u8 lbl_802F1F10[];
-extern u8 lbl_802F1FD0[];
+extern u32 lbl_802F1FD0;
 extern u8 lbl_802F1FD8[];
-extern u8 lbl_802F1FDC[];
-extern u8 lbl_802F1FE0[];
+extern f32 lbl_802F1FDC;
+extern s16 lbl_802F1FE0;
 extern u8 lbl_802F1FE4[];
-extern u8 lbl_802F1FEC[];
-extern u8 lbl_802F1FF4[];
+extern s16 lbl_802F1FEC;
+extern s16 lbl_802F1FF4;
 
 // Imported functions the code calls that no included header declares.
 extern void ball_8003BBF4();
@@ -232,9 +232,132 @@ void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-asm void lbl_00004A14(void)
+void lbl_00004A14(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00004A14.s"
+    struct Ball *ball = currentBall;
+    u8 *m = (u8 *)lbl_10000000;
+    u8 *k = (u8 *)lbl_0000BE80;
+    int id;
+
+    if (ball->pos.y < *(f64 *)(k + 0x2C8) || (lbl_802F1FD0 & 0x200))
+    {
+        if (*(s16 *)(m + 0x18) == 0)
+        {
+            if (*(s32 *)(m + 0x2C) != -1)
+            {
+                SoundOff(*(s32 *)(m + 0x2C));
+                *(s32 *)(m + 0x2C) = -1;
+            }
+            if (lbl_802F1FF6 == 0xE)
+                u_play_sound_0(0xF6);
+            else
+                u_play_sound_0(0xF5);
+            vibration_control(playerControllerIDs[ball->playerId], 1, 0x14);
+        }
+        else if (*(s16 *)(m + 0x18) == 0xA)
+        {
+            switch (ball->ape->charaId)
+            {
+            case 1:
+                u_play_sound_0(0xEE);
+                break;
+            case 2:
+                u_play_sound_0(0xEA);
+                break;
+            case 3:
+                id = u_play_sound_1_dupe(0x161);
+                SoundRev(id, 0x60);
+                SoundCho(id, 0x40);
+                break;
+            default:
+                u_play_sound_0(0xEC);
+                break;
+            }
+        }
+
+        (*(s16 *)(m + 0x18))++;
+        if (!(lbl_802F1FD0 & 0x200)
+         && ((mathutil_sqrt(mathutil_sum_of_sq_2(ball->vel.x, ball->vel.z)) < *(f64 *)(k + 0x2D0)
+              && ball->pos.y < *(f64 *)(k + 0x2D8))
+             || ball->pos.y < *(f64 *)(k + 0x2E0)))
+        {
+            lbl_802F1FD0 |= 0x200;
+            hud_show_fallout_banner(0xB4);
+            func_8002BFCC(0x16A, 0x16B);
+            u_play_music(0, 8);
+        }
+
+        if (*(s16 *)(m + 0x1A) == 0x50)
+            u_play_sound_0(0xC);
+        else if (*(s16 *)(m + 0x1A) > 0xB4)
+            lbl_802F1FF4 = 0;
+
+        if (lbl_802F1FD0 & 0x200)
+            (*(s16 *)(m + 0x1A))++;
+
+        if (lbl_802F1FDC > *(f64 *)(k + 0x1B0))
+        {
+            ball->vel.x = *(f64 *)(k + 0x2E8) * ball->vel.x;
+            ball->vel.y = *(f64 *)(k + 0x2E8) * ball->vel.y;
+            ball->vel.z = *(f64 *)(k + 0x2E8) * ball->vel.z;
+        }
+        else
+        {
+            ball->vel.x = *(f64 *)(k + 0x2F0) * ball->vel.x;
+            ball->vel.y = *(f64 *)(k + 0x2F0) * ball->vel.y;
+            ball->vel.z = *(f64 *)(k + 0x2F0) * ball->vel.z;
+        }
+
+        if (ball->vel.y < *(f64 *)(k + 0x1B0))
+            ball->vel.y = ball->vel.y * *(f64 *)(k + 0x2F8);
+    }
+    else
+    {
+        if (*(s16 *)(m + 0x18) != 0)
+        {
+            SoundOffID(0xEE);
+            SoundOffID(0xEA);
+            SoundOffID(0x161);
+            SoundOffID(0xEC);
+            *(s16 *)(m + 0x18) = 0;
+        }
+        *(s16 *)(m + 0x1A) = 0;
+    }
+
+    if (ball->pos.y < *(f64 *)(k + 0x300) && *(s16 *)(m + 0x18) == 0
+     && lbl_802F1FF6 != 0x16)
+        u_play_sound_0(0xF9);
+    else
+        SoundOffID(0xF9);
+
+    if (lbl_802F1FD0 & 0x1000)
+    {
+        if (*(s32 *)(m + 0x30) == -1)
+            *(s32 *)(m + 0x30) = u_play_sound_2(0xF3);
+    }
+    else
+    {
+        if (*(s32 *)(m + 0x30) != -1)
+        {
+            SoundOff(*(s32 *)(m + 0x30));
+            *(s32 *)(m + 0x30) = -1;
+        }
+    }
+
+    if (lbl_80285A58[modeCtrl.currPlayer] > 0)
+    {
+        int d = lbl_80285A58[modeCtrl.currPlayer] / lbl_802F1FEC;
+
+        if (d < 1)
+            d = 1;
+        lbl_80285A58[modeCtrl.currPlayer] -= d;
+        ((s32 *)(m + 0x44))[modeCtrl.currPlayer] += d;
+    }
+
+    if (lbl_802F1FEC > 0)
+        lbl_802F1FEC--;
+    if (lbl_802F1FE0 > 0)
+        lbl_802F1FE0--;
 }
+
 #pragma force_active reset

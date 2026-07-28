@@ -1,5 +1,5 @@
 /*
- * mini_golf.c -- REL module: isolated function lbl_0000F750.
+ * mini_golf.c -- REL module: isolated function lbl_0000F290.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -161,12 +161,12 @@ void lbl_000092E0(void);
 void lbl_000092F0(void);
 void lbl_00009300(void);
 void lbl_00009310(void);
-void lbl_00009320(Vec *);
-void lbl_00009340(Vec *);
+void lbl_00009320(void);
+void lbl_00009340(void);
 void lbl_00009360(void);
-void lbl_00009384(s16 *);
+void lbl_00009384(void);
 void lbl_00009394(void);
-void lbl_000093A4(s16 *);
+void lbl_000093A4(void);
 void lbl_000093B4(void);
 void lbl_000093C4(void);
 void lbl_000093D4(void);
@@ -206,7 +206,7 @@ void lbl_0000E99C(void);
 void lbl_0000F11C(void);
 void lbl_0000F194(void);
 void lbl_0000F290(void);
-void lbl_0000F750(struct Ball *);
+void lbl_0000F750(void);
 void lbl_0000F7E8(void);
 void lbl_0000FA18(void);
 void lbl_0000FBC8(void);
@@ -240,6 +240,7 @@ void lbl_00023AB4(void);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
+void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
@@ -257,19 +258,9 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-void lbl_0000F750(struct Ball *ball)
+asm void lbl_0000F290(void)
 {
-    u8 *p = (u8 *)lbl_000264A8;
-
-    ball->unk92 = decodedStageLzPtr->startPos->yrot;
-    lbl_00009340(&ball->prevPos);
-    lbl_00009320(&ball->pos);
-    lbl_000093A4(&ball->unk92);
-    lbl_00009384(&ball->unk92);
-    ball->vel.x = *(f32 *)(p + 0x30);
-    ball->vel.y = *(f32 *)(p + 0x34);
-    ball->vel.z = *(f32 *)(p + 0x30);
-    ball->state = 0x1A;
-    ball->unk148 = 4;
+    nofralloc
+#include "../asm/nonmatchings/mini_golf/lbl_0000F290.s"
 }
 #pragma force_active reset

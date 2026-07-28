@@ -34,6 +34,28 @@
 #include "window.h"
 #include "../data/common.nlobj.h"
 
+struct FightPanel
+{
+    /*0x00*/ u8 unk0;
+    /*0x01*/ u8 unk1;
+    /*0x02*/ s16 state;
+    /*0x04*/ s16 timer;
+    /*0x06*/ s16 unk6;
+    /*0x08*/ u8 pad08[4];
+    /*0x0C*/ f32 unkC;
+    /*0x10*/ u8 pad10[8];
+    /*0x18*/ f32 unk18;
+    /*0x1C*/ u8 pad1C[8];
+    /*0x24*/ f32 unk24;
+    /*0x28*/ u8 pad28[4];
+    /*0x2C*/ u8 *unk2C;
+};
+struct F38CPool
+{
+    f32 unk0, unk4, unk8, unkC, unk10, unk14, unk18, unk1C, unk20, unk24;
+    f32 unk28, unk2C, unk30;
+};
+
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_fight.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0001BF80[];
@@ -334,7 +356,7 @@ void lbl_0000F2C8(void);
 void lbl_0000F38C(void);
 void lbl_0000F4C8(void);
 void lbl_0000F628(void);
-void lbl_0000F6F4(void);
+void lbl_0000F6F4(struct FightPanel *p);
 void lbl_0000F848(void);
 void lbl_0000F9A0(void);
 void lbl_0000F9DC(void);
@@ -392,14 +414,42 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_0000F6F4(void)
+void lbl_0000F6F4(struct FightPanel *p)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000F6F4.s"
+    struct Effect ef;
+    struct Item it;
+    struct F38CPool *k = (struct F38CPool *)lbl_0001C308;
+
+    switch (p->state)
+    {
+    case 0:
+        p->state = 1;
+        p->timer = 0x78;
+        memset(&ef, 0, sizeof(ef));
+        ef.type = 0x19;
+        ef.playerId = p->unk0;
+        spawn_effect(&ef);
+        if (p->unkC < k->unk8)
+            p->unkC = *(f32 *)(lbl_0001C308 + 8);
+        p->unk24 = k->unk14;
+    case 1:
+        p->timer -= 1;
+        if (p->timer < 0)
+            p->state = 2;
+        break;
+    case 2:
+        p->state = 3;
+        memset(&it, 0, sizeof(it));
+        it.type = 3;
+        it.subType = (rand() & 0x7FFF) % 2;
+        it.animGroupId = 0;
+        it.pos = *(Vec *)(p->unk2C + 8);
+        it.pos.y += k->unk2C;
+        item_create(&it);
+        break;
+    case 3:
+        break;
+    }
 }
-asm void lbl_0000F848(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000F848.s"
-}
+
 #pragma force_active reset

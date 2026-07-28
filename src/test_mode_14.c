@@ -201,7 +201,6 @@ void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
 void lbl_000073EC(void);
-void lbl_00007BE0(void);
 void lbl_00007D20(void);
 void lbl_00007FE8(void);
 void lbl_00008008(void);
@@ -265,10 +264,49 @@ void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
-#pragma force_active on
-asm void lbl_00007BE0(void)
+struct TestModelWork
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00007BE0.s"
+    /*0x00*/ struct TPL *tpl;
+    /*0x04*/ struct GMA *gma;
+    /*0x08*/ s32 count;
+    u8 filler0C[0x14 - 0x0C];
+    /*0x14*/ void *unk14;
+    /*0x18*/ void *unk18;
+    /*0x1C*/ void **unk1C;
+};
+
+#pragma force_active on
+void lbl_00007BE0(void)
+{
+    u8 *p = lbl_10000000;
+    OSHeapHandle prevHeap;
+    int i;
+
+    prevHeap = OSSetCurrentHeap(stageHeap);
+    if ((*(struct TestModelWork **)(p + 0xD5C))->tpl != NULL
+     || (*(struct TestModelWork **)(p + 0xD5C))->gma != NULL)
+    {
+        VISetNextFrameBuffer(gfxBufferInfo->currFrameBuf);
+        VIWaitForRetrace();
+    }
+    if ((*(struct TestModelWork **)(p + 0xD5C))->tpl != NULL)
+    {
+        free_tpl((*(struct TestModelWork **)(p + 0xD5C))->tpl);
+        (*(struct TestModelWork **)(p + 0xD5C))->tpl = NULL;
+    }
+    if ((*(struct TestModelWork **)(p + 0xD5C))->gma != NULL)
+    {
+        free_gma((*(struct TestModelWork **)(p + 0xD5C))->gma);
+        (*(struct TestModelWork **)(p + 0xD5C))->gma = NULL;
+    }
+    for (i = 0; i < (*(struct TestModelWork **)(p + 0xD5C))->count; i++)
+        OSFreeToHeap(__OSCurrHeap, (*(struct TestModelWork **)(p + 0xD5C))->unk1C[i]);
+    OSFreeToHeap(__OSCurrHeap, (*(struct TestModelWork **)(p + 0xD5C))->unk14);
+    OSFreeToHeap(__OSCurrHeap, (*(struct TestModelWork **)(p + 0xD5C))->unk18);
+    OSFreeToHeap(__OSCurrHeap, (*(struct TestModelWork **)(p + 0xD5C))->unk1C);
+    OSFreeToHeap(__OSCurrHeap, *(struct TestModelWork **)(p + 0xD5C));
+    *(struct TestModelWork **)(p + 0xD5C) = NULL;
+    OSSetCurrentHeap(prevHeap);
 }
 #pragma force_active reset
+

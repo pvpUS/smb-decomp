@@ -256,7 +256,6 @@ void lbl_0000D3C0(void);
 void lbl_0000D844(void);
 void lbl_0000D9FC(void);
 void lbl_0000DB2C(void);
-void lbl_0000DC60(void);
 void lbl_0000DDA4(void);
 void lbl_0000E2E8(void);
 void lbl_0000E3E8(void);
@@ -266,9 +265,34 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_0000DC60(void)
+void lbl_0000DC60(char *name, char *fmt, ...)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000DC60.s"
+    u8 *s = lbl_000148E8;
+    u8 *p = lbl_10003BF8;
+    va_list ap;
+    char buf[80];
+
+    if (*(int *)(p + 0x78) == *(int *)(p + 0x7C))
+    {
+        window_set_text_color(2);
+        u_debug_print((char *)(s + 0xE98));
+    }
+    else
+    {
+        window_set_text_color(0);
+        u_debug_print((char *)(s + 0xE9C));
+    }
+    u_debug_print(name);
+    if (*(int *)(p + 0x78) == *(int *)(p + 0x7C))
+        window_set_text_color(2);
+    else
+        window_set_text_color(1);
+    va_start(ap, fmt);
+    vsprintf(buf, fmt, ap);
+    u_debug_print(buf);
+    *(int *)(p + 0x7C) = *(int *)(p + 0x7C) + 1;
+    window_set_text_color(0);
+    u_debug_print((char *)(s + 0xEAC));
 }
 #pragma force_active reset
+

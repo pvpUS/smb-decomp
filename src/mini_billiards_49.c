@@ -214,10 +214,10 @@ void lbl_00018474(void);
 void lbl_00018608(void);
 void lbl_000186EC(void);
 void lbl_000189B4(void);
-void lbl_00018A98(void);
-void lbl_00018C78(void);
-void lbl_00018F4C(void);
-void lbl_00019264(void);
+void lbl_00018A98(struct Ape *);
+f32 lbl_00018C78(struct Ape *);
+void lbl_00018F4C(struct Ape *, f32);
+void lbl_00019264(struct Ape *, int);
 void lbl_0001968C(void);
 void lbl_00019F5C(void);
 void lbl_00019FD4(void);
@@ -227,9 +227,85 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm void lbl_00019264(void)
+void lbl_00019264(struct Ape *ape, int arg)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00019264.s"
+    u8 *p = lbl_00020B58;
+    Vec v;
+    Vec t;
+    f32 f;
+
+    switch (arg) {
+    case 3:
+        ape_destroy(ape);
+        return;
+    }
+    if (debugFlags & 0xA)
+        return;
+    if (((s8 *)lbl_10009878)[ape->ballId * 0x68] == 0)
+        return;
+    ape->flags &= ~0x13;
+    if (mathutil_vec_sq_len((Vec *)&((s8 *)(lbl_10009878 + 0x34))[ape->ballId * 0x68]) < *(f32 *)(p + 0xDC) ||
+        (*(s8 *)lbl_1000000A != 0xA && *(s8 *)lbl_1000000A != 0x13 && *(s8 *)lbl_1000000A != 0x16 &&
+         *(s8 *)lbl_1000000A != 0x18 && *(s8 *)lbl_1000000A != 0x1A))
+        ape->flags |= 1;
+    if (u_globalAnimSpeedScale < *(f32 *)(p + 0xE0)) {
+        mathutil_mtxA_from_quat(&ape->unk60);
+    } else if (*(s8 *)lbl_1000001F != 0 ||
+               (*(s8 *)lbl_1000000A == 0x17 && ape->ballId != 0)) {
+        if (*(s8 *)lbl_1000000A == 8) {
+            v.x = *(f32 *)(p + 0x64);
+            v.y = *(f32 *)(p + 0x18);
+            v.z = *(f32 *)(p + 0x18);
+        } else {
+            f32 *s;
+
+            if (ape->ballId == 0) {
+                if (*(s8 *)lbl_10000049 != 0)
+                    s = (f32 *)(lbl_10009878 + *(s8 *)lbl_10000049 * 0x68 + 0x10);
+                else
+                    s = (f32 *)(lbl_10009878 + 0x3B8);
+            } else {
+                s = (f32 *)(lbl_10009878 + 0x10);
+            }
+            v.x = s[0] - *(f32 *)&((s8 *)(lbl_10009878 + 0x10))[ape->ballId * 0x68];
+            v.y = *(f32 *)(p + 0x18);
+            v.z = s[2] - *(f32 *)&((s8 *)(lbl_10009878 + 0x18))[ape->ballId * 0x68];
+        }
+        mathutil_vec_normalize_len(&v);
+        mathutil_mtxA_from_identity();
+        mathutil_mtxA_translate((Vec *)(lbl_10009878 + ape->ballId * 0x68 + 0x10));
+        mathutil_mtxA_rotate_y_sin_cos(v.x, v.z);
+        mathutil_mtxA_rotate_y_sin_cos(*(f32 *)(p + 0x64), *(f32 *)(p + 0x18));
+    } else if ((ape->ballId == 0 &&
+                (*(s8 *)lbl_1000000A == 0x15 || *(s8 *)lbl_1000000A == 0x17)) ||
+               *(s8 *)lbl_1000000A == 7 ||
+               (*(s8 *)lbl_1000000A == 0x18 && (ape->flags & 1))) {
+        v.x = cameraInfo[0].eye.x -
+              *(f32 *)&((s8 *)(lbl_10009878 + 0x10))[ape->ballId * 0x68];
+        v.y = *(f32 *)(p + 0x18);
+        v.z = cameraInfo[0].eye.z -
+              *(f32 *)&((s8 *)(lbl_10009878 + 0x18))[ape->ballId * 0x68];
+        mathutil_vec_normalize_len(&v);
+        mathutil_mtxA_from_identity();
+        mathutil_mtxA_translate((Vec *)(lbl_10009878 + ape->ballId * 0x68 + 0x10));
+        mathutil_mtxA_rotate_y_sin_cos(v.x, v.z);
+        mathutil_mtxA_rotate_y_sin_cos(*(f32 *)(p + 0x64), *(f32 *)(p + 0x18));
+    } else {
+        lbl_00018A98(ape);
+        f = lbl_00018C78(ape);
+    }
+    mathutil_mtxA_to_quat(&ape->unk60);
+    lbl_00018F4C(ape, f);
+    ape_skel_anim_main(ape);
+    mathutil_mtxA_push();
+    mathutil_mtxA_from_quat(&ape->unk60);
+    mathutil_mtxA_tf_vec_xyz(&ape->unk3C, *(f32 *)(p + 0x18), *(f32 *)(p + 0xE4),
+                             *(f32 *)(p + 0x18));
+    mathutil_mtxA_pop();
+    ape->pos = *(Vec *)&((s8 *)(lbl_10009878 + 0x10))[ape->ballId * 0x68];
+    t = *(Vec *)(p + 0xD0);
+    ape->unk48 = t;
+    ape->flags &= ~0x80000;
 }
+
 #pragma force_active reset

@@ -209,9 +209,23 @@ void lbl_00011824(void);
 void lbl_000118E4(void);
 
 #pragma force_active on
-asm void lbl_00000234(void)
+void lbl_00000234(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_00000234.s"
+    s32 i;
+    u8 *w = lbl_10000000;
+
+    modeCtrl.unk30 = 1;
+    for (i = 0; i < 6; i++)
+    {
+        ((s16 *)lbl_8027CE24)[i * 4] = 1;
+        ((s16 *)lbl_8027CE24)[i * 4 + 1] = 0;
+        ((s32 *)lbl_8027CE24)[i * 2 + 1] = 0;
+    }
+    *(s32 *)u_isCompetitionModeCourse = 0;
+    *(s32 *)lbl_802F1FB0 = *(s8 *)lbl_801EED50;
+    *(s32 *)lbl_802F1FAC = 0;
+    for (i = 0; i < 9; i++)
+        ((s32 *)(w + 0x18))[i] = 1;
+    *(s32 *)(lbl_801EED98 + 0xC) = 0;
 }
 #pragma force_active reset

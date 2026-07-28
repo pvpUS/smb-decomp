@@ -311,7 +311,7 @@ void lbl_0000B948(void);
 void lbl_0000BB0C(void);
 void lbl_0000C134(void);
 void lbl_0000C230(void);
-void lbl_0000C2B4(void);
+void lbl_0000C2B4(struct Sprite *);
 void lbl_0000C438(void);
 void lbl_0000C590(void);
 void lbl_0000C5EC(void);
@@ -376,9 +376,54 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_0000C2B4(void)
+
+void lbl_0000C2B4(struct Sprite *sprite)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000C2B4.s"
+    NLsprarg params;
+    u8 *cfg = lbl_00013C48;
+
+    params.sprno = sprite->bmpId;
+    params.x = *(f32 *)cfg;
+    params.y = *(f32 *)(cfg + 4);
+    params.z = sprite->depth;
+    params.zm_x = sprite->scaleX;
+    params.zm_y = sprite->scaleY;
+    params.u0 = sprite->unk7C;
+    params.v0 = sprite->unk80;
+    params.u1 = sprite->unk84;
+    params.v1 = sprite->unk88;
+    params.ang = 0;
+    params.trnsl = *(f32 *)(cfg + 8);
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = sprite->flags | NLSPR_DISP_CC;
+    params.base_color = -1;
+    params.offset_color = 0;
+    switch (modeCtrl.playerCount)
+    {
+    case 2:
+        params.ang = 0xC000;
+        nlSprPut(&params);
+        break;
+    case 3:
+        if (modeCtrl.splitscreenMode != 3)
+        {
+            params.ang = 0xC000;
+            nlSprPut(&params);
+            if (modeCtrl.splitscreenMode == 2)
+                params.y = params.y - *(f32 *)cfg;
+            else
+                params.y = params.y + *(f32 *)cfg;
+            params.ang = 0;
+            nlSprPut(&params);
+            break;
+        }
+        /* fall through */
+    case 4:
+        params.ang = 0xC000;
+        nlSprPut(&params);
+        params.ang = 0;
+        nlSprPut(&params);
+        break;
+    }
 }
 #pragma force_active reset

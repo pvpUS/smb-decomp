@@ -288,7 +288,7 @@ void lbl_00007A9C(void);
 void lbl_00007D4C(void);
 void lbl_00007F88(void);
 void lbl_00008160(void);
-void lbl_00008324(void);
+void lbl_00008324(struct Ball *);
 void lbl_000084A0(void);
 void lbl_000085D8(void);
 void lbl_00008A10(void);
@@ -376,9 +376,104 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_00008324(void)
+
+// Squared-distance twin of mathutil.h's mathutil_vec_distance (same asm block,
+// without the trailing mathutil_sqrt).  Not present in mathutil.h; every REL
+// minigame module uses it.  SHOULD BE PROMOTED TO src/mathutil.h.
+static inline float mathutil_vec_sq_distance(register Vec *a, register Vec *b)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00008324.s"
+#ifdef C_ONLY
+    return (a->x - b->x) * (a->x - b->x)
+         + (a->y - b->y) * (a->y - b->y)
+         + (a->z - b->z) * (a->z - b->z);
+#else
+    register float x1, y1, z1, x2, y2, z2;
+    register float result;
+    asm
+    {
+        lfs x1, a->x
+        lfs x2, b->x
+        lfs y1, a->y
+        lfs y2, b->y
+        lfs z1, a->z
+        lfs z2, b->z
+        fsubs x1, x1, x2
+        fsubs y1, y1, y2
+        fsubs z1, z1, z2
+        fmuls result, x1, x1
+        fmadds result, y1, y1, result
+        fmadds result, z1, z1, result
+    }
+    return result;
+#endif
+}
+
+struct RacePathHdr
+{
+    u8 filler0[0x30];
+    /*0x30*/ s32 unk30;
+    /*0x34*/ struct StageGoal *unk34;
+    u8 filler38[0x28];
+    /*0x60*/ s32 unk60;
+    /*0x64*/ struct StageGoal *unk64;
+};
+
+struct RaceSub
+{
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+};
+
+void lbl_00008324(struct Ball *ball)
+{
+    struct RaceSub *st;
+    u8 *cfg = lbl_00013740;
+    Vec *p;
+    struct RacePathHdr *path;
+    struct StageGoal *e;
+    int found;
+    s16 i;
+    Vec out;
+    Vec v;
+
+    p = &ball->pos;
+    found = 0;
+    st = (struct RaceSub *)ball->unk144;
+    path = (struct RacePathHdr *)decodedStageLzPtr->unk78;
+    e = path->unk64;
+    v = *(Vec *)(cfg + 0x334);
+    for (i = 0; i < path->unk60; i++, e++)
+    {
+        if (mathutil_vec_sq_distance(p, &e->pos) > *(f32 *)(cfg + 0x2F4))
+            continue;
+        mathutil_mtxA_from_translate(&e->pos);
+        mathutil_mtxA_rotate_z(e->rotZ);
+        mathutil_mtxA_rotate_y(e->rotY);
+        mathutil_mtxA_rotate_x(e->rotX);
+        mathutil_mtxA_rigid_inv_tf_point(p, &out);
+        out.z = out.z * *(f64 *)(cfg + 0x2F8);
+        if (out.x < *(f32 *)(cfg + 0x70))
+            continue;
+        if (out.x > *(f32 *)(cfg + 0x20))
+            continue;
+        if (out.z < *(f32 *)(cfg + 0x70))
+            continue;
+        if (out.z > *(f32 *)(cfg + 0x20))
+            continue;
+        found = 1;
+        break;
+    }
+    if (found)
+    {
+        if (!(st->unk14 & 0x2000))
+            st->unk14 |= 0x1000;
+        else
+            st->unk14 &= ~0x1000;
+        st->unk14 |= 0x2000;
+    }
+    else
+    {
+        st->unk14 &= ~0x3000;
+    }
 }
 #pragma force_active reset

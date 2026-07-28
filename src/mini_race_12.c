@@ -245,8 +245,8 @@ void lbl_000008B4(void);
 void lbl_00002018(void);
 void lbl_000020A4(void);
 void lbl_000021C8(void);
-void lbl_000024A0(void);
-void lbl_000025E4(void);
+void lbl_000024A0(struct Ball *, struct DecodedStageLzPtr_child5 *, f32 *);
+void lbl_000025E4(struct Ball *, struct DecodedStageLzPtr_child5 *, f32 *);
 void lbl_00002968(void);
 void lbl_00002B54(void);
 void lbl_00002BBC(void);
@@ -255,7 +255,7 @@ void lbl_00002FA4(void);
 void lbl_00003094(void);
 void lbl_000030DC(void);
 void lbl_00003120(void);
-void lbl_000031C0(void);
+void lbl_000031C0(struct DecodedStageLzPtr_child5 *, Vec *, f32);
 void lbl_00003238(void);
 void lbl_0000326C(void);
 void lbl_00003398(void);
@@ -376,9 +376,69 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_000024A0(void)
+
+// Squared-distance twin of mathutil.h's mathutil_vec_distance (same asm block,
+// without the trailing mathutil_sqrt).  Not present in mathutil.h; every REL
+// minigame module uses it.  SHOULD BE PROMOTED TO src/mathutil.h.
+static inline float mathutil_vec_sq_distance(register Vec *a, register Vec *b)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000024A0.s"
+#ifdef C_ONLY
+    return (a->x - b->x) * (a->x - b->x)
+         + (a->y - b->y) * (a->y - b->y)
+         + (a->z - b->z) * (a->z - b->z);
+#else
+    register float x1, y1, z1, x2, y2, z2;
+    register float result;
+    asm
+    {
+        lfs x1, a->x
+        lfs x2, b->x
+        lfs y1, a->y
+        lfs y2, b->y
+        lfs z1, a->z
+        lfs z2, b->z
+        fsubs x1, x1, x2
+        fsubs y1, y1, y2
+        fsubs z1, z1, z2
+        fmuls result, x1, x1
+        fmadds result, y1, y1, result
+        fmadds result, z1, z1, result
+    }
+    return result;
+#endif
+}
+
+void lbl_000024A0(struct Ball *ball, struct DecodedStageLzPtr_child5 *path, f32 *out)
+{
+    u8 *cfg = lbl_00013680;
+    u8 *lim = lbl_10000028;
+    Vec *p;
+    f32 best;
+    f32 t;
+    f32 scale;
+    f32 bestDist;
+    f32 tt;
+    Vec v;
+
+    best = *(f32 *)(cfg + 0x20);
+    lbl_000031C0(path, &v, best);
+    p = &ball->pos;
+    bestDist = mathutil_vec_sq_distance(p, &v);
+    scale = *(f32 *)(cfg + 0x40) / *(f32 *)(lim + 8);
+    for (t = *(f32 *)(cfg + 0x20); t < *(f32 *)(lim + 8); t += *(f32 *)(cfg + 0x9C))
+    {
+        f32 d;
+
+        tt = t * scale;
+        lbl_000031C0(path, &v, tt);
+        d = mathutil_vec_sq_distance(p, &v);
+        if (d < bestDist)
+        {
+            best = tt;
+            bestDist = d;
+        }
+    }
+    *out = best;
+    lbl_000025E4(ball, path, out);
 }
 #pragma force_active reset

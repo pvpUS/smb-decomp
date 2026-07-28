@@ -205,7 +205,6 @@ void lbl_00007D20(void);
 void lbl_00007FE8(void);
 void lbl_00008008(void);
 void lbl_00008808(void);
-void lbl_0000884C(void);
 void lbl_00008ADC(void);
 void lbl_00008B00(void);
 void lbl_00008F40(void);
@@ -264,10 +263,85 @@ void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
-#pragma force_active on
-asm void lbl_0000884C(void)
+struct TestResEntry
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000884C.s"
+    /*0x00*/ u32 unk0;
+    /*0x04*/ u16 width;
+    /*0x06*/ u16 height;
+    /*0x08*/ u32 flags;
+};
+
+#pragma force_active on
+void lbl_0000884C(void)
+{
+    u8 *k = lbl_0000FE78;
+    u8 *w = lbl_000102B0;
+    struct TestResEntry *e;
+    GXColor c;
+    int i;
+
+    window_set_cursor_pos(1, 1);
+    u_debug_print((char *)(w + 0x4520));
+    e = (struct TestResEntry *)(w + 0x4464);
+    for (i = 0; i < 9U; i++, e++)
+    {
+        if (i == modeCtrl.unk10)
+        {
+            window_set_cursor_pos(2, i + 3);
+            window_set_text_color(2);
+            u_debug_print((char *)(w + 0x400));
+            window_set_text_color(0);
+        }
+        window_set_cursor_pos(3, i + 3);
+        window_printf_2((char *)(w + 0x452C), e->width, e->height, e->unk0);
+    }
+    if (modeCtrl.courseFlags & 4)
+    {
+        e = &((struct TestResEntry *)(w + 0x4464))[modeCtrl.unk10];
+        if (e->flags & 1)
+        {
+            c = *(GXColor *)(k + 0x1F0);
+            GXSetPixelFmt(1, 0);
+            GXSetCopyClear(c, GX_MAX_Z24);
+        }
+        else
+        {
+            GXSetPixelFmt(0, 0);
+            GXSetCopyClear(backgroundInfo.backdropColor, GX_MAX_Z24);
+        }
+        change_current_camera(0);
+        u_draw_ball_shadow();
+        background_light_assign();
+        reset_light_group(0);
+        if (eventInfo[EVENT_STAGE].state == EV_STATE_RUNNING
+         || eventInfo[EVENT_STAGE].state == EV_STATE_SUSPENDED)
+            stage_draw();
+        if (currStageId >= 0x92 || currStageId < 0x8F)
+        {
+            mathutil_mtxA_from_mtxB();
+            mathutil_mtxA_translate((Vec *)decodedStageLzPtr->startPos);
+            mathutil_mtxA_rotate_y(globalAnimTimer << 9);
+            nl2ngc_draw_model_sort_translucent_alt2(((void **)g_commonNlObj)[11]);
+        }
+        poly_shadow_draw();
+        if (eventInfo[EVENT_BACKGROUND].state == EV_STATE_RUNNING)
+        {
+            ord_tbl_set_depth_offset(*(float *)(k + 0x1F4));
+            background_draw();
+            ord_tbl_set_depth_offset(*(float *)(k + 0x60));
+        }
+        if (eventInfo[EVENT_ITEM].state == EV_STATE_RUNNING)
+            item_draw();
+        if (eventInfo[EVENT_STOBJ].state == EV_STATE_RUNNING)
+            stobj_draw();
+        if (eventInfo[EVENT_EFFECT].state == EV_STATE_RUNNING)
+            effect_draw();
+        ord_tbl_draw_nodes();
+        GXSetTexCopySrc(0x270 - e->width, 0x1B0 - e->height, e->width, e->height);
+        GXSetTexCopyDst(e->width, e->height, 5, 0);
+        GXCopyTex(*(void **)lbl_10000D64, 0);
+    }
+    default_camera_env();
 }
 #pragma force_active reset
+

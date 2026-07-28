@@ -119,7 +119,7 @@ extern void func_8009F4C4();
 extern void func_80067310();
 extern void is_floor_visited();
 extern void is_load_queue_not_empty();
-extern void is_minigame_unlocked();
+extern int is_minigame_unlocked(int);
 extern void item_draw();
 extern void lens_flare_draw();
 extern void lens_flare_draw_mask();
@@ -159,7 +159,7 @@ void lbl_000029A8(void);
 void lbl_00002D00(void);
 void lbl_00002EC0(void);
 void lbl_000030F4(void);
-void lbl_00009868(void);
+void lbl_00009868(struct Ape *, int);
 void lbl_0000A3A4(void);
 void lbl_0000A4A0(void);
 void lbl_0000A544(void);
@@ -192,7 +192,7 @@ void lbl_0000E4BC(void);
 void lbl_0000E540(void);
 void lbl_0000E620(void);
 void lbl_0000E778(void);
-void lbl_0000EBD4(void);
+void lbl_0000EBD4(int);
 void lbl_0000ECB0(void);
 void lbl_0000F788(void);
 void lbl_0000FE0C(void);
@@ -208,14 +208,75 @@ void lbl_00011824(void);
 void lbl_000118E4(void);
 
 #pragma force_active on
-asm void lbl_0000033C(void)
+void lbl_0000033C(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_0000033C.s"
-}
-asm void lbl_000005D4(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_000005D4.s"
+    u8 filler[16];
+    u8 *w = lbl_10000000;
+    int i;
+
+    if (debugFlags & 0xA)
+        return;
+
+    u_clear_buffers_2_and_5();
+    event_start(EVENT_STAGE);
+    event_start(EVENT_STOBJ);
+    event_start(EVENT_ITEM);
+    event_start(EVENT_CAMERA);
+    event_start(EVENT_SPRITE);
+    event_start(EVENT_SOUND);
+    event_start(EVENT_EFFECT);
+    event_start(EVENT_BACKGROUND);
+    light_init(0);
+    camera_set_state_all(0x34);
+    g_poolInfo.playerPool.statusList[0] = STAT_NORMAL;
+    g_poolInfo.playerPool.statusList[1] = STAT_NULL;
+    g_poolInfo.playerPool.statusList[2] = STAT_NULL;
+    g_poolInfo.playerPool.statusList[3] = STAT_NULL;
+    call_bitmap_load_group(BMP_SEL);
+    lbl_0000A950();
+    for (i = 0; i < 0x1A; i++)
+        lbl_0000EBD4(i);
+    *(s32 *)((u8 *)&lbl_801EEDA8 + 0xBC) = 0;
+    *(s32 *)((u8 *)&lbl_801EEDA8 + 0xC0) = 0;
+    ape_get_by_type(0, 0, lbl_00009868);
+    ape_get_by_type(1, 1, lbl_00009868);
+    ape_get_by_type(2, 2, lbl_00009868);
+    ape_get_by_type(3, 3, lbl_00009868);
+    *(s32 *)((u8 *)&lbl_801EEDA8 + 0x58) = 0;
+    *(s32 *)((u8 *)&lbl_801EEDA8 + 0x5C) = 0;
+    *(s32 *)((u8 *)&lbl_801EEDA8 + 0x60) = 0;
+    *(s32 *)((u8 *)&lbl_801EEDA8 + 0x64) = 0;
+    *(s32 *)(w + 0x3C) = 0xBE;
+    preload_stage_files(*(s32 *)(w + 0x3C));
+    *(s32 *)(w + 0xC0) = 1;
+    if (modeCtrl.courseFlags & (1 << 16))
+    {
+        switch (modeCtrl.gameType)
+        {
+        case GAMETYPE_MINI_RACE:
+            u_play_music(8, 0);
+            break;
+        case GAMETYPE_MINI_FIGHT:
+            u_play_music(0xA, 0);
+            break;
+        case GAMETYPE_MINI_TARGET:
+            u_play_music(0xC, 0);
+            break;
+        default:
+        if (is_minigame_unlocked(6) && is_minigame_unlocked(7) && is_minigame_unlocked(8))
+            u_play_music(6, 0);
+        else
+            u_play_music(4, 0);
+            break;
+        }
+    }
+    else
+    {
+        if (is_minigame_unlocked(6) && is_minigame_unlocked(7) && is_minigame_unlocked(8))
+            u_play_music(6, 0);
+        else
+            u_play_music(4, 0);
+    }
+    gameSubmodeRequest = SMD_SEL_NGC_MAIN;
 }
 #pragma force_active reset

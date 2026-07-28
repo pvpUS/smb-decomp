@@ -294,7 +294,7 @@ void lbl_000085D8(void);
 void lbl_00008A10(void);
 void lbl_00008B60(void);
 void lbl_00008C4C(void);
-void lbl_0000A364(void);
+void lbl_0000A364(struct Camera *, struct Ball *);
 void lbl_0000A9C4(void);
 void lbl_0000A9EC(void);
 void lbl_0000AC30(void);
@@ -376,9 +376,30 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_0000A364(void)
+
+void lbl_0000A364(struct Camera *camera, struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000A364.s"
+    Vec dir;
+    Vec sp10;
+
+    if (debugFlags & 0xA)
+        return;
+
+    camera->lookAt = ball->pos;
+    ((u16 *)lbl_10001B1C)[ball->playerId] += 0x50;
+    mathutil_mtxA_from_rotate_y(((s16 *)lbl_10001B1C)[ball->playerId]);
+    mathutil_mtxA_rotate_x(-0x1000);
+    sp10 = *(Vec *)lbl_00013BAC;
+    camera->eye = sp10;
+    mathutil_mtxA_tf_vec(&camera->eye, &camera->eye);
+    camera->eye.x += camera->lookAt.x;
+    camera->eye.y += camera->lookAt.y;
+    camera->eye.z += camera->lookAt.z;
+    dir.x = camera->lookAt.x - camera->eye.x;
+    dir.y = camera->lookAt.y - camera->eye.y;
+    dir.z = camera->lookAt.z - camera->eye.z;
+    camera->rotY = mathutil_atan2(dir.x, dir.z) - 32768;
+    camera->rotX = mathutil_atan2(dir.y, mathutil_sqrt(mathutil_sum_of_sq_2(dir.x, dir.z)));
+    camera->rotZ = 0;
 }
 #pragma force_active reset

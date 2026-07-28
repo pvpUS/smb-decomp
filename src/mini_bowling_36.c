@@ -176,11 +176,11 @@ void lbl_00007878(void);
 void lbl_00007964(void);
 void lbl_000079E8(void);
 void lbl_00007A6C(void);
-void lbl_00007C54(void);
+void lbl_00007C54(struct Ball *);
 void lbl_00007E74(void);
 void lbl_00007FE0(void);
 void lbl_000080E0(void);
-void lbl_000082E4(void);
+int lbl_000082E4(struct Ball *);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
 void lbl_000087CC(void);
@@ -245,10 +245,41 @@ void lbl_0000E894(void);
 void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
+struct BowlSndSet { s32 id[8]; };
+
 #pragma force_active on
-asm void lbl_00007C54(void)
+void lbl_00007C54(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00007C54.s"
+    u8 *tbl = lbl_00011258;
+    struct BowlSndSet snd;
+    int code;
+
+    ball->prevPos = ball->pos;
+    ball->speed = mathutil_vec_len(&ball->vel);
+    mathutil_mtx_copy(ball->unk30, ball->unkC8);
+    ball->vel.x -= *(f64 *)(tbl + 0x40) * mathutil_sin(ball->rotY * 2);
+    ball->vel.y -= ball->accel;
+    if (ball->vel.z > *(f64 *)(tbl + 0x48))
+        ball->vel.z = *(f32 *)(tbl + 0x50);
+    ball->pos.x = ball->vel.x + ball->pos.x;
+    ball->pos.y = ball->vel.y + ball->pos.y;
+    ball->pos.z = ball->vel.z + ball->pos.z;
+    ball->rotX += ball->unk60;
+    ball->rotY += ball->unk62;
+    ball->rotZ += ball->unk64;
+    mathutil_mtxA_from_rotate_z(ball->rotZ);
+    mathutil_mtxA_rotate_y(ball->rotY);
+    mathutil_mtxA_rotate_x(ball->rotX);
+    mathutil_mtxA_to_quat(&ball->unk98);
+    mathutil_mtxA_set_translate(&ball->pos);
+    mathutil_mtxA_to_mtx(ball->unk30);
+    mathutil_mtxA_to_quat(&ball->unkA8);
+    code = lbl_000082E4(ball);
+    if (code == 5 || code == 15 || code == 7 || code == 10)
+        ball->flags |= BALL_FLAG_GOAL;
+    if (ball->ape->unk24 == 10 && (ball->unk80 & 0xf) == 0) {
+        snd = *(struct BowlSndSet *)(tbl + 0x20);
+        u_play_sound_0(snd.id[rand() & 7]);
+    }
 }
 #pragma force_active reset

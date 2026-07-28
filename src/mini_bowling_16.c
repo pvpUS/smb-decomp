@@ -168,7 +168,7 @@ void lbl_000068C4(void);
 void lbl_00006E64(void);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
-void lbl_00007650(void);
+void lbl_00007650(int, int, int);
 void lbl_000076D0(void);
 void lbl_00007740(void);
 void lbl_00007778(void);
@@ -232,8 +232,8 @@ void lbl_0000D7F8(void);
 void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
 void lbl_0000DA0C(void);
-void lbl_0000DAF4(void);
-void lbl_0000DD4C(void);
+void lbl_0000DAF4(int, void *);
+void lbl_0000DD4C(int, void *);
 void lbl_0000DFA4(void);
 void lbl_0000E22C(void);
 void lbl_0000E3A0(void);
@@ -245,10 +245,46 @@ void lbl_0000E894(void);
 void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
+#define CAMERA_FOREACH_2(code) \
+{ \
+    struct Camera **cc = &currentCamera; \
+    struct Camera *camera = &cameraInfo[0]; \
+    struct Camera *cameraBackup = *cc; \
+    int i; \
+    for (i = 0; i < 4; i++, camera++) \
+    { \
+        *cc = camera; \
+        { code } \
+    } \
+    *cc = cameraBackup; \
+}
+
 #pragma force_active on
-asm void lbl_00004410(void)
+void lbl_00004410(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00004410.s"
+    u8 *w = lbl_10000000;
+    u8 *p = lbl_00014F20;
+
+    if (!(currentBall->flags & BALL_FLAG_GOAL)) {
+        CAMERA_FOREACH_2(camera->subState = 5;)
+        lbl_0000DD4C(0xb4, p + 0x310);
+        *(s32 *)w = 0xf0;
+    } else {
+        if (*(s8 *)(w + 0x13e) == 0) {
+            lbl_00007650(0xa9, 0xaa, 0x12c);
+            lbl_0000DAF4(0xb4, p + 0x338);
+            u_play_sound_0(0x1cf);
+        } else {
+            lbl_00007650(0x9f, 0xa0, 0xb4);
+            lbl_0000DD4C(0xb4, p + 0x340);
+            u_play_sound_0(0x1cd);
+        }
+        BALL_FOREACH(ball->unk148 = 3;)
+        CAMERA_FOREACH_2(camera->subState = 6;)
+        *(s32 *)(w + 0x144) = 0x168;
+        *(s32 *)w = 0x168;
+    }
+    *(s32 *)p = 0x2000;
+    *(s32 *)(p + 4) = 0x60;
 }
 #pragma force_active reset

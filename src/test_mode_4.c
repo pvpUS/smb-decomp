@@ -186,7 +186,6 @@ void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
 void lbl_00000208(void);
-void lbl_00000270(void);
 void lbl_00000630(void);
 void lbl_00000934(void);
 void lbl_00001B78(void);
@@ -264,6 +263,13 @@ void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
+struct TestDipEntry
+{
+    /*0x00*/ int type;
+    /*0x04*/ int value;
+    /*0x08*/ int submode;
+};
+
 #pragma force_active on
 void lbl_00000208(void)
 {
@@ -272,9 +278,98 @@ void lbl_00000208(void)
     else
         (*(void (**)(void))(lbl_000102B0 + (gameSubmode - 0x5F) * 4))();
 }
-asm void lbl_00000270(void)
+#define REPEAT_LOCAL(btn) (     ((rep & (btn)) || (analogInputs[0].repeat & (btn)))  || (         ((controllerInfo[0].held.button & (btn)) || (analogInputs[0].held & (btn)))      && (analogInputs[0].held & ANALOG_TRIGGER_RIGHT)     ) )
+
+void lbl_00000270(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00000270.s"
+    *(int *)lbl_802F2130 = 0;
+    reset_camera_viewport();
+    lbl_0000B44C();
+    lbl_0000BFA0();
+    lbl_000094C0();
+    lbl_00002108();
+    lbl_00002760();
+    start_screen_fade(0, 0, 1);
+    u_play_music(-1, 1);
+    bitmap_free_group(14);
+    func_800249D4();
+    unload_stage();
+    event_finish_all();
+    light_init(0);
+    *(int *)lbl_10000000 = 0;
+    gameSubmodeRequest = 0x60;
 }
+
+void lbl_00000308(void)
+{
+    u8 *w = lbl_000102B0;
+    u16 rep = controllerInfo[0].repeat.button;
+    s32 i = *(s32 *)lbl_10000000;
+    s32 v;
+    s32 n;
+
+    if (REPEAT_LOCAL(PAD_BUTTON_DOWN))
+    {
+        do
+        {
+            i++;
+            if (i >= 0x1BU)
+                i = 0;
+        } while (((struct TestDipEntry *)(w + 0x27C))[i].type == 3);
+    }
+    if (REPEAT_LOCAL(PAD_BUTTON_UP))
+    {
+        do
+        {
+            i--;
+            if (i < 0)
+                i = 0x1A;
+        } while (((struct TestDipEntry *)(w + 0x27C))[i].type == 3);
+    }
+    *(s32 *)lbl_10000000 = i;
+    switch (((struct TestDipEntry *)(w + 0x27C))[i].type)
+    {
+    case 0:
+        if (controllerInfo[0].pressed.button & PAD_BUTTON_A)
+            gameSubmodeRequest = ((struct TestDipEntry *)(w + 0x27C))[i].submode;
+        break;
+    case 1:
+        v = loadingStageIdRequest;
+        n = v;
+        if (REPEAT_LOCAL(PAD_BUTTON_LEFT))
+        {
+            n--;
+            if (n < 1)
+                n = 1;
+        }
+        if (REPEAT_LOCAL(PAD_BUTTON_RIGHT))
+        {
+            n++;
+            if (n > 0xC8)
+                n = 0xC8;
+        }
+        if (n != v)
+            loadingStageIdRequest = n;
+        break;
+    case 2:
+        v = *(s16 *)&lbl_802F1F40;
+        n = v;
+        if (REPEAT_LOCAL(PAD_BUTTON_LEFT))
+        {
+            n--;
+            if (n < 0)
+                n = 0;
+        }
+        if (REPEAT_LOCAL(PAD_BUTTON_RIGHT))
+        {
+            n++;
+            if (n > 0x1B)
+                n = 0x1B;
+        }
+        if (n != v)
+            *(s16 *)&lbl_802F1F40 = n;
+        break;
+    }
+}
+
 #pragma force_active reset

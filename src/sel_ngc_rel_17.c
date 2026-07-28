@@ -143,7 +143,7 @@ void _epilog(void);
 void _unresolved(void);
 void lbl_00000234(void);
 void lbl_0000033C(void);
-void lbl_000005D4(void);
+int lbl_000005D4(int);
 void lbl_00001910(void);
 void lbl_00001968(void);
 void lbl_00001B38(void);
@@ -156,14 +156,14 @@ void lbl_0000269C(void);
 void lbl_000027AC(void);
 void lbl_000028A8(void);
 void lbl_000029A8(void);
-static void lbl_00002AA4(void);
+void lbl_00002AA4(int);
 void lbl_00002D00(void);
 void lbl_00002EC0(void);
 void lbl_000030F4(void);
 void lbl_00009868(void);
-static void lbl_00009B94(void);
-static void lbl_00009E40(void);
-static void lbl_0000A154(void);
+void lbl_00009B94(void);
+void lbl_00009E40(void);
+void lbl_0000A154(void);
 void lbl_0000A3A4(void);
 void lbl_0000A4A0(void);
 void lbl_0000A544(void);
@@ -212,44 +212,57 @@ void lbl_00011824(void);
 void lbl_000118E4(void);
 
 #pragma force_active on
-static asm void lbl_00002AA4(void)
+void lbl_00002AA4(int a)
 {
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_00002AA4.s"
-}
-asm void lbl_00002D00(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_00002D00.s"
-}
-asm void lbl_00002EC0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_00002EC0.s"
-}
-asm void lbl_000030F4(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_000030F4.s"
-}
-asm void lbl_00009868(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_00009868.s"
-}
-static asm void lbl_00009B94(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_00009B94.s"
-}
-static asm void lbl_00009E40(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_00009E40.s"
-}
-static asm void lbl_0000A154(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_0000A154.s"
+    u8 *w = (u8 *)lbl_10000000;
+    s32 *p = (s32 *)((u8 *)&lbl_801EEDA8 + 0xF4);
+
+    if (*p <= a - 2)
+    {
+        if (lbl_000005D4(2))
+            if (--(*p) < 0)
+                *p = a - 2;
+        if (lbl_000005D4(3))
+            if (++(*p) > a - 2)
+                *p = 0;
+    }
+    else
+    {
+        if (lbl_000005D4(2))
+            if (--(*p) < a - 1)
+                *p = a;
+        if (lbl_000005D4(3))
+            if (++(*p) > a)
+                *p = a - 1;
+    }
+    if (lbl_000005D4(2) || lbl_000005D4(3))
+        if (*(s32 *)(w + 0x40) == 1 || a > 2)
+            u_play_sound_0(0x6C);
+    if (*(s32 *)(w + 0x40) == 1)
+    {
+        if (lbl_000005D4(6))
+        {
+            if (*p == a - 1)
+            {
+                *(s32 *)((u8 *)&lbl_801EEDA8 + 0x108) = 1;
+                ((s32 *)(w + 0x44))[*(s32 *)(w + 0x40)] = *p;
+                *(s32 *)(w + 0x40) ^= 1;
+                *p = ((s32 *)(w + 0x44))[*(s32 *)(w + 0x40)];
+                u_play_sound_0(0x65);
+            }
+        }
+    }
+    else
+    {
+        if (lbl_000005D4(6) || lbl_000005D4(7))
+        {
+            *(s32 *)((u8 *)&lbl_801EEDA8 + 0x108) = 0;
+            ((s32 *)(w + 0x44))[*(s32 *)(w + 0x40)] = *p;
+            *(s32 *)(w + 0x40) ^= 1;
+            *p = ((s32 *)(w + 0x44))[*(s32 *)(w + 0x40)];
+            (*p)++;
+            u_play_sound_0(lbl_000005D4(6) ? 0x6A : 0x66);
+        }
+    }
 }
 #pragma force_active reset

@@ -255,7 +255,6 @@ void lbl_0000D084(void);
 void lbl_0000D3C0(void);
 void lbl_0000D844(void);
 void lbl_0000D9FC(void);
-void lbl_0000DB2C(void);
 void lbl_0000DC60(void);
 void lbl_0000DDA4(void);
 void lbl_0000E2E8(void);
@@ -266,9 +265,33 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_0000DB2C(void)
+void lbl_0000DB2C(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000DB2C.s"
+    u8 *p = lbl_10003BF8;
+    s32 i;
+    s32 j;
+    char *tmp;
+    s32 tmp2;
+
+    *(s32 **)(p + 0xB0) = OSAllocFromHeap(__OSCurrHeap, u_motAnimCount * 4);
+    *(char ***)(p + 0xB4) = OSAllocFromHeap(__OSCurrHeap, (u_motAnimCount + 1) * 4);
+    for (i = 0; i < u_motAnimCount; i++)
+    {
+        (*(s32 **)(p + 0xB0))[i] = i + 1;
+        (*(char ***)(p + 0xB4))[i] = (char *)motLabel[i + 1];
+        for (j = i - 1; j >= 0; j--)
+        {
+            if (strcmp((*(char ***)(p + 0xB4))[j], (*(char ***)(p + 0xB4))[j + 1]) <= 0)
+                break;
+            tmp = (*(char ***)(p + 0xB4))[j];
+            (*(char ***)(p + 0xB4))[j] = (*(char ***)(p + 0xB4))[j + 1];
+            (*(char ***)(p + 0xB4))[j + 1] = tmp;
+            tmp2 = (*(s32 **)(p + 0xB0))[j];
+            (*(s32 **)(p + 0xB0))[j] = (*(s32 **)(p + 0xB0))[j + 1];
+            (*(s32 **)(p + 0xB0))[j + 1] = tmp2;
+        }
+    }
+    (*(char ***)(p + 0xB4))[i] = NULL;
 }
 #pragma force_active reset
+

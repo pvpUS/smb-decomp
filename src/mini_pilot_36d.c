@@ -49,6 +49,20 @@
 #include "world.h"
 #include "stdlib.h"
 
+
+struct PilotRadarItem
+{
+    /*0x00*/ Vec pos;
+    /*0x0C*/ f32 scale;
+};  // size = 0x10
+
+struct PilotRadarSet
+{
+    /*0x00*/ struct PilotRadarItem *items;
+    /*0x04*/ s16 count;
+    /*0x06*/ u8 pad[2];
+};  // size = 8
+
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_pilot.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000BE80[];
@@ -210,7 +224,7 @@ void lbl_0000893C(void);
 void lbl_000089F8(void);
 void lbl_00008C40(void);
 void lbl_000090A0(void);
-void lbl_000091EC(void);
+void lbl_000091EC(struct Sprite *sprite);
 void lbl_00009440(void);
 void lbl_000097AC(void);
 void lbl_000097C8(void);
@@ -232,10 +246,83 @@ void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-asm void lbl_000091EC(void)
+void lbl_000091EC(struct Sprite *sprite)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_000091EC.s"
+    u8 *k;
+    NLsprarg params;
+    Vec pos;
+    struct Ball *ball = currentBall;
+    struct Camera *cam;
+    struct PilotRadarSet *set;
+    struct PilotRadarItem *items;
+    s16 count;
+    s16 courseId;
+    f32 x = sprite->x;
+    f32 y = sprite->y;
+    f32 dx;
+    f32 dz;
+    int i;
+    int sprno;
+
+    k = (u8 *)lbl_0000C360;
+    cam = &cameraInfo[ball->playerId];
+    courseId = *(s16 *)lbl_10000040;
+    set = &((struct PilotRadarSet *)lbl_0000D2E8)[courseId];
+    items = set->items;
+    count = set->count;
+    params.zm_x = *(f32 *)(k + 0x54);
+    params.zm_y = *(f32 *)(k + 0x54);
+    params.u0 = params.v0 = *(f32 *)(k + 0x98);
+    params.u1 = params.v1 = *(f32 *)(k + 0x54);
+    params.ang = 0;
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = 5;
+    params.trnsl = *(f32 *)(k + 0x54);
+    params.base_color = 0x00FFFFFF;
+    params.offset_color = 0;
+    params.attr = 0xA;
+    params.sprno = 0xB19;
+    params.x = x;
+    params.y = y;
+    params.z = *(f32 *)(k + 0xF0);
+    nlSprPut(&params);
+
+    mathutil_mtxA_from_identity();
+    mathutil_mtxA_rotate_y(-cam->rotY);
+    mathutil_mtxA_translate_neg(&ball->pos);
+
+    for (i = 0; i < count; i++)
+    {
+        mathutil_mtxA_tf_point(&items[i].pos, &pos);
+        pos.y = *(f32 *)(k + 0x98);
+        if (mathutil_sqrt(mathutil_sum_of_sq_2(pos.x, pos.z)) >= *(f64 *)(k + 0x180))
+        {
+            mathutil_vec_normalize_len(&pos);
+            pos.x = *(f64 *)(k + 0x180) * pos.x;
+            pos.y = *(f64 *)(k + 0x180) * pos.y;
+            pos.z = *(f64 *)(k + 0x180) * pos.z;
+            sprno = 0xB2F;
+            params.ang = -cam->rotY;
+            params.zm_x = *(f32 *)(k + 0x54);
+            params.zm_y = *(f32 *)(k + 0x54);
+        }
+        else
+        {
+            sprno = 0xB30;
+            params.zm_x = items[i].scale;
+            params.zm_y = params.zm_x;
+        }
+        dx = *(f64 *)(k + 0x188) * pos.x;
+        dz = *(f64 *)(k + 0x188) * pos.z;
+        mathutil_mtxA_push();
+        params.base_color = 0x00FF2020;
+        params.sprno = sprno;
+        params.x = x + dx;
+        params.y = y + dz;
+        params.z = *(f32 *)(k + 0x9C);
+        nlSprPut(&params);
+        mathutil_mtxA_pop();
+    }
 }
 
 #pragma force_active reset

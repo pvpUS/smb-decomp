@@ -217,7 +217,6 @@ void lbl_00009560(void);
 void lbl_000095F8(void);
 void lbl_00009998(void);
 void lbl_00009A0C(void);
-void lbl_0000A304(void);
 void lbl_0000A440(void);
 void lbl_0000A78C(void);
 void lbl_0000A7DC(void);
@@ -266,9 +265,37 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_0000A304(void)
+void lbl_0000A304(Mtx m, GXTexMtx id)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000A304.s"
+    float *k = (float *)lbl_00010080;
+    int i;
+    u8 *cam;
+    Mtx sp70;
+    Mtx sp40;
+    Mtx sp10;
+
+    PSMTXIdentity(sp40);
+    sp40[0][2] = k[16];
+    sp40[1][2] = k[16];
+    C_MTXScale(sp70, k[0], k[0], k[0]);
+    sp70[2][3] = k[3];
+    cam = lbl_10000E00;
+    for (i = 2; i > 0; i--)
+    {
+        sp40[0][0] = k[15] * *(float *)(cam + 0x60);
+        sp40[1][1] = k[16] * *(float *)(cam + 0x60);
+        PSMTXConcat(sp40, (float (*)[4])(cam + 0x2C), sp10);
+        PSMTXConcat(sp10, m, sp10);
+        GXLoadTexMtxImm(sp10, id, GX_MTX3x4);
+        id += 3;
+        sp70[0][2] = k[15] / *(float *)(cam + 0x28);
+        sp70[0][3] = k[16] + k[15] * *(float *)(cam + 0x24) / *(float *)(cam + 0x28);
+        PSMTXConcat(sp70, (float (*)[4])(cam + 0x2C), sp10);
+        PSMTXConcat(sp10, m, sp10);
+        GXLoadTexMtxImm(sp10, id, GX_MTX3x4);
+        id += 3;
+        cam += 0x9C;
+    }
 }
 #pragma force_active reset
+
