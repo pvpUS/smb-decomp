@@ -134,10 +134,24 @@ def merge(module, dry):
         os.remove(p)
     for p in glob.glob(os.path.join(REPO, 'asm', '%s_d*.s' % stem)):
         os.remove(p)
+    # copy2 preserves the WARM file's mtime, which is routinely older than the
+    # .o sitting in this tree from a previous merge or build.  make then skips
+    # the recompile and links the STALE object -- which either fails with a
+    # bogus multiply-defined (a file that moved functions between splits) or,
+    # far worse, links quietly and lets verify() report GOLDEN for a tree that
+    # was never built.  Stamp every copied file with "now" instead, and drop the
+    # module's objects outright so the rebuild cannot be skipped.
     for p in warm_c:
-        shutil.copy2(p, os.path.join(REPO, 'src', os.path.basename(p)))
+        dst = os.path.join(REPO, 'src', os.path.basename(p))
+        shutil.copyfile(p, dst)
+        os.utime(dst, None)
     for p in warm_asm:
-        shutil.copy2(p, os.path.join(REPO, 'asm', os.path.basename(p)))
+        dst = os.path.join(REPO, 'asm', os.path.basename(p))
+        shutil.copyfile(p, dst)
+        os.utime(dst, None)
+    for p in (glob.glob(os.path.join(REPO, 'src', '%s*.c.o' % stem)) +
+              glob.glob(os.path.join(REPO, 'asm', '%s*.s.o' % stem))):
+        os.remove(p)
 
     # Per-function bodies.  Usually deterministic and identical, but NOT always:
     #   - the first split of a module creates all of them, and without them

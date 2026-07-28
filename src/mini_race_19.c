@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_00003398.
+ * mini_race.c -- REL module: isolated function lbl_000030DC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -246,6 +246,7 @@ void lbl_00002018(void);
 void lbl_000020A4(void);
 void lbl_000021C8(void);
 void lbl_000024A0(void);
+void lbl_000025E4(void);
 void lbl_00002968(void);
 void lbl_00002B54(void);
 void lbl_00002BBC(void);
@@ -257,9 +258,13 @@ void lbl_00003120(void);
 void lbl_000031C0(void);
 void lbl_00003238(void);
 void lbl_0000326C(void);
-void lbl_00003398(struct Ball *ball);
+void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_000040C0(void);
+void lbl_00004284(void);
+void lbl_000044AC(void);
+void lbl_00004634(void);
 void lbl_00005CEC(void);
 void lbl_00005DDC(void);
 void lbl_00005FC4(void);
@@ -289,6 +294,7 @@ void lbl_000085D8(void);
 void lbl_00008A10(void);
 void lbl_00008B60(void);
 void lbl_00008C4C(void);
+void lbl_0000A364(void);
 void lbl_0000A9C4(void);
 void lbl_0000A9EC(void);
 void lbl_0000AC30(void);
@@ -325,6 +331,8 @@ void lbl_0000D19C(void);
 void lbl_0000D20C(void);
 void lbl_0000D2B8(void);
 void lbl_0000D41C(void);
+void lbl_0000D4E4(void);
+void lbl_0000D69C(void);
 void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
@@ -347,6 +355,7 @@ void lbl_0000FD48(void);
 void lbl_0000FDD8(void);
 void lbl_0000FE90(void);
 void lbl_0000FEF8(void);
+void lbl_000100B4(void);
 void lbl_00010130(void);
 void lbl_00010218(void);
 void lbl_000102FC(void);
@@ -366,21 +375,11 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
-struct RacePlayer
-{
-    u8 filler0[0x14];
-    u32 unk14;
-    u32 unk18;
-    u8 filler1c[0x29c - 0x1c];
-};
-
 #pragma force_active on
-void lbl_00003398(struct Ball *ball)
+void lbl_000030DC(void)
 {
-    struct RacePlayer *p = &((struct RacePlayer *)lbl_10001070)[ball->playerId];
-
-    p->unk18 = p->unk14;
-    if (ball->unk148 >= 0 && ball->unk148 < 20)
-        ((void (**)(struct Ball *))lbl_00015A20)[ball->unk148](ball);
+    OSHeapHandle old = OSSetCurrentHeap(stageHeap);
+    u_free_minigame_graphics();
+    OSSetCurrentHeap(old);
 }
 #pragma force_active reset

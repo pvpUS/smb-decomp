@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_000106C4.
+ * mini_race.c -- REL module: isolated function lbl_0000D8E8.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -246,6 +246,7 @@ void lbl_00002018(void);
 void lbl_000020A4(void);
 void lbl_000021C8(void);
 void lbl_000024A0(void);
+void lbl_000025E4(void);
 void lbl_00002968(void);
 void lbl_00002B54(void);
 void lbl_00002BBC(void);
@@ -260,6 +261,10 @@ void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_000040C0(void);
+void lbl_00004284(void);
+void lbl_000044AC(void);
+void lbl_00004634(void);
 void lbl_00005CEC(void);
 void lbl_00005DDC(void);
 void lbl_00005FC4(void);
@@ -289,6 +294,7 @@ void lbl_000085D8(void);
 void lbl_00008A10(void);
 void lbl_00008B60(void);
 void lbl_00008C4C(void);
+void lbl_0000A364(void);
 void lbl_0000A9C4(void);
 void lbl_0000A9EC(void);
 void lbl_0000AC30(void);
@@ -325,6 +331,8 @@ void lbl_0000D19C(void);
 void lbl_0000D20C(void);
 void lbl_0000D2B8(void);
 void lbl_0000D41C(void);
+void lbl_0000D4E4(void);
+void lbl_0000D69C(void);
 void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
@@ -347,6 +355,7 @@ void lbl_0000FD48(void);
 void lbl_0000FDD8(void);
 void lbl_0000FE90(void);
 void lbl_0000FEF8(void);
+void lbl_000100B4(void);
 void lbl_00010130(void);
 void lbl_00010218(void);
 void lbl_000102FC(void);
@@ -367,24 +376,7 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-void lbl_000106C4(void)
+void lbl_0000D8E8(void)
 {
-    u8 *cfg = lbl_00013C48;
-    struct Sprite *sprite = create_sprite();
-    if (sprite == NULL)
-        return;
-    sprite->type = 1;
-    sprite->bmpId = 0x4b;
-    sprite->x = *(f32 *)(cfg + 0x18);
-    sprite->y = *(f32 *)(cfg + 0x18);
-    sprite->depth = *(f32 *)(cfg + 0xc);
-    sprite->scaleX = *(f32 *)(cfg + 0xcc);
-    sprite->scaleY = *(f32 *)(cfg + 0x30);
-    sprite->opacity = *(f32 *)(cfg + 0x18);
-    sprite->mulR = 0;
-    sprite->mulG = 0;
-    sprite->mulB = 0;
-    sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0001075C;
-    sprite->userVar = 0;
 }
 #pragma force_active reset

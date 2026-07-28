@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_0000C134.
+ * mini_race.c -- REL module: isolated function lbl_000084A0.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -246,6 +246,7 @@ void lbl_00002018(void);
 void lbl_000020A4(void);
 void lbl_000021C8(void);
 void lbl_000024A0(void);
+void lbl_000025E4(void);
 void lbl_00002968(void);
 void lbl_00002B54(void);
 void lbl_00002BBC(void);
@@ -260,6 +261,10 @@ void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_000040C0(void);
+void lbl_00004284(void);
+void lbl_000044AC(void);
+void lbl_00004634(void);
 void lbl_00005CEC(void);
 void lbl_00005DDC(void);
 void lbl_00005FC4(void);
@@ -289,6 +294,7 @@ void lbl_000085D8(void);
 void lbl_00008A10(void);
 void lbl_00008B60(void);
 void lbl_00008C4C(void);
+void lbl_0000A364(void);
 void lbl_0000A9C4(void);
 void lbl_0000A9EC(void);
 void lbl_0000AC30(void);
@@ -303,13 +309,13 @@ void lbl_0000B834(void);
 void lbl_0000B8C8(void);
 void lbl_0000B948(void);
 void lbl_0000BB0C(void);
-void lbl_0000C134(u8 *arg0, f32 a, f32 b);
+void lbl_0000C134(void);
 void lbl_0000C230(void);
 void lbl_0000C2B4(void);
 void lbl_0000C438(void);
 void lbl_0000C590(void);
 void lbl_0000C5EC(void);
-void lbl_0000C668();
+void lbl_0000C668(void);
 void lbl_0000C76C(void);
 void lbl_0000C7E4(void);
 void lbl_0000C93C(void);
@@ -318,19 +324,21 @@ void lbl_0000CA24(void);
 void lbl_0000CA9C(void);
 void lbl_0000CB3C(void);
 void lbl_0000CE24(void);
-void lbl_0000CF44();
+void lbl_0000CF44(void);
 void lbl_0000D03C(void);
-void lbl_0000D0FC();
+void lbl_0000D0FC(void);
 void lbl_0000D19C(void);
-void lbl_0000D20C();
+void lbl_0000D20C(void);
 void lbl_0000D2B8(void);
-void lbl_0000D41C();
+void lbl_0000D41C(void);
+void lbl_0000D4E4(void);
+void lbl_0000D69C(void);
 void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
-void lbl_0000DE5C();
+void lbl_0000DE5C(void);
 void lbl_0000DF6C(void);
-void lbl_0000E11C();
+void lbl_0000E11C(void);
 void lbl_0000E1CC(void);
 void lbl_0000E520(void);
 void lbl_0000E7AC(void);
@@ -347,6 +355,7 @@ void lbl_0000FD48(void);
 void lbl_0000FDD8(void);
 void lbl_0000FE90(void);
 void lbl_0000FEF8(void);
+void lbl_000100B4(void);
 void lbl_00010130(void);
 void lbl_00010218(void);
 void lbl_000102FC(void);
@@ -367,18 +376,9 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-void lbl_0000C134(u8 *arg0, f32 a, f32 b)
+asm void lbl_000084A0(void)
 {
-    u8 *cfg = lbl_00013C48;
-    f32 t;
-
-    lbl_0000C668(arg0, *(f32 *)(cfg + 0xAC) + a, *(f32 *)(cfg + 0x6C) + b);
-    lbl_0000D20C(arg0, *(f32 *)(cfg + 0xB0) + a, t = *(f32 *)(cfg + 0x78) + b);
-    lbl_0000D0FC(arg0, *(f32 *)(cfg + 0xB4) + a, t);
-    lbl_0000D41C(arg0, *(f32 *)(cfg + 0xB8) + a, *(f32 *)(cfg + 0x8C) + b);
-    lbl_0000CF44(arg0, *(f32 *)(cfg + 0xBC) + a, *(f32 *)(cfg + 0xC0) + b);
-    t = *(f32 *)(cfg + 0x54) + a;
-    lbl_0000DE5C(arg0, t, *(f32 *)(cfg + 0x90) + b);
-    lbl_0000E11C(arg0, t, *(f32 *)(cfg + 0xC4) + b);
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_000084A0.s"
 }
 #pragma force_active reset

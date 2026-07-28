@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_0000C76C.
+ * mini_race.c -- REL module: isolated function lbl_0000A9C4.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -246,6 +246,7 @@ void lbl_00002018(void);
 void lbl_000020A4(void);
 void lbl_000021C8(void);
 void lbl_000024A0(void);
+void lbl_000025E4(void);
 void lbl_00002968(void);
 void lbl_00002B54(void);
 void lbl_00002BBC(void);
@@ -260,6 +261,10 @@ void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_000040C0(void);
+void lbl_00004284(void);
+void lbl_000044AC(void);
+void lbl_00004634(void);
 void lbl_00005CEC(void);
 void lbl_00005DDC(void);
 void lbl_00005FC4(void);
@@ -289,7 +294,8 @@ void lbl_000085D8(void);
 void lbl_00008A10(void);
 void lbl_00008B60(void);
 void lbl_00008C4C(void);
-void lbl_0000A9C4(void);
+void lbl_0000A364(void);
+f32 lbl_0000A9C4(register f32 a, register f32 b);
 void lbl_0000A9EC(void);
 void lbl_0000AC30(void);
 void lbl_0000ACF4(void);
@@ -310,7 +316,7 @@ void lbl_0000C438(void);
 void lbl_0000C590(void);
 void lbl_0000C5EC(void);
 void lbl_0000C668(void);
-void lbl_0000C76C(s8 *arg0, struct Sprite *sprite);
+void lbl_0000C76C(void);
 void lbl_0000C7E4(void);
 void lbl_0000C93C(void);
 void lbl_0000C9B0(void);
@@ -325,6 +331,8 @@ void lbl_0000D19C(void);
 void lbl_0000D20C(void);
 void lbl_0000D2B8(void);
 void lbl_0000D41C(void);
+void lbl_0000D4E4(void);
+void lbl_0000D69C(void);
 void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
@@ -347,6 +355,7 @@ void lbl_0000FD48(void);
 void lbl_0000FDD8(void);
 void lbl_0000FE90(void);
 void lbl_0000FEF8(void);
+void lbl_000100B4(void);
 void lbl_00010130(void);
 void lbl_00010218(void);
 void lbl_000102FC(void);
@@ -366,45 +375,13 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
-
-// Per-racer state hanging off struct Ball::unk144 inside this module.
-// INVENTED -- offsets read off the asm, names are placeholders.
-struct RaceSub
-{
-    u8 filler0[0x4];
-    Vec unk4;
-    f32 unk10;
-    u32 unk14;
-    u8 filler18[0x22 - 0x18];
-    s16 unk22;
-    u8 filler24[0x1CE - 0x24];
-    s16 unk1CE;
-    s16 unk1D0;
-    u8 filler1D2[0x1D4 - 0x1D2];
-    f32 unk1D4;
-    f32 unk1D8;
-    f32 unk1DC;
-    f32 unk1E0;
-    f32 unk1E4;
-    f32 unk1E8;
-    u8 filler1EC[0x1F0 - 0x1EC];
-    f32 unk1F0;
-    u8 filler1F4[0x262 - 0x1F4];
-    u8 unk262;
-    u8 unk263;
-    u8 filler264[0x26A - 0x264];
-    s16 unk26A;
-    s16 unk26C;
-};
-
 #pragma force_active on
-void lbl_0000C76C(s8 *arg0, struct Sprite *sprite)
+f32 lbl_0000A9C4(register f32 a, register f32 b)
 {
-    u8 *w = lbl_10000028;
-    s16 lap = ((struct RaceSub *)ballInfo[sprite->userVar].unk144)->unk22 + 1;
-
-    if (lap >= *(u16 *)(w + 4))
-        lap = *(u16 *)(w + 4);
-    sprintf(sprite->text, (char *)lbl_00015C6C, lap, *(u16 *)(w + 4));
+    asm {
+        fmuls a, a, a
+        fmadds a, b, b, a
+    }
+    return mathutil_sqrt(a);
 }
 #pragma force_active reset

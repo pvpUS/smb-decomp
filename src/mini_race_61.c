@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_0000D0FC.
+ * mini_race.c -- REL module: isolated function lbl_0000B8C8.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -246,6 +246,7 @@ void lbl_00002018(void);
 void lbl_000020A4(void);
 void lbl_000021C8(void);
 void lbl_000024A0(void);
+void lbl_000025E4(void);
 void lbl_00002968(void);
 void lbl_00002B54(void);
 void lbl_00002BBC(void);
@@ -260,6 +261,10 @@ void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_000040C0(void);
+void lbl_00004284(void);
+void lbl_000044AC(void);
+void lbl_00004634(void);
 void lbl_00005CEC(void);
 void lbl_00005DDC(void);
 void lbl_00005FC4(void);
@@ -289,6 +294,7 @@ void lbl_000085D8(void);
 void lbl_00008A10(void);
 void lbl_00008B60(void);
 void lbl_00008C4C(void);
+void lbl_0000A364(void);
 void lbl_0000A9C4(void);
 void lbl_0000A9EC(void);
 void lbl_0000AC30(void);
@@ -300,7 +306,7 @@ void lbl_0000B2F0(void);
 void lbl_0000B560(void);
 void lbl_0000B67C(void);
 void lbl_0000B834(void);
-void lbl_0000B8C8(void);
+void lbl_0000B8C8(s8 *str, struct Sprite *sprite);
 void lbl_0000B948(void);
 void lbl_0000BB0C(void);
 void lbl_0000C134(void);
@@ -320,11 +326,13 @@ void lbl_0000CB3C(void);
 void lbl_0000CE24(void);
 void lbl_0000CF44(void);
 void lbl_0000D03C(void);
-void lbl_0000D0FC(s16 idx, f32 x, f32 y);
+void lbl_0000D0FC(void);
 void lbl_0000D19C(void);
 void lbl_0000D20C(void);
 void lbl_0000D2B8(void);
 void lbl_0000D41C(void);
+void lbl_0000D4E4(void);
+void lbl_0000D69C(void);
 void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
@@ -347,6 +355,7 @@ void lbl_0000FD48(void);
 void lbl_0000FDD8(void);
 void lbl_0000FE90(void);
 void lbl_0000FEF8(void);
+void lbl_000100B4(void);
 void lbl_00010130(void);
 void lbl_00010218(void);
 void lbl_000102FC(void);
@@ -367,19 +376,11 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-void lbl_0000D0FC(s16 idx, f32 x, f32 y)
+void lbl_0000B8C8(s8 *str, struct Sprite *sprite)
 {
-    struct Sprite *sprite = create_sprite();
-    if (sprite == NULL)
-        return;
-    sprite->tag = idx + 0x67;
-    sprite->type = 0;
-    sprite->fontId = 0x47;
-    sprite->x = x;
-    sprite->y = y;
-    sprite->depth = *(f32 *)lbl_00013D20;
-    sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000D19C;
-    sprite->userVar = idx;
-    sprintf(sprite->text, (char *)lbl_00015C90);
+    if (*(s32 *)lbl_1000003C % 60 == 59)
+        u_play_sound_0(0xde);
+    if (*(s32 *)lbl_1000003C == 0)
+        str[0] = 0;
 }
 #pragma force_active reset

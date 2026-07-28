@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_00002B54.
+ * mini_race.c -- REL module: isolated function lbl_00002018.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -242,24 +242,29 @@ void lbl_0000056C(void);
 void lbl_000007EC(void);
 void lbl_00000838(void);
 void lbl_000008B4(void);
-void lbl_00002018(void);
+void lbl_00002018(struct Ball *ball);
 void lbl_000020A4(void);
 void lbl_000021C8(void);
 void lbl_000024A0(void);
+void lbl_000025E4(void);
 void lbl_00002968(void);
-void lbl_00002B54(struct Ball *ball);
+void lbl_00002B54(void);
 void lbl_00002BBC(void);
 void lbl_00002E04(void);
 void lbl_00002FA4(void);
 void lbl_00003094(void);
 void lbl_000030DC(void);
 void lbl_00003120(void);
-void lbl_000031C0(struct AnimChannel *ch, Vec *out, f32 t);
+void lbl_000031C0(void);
 void lbl_00003238(void);
 void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_000040C0(void);
+void lbl_00004284(void);
+void lbl_000044AC(void);
+void lbl_00004634(void);
 void lbl_00005CEC(void);
 void lbl_00005DDC(void);
 void lbl_00005FC4(void);
@@ -289,6 +294,7 @@ void lbl_000085D8(void);
 void lbl_00008A10(void);
 void lbl_00008B60(void);
 void lbl_00008C4C(void);
+void lbl_0000A364(void);
 void lbl_0000A9C4(void);
 void lbl_0000A9EC(void);
 void lbl_0000AC30(void);
@@ -325,6 +331,8 @@ void lbl_0000D19C(void);
 void lbl_0000D20C(void);
 void lbl_0000D2B8(void);
 void lbl_0000D41C(void);
+void lbl_0000D4E4(void);
+void lbl_0000D69C(void);
 void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
@@ -347,6 +355,7 @@ void lbl_0000FD48(void);
 void lbl_0000FDD8(void);
 void lbl_0000FE90(void);
 void lbl_0000FEF8(void);
+void lbl_000100B4(void);
 void lbl_00010130(void);
 void lbl_00010218(void);
 void lbl_000102FC(void);
@@ -366,6 +375,7 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
+/* ---- handwritten ---- */
 
 // Per-racer state hanging off struct Ball::unk144 inside this module.
 // INVENTED -- offsets read off the asm, names are placeholders.
@@ -397,25 +407,23 @@ struct RaceSub
     s16 unk26C;
 };
 
-struct AnimChannel
-{
-    int count;
-    struct Keyframe *frames;
-};
-
 #pragma force_active on
-void lbl_00002B54(struct Ball *ball)
+void lbl_00002018(struct Ball *ball)
 {
     struct RaceSub *st = (struct RaceSub *)ball->unk144;
-    struct AnimChannel *ch = (struct AnimChannel *)decodedStageLzPtr->unk78;
+    int active;
 
-    if (st->unk1CE > 5)
-    {
-        st->unk1D8 = st->unk1D4;
-        st->unk1E0 = st->unk1DC;
-        st->unk1D4 = st->unk1E8;
-        st->unk1DC = st->unk1F0;
-        lbl_000031C0(ch, &st->unk4, st->unk1D4);
-    }
+    if ((ball->unk120 & 1) || (ball->flags & 1))
+        active = 1;
+    else
+        active = 0;
+    if (st->unk1CE <= 0x7FFE)
+        st->unk1CE++;
+    if (st->unk1D0 <= 0x7FFE)
+        st->unk1D0++;
+    if (active && st->unk1CE > 5)
+        st->unk1D0 = 0;
+    if (!active && st->unk1D0 > 5)
+        st->unk1CE = 0;
 }
 #pragma force_active reset

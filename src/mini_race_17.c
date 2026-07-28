@@ -1,5 +1,5 @@
 /*
- * mini_race.c -- REL module: isolated function lbl_00003238.
+ * mini_race.c -- REL module: isolated function lbl_00002FA4.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -246,20 +246,25 @@ void lbl_00002018(void);
 void lbl_000020A4(void);
 void lbl_000021C8(void);
 void lbl_000024A0(void);
+void lbl_000025E4(void);
 void lbl_00002968(void);
 void lbl_00002B54(void);
 void lbl_00002BBC(void);
 void lbl_00002E04(void);
-void lbl_00002FA4(void);
+int lbl_00002FA4(void);
 void lbl_00003094(void);
 void lbl_000030DC(void);
 void lbl_00003120(void);
 void lbl_000031C0(void);
-f32 lbl_00003238(f32 x);
+void lbl_00003238(void);
 void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_000040C0(void);
+void lbl_00004284(void);
+void lbl_000044AC(void);
+void lbl_00004634(void);
 void lbl_00005CEC(void);
 void lbl_00005DDC(void);
 void lbl_00005FC4(void);
@@ -289,6 +294,7 @@ void lbl_000085D8(void);
 void lbl_00008A10(void);
 void lbl_00008B60(void);
 void lbl_00008C4C(void);
+void lbl_0000A364(void);
 void lbl_0000A9C4(void);
 void lbl_0000A9EC(void);
 void lbl_0000AC30(void);
@@ -325,6 +331,8 @@ void lbl_0000D19C(void);
 void lbl_0000D20C(void);
 void lbl_0000D2B8(void);
 void lbl_0000D41C(void);
+void lbl_0000D4E4(void);
+void lbl_0000D69C(void);
 void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
@@ -347,6 +355,7 @@ void lbl_0000FD48(void);
 void lbl_0000FDD8(void);
 void lbl_0000FE90(void);
 void lbl_0000FEF8(void);
+void lbl_000100B4(void);
 void lbl_00010130(void);
 void lbl_00010218(void);
 void lbl_000102FC(void);
@@ -366,14 +375,57 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
-#pragma force_active on
-f32 lbl_00003238(f32 x)
+/* ---- handwritten ---- */
+
+// Per-racer slot inside this module's work area (lbl_10000000 + 0x1070).
+// INVENTED -- offsets read off the asm, names are placeholders.
+struct RacePlayer
 {
-    u8 *cfg = lbl_00013680;
-    if (x < *(f32 *)(cfg + 0x20))
-        x += *(f32 *)(cfg + 0x40);
-    if (x >= *(f32 *)(cfg + 0x40))
-        x -= *(f32 *)(cfg + 0x40);
-    return x;
+    u8 filler0[0x14];
+    u32 unk14;
+    u8 filler18[0x29C - 0x18];
+};
+
+struct RaceEntity
+{
+    u8 filler0[0x14];
+    u32 unk14;
+};
+
+#pragma force_active on
+int lbl_00002FA4(void)
+{
+    u8 *w = lbl_10000000;
+    struct RacePlayer *p;
+    struct Ball *ball = ballInfo;
+    s8 *buf = g_poolInfo.playerBuf;
+    s16 count = 0;
+    s16 i;
+    int ret = 0;
+
+    for (i = 0; i < 4; i++, ball++, p++, buf++)
+    {
+        if (*buf == 2)
+        {
+            p = &((struct RacePlayer *)(w + 0x1070))[ball->playerId];
+            if (!(p->unk14 & 0x20) && (p->unk14 & 2))
+                count++;
+        }
+    }
+    if (modeCtrl.unk30 == 1)
+    {
+        if (count == 1)
+            ret = 1;
+    }
+    else if (count >= modeCtrl.unk30)
+    {
+        ret = 1;
+    }
+    else if (*(s16 *)(w + 0x46) >= 2)
+    {
+        if (((struct RaceEntity **)(w + 0x4C))[*(s16 *)(w + 0x46)]->unk14 & 2)
+            ret = 1;
+    }
+    return ret;
 }
 #pragma force_active reset

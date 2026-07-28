@@ -563,6 +563,28 @@ SOURCES := \
 	src/mini_race_93.c \
 	src/mini_race_94.c \
 	src/mini_race_95.c \
+	src/mini_race_96.c \
+	src/mini_race_97.c \
+	src/mini_race_98.c \
+	src/mini_race_99.c \
+	src/mini_race_100.c \
+	src/mini_race_101.c \
+	src/mini_race_102.c \
+	src/mini_race_103.c \
+	src/mini_race_104.c \
+	src/mini_race_105.c \
+	src/mini_race_106.c \
+	src/mini_race_107.c \
+	src/mini_race_108.c \
+	src/mini_race_109.c \
+	src/mini_race_110.c \
+	src/mini_race_111.c \
+	src/mini_race_112.c \
+	src/mini_race_113.c \
+	src/mini_race_114.c \
+	src/mini_race_115.c \
+	src/mini_race_116.c \
+	src/mini_race_117.c \
 	asm/mini_race_d1.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
