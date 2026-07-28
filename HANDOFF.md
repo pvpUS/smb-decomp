@@ -394,7 +394,11 @@ all line up.
 - **`C:/tmp/smbm/RUN7_RESULTS.md`** holds the full per-module reports this
   section summarises — every idiom, residual and tool bug in the agents' own
   words. `RUN7_BRIEF.md` is superseded.
-- Not pushed. Run 6's push was `fork/wip/rel-drafts-and-dol-matches` at `78bde4a`.
+- **Pushed**: `fork/wip/rel-drafts-and-dol-matches` at `b42e0f7` (was
+  `41483ab` — note §0.12 recorded the run-6 push as `78bde4a`, but `41483ab`
+  went out too). Diff scanned for game binaries first
+  (`.dol/.elf/.rel/.plf/.o/.map/.bin`, `baserom*`) — clean; 175 files, all
+  `.c`/`.py`/`.md`/Makefile.
 
 ## 0.12 — RUN 6 DONE (2026-07-27): +3,813 insn, 8.83% -> 10.83%. Superseded by §0.13.
 
