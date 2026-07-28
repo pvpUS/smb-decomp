@@ -277,6 +277,9 @@ def main():
     ap.add_argument('--tree', help='defaults to C:/tmp/smbm/<module>')
     ap.add_argument('--tmp', help='defaults to C:/tmp/tmp_<module>')
     ap.add_argument('--sweep', help='directory of candidate bodies to try')
+    ap.add_argument('--install-best', action='store_true',
+                    help='leave the best-scoring variant in place afterwards '
+                         'instead of restoring the pre-sweep file')
     ap.add_argument('--gate', action='store_true',
                     help='rebuild with ALL module objects deleted and check the '
                          'golden sha1; the only valid proof of a match')
@@ -327,7 +330,11 @@ def main():
         # Trap 4.  shutil.move of a copy2 backup restores the ORIGINAL mtime,
         # which is older than the last variant's .o, so make skips the recompile
         # and every later build links that variant instead of the file on disk.
-        shutil.copyfile(backup, target_c)
+        best = min(results)[1] if results and min(results)[0] != FAILED else None
+        if args.install_best and best:
+            shutil.copyfile(os.path.join(args.sweep, best), target_c)
+        else:
+            shutil.copyfile(backup, target_c)
         os.utime(target_c, None)
         os.remove(backup)
         try:
@@ -349,10 +356,26 @@ def main():
         print('\n(note: every variant scored %d. Usually means mwcc canonicalises '
               'these spellings. To prove the builds are real, add a deliberately '
               'wrong control variant and confirm it scores differently.)' % real[0])
+    # Trap 6, run 7 (mini_bowling): the sweep RESTORES the pre-sweep content when
+    # it finishes, so a winning variant is discarded and the file on disk is the
+    # asm stub again. Its first "9 matches" gate ran with one file silently
+    # reverted. Never let that be silent.
+    if best is None:
+        pass
+    elif args.install_best:
+        print('\ninstalled the best variant: %s -> %s' % (best, args.file))
+    else:
+        win = os.path.join(args.sweep, best).replace('\\', '/')
+        dst = target_c.replace('\\', '/')
+        print('\n!! %s HAS BEEN RESTORED to its pre-sweep content -- the winning\n'
+              '   variant is NOT installed. Install it before gating:\n'
+              "     cp '%s' '%s' && rm -f '%s.o'\n"
+              '   or re-run with --install-best.' % (args.file, win, dst, dst))
+
     if not any(n == 0 for n, _ in results):
         return 1
     print('\na MATCH here is NOT a match. Confirm with: '
-          'python tools/rel_sweep.py <module> --gate')
+          'python tools/rel_sweep.py %s --gate' % args.module)
     return 0
 
 
