@@ -271,6 +271,34 @@ that is blocking you.**
    base at fixed displacements and are the prime `f32 *k = …; k[n]` candidates.
 8. **Deprioritise mini_golf generally** (8% reachable) despite its size.
 
+### RUN 7 IS SET UP — everything below is done and verified
+
+- **All NINE warm copies** at `C:/tmp/smbm/<mod>` reset to `d1f91c4`, cleaned
+  (0 untracked), and **each rebuilt to its golden sha1 with every module object
+  DELETED first** — not incrementally. Run 6 proved a preserved `.o` can be
+  linked stale and still hash golden, so an incremental "verified" baseline is
+  worthless. All nine reported GOLDEN. Their CW temps `C:/tmp/tmp_<mod>` exist.
+  Re-run with `scratchpad/warm_verify.sh` if you need to re-establish it.
+- **`C:/tmp/smbm/RUN7_BRIEF.md`** is the agent briefing — hand it to every module
+  agent. It supersedes RUN6_BRIEF.md, which contains rules now known WRONG (the
+  NOT-levers list, declaration order as a universal lever, the empty-switch-case
+  scope, and the whole-TU carve framing). It leads with **reachability
+  classification** and **checking already-matched DOL code**, because those are
+  where run 6's cheapest wins came from.
+- **Near-miss drafts rescued** to
+  `D:/Nonschool Projects/smb-updated-decomp/run6-nearmiss-drafts/` — 48 files
+  across all nine modules with a `README.md` giving each one's residual diff
+  count and what is left, **including an explicit do-NOT-restart list** for the
+  four proven not source-reachable. run5-nearmiss-drafts/ is still next door and
+  its unconverted entries remain valid. Deliberately outside the repo — none of
+  it byte-matches.
+- Also rescued: `mini_race/recon4.py` (regenerates a full per-function
+  reachability table — the cleanest worked example of the `lis rN, 0x4330`
+  classification), two variant generators, and two carve-safe isolation scripts.
+- **NOT pushed.** `fork/wip/rel-drafts-and-dol-matches` is still at the run-5
+  commit `8817308`; run 6's four commits (`5cf8951` `f88915a` `9c2c14a`
+  `d1f91c4`) are local only.
+
 **Still-unverified inferences to flag if anyone upstreams this:** invented
 structs in sel_ngc (`SelNgcMenu`), mini_fight (`FightCell`, `FightSceneWork`,
 `FightPart`, `FightRail`, `FightCam`), mini_race (`RaceSub`/`RaceSub2`),
