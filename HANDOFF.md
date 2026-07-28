@@ -295,9 +295,9 @@ that is blocking you.**
 - Also rescued: `mini_race/recon4.py` (regenerates a full per-function
   reachability table — the cleanest worked example of the `lis rN, 0x4330`
   classification), two variant generators, and two carve-safe isolation scripts.
-- **NOT pushed.** `fork/wip/rel-drafts-and-dol-matches` is still at the run-5
-  commit `8817308`; run 6's four commits (`5cf8951` `f88915a` `9c2c14a`
-  `d1f91c4`) are local only.
+- **Pushed**: `fork/wip/rel-drafts-and-dol-matches` at `78bde4a` (was `091adbf`).
+  Diff scanned for game binaries first (`.dol/.elf/.rel/.plf/.o/.map/.bin`,
+  `baserom*`) — clean; 409 files, all `.c`/`.s`/`.py`/`.md`/Makefile.
 
 **Still-unverified inferences to flag if anyone upstreams this:** invented
 structs in sel_ngc (`SelNgcMenu`), mini_fight (`FightCell`, `FightSceneWork`,
