@@ -4,7 +4,392 @@
 
 ---
 
-## 0.12 — RUN 6 DONE (2026-07-27): +3,813 insn, 8.83% -> 10.83%. START HERE.
+## 0.13 — RUN 7 DONE (2026-07-27): +7,575 insn, 10.83% -> 14.81%. START HERE.
+
+Nine parallel agents, one per module. **The rate did not decline — it nearly
+doubled.** Run 6 was +3,813 / +47 fns on the same nine modules; run 7 is
+**+7,575 / +59 fns**, and every module gained.
+
+| module | funcs | insn | % | gained |
+|---|---|---|---|---|
+| mini_bowling | 78/120 | 4966/15313 | 32.43% | +9 fns / +1,122 |
+| mini_pilot | — | 3280/12137 | 27.02% | +5 fns / +1,062 |
+| sel_ngc | 48/73 | 3648/18084 | 20.17% | +10 fns / +1,404 |
+| mini_race | 75/157 | 3405/19817 | 17.18% | +8 fns / +819 |
+| option | 41/71 | 1604/12375 | 12.96% | +3 fns / +266 |
+| test_mode | 46/94 | 2053/16231 | 12.65% | +11 lbls / +1,132 |
+| mini_fight | 84/154 | 2989/28588 | 10.46% | +8 fns / +794 |
+| mini_golf | 80/118 | 4044/38919 | 10.39% | +3 fns / +497 |
+| mini_billiards | 29/70 | 2191/28793 | 7.61% | +2 fns / +479 |
+| **TOTAL** | | **28180/190257** | **14.81%** | **+59 / +7,575** |
+
+§0.12 predicted per-agent yield would keep varying 20x and that picking targets
+matters more than pushing hard on one. Both held — but the *reason* the run
+doubled is a single method, below.
+
+### THE BIG LESSON: cross-referencing already-matched code is the whole game
+
+§0.12 idiom 1 recorded this as a curiosity found once. In run 7 it produced the
+majority of the gain, across every module that tried it:
+
+- **mini_pilot** took **four of five** conversions out of `src/ball.c`.
+  `lbl_00006124` is `handle_ball_linear_kinematics` (2 diffs first build);
+  `lbl_000051A4` is `u_ball_ape_thread` — **MATCH on the first real build.**
+- **mini_fight** took **six of eight**, five MATCHing on the first build, and
+  went from run 6's +61 to **+794 (13x)**.
+- **mini_golf** took **all three**, from an already-matched IN-MODULE template.
+- **mini_bowling** ported `mini_race/lbl_00010BC8` verbatim into
+  `lbl_000066C4` — **MATCH on the first build.**
+- **test_mode** found `src/input.h`'s `REPEAT_WITH_R_ACCEL` macro reproduces a
+  13-instruction chain byte-exactly and appears 6x across two functions — **~90
+  of its 418 converted instructions are that one macro.**
+
+**`tools/rel_xref.py` is NEW and mechanises it.** Fingerprints each unconverted
+function by the symbols it `bl`s and ranks every matched C function in the tree
+by call-set coverage; defaults to the module's whole unconverted set. Validated
+against the three known answers. **Open every module with it in run 8.**
+
+Two agents independently built stronger variants worth folding in: mini_fight's
+indexes **all 8,899 named DOL functions plus all 935 REL asm functions** by
+opcode spine (difflib ratio, ~4 min); mini_bowling's does the same across the
+other eight REL modules but cannot see DOL bodies (they have no `.s` left) —
+`objdump -d src/*.c.o` is the fix. `tools/rel_xref.py` parses `src/*.c` so it
+DOES see DOL bodies; the approaches are complementary, not redundant.
+
+**Strictly stronger than grepping sources** (mini_race): `powerpc-eabi-objdump
+-d src/*.c.o` over the built DOL objects, searching for an instruction SHAPE,
+then reading the C that produced it. That is how the run's best find happened.
+
+### THE BEST SINGLE FIND: `mathutil.h` is missing a helper
+
+A 12-instruction block recurs across the minigames — six live FPRs, every load
+hoisted above the subtractions:
+```
+lfs f5,0(rA) lfs f2,0(rB) lfs f4,4(rA) lfs f1,4(rB) lfs f3,8(rA) lfs f0,8(rB)
+fsubs f5,f5,f2  fsubs f4,f4,f1  fsubs f3,f3,f0
+fmuls fD,f5,f5  fmadds fD,f4,f4,fD  fmadds fD,f3,f3,fD
+```
+**No plain-C spelling reproduces it** — `mathutil_sum_of_sq_3(a->x - b->x, …)`
+gives a 5-register form and ~150 variants floored at 10 diffs. It is
+`mathutil_vec_distance()`'s inline asm **minus the trailing `mathutil_sqrt`
+call**. Added as a local `static inline`: **10 diffs -> MATCH on the first
+build**, then five more functions matched almost immediately.
+
+**18 still-unconverted functions across three modules contain this block:**
+mini_race `lbl_000020A4` `lbl_000021C8` `lbl_00003474` `lbl_00007A9C`
+`lbl_0000B2F0` `lbl_00012D50`; **mini_fight x11** (`lbl_0000351C` `lbl_00005A08`
+`lbl_000080D4` `lbl_0000AD9C` `lbl_0000BC94` `lbl_00010018` `lbl_00010B98`
+`lbl_000122C8` `lbl_000131C4` `lbl_000135DC` `lbl_0001B43C`); mini_bowling
+`lbl_0000CAA8`. Where the block is *followed* by `bl mathutil_sqrt`, the existing
+`mathutil_vec_distance` is what you want.
+
+**It is duplicated into each `.c` that needs it, NOT put in `src/mathutil.h`** —
+`rel_merge_back` only copies `src/<stem>*.c` and would silently drop a header
+edit. Same for mini_bowling's `CAMERA_FOREACH_2`. **Both belong in the shared
+headers; promoting them is a deliberate decision for whoever upstreams, not
+something an agent should do mid-run.**
+
+### RECONNAISSANCE IN §0.12 WAS WRONG IN FIVE PLACES — re-derive, don't trust
+
+Every module that checked its own brief found an error in it.
+
+- **mini_pilot: "~24% of remaining is magic-blocked" is INVERTED — it is 85%**
+  (20 fns / 7,492 blocked vs 7 / 1,349 reachable).
+- **test_mode: "no `.data` jump table" is WRONG.** It has **5 `bctr` functions
+  totalling 3,514 insn** — 25% of what remains is structurally unreachable and
+  had been counted nowhere.
+- **mini_bowling: all three of its named targets were wrong.** The 33
+  letter-suffixed files are GONE at `d1f91c4` so the `rel_rematch` hazard no
+  longer applies; the "top prize" `lbl_000146A0` TU is entirely a-BLOCKED (a
+  carve project, not a merge); and the "`_42.c`..`_53.c` mechanical merge" had
+  nothing to merge — those files were already pure C.
+- **option has FOUR magic doubles, not one** (`lbl_0000C270` `lbl_0000C380`
+  signed, `lbl_0000C368` `lbl_0000C4B0` unsigned; only `0xC380` carved).
+- **mini_billiards' magic set was mis-stated** — `lbl_00020848` `lbl_00020B10`
+  `lbl_00020C20` are in the blob; `lbl_0001CBD0`/`lbl_0001CC88` were carved in
+  run 5 and are therefore in no `.s` at all.
+
+### PROJECT-WIDE REACHABILITY — the run's most durable output
+
+Every module now has a per-function table, regenerable from a script in its
+scratch dir. **Plan run 8 off this.**
+
+| module | remaining | reachable now | magic-blocked | jump table |
+|---|---|---|---|---|
+| mini_race | 82 / 16,412 | **39 / 7,434 (45%)** | 40 / 7,509 | 3 / 1,469 |
+| mini_billiards | 41 / 26,602 | **19 / 6,902 (26%)** | 17 / 12,596 | 5 / 7,103 |
+| test_mode | 48 / 14,178 | **25 / 5,632 (40%)** | 18 / 5,032 | 5 / 3,514 |
+| mini_bowling | 42 / 10,341 | **21 / 5,292 (51%)** | 18 / 4,742 | 3 / 307 |
+| mini_fight | 70 / 25,599 | **26 / 4,751 (19%)** | 41 / 14,634 | 3 / 6,214 |
+| mini_golf | 38 / 34,875 | **11 / 2,750 (8%)** | 23 / 28,048 | 4 / 4,077 |
+| option | 30 / 10,771 | **10 / 2,439 (23%)** | 18 / 7,951 | 2 / 381 |
+| mini_pilot | 27 / 8,841 | **7 / 1,349 (15%)** | 20 / 7,492 | — |
+| sel_ngc | 25 / 14,436 | **4 / 837 (6%)** | 17 / 4,775 | 4 / 8,824 |
+| **TOTAL** | | **~37,400** | **~92,800** | **~31,900** |
+
+**~37,400 instructions are convertible today with no carve.** Jump tables are now
+measured at **~31,900 insn project-wide** — far above §0.12's ~5,850 guess,
+because three modules had never counted them.
+
+### DEAD ENDS THAT FELL THIS RUN — re-test before believing any of them
+
+Three separate "confirmed" entries were wrong, continuing the pattern from runs
+5 and 6. **Assume any blocking entry on the dead-end list is worth one re-test.**
+
+- **"mini_fight is exhausted at the small end; none are cheap."** It had no
+  reachability table. Once built, **21% of its remaining mass was carve-free**,
+  and run 6's four grinds were all in the reachable set — it had been grinding
+  the four hardest members while 5,000 insn of easier work sat unclassified.
+  Result: +61 -> **+794**.
+- **option's magic-free type-pun, "confirmed dead" in §0.12/§9.** It went
+  **17 diffs -> 5**, with correct frame, correct multiset, correct `lfsu`, and
+  **every FPR correct**; a sibling independently reached 6. Run 6 rejected it on
+  a sub-lever (store the low word first) that only fails on the shape run 6
+  tested — it *helps* once the pool constants are hoisted first.
+- **mini_billiards' 8-member pool TU**, written off in runs 4 and 5 and re-opened
+  in run 6, converted cleanly this run.
+
+Two that held, and should now be retired for good:
+- **mini_golf `lbl_000109CC`** — ~1,150 formulations across three runs, still 14.
+  The carve is verified to work and the carve-free pool-read form is *worse* (16).
+  Residual is a pure 3-register rotation. **Retire it.**
+- **mini_pilot `lbl_000097C8`** — 16 diffs after 104 further variants on top of
+  run 6's. The original computes `currentBall@ha` late into a dead r3; no source
+  form reaches it. **Retire it.** (`lbl_0000893C` at 2 diffs was already retired
+  in run 6 and stayed untouched, correctly.)
+
+### NEW IDIOMS — ranked, all proven by a golden build
+
+1. **A missing `mathutil_vec_sq_distance` (see above).** Add as a local
+   `static inline`; inline asm in a `static inline` does not trigger the
+   asm-sibling deopt. 10 diffs -> MATCH, then five more functions.
+2. **Same-TU auto-inlining is real — use `static inline`, NEVER plain `static`.**
+   `-inline auto` is on, so the original TU inlined small helpers into callers.
+   Calling the real function gives 27 diffs, writing the loop out gives 98, a
+   **`static inline`** helper gives MATCH first try. **A plain `static` helper
+   also scores MATCH per-function but emits an out-of-line copy that silently
+   shifts `.text` and the REL hashes non-golden.** Put it outside the
+   `force_active` block. (sel_ngc)
+3. **An enum-typed parameter defeats increment folding.** With `int id`, mwcc
+   folds `f(id); id+=3; f(id); id+=3;` into `addi r4,r28,3`+`addi r28,r28,6`;
+   **`GXTexMtx id`** emits two separate `addi r28,r28,3` — instant MATCH.
+   `int`/`s32`/`u32` fold; `u8`/`short` give 20. (test_mode)
+4. **`a.x += b.x` is NOT `a.x = b.x + a.x`** — the compound form loads in the
+   wrong order and picks the wrong `fadds` slot. Same for `x = pool * x` vs
+   `x *= pool`. (mini_bowling; note this is the *opposite* direction from §0.11
+   idiom 17's division case, so check the asm rather than assuming.)
+5. **`for (i=0;i<N;i++,q++) *q=0;` does NOT fully unroll where `arr[i]=0` does.**
+   Index form unrolls to 16 flat `stw`s; the comma-increment pointer form
+   unrolls x8 leaving `mtctr 2`+`bdnz`. `*q++ = 0` and `q[i] = 0` give the flat
+   form. 41 -> 7. (test_mode)
+6. **A global read used as an array subscript needs its own STATEMENT** to fold
+   `@l` into the load: `set = &tbl[*(s16 *)lbl_X]` gives `lis; addi rX,rX,@l;
+   lha`; splitting it gives the original's `lis; lha rY,@l(rX)`. **143 -> 19, and
+   16 spellings of the deref itself changed nothing** — it is the statement, not
+   the expression. (mini_pilot)
+7. **The address-spelling lever is PER-SITE and both directions occur in one
+   function.** Sweeping the 5x5 cross product of two spellings at two sites took
+   a function 9 -> 0; a sibling needs the opposite pairing. **Never pick one
+   spelling globally.** (mini_billiards)
+8. **`&arr[K]` into a pointer local PLUS a separate full-expression read of the
+   same element** is what gives `addis rT,base,1 / addi rSAVED,rT,-K / lbz -K(rT)`.
+   No `q + CONST` spelling reaches it. **197 -> 0.** (mini_billiards)
+9. **`&((T *)((u8 *)base + K))[i*N]` beats `(T *)((u8 *)base + K + i*sizeof(T))`**
+   for placing a large constant — mwcc canonicalises `base+idx+const` to
+   `(idx+const)+base`, so folding it into the INDEX is the only route to
+   `add rD,base,idx; addi rD,rD,const`. 7 -> MATCH. (test_mode)
+10. **A redundant cast on an ALREADY-correctly-typed base blocks a displacement
+    fold** — `*(T *)(tbl + K)` folds the next access's offset into one `addi`;
+    `*(T *)((u8 *)tbl + K)` materialises the base into a callee-saved register.
+    **MATCH vs 87.** And **to stop mwcc collapsing `v = *(Vec *)src; dst = v;`
+    into one struct copy, put a redundant cast on the SECOND statement's
+    source** (65 -> 10). (mini_golf, mini_bowling — both generalise run 6's cast
+    finding)
+11. **`((f32 *)t)[2]` vs `*(f32 *)(t + 8)` is worth 116 diffs** — the raw
+    spelling gets CSE'd into an `fmr`, the array spelling forces the reload.
+    128 -> 12. (sel_ngc)
+12. **An embedded assignment defeats an alias-induced reload:**
+    `*(f32 *)(w+0x160) += (v = *(f32 *)(w+0x164));` MATCHes where the separate
+    statement gave 2 and the inline reload gave 141. Two `u8 *`-derived
+    addresses can alias so mwcc will not CSE across the store. (mini_bowling)
+13. **Declaration order of `f64` locals maps 1:1 onto FPR numbers f1,f2,f3…** —
+    read the numbers off the asm and declare in that order. (option)
+14. **mwcc lays declared locals out in REVERSE declaration order** (last declared
+    = lowest address); **`Vec out; Vec v;` puts `out` at the HIGHER address**.
+    A trailing unused `s32 pad;` relocates slots **without changing frame size**.
+    **A PARAMETER competes in the callee-saved order too.** (sel_ngc, mini_race,
+    mini_bowling)
+15. **Compare types, sharpened.** A `u8` switch scrutinee gives `lbz; cmpwi` with
+    no `extsb`; `char`/`s8` gives `lbz; extsb; cmpwi`. An `(s8)` cast inside an
+    `==`/`!=` test gives `cmpwi` with **no** `extsb` (equality is sign-agnostic
+    so mwcc drops the extension but keeps the signed compare) — this resolves the
+    apparent contradiction in the old idiom 16. `int i` + `i < 27U` gives
+    `cmplwi` while keeping `i == s32field` as `cmpw`: **the unsigned LITERAL
+    drives the bound compare, not the variable's type.** (mini_race, mini_fight,
+    test_mode)
+16. **`NULL2` is not interchangeable with `NULL`/`0`** — `NULL2` emits
+    `li r0,0; cmplw`, `NULL` emits `cmplwi`. 97 diffs. (mini_race)
+17. **`CAMERA_FOREACH` has two spellings in the wild.** The stock `camera.h`
+    macro gives the fused `lwzu r6, currentCamera@l(r4)`; declaring
+    `struct Camera **cc = &currentCamera;` first gives the unfused
+    `lis / addi / lwz`. **Read the asm and pick.** (mini_bowling)
+18. **`sizeof(struct StageGoal) == 0x14`** — its `/*0x14*/ char type;` comment is
+    WRONG, the field is at 0x12. Four matches depend on the 0x14 stride.
+    (mini_race)
+
+### TOOL WORK — five commits, each validated against a REPRODUCED failure
+
+`tools/rel_sweep.py` had three defects that all report a confident wrong answer.
+
+- **`--gate` is NEW and is the only valid proof of a match.** A per-function diff
+  of 0 is necessary, not sufficient — it comes from a build reusing every sibling
+  object. `--gate` deletes EVERY module object plus the `.rel`/`.plf`, rebuilds,
+  and checks `supermonkeyball.sha1`. Verified both directions.
+- **Trap 4 (`--sweep` restore).** It used `shutil.move` of a `copy2` backup, so
+  the restored `.c` kept its original mtime and every later build silently linked
+  the last variant. Now stamps mtime and drops the object.
+- **Trap 5 (wrong `--file` reports MATCH).** Found by mini_fight: point `--file`
+  at a file that does not contain `--label` and the untouched stub elsewhere
+  trivially matches itself, printing a clean `MATCH (0 diffs)`. A forward
+  declaration in the named file makes it look plausible. Now refuses unless the
+  named file really defines the label in C.
+- **Trap 6 (`--sweep` discards the winner).** Found independently by
+  **mini_bowling AND test_mode**, and it cost each of them a near-miss false
+  report: the sweep restores the pre-sweep CONTENT, so a winning variant is gone
+  and the file is the asm stub again. Now prints a loud notice with a
+  copy-pasteable install command; `--install-best` keeps the winner.
+- **The all-same nonzero exit was a FALSE ALARM** and is now advisory —
+  `build()` already refuses to score a file it saw no `Compiling` line for, so
+  trap 1 is closed by construction. It fired 3-4 times per agent, including on
+  all-MATCH sets.
+- **`--gate` now prints an `objdump -h` audit on failure** (sel_ngc's
+  recommendation): `rel_fdiff` locates a function by symbol, so an extra
+  out-of-line helper or an unexpected `.rodata` passes the per-function gate
+  while the REL hashes non-golden. Verified by reproducing sel_ngc's exact
+  symptom — `#include <math.h>` alone emits 16 bytes of `.rodata` for an inline
+  sqrt's 0.5 and 3.0, and it cost them a golden hash.
+
+**`tools/rel_xref.py` is NEW** (see above).
+
+### OTHER TOOL HAZARDS FOUND — read before touching the tools
+
+- **`rel_rematch` now corrupts THREE modules**, not one. Its `src_files()` sort
+  bug hits any tree with letter-suffixed files, and after run 7 **mini_race (7),
+  option (11), sel_ngc (10) and mini_billiards** all carry them. It exits 0.
+  **mini_fight is destroyed a second way**: it hoists hand-added mid-preamble
+  `#include`s but regenerates the `extern` stubs that were hand-deleted to make
+  them compile, so `make` dies in files you never touched. **mini_bowling is now
+  CLEAR** — its 33 letter-suffixed files are gone.
+- **Carve-safe isolate scripts are the standard route now**, one per module in
+  its scratch dir, all verified byte-neutral. Two traps they share: **`static asm`
+  functions called by a sibling stop linking once split** (drop `static` from the
+  definition AND the forward decl in every file), and **re-running an isolate
+  after `git checkout` duplicates the file's SOURCES line** — it builds and links
+  while compiling the object twice.
+- **A recon script that greps `nonmatchings/<mod>/` over-counts asm siblings by
+  one**, because the generated preamble contains that string in a COMMENT. It
+  made four singleton files look like they needed an isolate script and nearly
+  cost 958 insn of easy work. **Anchor on `#include "../asm/nonmatchings/`.**
+- **`rel_merge_back` only copies `src/<stem>*.c`** — a `src/mathutil.h` or
+  `src/camera.h` edit is silently dropped. This is why the two new shared helpers
+  are duplicated per-file.
+
+### NEXT RUN — ranked, reconnaissance done, ~37,400 carve-free insn available
+
+1. **Open every module with `tools/rel_xref.py`.** It is the single highest-yield
+   action available and most modules have not been swept with it. Fold in
+   mini_fight's opcode-spine variant (all 8,899 DOL + 935 REL functions) and add
+   `objdump -d src/*.c.o` so matched DOL bodies are indexed too.
+2. **Cash the `sqdist.h` helper into the 18 identified functions** — mini_fight
+   x11, mini_race x6, mini_bowling `lbl_0000CAA8`. Decide first whether it goes
+   into `src/mathutil.h` (with `CAMERA_FOREACH_2` into `src/camera.h`) rather
+   than staying duplicated.
+3. **mini_bowling `mini_bowling_82.c`: `lbl_0000CAA8`(651) + `lbl_0000C1D0`(566),
+   both c-FREE.** Converting both makes the file pure C with no isolate script —
+   **1,217 insn, the biggest carve-free block anywhere**, and `lbl_0000CAA8`
+   contains the sq-distance block.
+4. **mini_race is the richest field: 39 fns / 7,434 insn reachable.** Cheapest
+   first: `lbl_0000048C`(56, draft at 8 diffs) `lbl_00007800`(60, draft at 11)
+   `lbl_000044AC`(98, 0 fops) `lbl_00002E04`(104) `lbl_0000B2F0`(156)
+   `lbl_000021C8`(182) — the last two are already isolated singletons and both
+   use the new helper. `lbl_000008B4`(1,497) is the largest reachable item.
+5. **test_mode `test_mode_13.c` holds `lbl_000057C0`(908) + `lbl_00006974`(670) +
+   `lbl_000073EC`(509)** — 2,087 insn behind one `rel_rematch --add`.
+6. **mini_fight, 2,507 carve-free insn none attempted**: `lbl_00004498`(543)
+   `lbl_0001199C`(484) `lbl_00004D14`(438) `lbl_000135DC`(400) `lbl_00003DE0`(333)
+   `lbl_00010B98`(309). The 1st/3rd/5th are mutual 0.58-0.69 opcode siblings in
+   one file, so cracking one should carry the other two.
+7. **option: two more carves are worked out and VERIFIED to produce the intended
+   interleave** — `lbl_0000C4B0` -> `lbl_00008068`(627) and `lbl_0000C270` ->
+   `lbl_00001598`(722) or `lbl_00000C94`(577), one only. Command in
+   `_scratch_option/nearmiss/run7/MAGIC_HOLES.md`. Also **the magic-free pun is
+   at 5 diffs** — landing it unlocks five functions at once.
+8. **mini_billiards: 19 fns / 6,902 insn reachable, largely unattempted.**
+   `lbl_0000A054`(2,094) is the biggest single reachable function in the project
+   outside mini_race's `lbl_000008B4`.
+9. **Carve projects, in value order:** mini_race still has **8 magic doubles with
+   one carved** (7,509 blocked insn); mini_pilot's `_9.c`->`_10.c` (1,477) and
+   `_30.c`->`_31.c` (1,086) are `.text`-adjacent so the same-object trick applies
+   with no new hole; mini_billiards has 7 blocked fns (3,964) on a magic that
+   **already has a hole owner**.
+10. **Deprioritise sel_ngc and mini_golf.** sel_ngc is now 61% jump-table / 33%
+    magic-blocked with only 837 carve-free insn left; mini_golf is 8% reachable.
+11. **Standard close-out for every agent: regenerate the reachability table.**
+    test_mode caught a silently-lost match that way, and it costs one script run.
+
+---
+
+
+### VERIFICATION — what was actually proven
+
+- All nine warm copies merged with `tools/rel_merge_back.py --all`; **each
+  rebuilt in the main tree to its golden sha1 from DELETED objects**, all nine
+  reported GOLDEN.
+- Then a **completely clean rebuild**: all 890 objects plus every `.rel`/`.plf`/
+  `.map`, `supermonkeyball.dol` and the `.elf` removed first, `make all` from
+  nothing. **`sha1sum -c supermonkeyball.sha1` = all 12 artifacts OK.** This is
+  stronger than run 6's gate, which kept the DOL objects.
+- Commit `e1a934f`, 551 files: 542 `.c`, 8 `.s`, 1 Makefile. Diff scanned for
+  game binaries first (`.dol/.elf/.rel/.plf/.o/.map/.bin`, `baserom*`) — clean.
+  Working tree clean afterwards.
+- Every agent additionally gated its own module on the golden sha1 with all
+  module objects deleted before reporting.
+
+**Still-unverified inferences to flag if anyone upstreams this.** All byte-match;
+none is confirmed against a symbol file. Carried over: `SelNgcMenu`, `FightCell`,
+`FightSceneWork`, `FightPart`, `FightRail`, `FightCam`, `RaceSub`/`RaceSub2`,
+`TestModeVecKey`, `struct Preview *` at `sprite + 0x2C`, `BilliardsPlayer`,
+`BilliardsApe`. **New in run 7:** `FightDepthMaskParams`, `SelNgcState`,
+`SelNgcSlot`, `SelNgcCharInfo`, `TestModelWork` (note: two files give fields
+0x14/0x18/0x1C *different* pointer types because each TU needs a different one),
+`TestDipEntry`, `TestResEntry`, `BowlSlot`, `BowlBank`, `BowlSndSet`/`BowlSnd4`,
+extended `BowlPin` (byte-compatible with the stub in `_68.c`, should replace it),
+and extensions to `BilliardsPlayer`/`BilliardsApe`. One is *solid* rather than
+invented: **`lbl_00018A98`, `lbl_00018C78`, `lbl_00018F4C` and `lbl_00019264` in
+mini_billiards all take `struct Ape *`** — `flags` 0x14, `unk60`, `ballId` 0xC0
+all line up.
+
+### STATE FOR RUN 8
+
+- **Near-miss drafts and recon scripts rescued** to
+  `D:/Nonschool Projects/smb-updated-decomp/run7-nearmiss-drafts/` — 170 files
+  (12 READMEs, 51 drafts, 90 scripts) with a top-level `README.md` giving every
+  residual diff count, an explicit **do-NOT-restart list**, and the 18 functions
+  the new `sqdist.h` applies to. Deliberately outside the repo; none of it
+  byte-matches. run5/run6 dirs are still next door and their unconverted entries
+  remain valid.
+- **The warm copies at `C:/tmp/smbm/<mod>` are still dirty at their run-7 end
+  state** — they have NOT been reset to the new HEAD. Reset and re-verify them
+  before handing them to run-8 agents, deleting every module object first: run 6
+  proved a preserved `.o` can be linked stale and still hash golden, so an
+  incremental "verified" baseline is worthless.
+- **`C:/tmp/smbm/RUN7_RESULTS.md`** holds the full per-module reports this
+  section summarises — every idiom, residual and tool bug in the agents' own
+  words. **`RUN7_BRIEF.md` is now superseded**; write RUN8_BRIEF from §0.13,
+  leading with `tools/rel_xref.py` and the reachability tables.
+- Not pushed. Run 6's push was `fork/wip/rel-drafts-and-dol-matches` at `78bde4a`.
+
+## 0.12 — RUN 6 DONE (2026-07-27): +3,813 insn, 8.83% -> 10.83%. Superseded by §0.13.
 
 Nine parallel agents, one per module. All merged into the main tree, each rebuilt
 **there** to its golden sha1, then a **from-scratch** `make all` (all 751 REL
