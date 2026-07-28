@@ -210,8 +210,8 @@ void lbl_0000F7E8(void);
 void lbl_0000FA18(void);
 void lbl_0000FBC8(void);
 void lbl_0000FCE0(void);
-void lbl_000100D4(void);
-void lbl_00010304(void);
+void lbl_000100D4(struct PhysicsBall *b, struct Stage *s);
+void lbl_00010304(struct Ball *ball, struct PhysicsBall *physBall, int c);
 void lbl_000106B8(void);
 void lbl_00010808(void);
 void lbl_000109CC(void);
@@ -256,9 +256,93 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-asm void lbl_00010304(void)
+void lbl_00010304(struct Ball *ball, struct PhysicsBall *physBall, int c)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_00010304.s"
+    Vec stageUp;
+    Vec accel;
+    f64 *pool = (f64 *)lbl_000264A8;
+
+    ball->prevPos.x = ball->pos.x;
+    ball->prevPos.y = ball->pos.y;
+    ball->prevPos.z = ball->pos.z;
+
+    ball->speed = mathutil_vec_len(&ball->vel);
+    ball->flags &= ~BALL_FLAG_05;
+
+    mathutil_mtxA_from_identity();
+    mathutil_mtxA_rotate_x(worldInfo[ball->playerId].xrot);
+    mathutil_mtxA_rotate_z(worldInfo[ball->playerId].zrot);
+    stageUp.x = ((f32 *)pool)[12];
+    stageUp.y = ((f32 *)pool)[17];
+    stageUp.z = ((f32 *)pool)[12];
+    mathutil_mtxA_tf_vec(&stageUp, &stageUp);
+
+    accel.x = ((f32 *)pool)[12];
+    accel.y = -ball->accel;
+    accel.z = ((f32 *)pool)[12];
+    if (ball->flags & BALL_FLAG_REVERSE_GRAVITY)
+        accel.y = -accel.y;
+    else if (ball->flags & BALL_FLAG_08)
+        accel.y = ((f32 *)pool)[12];
+
+    if (!(ball->flags & BALL_FLAG_16)
+     && gameSubmode != SMD_ADV_INFO_MAIN
+     && c == 0
+     && (ball->unk120 & 1))
+    {
+        Vec vel = ball->vel;
+        float f1 = mathutil_sum_of_sq_2(vel.x, vel.z);
+
+        if (f1 > ((f32 *)pool)[28])
+        {
+            f1 = pool[15] / mathutil_sqrt(f1);
+            vel.x *= f1;
+            vel.z *= f1;
+            f1 = -mathutil_sin(cameraInfo[ball->playerId].rotY) * vel.x
+               + -mathutil_cos(cameraInfo[ball->playerId].rotY) * vel.z;
+            if (f1 < pool[16])
+            {
+                f1 = pool[17] * -f1 + pool[15];
+                accel.x *= f1;
+                accel.y *= f1;
+                accel.z *= f1;
+            }
+        }
+    }
+
+    mathutil_mtxA_from_identity();
+    mathutil_mtxA_rotate_x(worldInfo[ball->playerId].xrot);
+    mathutil_mtxA_rotate_z(worldInfo[ball->playerId].zrot);
+    mathutil_mtxA_rigid_inv_tf_vec(&accel, &accel);
+
+    ball->vel.x += accel.x;
+    ball->vel.y += accel.y;
+    ball->vel.z += accel.z;
+
+    ball->pos.x += ball->vel.x;
+    ball->pos.y += ball->vel.y;
+    ball->pos.z += ball->vel.z;
+
+    init_physball_from_ball(ball, physBall);
+    lbl_000100D4(physBall, decodedStageLzPtr);
+    set_ball_pos_and_vel_from_physball(ball, physBall);
+
+    if (physBall->flags & 1)
+    {
+        if (physBall->hardestColiAnimGroupId == 0)
+        {
+            ball->unk114.x = -physBall->hardestColiPlane.normal.x;
+            ball->unk114.y = -physBall->hardestColiPlane.normal.y;
+            ball->unk114.z = -physBall->hardestColiPlane.normal.z;
+        }
+        else
+        {
+            mathutil_mtxA_from_mtx(animGroups[physBall->hardestColiAnimGroupId].transform);
+            mathutil_mtxA_tf_vec(&physBall->hardestColiPlane.normal, &ball->unk114);
+            ball->unk114.x = -ball->unk114.x;
+            ball->unk114.y = -ball->unk114.y;
+            ball->unk114.z = -ball->unk114.z;
+        }
+    }
 }
 #pragma force_active reset
