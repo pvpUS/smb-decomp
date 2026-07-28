@@ -1,6 +1,6 @@
 /*
  * mini_bowling.c -- REL module, structurally split for per-function
- * byte-matching (part 14 of 57; contiguous .text range).  Each function
+ * byte-matching (part 14 of 96; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_bowling/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -132,6 +132,10 @@ extern void u_set_minigame_callbacks_2();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_0000020C(void);
+void lbl_00000718(void);
+void lbl_000009EC(void);
+void lbl_00000F98(void);
 void lbl_00001888(void);
 void lbl_00001908(void);
 void lbl_00001B14(void);
@@ -159,6 +163,7 @@ void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
 void lbl_000066C4(void);
+void lbl_000068C4(void);
 void lbl_00006E64(void);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
@@ -166,14 +171,15 @@ void lbl_00007650(void);
 void lbl_000076D0(void);
 void lbl_00007740(void);
 void lbl_00007778(void);
-void lbl_00007878(struct Ball *ball);
+void lbl_00007878(void);
 void lbl_00007964(void);
 void lbl_000079E8(void);
-void lbl_00007A6C(struct Ball *ball);
-void lbl_00007C54(struct Ball *ball);
-void lbl_00007E74(struct Ball *ball);
-void lbl_00007FE0(struct Ball *ball);
-void lbl_000080E0(struct Ball *ball);
+void lbl_00007A6C(void);
+void lbl_00007C54(void);
+void lbl_00007E74(void);
+void lbl_00007FE0(void);
+void lbl_000080E0(void);
+void lbl_000082E4(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
 void lbl_000087CC(void);
@@ -213,6 +219,9 @@ void lbl_0000B460(void);
 void lbl_0000B654(void);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
+void lbl_0000BDE0(void);
+void lbl_0000BEB8(void);
+void lbl_0000C0D0(void);
 void lbl_0000C1D0(void);
 void lbl_0000CAA8(void);
 void lbl_0000D4D4(void);
@@ -223,51 +232,22 @@ void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
 void lbl_0000DA0C(void);
 void lbl_0000DAF4(void);
-void lbl_0000DBB8(void);
 void lbl_0000DD4C(void);
-void lbl_0000DE10(void);
 void lbl_0000DFA4(void);
 void lbl_0000E22C(void);
-void lbl_0000E2E0(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
 void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
+void lbl_0000EC38(void);
+void lbl_0000EDB0(void);
 
 #pragma force_active on
-// lbl_00007878 (0x7878): the module's per-frame ball callback.  Dispatches on the
-// ball's bowling substate, plays the "ball fell off the lane" sound once, and
-// bumps the ball's frame counter.
-void lbl_00007878(struct Ball *ball)
+asm void lbl_00003DC0(void)
 {
-    switch (ball->unk148)
-    {
-    case 0:
-        lbl_00007A6C(ball);
-        break;
-    case 1:
-        lbl_00007C54(ball);
-        break;
-    case 2:
-        lbl_00007E74(ball);
-        break;
-    case 3:
-        lbl_00007FE0(ball);
-        break;
-    case 4:
-        lbl_000080E0(ball);
-        break;
-    }
-
-    if (ball->pos.y < *(f64 *)lbl_00011258 && !(ball->flags & 0x1000)
-        && *(s32 *)lbl_000153E4 == -1)
-    {
-        u_play_sound_0(0x1D);
-        *(s32 *)lbl_000153E4 = u_play_sound_2(0x15);
-    }
-
-    ball->unk80++;
+    nofralloc
+#include "../asm/nonmatchings/mini_bowling/lbl_00003DC0.s"
 }
 #pragma force_active reset

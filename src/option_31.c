@@ -1,5 +1,5 @@
 /*
- * option.c -- REL module: isolated function lbl_00004260.
+ * option.c -- REL module: isolated function lbl_00004204.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -117,10 +117,11 @@ void lbl_00003B90(void);
 void lbl_00003F10(void);
 u8 *lbl_00003F6C(int);
 void lbl_00003FF0(void);
-void lbl_00004204(void);
-void lbl_00004260(int);
+void lbl_00004204(int);
+void lbl_00004260(void);
 void lbl_000042BC(void);
 void lbl_000047D0(void);
+void lbl_00004858(void);
 void lbl_00004EB4(void);
 void lbl_00005020(void);
 void lbl_00005340(void);
@@ -150,14 +151,14 @@ void lbl_0000B218(void);
 void lbl_0000C148(void);
 
 #pragma force_active on
-void lbl_00004260(int arg0)
+void lbl_00004204(int arg0)
 {
     u8 *p = lbl_00003F6C(arg0);
 
     if (p != NULL)
     {
-        p[0] = 2;
-        if (*(f32 *)(p + 4) < *(f64 *)lbl_0000C388)
+        p[0] = 1;
+        if (*(f32 *)(p + 4) > *(f64 *)lbl_0000C388)
         {
             *(f32 *)(p + 8) = *(f32 *)(p + 4);
             *(f32 *)(p + 4) = *(f32 *)lbl_0000C370;

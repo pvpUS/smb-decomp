@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_0000DAF4.
+ * mini_bowling.c -- REL module: isolated function lbl_00008DF0.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -133,6 +133,10 @@ extern void u_set_minigame_callbacks_2();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_0000020C(void);
+void lbl_00000718(void);
+void lbl_000009EC(void);
+void lbl_00000F98(void);
 void lbl_00001888(void);
 void lbl_00001908(void);
 void lbl_00001B14(void);
@@ -160,6 +164,7 @@ void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
 void lbl_000066C4(void);
+void lbl_000068C4(void);
 void lbl_00006E64(void);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
@@ -175,14 +180,15 @@ void lbl_00007C54(void);
 void lbl_00007E74(void);
 void lbl_00007FE0(void);
 void lbl_000080E0(void);
+void lbl_000082E4(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
-void lbl_000087CC(void);
+void lbl_000087CC(struct Camera *camera, Vec *eye, Vec *lookAt, s16 fov, float t);
 void lbl_000089FC(void);
 void lbl_00008B8C(void);
 void lbl_00008C68(void);
 void lbl_00008D2C(void);
-void lbl_00008DF0(void);
+void lbl_00008DF0(struct Camera *camera, struct Ball *ball);
 void lbl_00008EC0(void);
 void lbl_00008FB0(void);
 void lbl_00009048(void);
@@ -214,6 +220,9 @@ void lbl_0000B460(void);
 void lbl_0000B654(void);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
+void lbl_0000BDE0(void);
+void lbl_0000BEB8(void);
+void lbl_0000C0D0(void);
 void lbl_0000C1D0(void);
 void lbl_0000CAA8(void);
 void lbl_0000D4D4(void);
@@ -223,43 +232,41 @@ void lbl_0000D7F8(void);
 void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
 void lbl_0000DA0C(void);
-void lbl_0000DAF4(int, char *);
-void lbl_0000DBB8(s8 *, struct Sprite *);
+void lbl_0000DAF4(void);
 void lbl_0000DD4C(void);
-void lbl_0000DE10(void);
 void lbl_0000DFA4(void);
 void lbl_0000E22C(void);
-void lbl_0000E2E0(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
 void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
+void lbl_0000EC38(void);
+void lbl_0000EDB0(void);
 
 #pragma force_active on
-// lbl_0000DAF4 (0x0000DAF4): spawn the yellow scoreboard banner carrying `text`;
-// lbl_0000DBB8 animates it for `timer` frames.
-void lbl_0000DAF4(int timer, char *text)
+// lbl_00008DF0 (0x8DF0): camera substate -- like 0x8C68 but at the higher eye
+// height and looking at the fixed aim point.
+void lbl_00008DF0(struct Camera *camera, struct Ball *ball)
 {
-    u8 *tbl = lbl_00014D70;
-    struct Sprite *sprite = create_sprite();
+    u8 *look = lbl_000153E8;
+    u8 *tbl = lbl_00011338;
+    Vec sp1c;
+    Vec sp10;
 
-    if (sprite != NULL) {
-        sprite->x = *(f32 *)(tbl + 0x28);
-        sprite->y = *(f32 *)(tbl + 0x50);
-        sprite->depth = *(f32 *)(tbl + 0x30);
-        sprite->mulR = 0xff;
-        sprite->mulG = 0xff;
-        sprite->mulB = 0;
-        sprite->tag = 0x6b;
-        sprite->fontId = 9;
-        sprite->textAlign = 4;
-        sprite->counter = timer;
-        sprite->userVar = timer;
-        sprite->flags |= 0x1000;
-        sprite->mainFunc = lbl_0000DBB8;
-        strcpy(sprite->text, text);
-    }
+    sp1c.x = ball->pos.x;
+    sp1c.y = *(f32 *)(tbl + 0x88);
+    sp1c.z = *(f64 *)(tbl + 0x68) + ball->pos.z;
+    if (sp1c.z < *(f64 *)(tbl + 0x30))
+        sp1c.z = *(f32 *)(tbl + 0x38);
+    if (sp1c.x < *(f64 *)(tbl + 0x40))
+        sp1c.x = *(f32 *)(tbl + 0x48);
+    if (sp1c.x > *(f64 *)(tbl + 0x50))
+        sp1c.x = *(f32 *)(tbl + 0x58);
+    sp10.x = *(f32 *)(look + 0);
+    sp10.y = *(f32 *)(look + 4) - *(f64 *)(tbl + 0x90);
+    sp10.z = *(f32 *)(look + 8);
+    lbl_000087CC(camera, &sp1c, &sp10, 0x1400, *(f32 *)(tbl + 0x5c));
 }
 #pragma force_active reset

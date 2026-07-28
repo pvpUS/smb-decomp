@@ -237,14 +237,5 @@ asm void lbl_000040EC(void)
     nofralloc
 #include "../asm/nonmatchings/mini_pilot/lbl_000040EC.s"
 }
-asm void lbl_00004450(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00004450.s"
-}
-asm void lbl_00004570(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00004570.s"
-}
+
 #pragma force_active reset

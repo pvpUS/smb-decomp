@@ -1,6 +1,6 @@
 /*
  * option.c -- REL module, structurally split for per-function
- * byte-matching (part 4 of 53; contiguous .text range).  Each function
+ * byte-matching (part 4 of 60; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/option/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -120,6 +120,7 @@ void lbl_00004204(void);
 void lbl_00004260(void);
 void lbl_000042BC(void);
 void lbl_000047D0(void);
+void lbl_00004858(void);
 void lbl_00004EB4(void);
 void lbl_00005020(void);
 void lbl_00005340(void);
@@ -149,9 +150,16 @@ void lbl_0000B218(void);
 void lbl_0000C148(void);
 
 #pragma force_active on
-asm void lbl_00000258(void)
+void lbl_00000258(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00000258.s"
+    if (globalAnimTimer & 4)
+        *(u8 *)(lbl_10000000 + 0x38) = 0xBF;
+    else
+        *(u8 *)(lbl_10000000 + 0x38) = 0;
+
+    if (gameSubmode <= 0xAD || gameSubmode >= 0xC6)
+        printf((char *)lbl_0000C744, gameSubmode);
+    else
+        (*(void (**)(void))(lbl_0000C640 + (gameSubmode - 0xAE) * 4))();
 }
 #pragma force_active reset

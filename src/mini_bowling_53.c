@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_0000E510.
+ * mini_bowling.c -- REL module: isolated function lbl_0000919C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -133,6 +133,10 @@ extern void u_set_minigame_callbacks_2();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_0000020C(void);
+void lbl_00000718(void);
+void lbl_000009EC(void);
+void lbl_00000F98(void);
 void lbl_00001888(void);
 void lbl_00001908(void);
 void lbl_00001B14(void);
@@ -160,6 +164,7 @@ void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
 void lbl_000066C4(void);
+void lbl_000068C4(void);
 void lbl_00006E64(void);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
@@ -175,6 +180,7 @@ void lbl_00007C54(void);
 void lbl_00007E74(void);
 void lbl_00007FE0(void);
 void lbl_000080E0(void);
+void lbl_000082E4(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
 void lbl_000087CC(void);
@@ -188,8 +194,8 @@ void lbl_00008FB0(void);
 void lbl_00009048(void);
 void lbl_000090CC(void);
 void lbl_00009134(void);
-void lbl_0000919C(void);
-void lbl_00009230(void);
+void lbl_0000919C(struct Camera *camera, struct Ball *ball);
+void lbl_00009230(struct Camera *camera, struct Ball *ball);
 void lbl_000096B4(void);
 void lbl_000097B4(void);
 void lbl_00009AA8(void);
@@ -214,6 +220,9 @@ void lbl_0000B460(void);
 void lbl_0000B654(void);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
+void lbl_0000BDE0(void);
+void lbl_0000BEB8(void);
+void lbl_0000C0D0(void);
 void lbl_0000C1D0(void);
 void lbl_0000CAA8(void);
 void lbl_0000D4D4(void);
@@ -224,45 +233,31 @@ void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
 void lbl_0000DA0C(void);
 void lbl_0000DAF4(void);
-void lbl_0000DBB8(void);
 void lbl_0000DD4C(void);
-void lbl_0000DE10(void);
 void lbl_0000DFA4(void);
 void lbl_0000E22C(void);
-void lbl_0000E2E0(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
-void lbl_0000E5D4(s8 *, struct Sprite *);
+void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
+void lbl_0000EC38(void);
+void lbl_0000EDB0(void);
 
 #pragma force_active on
-// lbl_0000E510 (0xE510): spawn the blue announcement banner (lbl_0000E5D4 runs
-// its 300-frame animation) and play its sting.
-void lbl_0000E510(void)
+void lbl_0000919C(struct Camera *camera, struct Ball *ball)
 {
-    u8 *tbl = lbl_00014D70;
-    struct Sprite *sprite = create_sprite();
-
-    if (sprite != NULL) {
-        sprite->x = *(f32 *)(tbl + 0x70);
-        sprite->y = *(f32 *)(tbl + 0x2c);
-        sprite->mulR = 0;
-        sprite->mulG = 0;
-        sprite->mulB = 0xff;
-        sprite->tag = 0x6b;
-        sprite->fontId = 9;
-        sprite->textAlign = 4;
-        sprite->counter = 0x12c;
-        sprite->userVar = 0x12c;
-        sprite->scaleX = *(f32 *)(tbl + 0x74);
-        sprite->scaleY = *(f32 *)(tbl + 0x74);
-        sprite->depth = *(f32 *)tbl;
-        sprite->opacity = *(f32 *)(tbl + 4);
-        sprite->mainFunc = lbl_0000E5D4;
-        strcpy(sprite->text, (char *)lbl_0001546C);
-        u_play_sound_0(6);
-    }
+    camera_clear(camera);
+    camera->unk26 = 9;
+    camera->sub28.unk28 = *(f32 *)lbl_00011340;
+    camera->sub28.unk2C = *(f32 *)lbl_00011340;
+    camera->sub28.fov = 0x1c71;
+    if (func_8009D7CC() == 0)
+        camera->timerCurr = func_8009D7E8() * 0x110;
+    else
+        camera->timerCurr = 0;
+    camera->subState = 0xb;
+    lbl_00009230(camera, ball);
 }
 #pragma force_active reset

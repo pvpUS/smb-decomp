@@ -172,7 +172,7 @@ void lbl_0000A7D4(void);
 void lbl_0000A840(void);
 void lbl_0000A870(void);
 void lbl_0000A950(void);
-void lbl_0000AFB0(void);
+void lbl_0000AFB0(struct Sprite *sprite);
 void lbl_0000B0FC(void);
 void lbl_0000B1C0(void);
 void lbl_0000B920(void);
@@ -208,9 +208,245 @@ void lbl_00011824(void);
 void lbl_000118E4(void);
 
 #pragma force_active on
-asm void lbl_0000A950(void)
+void lbl_0000A950(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_0000A950.s"
+    u8 *tbl = lbl_00012730;
+    u8 *k = lbl_00011CB0;
+    struct Sprite *sprite;
+    f64 pad;
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->type = 1;
+        sprite->bmpId = 0x404;
+        sprite->x = *(f32 *)(k + 0x14);
+        sprite->y = *(f32 *)(k + 0x18);
+        sprite->depth = *(f32 *)(k + 0x1C);
+        sprite->textAlign = 4;
+        sprite->flags |= 0x40000;
+        sprintf(sprite->text, (char *)(tbl + 0xE8));
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->tag = 0x16;
+        sprite->fontId = 0xB1;
+        sprite->x = *(f32 *)(k + 0x14);
+        sprite->y = *(f32 *)(k + 0x20);
+        sprite->textAlign = 4;
+        sprite->bmpId = 0x40D;
+        sprite->flags |= 0x200000;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000AFB0;
+        strcpy(sprite->text, (char *)(tbl + 0xEC));
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->tag = 0x17;
+        sprite->fontId = 0xB1;
+        sprite->x = *(f32 *)(tbl + 0x28);
+        sprite->y = *(f32 *)(tbl + 0x2C);
+        sprite->textAlign = 4;
+        sprite->userVar = 0x11;
+        sprite->bmpId = 0x40C;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000B0FC;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000B1C0;
+        strcpy(sprite->text, (char *)(tbl + 0xF4));
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->tag = 0x18;
+        sprite->fontId = 0xB1;
+        sprite->x = *(f32 *)(tbl + 0x40);
+        sprite->y = *(f32 *)(tbl + 0x44);
+        sprite->textAlign = 4;
+        sprite->userVar = 0;
+        sprite->bmpId = 0x416;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000B0FC;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000B920;
+        strcpy(sprite->text, (char *)(tbl + 0xF8));
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->tag = 0x19;
+        sprite->fontId = 0x36;
+        sprite->x = *(f32 *)(tbl + 0x50);
+        sprite->y = *(f32 *)(tbl + 0x54);
+        sprite->textAlign = 4;
+        sprite->userVar = 0;
+        sprite->bmpId = 0x417;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000B0FC;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000BEE8;
+        strcpy(sprite->text, (char *)(tbl + 0x100));
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->tag = 0x1A;
+        sprite->fontId = 0xB1;
+        sprite->x = *(f32 *)(tbl + 0x60);
+        sprite->y = *(f32 *)(tbl + 0x64);
+        sprite->textAlign = 4;
+        sprite->userVar = 0;
+        sprite->bmpId = 0x433;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000B0FC;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000C970;
+        strcpy(sprite->text, (char *)(tbl + 0x108));
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->type = 1;
+        sprite->tag = 0x1B;
+        sprite->x = *(f32 *)(tbl + 0x68);
+        sprite->y = *(f32 *)(tbl + 0x6C) + (modeCtrl.gameType == 2 ? 0x18 : 0);
+        sprite->textAlign = 4;
+        sprite->userVar = 0;
+        sprite->scaleX = *(f32 *)(k + 0xC);
+        sprite->scaleY = modeCtrl.gameType == 2 ? *(f64 *)(k + 0x28) : *(f64 *)(k + 0x30);
+        sprite->counter = 9;
+        sprite->bmpId = 0x429;
+        sprite->depth = *(f32 *)(k + 0x38);
+        sprite->flags |= 0x40000;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000D39C;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000D5A8;
+        strcpy(sprite->text, (char *)(tbl + 0x110));
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->fontId = 0xB1;
+        sprite->textAlign = 4;
+        sprite->depth = *(f32 *)(k + 0x3C);
+        sprite->scaleX = *(f32 *)(k + 0x40);
+        sprite->scaleY = *(f32 *)(k + 0x40);
+        sprite->depth = *(f32 *)(k + 0x44);
+        sprite->userVar = 0;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000E368;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000E540;
+        strcpy(sprite->text, (char *)(tbl + 0x11C));
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->type = 1;
+        sprite->tag = 0x1C;
+        sprite->x = *(f32 *)(tbl + 0x88);
+        sprite->y = *(f32 *)(tbl + 0x8C);
+        sprite->textAlign = 4;
+        sprite->userVar = 0;
+        sprite->bmpId = 0x42A;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000D7C0;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000D82C;
+        strcpy(sprite->text, (char *)(tbl + 0x12C));
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->type = 1;
+        sprite->tag = 0x21;
+        sprite->x = *(f32 *)(tbl + 0xA8);
+        sprite->y = *(f32 *)(tbl + 0xAC);
+        sprite->textAlign = 4;
+        sprite->userVar = 0;
+        sprite->bmpId = 0x406;
+        sprite->depth = *(f32 *)(k + 0x38);
+        sprite->flags |= 0x40000;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000DCA4;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000DDF4;
+        strcpy(sprite->text, (char *)(tbl + 0x138));
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->fontId = 0xB1;
+        sprite->textAlign = 4;
+        sprite->scaleX = *(f32 *)(k + 0x40);
+        sprite->scaleY = *(f32 *)(k + 0x40);
+        sprite->depth = *(f32 *)(k + 0x44);
+        sprite->userVar = 0;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000E43C;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000E540;
+        strcpy(sprite->text, (char *)(tbl + 0x144));
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->textAlign = 4;
+        sprite->depth = *(f32 *)(k + 0x44);
+        sprite->userVar = 0;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000E43C;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000E620;
+        strcpy(sprite->text, (char *)(tbl + 0x154));
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->type = 1;
+        sprite->tag = 0x22;
+        sprite->x = *(f32 *)(tbl + 0xC8);
+        sprite->y = *(f32 *)(tbl + 0xCC);
+        sprite->textAlign = 4;
+        sprite->userVar = 0;
+        sprite->bmpId = 0x409;
+        sprite->depth = *(f32 *)(k + 0x38);
+        sprite->flags |= 0x40000;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000DEC8;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000E068;
+        strcpy(sprite->text, (char *)(tbl + 0x168));
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->fontId = 0xB1;
+        sprite->textAlign = 4;
+        sprite->depth = *(f32 *)(k + 0x3C);
+        sprite->scaleX = *(f32 *)(k + 0x48);
+        sprite->scaleY = *(f32 *)(k + 0x48);
+        sprite->depth = *(f32 *)(k + 0x44);
+        sprite->userVar = 0;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000E4BC;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000E778;
+        strcpy(sprite->text, (char *)(tbl + 0x178));
+    }
+}
+#pragma force_active reset
+
+#pragma force_active on
+void lbl_0000AFB0(struct Sprite *sprite)
+{
+    void (*save)(struct Sprite *);
+
+    lbl_0000A870();
+    reset_text_draw_settings();
+    set_text_font(sprite->fontId);
+    func_80071B50(sprite->flags);
+    strcpy(sprite->text, *(char **)(lbl_00012970 + sprite->userVar * 4));
+    save = sprite->drawFunc;
+    sprite->drawFunc = NULL;
+    calc_sprite_bounds(sprite, &sprite->left, &sprite->top, &sprite->right, &sprite->bottom);
+    sprite->drawFunc = save;
+    set_text_mul_color(0x202000);
+    set_text_pos(sprite->left + 3, sprite->top + 3);
+    sprite_puts(sprite->text);
+    set_text_mul_color(0xFFFF00);
+    set_text_pos(sprite->left, sprite->top);
+    sprite_puts(sprite->text);
 }
 #pragma force_active reset

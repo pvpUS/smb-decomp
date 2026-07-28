@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_0000E7B0.
+ * mini_bowling.c -- REL module: isolated function lbl_000096B4.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -133,6 +133,10 @@ extern void u_set_minigame_callbacks_2();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_0000020C(void);
+void lbl_00000718(void);
+void lbl_000009EC(void);
+void lbl_00000F98(void);
 void lbl_00001888(void);
 void lbl_00001908(void);
 void lbl_00001B14(void);
@@ -160,6 +164,7 @@ void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
 void lbl_000066C4(void);
+void lbl_000068C4(void);
 void lbl_00006E64(void);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
@@ -175,6 +180,7 @@ void lbl_00007C54(void);
 void lbl_00007E74(void);
 void lbl_00007FE0(void);
 void lbl_000080E0(void);
+void lbl_000082E4(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
 void lbl_000087CC(void);
@@ -190,7 +196,7 @@ void lbl_000090CC(void);
 void lbl_00009134(void);
 void lbl_0000919C(void);
 void lbl_00009230(void);
-void lbl_000096B4(void);
+int lbl_000096B4(void);
 void lbl_000097B4(void);
 void lbl_00009AA8(void);
 void lbl_00009D18(void);
@@ -214,6 +220,9 @@ void lbl_0000B460(void);
 void lbl_0000B654(void);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
+void lbl_0000BDE0(void);
+void lbl_0000BEB8(void);
+void lbl_0000C0D0(void);
 void lbl_0000C1D0(void);
 void lbl_0000CAA8(void);
 void lbl_0000D4D4(void);
@@ -224,44 +233,33 @@ void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
 void lbl_0000DA0C(void);
 void lbl_0000DAF4(void);
-void lbl_0000DBB8(void);
 void lbl_0000DD4C(void);
-void lbl_0000DE10(void);
 void lbl_0000DFA4(void);
 void lbl_0000E22C(void);
-void lbl_0000E2E0(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
 void lbl_0000E5D4(void);
-void lbl_0000E7B0(int);
-void lbl_0000E870(s8 *, struct Sprite *);
+void lbl_0000E7B0(void);
+void lbl_0000E870(void);
 void lbl_0000E894(void);
+void lbl_0000EC38(void);
+void lbl_0000EDB0(void);
 
 #pragma force_active on
-// lbl_0000E7B0 (0xE7B0): spawn the full-screen flash bitmap that lbl_0000E870
-// tears down after `timer` frames.
-void lbl_0000E7B0(int timer)
+// lbl_000096B4 (0x96B4): returns 1 if any active player pressed A this frame.
+// (Byte-identical twin of lbl_00007778.)
+int lbl_000096B4(void)
 {
-    u8 *tbl = lbl_00014D70;
-    struct Sprite *sprite = create_sprite();
+    s8 *status = g_poolInfo.playerPool.statusList;
 
-    if (sprite == NULL)
-        return;
-    sprite->type = 1;
-    sprite->x = *(f32 *)(tbl + 0x90);
-    sprite->y = *(f32 *)(tbl + 0x90);
-    sprite->depth = *(f32 *)(tbl + 0x94);
-    sprite->opacity = *(f32 *)(tbl + 0x74);
-    sprite->mulR = 0;
-    sprite->mulG = 0;
-    sprite->mulB = 0;
-    sprite->tag = 0x6b;
-    sprite->textAlign = 0;
-    sprite->counter = timer;
-    sprite->bmpId = 0x4b;
-    sprite->scaleX = *(f32 *)(tbl + 0x98);
-    sprite->scaleY = *(f32 *)(tbl + 0x9c);
-    sprite->flags |= 0x1000;
-    sprite->mainFunc = lbl_0000E870;
+    if (status[0] && (controllerInfo[playerControllerIDs[0]].pressed.button & PAD_BUTTON_A))
+        return 1;
+    if (status[1] && (controllerInfo[playerControllerIDs[1]].pressed.button & PAD_BUTTON_A))
+        return 1;
+    if (status[2] && (controllerInfo[playerControllerIDs[2]].pressed.button & PAD_BUTTON_A))
+        return 1;
+    if (status[3] && (controllerInfo[playerControllerIDs[3]].pressed.button & PAD_BUTTON_A))
+        return 1;
+    return 0;
 }
 #pragma force_active reset

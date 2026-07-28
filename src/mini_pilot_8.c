@@ -232,14 +232,30 @@ void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-asm void lbl_00000698(void)
+void lbl_00000698(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00000698.s"
-}
-asm void lbl_000007B8(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_000007B8.s"
+    u8 *m = (u8 *)lbl_10000000;
+    s16 *stages = (s16 *)lbl_0000C740;
+    s32 i;
+    s32 unused;  // frame padding: the original had one more local here
+
+    event_finish_all();
+    *(u32 *)lbl_802F1FD0 &= 0x18;
+    pauseMenuState.unk4 |= 2;
+    fogInfo.enabled = 0;
+    load_stage(stages[*(s16 *)(m + 0x40)]);
+    i = *(s16 *)(m + 0x40);
+    if (i + 1 >= 3)
+        preload_stage_files(stages[0]);
+    else
+        preload_stage_files(stages[i + 1]);
+    for (i = 0; i < 4; i++)
+    {
+        *(u32 *)(m + 8 + i * 4) = *(u32 *)(m + 0x44 + i * 4);
+        ((u32 *)lbl_80285A58)[i] = 0;
+        *(s16 *)(m + 0x54 + i * 2) = *(s16 *)(m + 0x5C + i * 2);
+    }
+    *(s16 *)(m + 0x36) = 0;
+    *(s16 *)lbl_802F1FF4 = 1;
 }
 #pragma force_active reset

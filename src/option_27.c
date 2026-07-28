@@ -1,6 +1,6 @@
 /*
  * option.c -- REL module, structurally split for per-function
- * byte-matching (part 27 of 53; contiguous .text range).  Each function
+ * byte-matching (part 27 of 60; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/option/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -118,9 +118,10 @@ void lbl_00003F10(void);
 void lbl_00003F6C(void);
 void lbl_00003FF0(void);
 void lbl_00004204(void);
-void lbl_00004260(void);
+void lbl_00004260(int);
 void lbl_000042BC(void);
 void lbl_000047D0(void);
+void lbl_00004858(void);
 void lbl_00004EB4(void);
 void lbl_00005020(void);
 void lbl_00005340(void);
@@ -149,10 +150,52 @@ void lbl_0000B10C(void);
 void lbl_0000B218(void);
 void lbl_0000C148(void);
 
+//@SUB void lbl_00004260(void);|void lbl_00004260(int);
 #pragma force_active on
-static asm void lbl_00003DD8(void)
+void lbl_00003DD8(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00003DD8.s"
+    u16 *btn;
+    s32 sel;
+    u8 mask;
+    u8 mask0;
+    s32 *pSel;
+    s32 old;
+
+    mask0 = vibration_get_cont_enable_mask();
+    btn = &g_currPlayerButtons[2];
+    pSel = (s32 *)(lbl_10000000 + 0x154);
+    mask = mask0;
+    old = *pSel;
+    sel = old;
+
+    if ((g_currPlayerButtons[2] & 8) || (g_currPlayerAnalogButtons[2] & 8))
+    {
+        if (--sel < 0)
+            sel = 3;
+    }
+    else if ((g_currPlayerButtons[2] & 4) || (g_currPlayerAnalogButtons[2] & 4))
+    {
+        if (++sel >= 4)
+            sel = 0;
+    }
+    if (sel != old)
+    {
+        u_play_sound_0(0x6C);
+        *pSel = sel;
+    }
+    if ((*btn & 2) || (g_currPlayerAnalogButtons[2] & 2)
+     || (*btn & 1) || (g_currPlayerAnalogButtons[2] & 1))
+    {
+        u_play_sound_0(0x65);
+        mask ^= 1 << sel;
+    }
+    if (mask != mask0)
+        vibration_set_cont_enable_mask(mask);
+    if (*btn & 0x200)
+    {
+        u_play_sound_0(0x6B);
+        lbl_00004260(0x60);
+        gameSubmodeRequest = 0xC2;
+    }
 }
 #pragma force_active reset

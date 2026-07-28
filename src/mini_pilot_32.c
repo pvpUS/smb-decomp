@@ -232,14 +232,47 @@ void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-asm void lbl_00008134(void)
+
+void lbl_00008184(struct Effect *e);
+void lbl_00008198(struct Effect *e);
+void lbl_00008234(struct Effect *e);
+void lbl_000082BC(struct Effect *e);
+
+void lbl_00008134(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00008134.s"
+    struct EffectFuncs funcs = *(struct EffectFuncs *)lbl_0000C348;
+
+    effect_replace_type_funcs(0x27, &funcs);
 }
-asm void lbl_000082C0(void)
+
+void lbl_00008184(struct Effect *e)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_000082C0.s"
+    e->u_otherTimer = -1;
+    e->timer = 100;
 }
+
+void lbl_00008198(struct Effect *e)
+{
+    e->u_otherTimer++;
+    e->pos = currentBall->pos;
+    e->pos.y -= *(f64 *)lbl_0000C358;
+    if ((u32)e->u_otherTimer < 0x27)
+        e->model = minigameGma->modelEntries[((s16 *)lbl_0000D1C8)[e->u_otherTimer]].model;
+    else
+        g_poolInfo.effectPool.statusList[e->poolIndex] = STAT_DEST;
+}
+
+void lbl_00008234(struct Effect *e)
+{
+    mathutil_mtxA_from_mtxB_translate(&e->pos);
+    mathutil_mtxA_sq_from_identity();
+    mathutil_mtxA_scale(&e->scale);
+    avdisp_set_bound_sphere_scale(MAX(e->scale.x, MAX(e->scale.y, e->scale.z)));
+    avdisp_draw_model_culled_sort_translucent(e->model);
+}
+
+void lbl_000082BC(struct Effect *e)
+{
+}
+
 #pragma force_active reset

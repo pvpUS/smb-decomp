@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_000051E0.
+ * mini_bowling.c -- REL module: isolated function lbl_00001B14.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -46,15 +46,6 @@
 #include "stcoli.h"
 #include "shadow.h"
 #include "vibration.h"
-
-// Per-player bowling scorecard.  Layout is read off the code; field NAMES are
-// INVENTED.  `state[b]` is 0 = ball not thrown, 2 = strike, 3 = spare.
-struct BowlScore {
-    u8 filler0[0xa];
-    s16 total[11];   // 0x0a -- running score, total[0] unused, -1 = not scored yet
-    s8 pins[21];     // 0x20 -- pins felled per ball (10 frames x 2 + bonus)
-    s8 state[21];    // 0x35
-};
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_bowling.s) or imported.  Declared so mwcc accepts `@ha/@l`.
@@ -142,6 +133,10 @@ extern void u_set_minigame_callbacks_2();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_0000020C(void);
+void lbl_00000718(void);
+void lbl_000009EC(void);
+void lbl_00000F98(void);
 void lbl_00001888(void);
 void lbl_00001908(void);
 void lbl_00001B14(void);
@@ -164,11 +159,12 @@ void lbl_00004BD8(void);
 void lbl_00004D10(void);
 void lbl_00004DF8(void);
 void lbl_00005128(void);
-void lbl_000051E0(struct BowlScore *p);
+void lbl_000051E0(void);
 void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
 void lbl_000066C4(void);
+void lbl_000068C4(void);
 void lbl_00006E64(void);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
@@ -184,6 +180,7 @@ void lbl_00007C54(void);
 void lbl_00007E74(void);
 void lbl_00007FE0(void);
 void lbl_000080E0(void);
+void lbl_000082E4(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
 void lbl_000087CC(void);
@@ -223,6 +220,9 @@ void lbl_0000B460(void);
 void lbl_0000B654(void);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
+void lbl_0000BDE0(void);
+void lbl_0000BEB8(void);
+void lbl_0000C0D0(void);
 void lbl_0000C1D0(void);
 void lbl_0000CAA8(void);
 void lbl_0000D4D4(void);
@@ -233,77 +233,22 @@ void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
 void lbl_0000DA0C(void);
 void lbl_0000DAF4(void);
-void lbl_0000DBB8(void);
 void lbl_0000DD4C(void);
-void lbl_0000DE10(void);
 void lbl_0000DFA4(void);
 void lbl_0000E22C(void);
-void lbl_0000E2E0(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
 void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
+void lbl_0000EC38(void);
+void lbl_0000EDB0(void);
 
 #pragma force_active on
-// lbl_000051E0 (0x51E0): recompute the running total for the first frame that
-// has not been scored yet, once all the balls it depends on have been thrown.
-void lbl_000051E0(struct BowlScore *p)
+asm void lbl_00001B14(void)
 {
-    int frame;
-    int ball;
-
-    for (frame = 1; frame <= 10; frame++) {
-        if (p->total[frame] == -1)
-            break;
-    }
-
-    if (frame == 10) {
-        if (p->state[18] == 0)
-            return;
-        if (p->state[19] == 0)
-            return;
-        if (p->state[18] == 2 || p->state[19] == 2 || p->state[19] == 3) {
-            if (p->state[20] == 0)
-                return;
-        }
-        p->total[frame] =
-            p->total[frame - 1] + p->pins[18] + p->pins[19] + p->pins[20];
-        return;
-    }
-
-    ball = (frame - 1) * 2;
-    if (p->state[ball] == 2) {
-        if (frame == 9) {
-            if (p->state[ball + 2] == 0)
-                return;
-            if (p->state[ball + 3] == 0)
-                return;
-            p->total[frame] =
-                p->total[frame - 1] + p->pins[ball] + p->pins[ball + 2] + p->pins[ball + 3];
-        } else if (p->state[ball + 2] == 0) {
-            return;
-        } else if (p->state[ball + 2] == 2) {
-            if (p->state[ball + 4] == 0)
-                return;
-            p->total[frame] =
-                p->total[frame - 1] + p->pins[ball] + p->pins[ball + 2] + p->pins[ball + 4];
-        } else {
-            if (p->state[ball + 3] == 0)
-                return;
-            p->total[frame] =
-                p->total[frame - 1] + p->pins[ball] + p->pins[ball + 2] + p->pins[ball + 3];
-        }
-    } else if (p->state[ball + 1] == 3) {
-        if (p->state[ball + 2] == 0)
-            return;
-        p->total[frame] =
-            p->total[frame - 1] + p->pins[ball] + p->pins[ball + 1] + p->pins[ball + 2];
-    } else {
-        if (p->state[ball + 1] == 0)
-            return;
-        p->total[frame] = p->total[frame - 1] + p->pins[ball] + p->pins[ball + 1];
-    }
+    nofralloc
+#include "../asm/nonmatchings/mini_bowling/lbl_00001B14.s"
 }
 #pragma force_active reset

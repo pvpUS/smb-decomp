@@ -122,6 +122,7 @@ void lbl_00004204(void);
 void lbl_00004260(void);
 void lbl_000042BC(void);
 void lbl_000047D0(void);
+void lbl_00004858(void);
 void lbl_00004EB4(void);
 void lbl_00005020(void);
 void lbl_00005340(void);

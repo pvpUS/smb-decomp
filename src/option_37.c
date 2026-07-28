@@ -1,5 +1,5 @@
 /*
- * option.c -- REL module: isolated function lbl_00006C34.
+ * option.c -- REL module: isolated function lbl_00006AA8.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -121,6 +121,7 @@ void lbl_00004204(void);
 void lbl_00004260(void);
 void lbl_000042BC(void);
 void lbl_000047D0(void);
+void lbl_00004858(void);
 void lbl_00004EB4(void);
 void lbl_00005020(void);
 void lbl_00005340(void);
@@ -150,8 +151,8 @@ void lbl_0000B218(void);
 void lbl_0000C148(void);
 
 #pragma force_active on
-void lbl_00006C34(void)
+void lbl_00006AA8(void)
 {
-    lbl_00003FF0();
+    preview_free(lbl_10006EC8);
 }
 #pragma force_active reset

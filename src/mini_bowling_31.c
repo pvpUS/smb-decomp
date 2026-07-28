@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_0000AC60.
+ * mini_bowling.c -- REL module: isolated function lbl_00007650.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -46,11 +46,6 @@
 #include "stcoli.h"
 #include "shadow.h"
 #include "vibration.h"
-
-struct BowlPin {  // 0x184-byte per-pin record in this module's .bss
-    u32 flags;  // 0x000
-    u8 unk4[0x180];
-};
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_bowling.s) or imported.  Declared so mwcc accepts `@ha/@l`.
@@ -114,7 +109,7 @@ extern u8 lbl_100004C0[];
 extern u8 lbl_100004E0[];
 extern u8 lbl_10012140[];
 extern u8 lbl_10012180[];
-extern struct BowlPin lbl_10018510[];
+extern u8 lbl_10018510[];
 
 // Imported functions the code calls that no included header declares.
 extern void draw_test_camera_target();
@@ -138,6 +133,10 @@ extern void u_set_minigame_callbacks_2();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_0000020C(void);
+void lbl_00000718(void);
+void lbl_000009EC(void);
+void lbl_00000F98(void);
 void lbl_00001888(void);
 void lbl_00001908(void);
 void lbl_00001B14(void);
@@ -165,10 +164,11 @@ void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
 void lbl_000066C4(void);
+void lbl_000068C4(void);
 void lbl_00006E64(void);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
-void lbl_00007650(void);
+void lbl_00007650(s32 a, s32 b, s32 c);
 void lbl_000076D0(void);
 void lbl_00007740(void);
 void lbl_00007778(void);
@@ -180,6 +180,7 @@ void lbl_00007C54(void);
 void lbl_00007E74(void);
 void lbl_00007FE0(void);
 void lbl_000080E0(void);
+void lbl_000082E4(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
 void lbl_000087CC(void);
@@ -219,6 +220,9 @@ void lbl_0000B460(void);
 void lbl_0000B654(void);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
+void lbl_0000BDE0(void);
+void lbl_0000BEB8(void);
+void lbl_0000C0D0(void);
 void lbl_0000C1D0(void);
 void lbl_0000CAA8(void);
 void lbl_0000D4D4(void);
@@ -229,31 +233,27 @@ void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
 void lbl_0000DA0C(void);
 void lbl_0000DAF4(void);
-void lbl_0000DBB8(void);
 void lbl_0000DD4C(void);
-void lbl_0000DE10(void);
 void lbl_0000DFA4(void);
 void lbl_0000E22C(void);
-void lbl_0000E2E0(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
 void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
+void lbl_0000EC38(void);
+void lbl_0000EDB0(void);
 
 #pragma force_active on
-// lbl_0000AC60 (0xAC60): reset every pin's flag word -- pins that were both live
-// and knocked down (1|4) are cleared, the rest are re-armed with 1|2.
-void lbl_0000AC60(void)
+void lbl_00007650(s32 a, s32 b, s32 c)
 {
-    int i;
+    u8 *g = lbl_10000000;
 
-    for (i = 0; i < 10; i++) {
-        if ((lbl_10018510[i].flags & 5) == 5)
-            lbl_10018510[i].flags = 0;
-        else
-            lbl_10018510[i].flags = 3;
-    }
+    *(s32 *)(g + 0x154) = a;
+    *(s32 *)(g + 0x158) = b;
+    *(s16 *)(g + 0x15c) = c;
+    *(s16 *)(g + 0x15e) = c - *(f64 *)lbl_00011250;
+    u_play_music(0, 8);
 }
 #pragma force_active reset

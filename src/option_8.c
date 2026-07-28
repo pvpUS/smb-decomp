@@ -1,6 +1,6 @@
 /*
  * option.c -- REL module, structurally split for per-function
- * byte-matching (part 8 of 53; contiguous .text range).  Each function
+ * byte-matching (part 8 of 60; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/option/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -118,9 +118,10 @@ void lbl_00003F10(void);
 void lbl_00003F6C(void);
 void lbl_00003FF0(void);
 void lbl_00004204(void);
-void lbl_00004260(void);
+void lbl_00004260(int);
 void lbl_000042BC(void);
 void lbl_000047D0(void);
+void lbl_00004858(void);
 void lbl_00004EB4(void);
 void lbl_00005020(void);
 void lbl_00005340(void);
@@ -149,10 +150,37 @@ void lbl_0000B10C(void);
 void lbl_0000B218(void);
 void lbl_0000C148(void);
 
+//@SUB void lbl_00004260(void);|void lbl_00004260(int);
 #pragma force_active on
-static asm void lbl_000005E8(void)
+void lbl_000005E8(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_000005E8.s"
+    u8 *w = lbl_10000000;
+    u8 *q = w + 0xBC;
+
+    if (--*(s32 *)(w + 0xD8) == 0)
+    {
+        u_play_sound_0(*(u8 *)lbl_0000C6A5);
+        *(s32 *)(q + 0x1C) = 60;
+    }
+    if (*(s16 *)(w + 0x1B4) > 0)
+    {
+        if (--*(s16 *)(w + 0x1B4) > 0)
+            return;
+        u_change_sound_mode(OSGetSoundMode() == 1 ? 0 : 1);
+        u_play_music(*(u8 *)lbl_0000C6A4, 0);
+    }
+    if ((g_currPlayerButtons[4] & 1) || (g_currPlayerAnalogButtons[4] & 1)
+     || (g_currPlayerButtons[4] & 2) || (g_currPlayerAnalogButtons[4] & 2))
+    {
+        u_play_sound_0(0x6C);
+        u_play_music(-1, 1);
+        *(s16 *)(w + 0x1B4) = 5;
+    }
+    else if (g_currPlayerButtons[2] & 0x200)
+    {
+        u_play_sound_0(0x6B);
+        lbl_00004260(0x5C);
+        gameSubmodeRequest = 0xAE;
+    }
 }
 #pragma force_active reset

@@ -227,9 +227,67 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm void lbl_00009540(void)
+void lbl_00009540(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00009540.s"
+    u8 *q = lbl_10000000;
+    u8 *r;
+    int i;
+    int j;
+    int c;
+    s8 t;
+    s8 sv;
+    u8 v;
+    u8 buf[0x410];
+
+    if (*(s8 *)(q + 0xB339) > 0) {
+        *(u8 *)(q + 0xB339) = *(s8 *)(q + 0xB339) - 1;
+        return;
+    }
+    sv = *(s8 *)(q + 0xE);
+    memcpy(buf, q + 0x9878, 0x410);
+    *(u32 *)(q + 0x28) = 0;
+    *(u32 *)(q + 0x30) = 0;
+    *(u32 *)(q + 0x34) = 0;
+    *(u8 *)(q + 3) = 0;
+    for (i = 0; i < 6; i++)
+        lbl_0000A054(0);
+    t = *(s8 *)(q + 0xE);
+    *(u8 *)(q + 3) = 0;
+    for (i = 0; i < 3; i++)
+        lbl_0000A054(0);
+
+    if (*(s8 *)(q + 0xA) == 0x13) {
+        c = lbl_802F1C32;
+        if ((s8)(q + c * 6)[0xA66] == 0 && t == 0 &&
+            *(s8 *)(q + 0xE) == *(s8 *)(q + 0x49)) {
+            vibration_control(playerControllerIDs[c], 1, 10);
+            *(u8 *)(q + 0xB339) = 10;
+        }
+    }
+
+    r = q + 0xAA38;
+    for (j = 0; j < *(s8 *)(q + 3); r += 0x18, j++) {
+        v = r[0];
+        if ((s8)v == 0 || (u8)(v - 1) <= 1) {
+            if (*(s8 *)(q + 0xA) == 0xA) {
+                if (*(s8 *)(q + 0xA66) == 0 && *(s8 *)(r + 1) == 0) {
+                    vibration_control(playerControllerIDs[0], 1, 7);
+                    *(u8 *)(q + 0xB339) = 7;
+                }
+                if (*(s8 *)(q + 0xA6C) == 0 && *(s8 *)(r + 1) == 1) {
+                    vibration_control(playerControllerIDs[1], 1, 7);
+                    *(u8 *)(q + 0xB339) = 7;
+                }
+            } else {
+                c = lbl_802F1C32;
+                if (((s8 *)(q + 0xA66))[c * 6] == 0 && *(s8 *)(r + 1) == 0) {
+                    vibration_control(playerControllerIDs[c], 1, 7);
+                    *(u8 *)(q + 0xB339) = 7;
+                }
+            }
+        }
+    }
+    memcpy(q + 0x9878, buf, 0x410);
+    *(s8 *)(q + 0xE) = sv;
 }
 #pragma force_active reset

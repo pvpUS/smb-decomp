@@ -227,9 +227,80 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm void lbl_00003CC8(void)
+struct BilliardsPlayer
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00003CC8.s"
+    s8 unk0;
+    s8 chara;
+    u8 filler2[4];
+};
+
+struct BilliardsApe
+{
+    u8 filler0[0x64];
+    struct Ape *ape;
+};
+
+void lbl_00003CC8(void)
+{
+    u8 *q = lbl_10000000;
+    int i;
+    int k;
+    int id;
+    int cnt[4];
+
+    for (i = 15; i >= 0; i--) {
+        if (((int *)(q + 0x64))[i] != -1) {
+            thread_kill(((int *)(q + 0x64))[i]);
+            ((int *)(q + 0x64))[i] = -1;
+        }
+    }
+    if (*(s8 *)(q + 0xA) != 8 && *(s8 *)(q + 0xA) != 9 && *(s8 *)(q + 0xA) != 0xA) {
+        cnt[3] = 0;
+        cnt[2] = 0;
+        cnt[1] = 0;
+        cnt[0] = 0;
+        k = 0;
+        for (i = 0; i < 9; i++) {
+            if ((u32)i <= 1 && *(s8 *)(q + 0xA) == 7) {
+                id = ((struct BilliardsPlayer *)(q + 0xA64))[i].chara;
+            } else if (i == 0 || i == 9) {
+                id = ((struct BilliardsPlayer *)(q + 0xA64))[lbl_802F1C32].chara;
+            } else {
+                int a = ((struct BilliardsPlayer *)(q + 0xA64))[lbl_802F1C32].chara;
+                int b =
+                    ((struct BilliardsPlayer *)(q + 0xA64))[1 - lbl_802F1C32].chara;
+                do {
+                    k = (k + 1) & 3;
+                    cnt[k]++;
+                } while (k == a || k == b);
+                id = k;
+            }
+            ((struct BilliardsApe *)(q + 0x9878))[i].ape = u_make_ape(id);
+            u_start_indexed_anim(((struct BilliardsApe *)(q + 0x9878))[i].ape, 1, 0);
+            ((struct BilliardsApe *)(q + 0x9878))[i].ape->ballId = i;
+            if ((u32)i <= 1 && *(s8 *)(q + 0xA) == 7)
+                ((struct BilliardsApe *)(q + 0x9878))[i].ape->colorId = i;
+            else if (i == 0)
+                ((struct BilliardsApe *)(q + 0x9878))[i].ape->colorId = lbl_802F1C32;
+            else
+                ((struct BilliardsApe *)(q + 0x9878))[i].ape->colorId = cnt[id] - 1;
+            ((int *)(q + 0x64))[i] = thread_create(
+                (ThreadCallback)lbl_00019264,
+                ((struct BilliardsApe *)(q + 0x9878))[i].ape, THREAD_GROUP_5);
+        }
+    } else {
+        for (i = 0; i < 2; i++) {
+            id = ((struct BilliardsPlayer *)(q + 0xA64))[i].chara;
+            ((struct BilliardsApe *)(q + 0x9878))[i].ape =
+                u_make_ape(id);
+            u_start_indexed_anim(((struct BilliardsApe *)(q + 0x9878))[i].ape, 1, 0);
+            ((struct BilliardsApe *)(q + 0x9878))[i].ape->ballId = i;
+            ((struct BilliardsApe *)(q + 0x9878))[i].ape->colorId = i;
+            ((int *)(q + 0x64))[i] = thread_create(
+                (ThreadCallback)lbl_00019264,
+                ((struct BilliardsApe *)(q + 0x9878))[i].ape, THREAD_GROUP_5);
+        }
+    }
+    *(u8 *)(q + 0x1F) = 1;
 }
 #pragma force_active reset

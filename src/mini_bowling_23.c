@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_000090CC.
+ * mini_bowling.c -- REL module: isolated function lbl_000051E0.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -47,6 +47,12 @@
 #include "shadow.h"
 #include "vibration.h"
 
+struct BowlScore {
+    u8 filler0[0xa];
+    s16 total[11];   // 0x0a -- running score, total[0] unused, -1 = not scored yet
+    s8 pins[21];     // 0x20 -- pins felled per ball (10 frames x 2 + bonus)
+    s8 state[21];    // 0x35
+};
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_bowling.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000F020[];
@@ -133,6 +139,10 @@ extern void u_set_minigame_callbacks_2();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_0000020C(void);
+void lbl_00000718(void);
+void lbl_000009EC(void);
+void lbl_00000F98(void);
 void lbl_00001888(void);
 void lbl_00001908(void);
 void lbl_00001B14(void);
@@ -155,11 +165,12 @@ void lbl_00004BD8(void);
 void lbl_00004D10(void);
 void lbl_00004DF8(void);
 void lbl_00005128(void);
-void lbl_000051E0(void);
+void lbl_000051E0(struct BowlScore *p);
 void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
 void lbl_000066C4(void);
+void lbl_000068C4(void);
 void lbl_00006E64(void);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
@@ -175,9 +186,10 @@ void lbl_00007C54(void);
 void lbl_00007E74(void);
 void lbl_00007FE0(void);
 void lbl_000080E0(void);
+void lbl_000082E4(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
-void lbl_000087CC(struct Camera *, Vec *, Vec *, int, float);
+void lbl_000087CC(void);
 void lbl_000089FC(void);
 void lbl_00008B8C(void);
 void lbl_00008C68(void);
@@ -186,7 +198,7 @@ void lbl_00008DF0(void);
 void lbl_00008EC0(void);
 void lbl_00008FB0(void);
 void lbl_00009048(void);
-void lbl_000090CC(struct Camera *camera, struct Ball *ball);
+void lbl_000090CC(void);
 void lbl_00009134(void);
 void lbl_0000919C(void);
 void lbl_00009230(void);
@@ -214,6 +226,9 @@ void lbl_0000B460(void);
 void lbl_0000B654(void);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
+void lbl_0000BDE0(void);
+void lbl_0000BEB8(void);
+void lbl_0000C0D0(void);
 void lbl_0000C1D0(void);
 void lbl_0000CAA8(void);
 void lbl_0000D4D4(void);
@@ -224,32 +239,76 @@ void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
 void lbl_0000DA0C(void);
 void lbl_0000DAF4(void);
-void lbl_0000DBB8(void);
 void lbl_0000DD4C(void);
-void lbl_0000DE10(void);
 void lbl_0000DFA4(void);
 void lbl_0000E22C(void);
-void lbl_0000E2E0(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
 void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
+void lbl_0000EC38(void);
+void lbl_0000EDB0(void);
 
 #pragma force_active on
-void lbl_000090CC(struct Camera *camera, struct Ball *ball)
+// lbl_000051E0 (0x51E0): recompute the running total for the first frame that
+// has not been scored yet, once all the balls it depends on have been thrown.
+void lbl_000051E0(struct BowlScore *p)
 {
-    Vec sp1c;
-    Vec sp10;
-    f32 *tbl = (f32 *)lbl_00011338;
+    int frame;
+    int ball;
 
-    sp1c.x = tbl[0x32];
-    sp1c.y = tbl[0x26];
-    sp1c.z = tbl[0x33];
-    sp10.x = tbl[0x34];
-    sp10.y = tbl[0x35];
-    sp10.z = tbl[0x36];
-    lbl_000087CC(camera, &sp1c, &sp10, 0x1800, tbl[0x26]);
+    for (frame = 1; frame <= 10; frame++) {
+        if (p->total[frame] == -1)
+            break;
+    }
+
+    if (frame == 10) {
+        if (p->state[18] == 0)
+            return;
+        if (p->state[19] == 0)
+            return;
+        if (p->state[18] == 2 || p->state[19] == 2 || p->state[19] == 3) {
+            if (p->state[20] == 0)
+                return;
+        }
+        p->total[frame] =
+            p->total[frame - 1] + p->pins[18] + p->pins[19] + p->pins[20];
+        return;
+    }
+
+    ball = (frame - 1) * 2;
+    if (p->state[ball] == 2) {
+        if (frame == 9) {
+            if (p->state[ball + 2] == 0)
+                return;
+            if (p->state[ball + 3] == 0)
+                return;
+            p->total[frame] =
+                p->total[frame - 1] + p->pins[ball] + p->pins[ball + 2] + p->pins[ball + 3];
+        } else if (p->state[ball + 2] == 0) {
+            return;
+        } else if (p->state[ball + 2] == 2) {
+            if (p->state[ball + 4] == 0)
+                return;
+            p->total[frame] =
+                p->total[frame - 1] + p->pins[ball] + p->pins[ball + 2] + p->pins[ball + 4];
+        } else {
+            if (p->state[ball + 3] == 0)
+                return;
+            p->total[frame] =
+                p->total[frame - 1] + p->pins[ball] + p->pins[ball + 2] + p->pins[ball + 3];
+        }
+    } else if (p->state[ball + 1] == 3) {
+        if (p->state[ball + 2] == 0)
+            return;
+        p->total[frame] =
+            p->total[frame - 1] + p->pins[ball] + p->pins[ball + 1] + p->pins[ball + 2];
+    } else {
+        if (p->state[ball + 1] == 0)
+            return;
+        p->total[frame] = p->total[frame - 1] + p->pins[ball] + p->pins[ball + 1];
+    }
 }
 #pragma force_active reset

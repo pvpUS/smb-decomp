@@ -1,5 +1,5 @@
 /*
- * option.c -- REL module: isolated function lbl_00009A78.
+ * option.c -- REL module: isolated function lbl_00008A34.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -121,6 +121,7 @@ void lbl_00004204(void);
 void lbl_00004260(void);
 void lbl_000042BC(void);
 void lbl_000047D0(void);
+void lbl_00004858(void);
 void lbl_00004EB4(void);
 void lbl_00005020(void);
 void lbl_00005340(void);
@@ -150,53 +151,31 @@ void lbl_0000B218(void);
 void lbl_0000C148(void);
 
 #pragma force_active on
-void lbl_00009A78(void)
+void lbl_00008A34(void)
 {
-    u8 *c = lbl_0000C370;
-    u8 *q;
     u8 *p;
     struct Sprite *sprite;
 
-    if (find_sprite_with_tag(0x5E) != NULL)
+    if (find_sprite_with_tag(0x5D) != NULL)
     {
-        if (*(s8 *)(lbl_10000000 + 0xFC) == 1)
-            *(u8 *)(lbl_10000000 + 0xFC) = 3;
-        else
-            *(u8 *)(lbl_10000000 + 0xFC) = 4;
+        *(u8 *)(lbl_10000000 + 0xDC) = 4;
     }
     else
     {
-        q = lbl_10000000 + 0xFC;
-        if (*(s8 *)(lbl_10000000 + 0xFC) == 1)
+        p = lbl_00003F6C(0x5D);
+        if (p != NULL)
         {
-            p = lbl_00003F6C(0x5E);
-            if (p != NULL)
-            {
-                p[0] = 3;
-                p[1] = 30;
-                *(f32 *)(p + 4) = *(f32 *)(c + 0x20);
-                *(f32 *)(p + 8) = *(f32 *)c;
-            }
+            p[0] = 4;
+            p[1] = 30;
+            *(f32 *)(p + 4) = *(f32 *)lbl_0000C394;
+            *(f32 *)(p + 8) = *(f32 *)lbl_0000C370;
         }
-        else
-        {
-            p = lbl_00003F6C(0x5E);
-            if (p != NULL)
-            {
-                p[0] = 4;
-                p[1] = 30;
-                *(f32 *)(p + 4) = *(f32 *)(c + 0x24);
-                *(f32 *)(p + 8) = *(f32 *)c;
-            }
-        }
-        *(f32 *)(lbl_10000000 + 0x108) = *(f32 *)(c + 0x208);
         sprite = create_sprite();
         if (sprite != NULL)
         {
-            sprite->tag = 0x5E;
-            sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_000093C0;
-            sprite->drawFunc = (void (*)(struct Sprite *))lbl_00009454;
-            *(u8 **)((u8 *)sprite + 0x2C) = q;
+            sprite->tag = 0x5D;
+            sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_00008048;
+            sprite->drawFunc = (void (*)(struct Sprite *))lbl_00008068;
             strcpy(sprite->text, (char *)lbl_0000D310);
         }
     }

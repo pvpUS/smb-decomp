@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_0000D8CC.
+ * mini_bowling.c -- REL module: isolated function lbl_00008B8C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -133,6 +133,10 @@ extern void u_set_minigame_callbacks_2();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_0000020C(void);
+void lbl_00000718(void);
+void lbl_000009EC(void);
+void lbl_00000F98(void);
 void lbl_00001888(void);
 void lbl_00001908(void);
 void lbl_00001B14(void);
@@ -160,6 +164,7 @@ void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
 void lbl_000066C4(void);
+void lbl_000068C4(void);
 void lbl_00006E64(void);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
@@ -175,11 +180,12 @@ void lbl_00007C54(void);
 void lbl_00007E74(void);
 void lbl_00007FE0(void);
 void lbl_000080E0(void);
+void lbl_000082E4(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
-void lbl_000087CC(void);
+void lbl_000087CC(struct Camera *camera, Vec *eye, Vec *lookAt, s16 fov, float t);
 void lbl_000089FC(void);
-void lbl_00008B8C(void);
+void lbl_00008B8C(struct Camera *camera, struct Ball *ball);
 void lbl_00008C68(void);
 void lbl_00008D2C(void);
 void lbl_00008DF0(void);
@@ -214,55 +220,58 @@ void lbl_0000B460(void);
 void lbl_0000B654(void);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
+void lbl_0000BDE0(void);
+void lbl_0000BEB8(void);
+void lbl_0000C0D0(void);
 void lbl_0000C1D0(void);
 void lbl_0000CAA8(void);
 void lbl_0000D4D4(void);
 void lbl_0000D598(void);
 void lbl_0000D650(void);
 void lbl_0000D7F8(void);
-void lbl_0000D8CC(register Vec *a, register Vec *b, register Vec *result);
+void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
 void lbl_0000DA0C(void);
 void lbl_0000DAF4(void);
-void lbl_0000DBB8(void);
 void lbl_0000DD4C(void);
-void lbl_0000DE10(void);
 void lbl_0000DFA4(void);
 void lbl_0000E22C(void);
-void lbl_0000E2E0(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
 void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
+void lbl_0000EC38(void);
+void lbl_0000EDB0(void);
 
 #pragma force_active on
-void lbl_0000D8CC(register Vec *a, register Vec *b, register Vec *result)
+// lbl_00008B8C (0x8B8C): camera substate -- trail the ball down the lane,
+// leading it by an amount that grows as the ball slows (capped at tbl+0x28),
+// and clamp the eye into the lane box.
+void lbl_00008B8C(struct Camera *camera, struct Ball *ball)
 {
-    register float x1, y1, z1, x2, y2, z2;
-    register float x, y, z;
+    u8 *tbl = lbl_00011338;
+    Vec sp10;
+    f64 lead;
+    f64 t;
 
-    // clang-format off
-    asm
-    {
-        lfs y1, a->y
-        lfs z2, b->z
-        lfs z1, a->z
-        lfs x2, b->x
-        lfs x1, a->x
-        lfs y2, b->y
-
-        fmuls x, y1, z2
-        fmuls y, z1, x2
-        fmuls z, x1, y2
-        fnmsubs x, z1, y2, x
-        stfs x, result->x
-        fnmsubs y, x1, z2, y
-        stfs y, result->y
-        fnmsubs z, y1, x2, z
-        stfs z, result->z
-    }
-    // clang-format on
+    sp10.x = *(f64 *)(tbl + 0x10) * ball->pos.x;
+    sp10.y = *(f32 *)(tbl + 0x18);
+    t = *(f64 *)(tbl + 0x20);
+    t /= -ball->vel.z;
+    if (t < *(f64 *)(tbl + 0x28))
+        lead = t;
+    else
+        lead = *(f64 *)(tbl + 0x28);
+    t = *(f64 *)(tbl + 0x20) + ball->pos.z;
+    sp10.z = t + lead;
+    if (sp10.z < *(f64 *)(tbl + 0x30))
+        sp10.z = *(f32 *)(tbl + 0x38);
+    if (sp10.x < *(f64 *)(tbl + 0x40))
+        sp10.x = *(f32 *)(tbl + 0x48);
+    if (sp10.x > *(f64 *)(tbl + 0x50))
+        sp10.x = *(f32 *)(tbl + 0x58);
+    lbl_000087CC(camera, &sp10, (Vec *)lbl_000153E8, 0x1800, *(f32 *)(tbl + 0x5c));
 }
 #pragma force_active reset

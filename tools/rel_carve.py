@@ -258,8 +258,17 @@ def write_segments(mod, pre, secs, order, segments, keep_labels):
 def sources_block(mod):
     mk = os.path.join(REPO, 'Makefile')
     L = open(mk, newline='').read().split('\n')
-    h = next(i for i, l in enumerate(L)
-             if l.strip() == '# mkbe.rel_%s.rel sources' % mod)
+    # Three Makefile spellings exist (rel_rematch.py carries the same list):
+    #   mini_bowling -> # mkbe.rel_mini_bowling.rel sources
+    #   test_mode    -> # mkbe.test_mode.rel sources
+    #   sel_ngc_rel  -> # mkbe.sel_ngc.rel sources   (stem drops its _rel)
+    hdrs = ['# mkbe.rel_%s.rel sources' % mod, '# mkbe.%s.rel sources' % mod]
+    if mod.endswith('_rel'):
+        hdrs.append('# mkbe.%s.rel sources' % mod[:-len('_rel')])
+    h = next((i for i, l in enumerate(L) if l.strip() in hdrs), None)
+    if h is None:
+        sys.exit('rel_carve: no Makefile SOURCES header found for %r\n'
+                 '  looked for: %s' % (mod, ', '.join(repr(x) for x in hdrs)))
     s = h + 1
     e = next(i for i in range(s + 1, len(L)) if not L[i].rstrip().endswith('\\'))
     items = [L[i].rstrip().rstrip('\\').strip() for i in range(s + 1, e + 1)]

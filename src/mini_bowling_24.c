@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_00009134.
+ * mini_bowling.c -- REL module: isolated function lbl_000054BC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -133,6 +133,10 @@ extern void u_set_minigame_callbacks_2();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_0000020C(void);
+void lbl_00000718(void);
+void lbl_000009EC(void);
+void lbl_00000F98(void);
 void lbl_00001888(void);
 void lbl_00001908(void);
 void lbl_00001B14(void);
@@ -156,10 +160,11 @@ void lbl_00004D10(void);
 void lbl_00004DF8(void);
 void lbl_00005128(void);
 void lbl_000051E0(void);
-void lbl_000054BC(void);
+char *lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
 void lbl_000066C4(void);
+void lbl_000068C4(void);
 void lbl_00006E64(void);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
@@ -175,9 +180,10 @@ void lbl_00007C54(void);
 void lbl_00007E74(void);
 void lbl_00007FE0(void);
 void lbl_000080E0(void);
+void lbl_000082E4(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
-void lbl_000087CC(struct Camera *, Vec *, Vec *, int, float);
+void lbl_000087CC(void);
 void lbl_000089FC(void);
 void lbl_00008B8C(void);
 void lbl_00008C68(void);
@@ -187,7 +193,7 @@ void lbl_00008EC0(void);
 void lbl_00008FB0(void);
 void lbl_00009048(void);
 void lbl_000090CC(void);
-void lbl_00009134(struct Camera *camera, struct Ball *ball);
+void lbl_00009134(void);
 void lbl_0000919C(void);
 void lbl_00009230(void);
 void lbl_000096B4(void);
@@ -214,6 +220,9 @@ void lbl_0000B460(void);
 void lbl_0000B654(void);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
+void lbl_0000BDE0(void);
+void lbl_0000BEB8(void);
+void lbl_0000C0D0(void);
 void lbl_0000C1D0(void);
 void lbl_0000CAA8(void);
 void lbl_0000D4D4(void);
@@ -224,32 +233,54 @@ void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
 void lbl_0000DA0C(void);
 void lbl_0000DAF4(void);
-void lbl_0000DBB8(void);
 void lbl_0000DD4C(void);
-void lbl_0000DE10(void);
 void lbl_0000DFA4(void);
 void lbl_0000E22C(void);
-void lbl_0000E2E0(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
 void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
+void lbl_0000EC38(void);
+void lbl_0000EDB0(void);
+
+struct PatEntry
+{
+    char *name;
+    u16 key;
+    u8 pad[2];
+};
+
+struct BowlConfig
+{
+    u8 pad0[0x1fcc];
+    struct PatEntry arr2[27];
+};
 
 #pragma force_active on
-void lbl_00009134(struct Camera *camera, struct Ball *ball)
+char *lbl_000054BC(void)
 {
-    Vec sp1c;
-    Vec sp10;
-    f32 *tbl = (f32 *)lbl_00011338;
+    u8 *base = lbl_0000F020;
+    struct BowlConfig *cfg = (struct BowlConfig *)base;
+    struct PatEntry *p2;
+    u16 *p1;
+    u16 key;
+    int i;
 
-    sp1c.x = tbl[0x37];
-    sp1c.y = tbl[0x38];
-    sp1c.z = tbl[0x39];
-    sp10.x = tbl[0x3a];
-    sp10.y = tbl[0x3b];
-    sp10.z = tbl[0x3c];
-    lbl_000087CC(camera, &sp1c, &sp10, 0x1800, tbl[0x26]);
+    if (*(s8 *)lbl_1000013E < 2)
+        return 0;
+    key = *(u16 *)lbl_1000013C;
+    if (key & 1)
+        return 0;
+    p1 = (u16 *)(base + 0x1f78);
+    for (i = 0; i < 41; i++)
+        if (key == p1[i])
+            return 0;
+    p2 = cfg->arr2;
+    for (i = 0; i < 27; i++)
+        if (key == p2[i].key)
+            return cfg->arr2[i].name;
+    return (char *)lbl_00015380;
 }
 #pragma force_active reset

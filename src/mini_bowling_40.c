@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_0000D4D4.
+ * mini_bowling.c -- REL module: isolated function lbl_000086E4.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -47,13 +47,6 @@
 #include "shadow.h"
 #include "vibration.h"
 
-struct BowlPin {  // 0x184-byte per-pin record in this module's .bss
-    u32 flags;  // 0x000
-    Vec unk4[12];  // 0x004 collision points, current
-    Vec unk94[12];  // 0x094 collision points, previous
-    Vec unk124;  // 0x124 world offset
-    u8 unk130[0x54];  // 0x130
-};
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_bowling.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000F020[];
@@ -140,6 +133,10 @@ extern void u_set_minigame_callbacks_2();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_0000020C(void);
+void lbl_00000718(void);
+void lbl_000009EC(void);
+void lbl_00000F98(void);
 void lbl_00001888(void);
 void lbl_00001908(void);
 void lbl_00001B14(void);
@@ -167,6 +164,7 @@ void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
 void lbl_000066C4(void);
+void lbl_000068C4(void);
 void lbl_00006E64(void);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
@@ -182,7 +180,8 @@ void lbl_00007C54(void);
 void lbl_00007E74(void);
 void lbl_00007FE0(void);
 void lbl_000080E0(void);
-void lbl_000086E4(void);
+void lbl_000082E4(void);
+f32 lbl_000086E4(Vec *v);
 void lbl_0000871C(void);
 void lbl_000087CC(void);
 void lbl_000089FC(void);
@@ -221,9 +220,12 @@ void lbl_0000B460(void);
 void lbl_0000B654(void);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
+void lbl_0000BDE0(void);
+void lbl_0000BEB8(void);
+void lbl_0000C0D0(void);
 void lbl_0000C1D0(void);
 void lbl_0000CAA8(void);
-void lbl_0000D4D4(struct BowlPin *, Vec *);
+void lbl_0000D4D4(void);
 void lbl_0000D598(void);
 void lbl_0000D650(void);
 void lbl_0000D7F8(void);
@@ -231,40 +233,34 @@ void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
 void lbl_0000DA0C(void);
 void lbl_0000DAF4(void);
-void lbl_0000DBB8(void);
 void lbl_0000DD4C(void);
-void lbl_0000DE10(void);
 void lbl_0000DFA4(void);
 void lbl_0000E22C(void);
-void lbl_0000E2E0(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
 void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
+void lbl_0000EC38(void);
+void lbl_0000EDB0(void);
 
 #pragma force_active on
-// lbl_0000D4D4 (0xD4D4): translate a pin -- add `delta` to its world offset and
-// to every one of its active collision points in both Vec arrays.
-void lbl_0000D4D4(struct BowlPin *pin, Vec *delta)
+// lbl_000086E4 (0x86E4): magnitude of a Vec -- mathutil_sqrt of the squared length.
+f32 lbl_000086E4(register Vec *v)
 {
-    int i;
-    Vec *a = pin->unk4;
-    Vec *b = pin->unk94;
-
-    pin->unk124.x = delta->x + pin->unk124.x;
-    pin->unk124.y = delta->y + pin->unk124.y;
-    pin->unk124.z = delta->z + pin->unk124.z;
-    for (i = 0; i < lbl_00014B78[0x34]; i++) {
-        a->x = delta->x + a->x;
-        a->y = delta->y + a->y;
-        a->z = delta->z + a->z;
-        a++;
-        b->x = delta->x + b->x;
-        b->y = delta->y + b->y;
-        b->z = delta->z + b->z;
-        b++;
+    register float x, y, z, result;
+    // clang-format off
+    asm
+    {
+        lfs x, v->x
+        lfs y, v->y
+        lfs z, v->z
+        fmuls result, x, x
+        fmadds result, y, y, result
+        fmadds result, z, z, result
     }
+    // clang-format on
+    return mathutil_sqrt(result);
 }
 #pragma force_active reset

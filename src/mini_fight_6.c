@@ -154,17 +154,14 @@ extern u8 lbl_10018FD4[];
 extern u8 lbl_10019040[];
 extern u8 backgroundInfo[];
 extern u8 g_bgLightInfo[];
-extern u8 g_stobjInfo[];
 extern u8 infoWork[];
 extern u8 lbl_801EED98[];
-extern u8 lbl_8028C0B0[];
 extern u8 pauseMenuState[];
 extern u8 polyDisp[];
 extern u8 worldInfo[];
 
 // Imported functions the code calls that no included header declares.
 extern void ape_face_dir();
-extern void collide_ball_with_stage();
 extern void fade_color_base_default();
 extern void func_8000D5B8();
 extern void func_80047518();
@@ -188,7 +185,6 @@ extern void mathutil_tan();
 extern void mathutil_vec_normalize_len();
 extern void mathutil_vec_set_len();
 extern void mini_commend_free_data();
-extern void spawn_stobj();
 extern void u_math_unk15();
 extern void ape_skel_anim_main();
 extern void avdisp_draw_model_culled_sort_all();
@@ -230,7 +226,6 @@ extern void mathutil_mtxA_normalize_basis();
 extern void mathutil_mtxA_rigid_inv_tf_point();
 extern void mathutil_mtxA_scale_s();
 extern void ord_tbl_draw_nodes();
-extern void raycast_stage_down();
 extern void set_ape_model_lod();
 extern void thread_create();
 extern void unref_func_80039320();
@@ -283,7 +278,6 @@ void _epilog(void);
 void _unresolved(void);
 void lbl_00000210(void);
 void lbl_00000270(void);
-void lbl_000032B8(void);
 void lbl_000033AC(void);
 void lbl_0000351C(void);
 void lbl_00003CC8(void);
@@ -392,10 +386,27 @@ void lbl_0001A554(void);
 void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
+#include "stcoli.h"
+#include "stobj.h"
 #pragma force_active on
-asm void lbl_000032B8(void)
+void lbl_000032B8(struct Stobj *stobj)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000032B8.s"
+    struct PhysicsBall pb;
+    f32 *k = (f32 *)lbl_0001BF80;
+
+    pb.flags = 0;
+    pb.pos = stobj->localPos;
+    pb.prevPos = stobj->unk7C;
+    pb.vel = stobj->unk64;
+    pb.radius = stobj->boundSphereRadius;
+    pb.gravityAccel = k[2];
+    pb.restitution = k[2];
+    pb.hardestColiSpeed = k[0x18];
+    pb.friction = k[0x34];
+    pb.animGroupId = 0;
+    pb.hardestColiAnimGroupId = 0;
+    collide_ball_with_stage(&pb, decodedStageLzPtr);
+    stobj->localPos = pb.pos;
+    stobj->unk64 = pb.vel;
 }
 #pragma force_active reset

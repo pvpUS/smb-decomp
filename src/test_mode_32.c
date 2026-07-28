@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_0000C00C.
+ * test_mode.c -- REL module: isolated function lbl_0000A78C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -196,8 +196,12 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
+void lbl_00003C34(void);
 void lbl_00005384(void);
+void lbl_000055E8(void);
+void lbl_000056BC(void);
 void lbl_000073EC(void);
+void lbl_00007BE0(void);
 void lbl_00007D20(void);
 void lbl_00007FE8(void);
 void lbl_00008008(void);
@@ -205,11 +209,16 @@ void lbl_00008808(void);
 void lbl_0000884C(void);
 void lbl_00008ADC(void);
 void lbl_00008B00(void);
+void lbl_00008F40(void);
 void lbl_00009060(void);
 void lbl_00009338(void);
 void lbl_000094C0(void);
 void lbl_00009560(void);
+void lbl_000095F8(void);
+void lbl_00009998(void);
+void lbl_00009A0C(void);
 void lbl_0000A304(void);
+void lbl_0000A440(void);
 void lbl_0000A78C(void);
 void lbl_0000A7DC(void);
 void lbl_0000A7E0(void);
@@ -225,6 +234,7 @@ void lbl_0000B364(void);
 void lbl_0000B44C(void);
 void lbl_0000B4A0(void);
 void lbl_0000B57C(void);
+void lbl_0000B6B0(void);
 void lbl_0000BE00(void);
 void lbl_0000BE94(void);
 void lbl_0000BE98(void);
@@ -241,18 +251,27 @@ void lbl_0000C984(void);
 void lbl_0000CB0C(void);
 void lbl_0000CB10(void);
 void lbl_0000CDE0(void);
+void lbl_0000D084(void);
+void lbl_0000D3C0(void);
+void lbl_0000D844(void);
+void lbl_0000D9FC(void);
+void lbl_0000DB2C(void);
+void lbl_0000DC60(void);
+void lbl_0000DDA4(void);
+void lbl_0000E2E8(void);
+void lbl_0000E3E8(void);
+void lbl_0000F6F0(void);
 void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_0000C00C(void)
+void lbl_0000A78C(void)
 {
-    lbl_0000C260();
-    draw_normal_game_scene();
-    lbl_0000C3F0();
-    GXSetBlendMode_cached(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR);
-    GXSetZMode_cached(GX_ENABLE, GX_LESS, GX_ENABLE);
-    fog_gx_set();
+    if (*(void **)lbl_10000F58 != NULL)
+    {
+        OSFreeToHeap(__OSCurrHeap, *(void **)lbl_10000F58);
+        *(void **)lbl_10000F58 = NULL;
+    }
 }
 #pragma force_active reset

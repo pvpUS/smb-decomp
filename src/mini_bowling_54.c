@@ -1,6 +1,6 @@
 /*
  * mini_bowling.c -- REL module, structurally split for per-function
- * byte-matching (part 54 of 57; contiguous .text range).  Each function
+ * byte-matching (part 54 of 96; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/mini_bowling/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -132,6 +132,10 @@ extern void u_set_minigame_callbacks_2();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_0000020C(void);
+void lbl_00000718(void);
+void lbl_000009EC(void);
+void lbl_00000F98(void);
 void lbl_00001888(void);
 void lbl_00001908(void);
 void lbl_00001B14(void);
@@ -159,6 +163,7 @@ void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
 void lbl_000066C4(void);
+void lbl_000068C4(void);
 void lbl_00006E64(void);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
@@ -174,6 +179,7 @@ void lbl_00007C54(void);
 void lbl_00007E74(void);
 void lbl_00007FE0(void);
 void lbl_000080E0(void);
+void lbl_000082E4(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
 void lbl_000087CC(void);
@@ -213,6 +219,9 @@ void lbl_0000B460(void);
 void lbl_0000B654(void);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
+void lbl_0000BDE0(void);
+void lbl_0000BEB8(void);
+void lbl_0000C0D0(void);
 void lbl_0000C1D0(void);
 void lbl_0000CAA8(void);
 void lbl_0000D4D4(void);
@@ -223,72 +232,22 @@ void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
 void lbl_0000DA0C(void);
 void lbl_0000DAF4(void);
-void lbl_0000DBB8(void);
 void lbl_0000DD4C(void);
-void lbl_0000DE10(void);
 void lbl_0000DFA4(void);
 void lbl_0000E22C(void);
-void lbl_0000E2E0(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
-void lbl_0000E5D4(s8 *alive, struct Sprite *sprite);
+void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
+void lbl_0000EC38(void);
+void lbl_0000EDB0(void);
 
 #pragma force_active on
-// lbl_0000E5D4 (0xE5D4): sprite mainFunc for the "3..2..1" style countdown --
-// at each 60-frame boundary it restamps the text (strs+0x48.. are the one-char
-// strings "1".."4"), colour and start scale (tbl+0x78.. = 1.3/1.1/0.9/0.7),
-// then every frame grows the scale by 0.01 and fades opacity by 1/60.
-void lbl_0000E5D4(s8 *alive, struct Sprite *sprite)
+asm void lbl_00009230(void)
 {
-    u8 *strs = lbl_00015428;
-    u8 *tbl = lbl_00014D70;
-
-    if (sprite->counter == 60) {
-        sprite->mulR = 0xff;
-        sprite->mulG = 0;
-        sprite->mulB = 0;
-        sprite->scaleX = *(f32 *)(tbl + 0x78);
-        sprite->scaleY = *(f32 *)(tbl + 0x78);
-        sprite->opacity = *(f32 *)(tbl + 4);
-        strcpy(sprite->text, (char *)(strs + 0x48));
-        u_play_sound_0(6);
-    } else if (sprite->counter == 120) {
-        sprite->mulR = 0xff;
-        sprite->mulG = 0x7f;
-        sprite->mulB = 0;
-        sprite->scaleX = *(f32 *)(tbl + 0x7c);
-        sprite->scaleY = *(f32 *)(tbl + 0x7c);
-        sprite->opacity = *(f32 *)(tbl + 4);
-        strcpy(sprite->text, (char *)(strs + 0x4c));
-        u_play_sound_0(6);
-    } else if (sprite->counter == 180) {
-        sprite->mulR = 0xff;
-        sprite->mulG = 0xff;
-        sprite->mulB = 0;
-        sprite->scaleX = *(f32 *)(tbl + 0x80);
-        sprite->scaleY = *(f32 *)(tbl + 0x80);
-        sprite->opacity = *(f32 *)(tbl + 4);
-        strcpy(sprite->text, (char *)(strs + 0x50));
-        u_play_sound_0(6);
-    } else if (sprite->counter == 240) {
-        sprite->mulR = 0;
-        sprite->mulG = 0xff;
-        sprite->mulB = 0;
-        sprite->scaleX = *(f32 *)(tbl + 0x84);
-        sprite->scaleY = *(f32 *)(tbl + 0x84);
-        sprite->opacity = *(f32 *)(tbl + 4);
-        strcpy(sprite->text, (char *)(strs + 0x54));
-        u_play_sound_0(6);
-    }
-
-    sprite->scaleX = sprite->scaleX + *(f64 *)(tbl + 0x88);
-    sprite->scaleY = sprite->scaleY + *(f64 *)(tbl + 0x88);
-    sprite->opacity = sprite->opacity - *(f64 *)(tbl + 0x68);
-    sprite->counter--;
-    if (sprite->counter <= 0)
-        *alive = 0;
+    nofralloc
+#include "../asm/nonmatchings/mini_bowling/lbl_00009230.s"
 }
 #pragma force_active reset

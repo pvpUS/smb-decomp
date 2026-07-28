@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_0000D7F8.
+ * mini_bowling.c -- REL module: isolated function lbl_000089FC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -47,6 +47,10 @@
 #include "shadow.h"
 #include "vibration.h"
 
+struct BowlCamCfg {
+    u8 filler0[8];
+    f32 zero;                  // 0x08 == 0.0f
+};
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_bowling.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000F020[];
@@ -133,6 +137,10 @@ extern void u_set_minigame_callbacks_2();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_0000020C(void);
+void lbl_00000718(void);
+void lbl_000009EC(void);
+void lbl_00000F98(void);
 void lbl_00001888(void);
 void lbl_00001908(void);
 void lbl_00001B14(void);
@@ -160,6 +168,7 @@ void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
 void lbl_000066C4(void);
+void lbl_000068C4(void);
 void lbl_00006E64(void);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
@@ -175,10 +184,11 @@ void lbl_00007C54(void);
 void lbl_00007E74(void);
 void lbl_00007FE0(void);
 void lbl_000080E0(void);
+void lbl_000082E4(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
 void lbl_000087CC(void);
-void lbl_000089FC(void);
+void lbl_000089FC(struct Camera *camera, struct Ball *ball);
 void lbl_00008B8C(void);
 void lbl_00008C68(void);
 void lbl_00008D2C(void);
@@ -214,54 +224,64 @@ void lbl_0000B460(void);
 void lbl_0000B654(void);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
+void lbl_0000BDE0(void);
+void lbl_0000BEB8(void);
+void lbl_0000C0D0(void);
 void lbl_0000C1D0(void);
 void lbl_0000CAA8(void);
 void lbl_0000D4D4(void);
 void lbl_0000D598(void);
 void lbl_0000D650(void);
-void lbl_0000D7F8(Vec *, Vec *, s16, u8 *, u8 *);
+void lbl_0000D7F8(void);
 void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
 void lbl_0000DA0C(void);
 void lbl_0000DAF4(void);
-void lbl_0000DBB8(void);
 void lbl_0000DD4C(void);
-void lbl_0000DE10(void);
 void lbl_0000DFA4(void);
 void lbl_0000E22C(void);
-void lbl_0000E2E0(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
 void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
+void lbl_0000EC38(void);
+void lbl_0000EDB0(void);
+
+static inline void camera_face_direction(struct Camera *camera, Vec *lookDir)
+{
+    camera->rotY = mathutil_atan2(lookDir->x, lookDir->z) - 32768;
+    camera->rotX = mathutil_atan2(lookDir->y, mathutil_sqrt(mathutil_sum_of_sq_2(lookDir->x, lookDir->z)));
+    camera->rotZ = 0;
+}
 
 #pragma force_active on
-// lbl_0000D7F8 (0xD7F8): turn a world point into a listener-relative stereo pan
-// pair -- rotate/translate it into the listener frame, take its bearing, and fold
-// the two quarter-turn-offset angles into 0..0x7f ramps.
-void lbl_0000D7F8(Vec *point, Vec *listener, s16 yaw, u8 *panA, u8 *panB)
+// lbl_000089FC (0x89FC): camera substate 0 -- reset the camera onto the ball,
+// aim it at the fixed lane target and hand control to substate 2.
+void lbl_000089FC(struct Camera *camera, struct Ball *ball)
 {
-    Vec sp1c;
-    s16 ang;
-    u8 a;
-    u8 b;
+    struct BowlCamCfg *cfg = (struct BowlCamCfg *)lbl_00011338;
+    Vec sp10;
 
-    mathutil_mtxA_push();
-    mathutil_mtxA_from_rotate_y(yaw);
-    mathutil_mtxA_set_translate(listener);
-    mathutil_mtxA_tf_point(point, &sp1c);
-    ang = mathutil_atan2(sp1c.x, sp1c.z);
-    mathutil_mtxA_pop();
-
-    a = abs(ang + 0x4000) >> 8;
-    b = abs(ang - 0x8000) >> 8;
-    if (a >= 0x80)
-        a = 0xff - a;
-    if (b >= 0x80)
-        b = 0xff - b;
-    *panA = a;
-    *panB = b;
+    camera_clear(camera);
+    camera->unkAC = ball->pos;
+    camera->eye = ball->pos;
+    camera->lookAt = *(Vec *)lbl_000153E8;
+    camera->eyeVel.x = cfg->zero;
+    camera->eyeVel.y = cfg->zero;
+    camera->eyeVel.z = cfg->zero;
+    camera->lookAtVel.x = cfg->zero;
+    camera->lookAtVel.y = cfg->zero;
+    camera->lookAtVel.z = cfg->zero;
+    sp10.x = camera->lookAt.x - camera->eye.x;
+    sp10.y = camera->lookAt.y - camera->eye.y;
+    sp10.z = camera->lookAt.z - camera->eye.z;
+    camera_face_direction(camera, &sp10);
+    camera->unk26 = 9;
+    camera->sub28.fov = 0x1300;
+    cameraInfo[ball->playerId].flags &= ~4;
+    cameraInfo[ball->playerId].flags |= 8;
+    camera->subState = 2;
 }
 #pragma force_active reset

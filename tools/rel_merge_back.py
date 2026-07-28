@@ -218,11 +218,37 @@ def verify(module):
     return ok
 
 
+USAGE = """usage: rel_merge_back.py [--dry-run] (--all | <module>...)
+
+Merges a warm copy at C:/tmp/smbm/<module> back into the main tree and rebuilds
+that module's REL here, gating on its golden sha1.
+
+  --all       every module (%s)
+  --dry-run   report what would be copied, touch nothing
+  -h/--help   this text
+
+Naming a module explicitly is STRONGLY preferred: a bare invocation merges ALL
+nine warm copies, which silently pulls in half-written state from any agent that
+is still working.  That is why --all is now required rather than implied.
+""" % ', '.join(MODULES)
+
+
 def main():
     args = sys.argv[1:]
+    if '-h' in args or '--help' in args:
+        sys.exit(USAGE)
     dry = '--dry-run' in args
-    args = [a for a in args if not a.startswith('--')]
-    mods = list(MODULES) if (not args or '--all' in sys.argv[1:]) else args
+    flags = {a for a in args if a.startswith('-')}
+    unknown_flags = flags - {'--dry-run', '--all'}
+    if unknown_flags:
+        sys.exit('unknown flag(s): %s\n\n%s'
+                 % (', '.join(sorted(unknown_flags)), USAGE))
+    args = [a for a in args if not a.startswith('-')]
+    if not args and '--all' not in flags:
+        # Never fall through to "everything" on an empty module list -- an
+        # unrecognised flag used to land here and merge all nine trees.
+        sys.exit('refusing to merge every module implicitly.\n\n%s' % USAGE)
+    mods = list(MODULES) if '--all' in flags else args
     unknown = [m for m in mods if m not in MODULES]
     if unknown:
         sys.exit('unknown module(s): %s\nknown: %s'

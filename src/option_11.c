@@ -1,6 +1,6 @@
 /*
  * option.c -- REL module, structurally split for per-function
- * byte-matching (part 11 of 53; contiguous .text range).  Each function
+ * byte-matching (part 11 of 60; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/option/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -123,6 +123,7 @@ void lbl_00004204(void);
 void lbl_00004260(void);
 void lbl_000042BC(void);
 void lbl_000047D0(void);
+void lbl_00004858(void);
 void lbl_00004EB4(void);
 void lbl_00005020(void);
 void lbl_00005340(void);

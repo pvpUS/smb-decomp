@@ -1,6 +1,6 @@
 /*
  * option.c -- REL module, structurally split for per-function
- * byte-matching (part 46 of 53; contiguous .text range).  Each function
+ * byte-matching (part 46 of 60; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/option/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -120,6 +120,7 @@ void lbl_00004204(void);
 void lbl_00004260(void);
 void lbl_000042BC(void);
 void lbl_000047D0(void);
+void lbl_00004858(void);
 void lbl_00004EB4(void);
 void lbl_00005020(void);
 void lbl_00005340(void);
@@ -134,8 +135,6 @@ void lbl_00007F90(void);
 void lbl_00008048(void);
 void lbl_00008068(void);
 void lbl_00008A34(void);
-static void lbl_00008AEC(void);
-static void lbl_00008C40(void);
 void lbl_0000925C(void);
 void lbl_000093C0(void);
 void lbl_00009454(void);
@@ -151,29 +150,9 @@ void lbl_0000B218(void);
 void lbl_0000C148(void);
 
 #pragma force_active on
-static asm void lbl_00008AEC(void)
+asm void lbl_00008068(void)
 {
     nofralloc
-#include "../asm/nonmatchings/option/lbl_00008AEC.s"
-}
-static asm void lbl_00008C40(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00008C40.s"
-}
-asm void lbl_0000925C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_0000925C.s"
-}
-asm void lbl_000093C0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_000093C0.s"
-}
-asm void lbl_00009454(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00009454.s"
+#include "../asm/nonmatchings/option/lbl_00008068.s"
 }
 #pragma force_active reset

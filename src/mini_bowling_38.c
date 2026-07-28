@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_0000B654.
+ * mini_bowling.c -- REL module: isolated function lbl_00007FE0.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -133,6 +133,10 @@ extern void u_set_minigame_callbacks_2();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_0000020C(void);
+void lbl_00000718(void);
+void lbl_000009EC(void);
+void lbl_00000F98(void);
 void lbl_00001888(void);
 void lbl_00001908(void);
 void lbl_00001B14(void);
@@ -160,6 +164,7 @@ void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
 void lbl_000066C4(void);
+void lbl_000068C4(void);
 void lbl_00006E64(void);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
@@ -173,8 +178,9 @@ void lbl_000079E8(void);
 void lbl_00007A6C(void);
 void lbl_00007C54(void);
 void lbl_00007E74(void);
-void lbl_00007FE0(void);
+void lbl_00007FE0(struct Ball *ball);
 void lbl_000080E0(void);
+void lbl_000082E4(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
 void lbl_000087CC(void);
@@ -214,6 +220,9 @@ void lbl_0000B460(void);
 void lbl_0000B654(void);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
+void lbl_0000BDE0(void);
+void lbl_0000BEB8(void);
+void lbl_0000C0D0(void);
 void lbl_0000C1D0(void);
 void lbl_0000CAA8(void);
 void lbl_0000D4D4(void);
@@ -224,23 +233,51 @@ void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
 void lbl_0000DA0C(void);
 void lbl_0000DAF4(void);
-void lbl_0000DBB8(void);
 void lbl_0000DD4C(void);
-void lbl_0000DE10(void);
 void lbl_0000DFA4(void);
 void lbl_0000E22C(void);
-void lbl_0000E2E0(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
 void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
+void lbl_0000EC38(void);
+void lbl_0000EDB0(void);
 
 #pragma force_active on
-asm void lbl_0000B654(void)
+// lbl_00007FE0 (0x7FE0): ball substate 3 -> 4 -- park the ball back at the foul
+// line, kill the rolling/spin sounds and re-arm the frame counter.
+void lbl_00007FE0(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000B654.s"
+    u8 *tbl = lbl_00011258;
+    s32 *snd = (s32 *)lbl_000153E0;
+
+    ball->pos.x = *(f32 *)(tbl + 0x14);
+    ball->pos.y = *(f32 *)(tbl + 0x54);
+    ball->pos.z = *(f32 *)(tbl + 0x58);
+    ball->prevPos.x = *(f32 *)(tbl + 0x14);
+    ball->prevPos.y = *(f32 *)(tbl + 0x54);
+    ball->prevPos.z = *(f32 *)(tbl + 0x58);
+    ball->vel.x = *(f32 *)(tbl + 0x14);
+    ball->vel.y = *(f32 *)(tbl + 0x5c) * ball->accel;
+    ball->vel.z = *(f32 *)(tbl + 0x60);
+    ball->rotX = 0;
+    ball->rotY = 0;
+    ball->rotZ = 0;
+    ball->unk60 = 0x1000;
+    ball->unk62 = 0;
+    ball->unk64 = 0;
+    ball->speed = *(f32 *)(tbl + 0x14);
+    if (snd[0] != -1) {
+        SoundOff(snd[0]);
+        snd[0] = -1;
+    }
+    if (snd[1] != -1) {
+        SoundOff(snd[1]);
+        snd[1] = -1;
+    }
+    ball->unk80 = 0;
+    ball->unk148 = 4;
 }
 #pragma force_active reset

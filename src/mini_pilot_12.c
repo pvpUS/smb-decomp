@@ -237,9 +237,5 @@ asm void lbl_000021B4(void)
     nofralloc
 #include "../asm/nonmatchings/mini_pilot/lbl_000021B4.s"
 }
-asm void lbl_000022D8(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_000022D8.s"
-}
+
 #pragma force_active reset

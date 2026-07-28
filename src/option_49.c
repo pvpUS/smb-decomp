@@ -1,5 +1,5 @@
 /*
- * option.c -- REL module: isolated function lbl_0000A534.
+ * option.c -- REL module: isolated function lbl_000093C0.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -115,12 +115,13 @@ void lbl_0000266C(void);
 void lbl_000038A8(void);
 void lbl_00003B90(void);
 void lbl_00003F10(void);
-u8 *lbl_00003F6C(int);
+void lbl_00003F6C(void);
 void lbl_00003FF0(void);
 void lbl_00004204(void);
 void lbl_00004260(void);
 void lbl_000042BC(void);
 void lbl_000047D0(void);
+void lbl_00004858(void);
 void lbl_00004EB4(void);
 void lbl_00005020(void);
 void lbl_00005340(void);
@@ -150,35 +151,9 @@ void lbl_0000B218(void);
 void lbl_0000C148(void);
 
 #pragma force_active on
-void lbl_0000A534(void)
+asm void lbl_000093C0(void)
 {
-    u8 *c = lbl_0000C370;
-    u8 *p;
-    struct Sprite *sprite;
-
-    if (find_sprite_with_tag(0x60) != NULL)
-    {
-        *(u8 *)(lbl_10000000 + 0x13C) = 4;
-    }
-    else
-    {
-        p = lbl_00003F6C(0x60);
-        if (p != NULL)
-        {
-            p[0] = 4;
-            p[1] = 30;
-            *(f32 *)(p + 4) = *(f32 *)(c + 0x24);
-            *(f32 *)(p + 8) = *(f32 *)c;
-        }
-        *(f32 *)(lbl_10000000 + 0x148) = *(f32 *)(c + 0x98);
-        sprite = create_sprite();
-        if (sprite != NULL)
-        {
-            sprite->tag = 0x60;
-            sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_00009BB4;
-            sprite->drawFunc = (void (*)(struct Sprite *))lbl_00009C3C;
-            strcpy(sprite->text, (char *)lbl_0000D310);
-        }
-    }
+    nofralloc
+#include "../asm/nonmatchings/option/lbl_000093C0.s"
 }
 #pragma force_active reset

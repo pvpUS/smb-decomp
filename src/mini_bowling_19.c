@@ -1,5 +1,5 @@
 /*
- * mini_bowling.c -- REL module: isolated function lbl_000087CC.
+ * mini_bowling.c -- REL module: isolated function lbl_00004BD8.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -133,6 +133,10 @@ extern void u_set_minigame_callbacks_2();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
+void lbl_0000020C(void);
+void lbl_00000718(void);
+void lbl_000009EC(void);
+void lbl_00000F98(void);
 void lbl_00001888(void);
 void lbl_00001908(void);
 void lbl_00001B14(void);
@@ -160,6 +164,7 @@ void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
 void lbl_000066C4(void);
+void lbl_000068C4(void);
 void lbl_00006E64(void);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
@@ -175,9 +180,10 @@ void lbl_00007C54(void);
 void lbl_00007E74(void);
 void lbl_00007FE0(void);
 void lbl_000080E0(void);
+void lbl_000082E4(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
-void lbl_000087CC(struct Camera *, Vec *, Vec *, s16, float);
+void lbl_000087CC(void);
 void lbl_000089FC(void);
 void lbl_00008B8C(void);
 void lbl_00008C68(void);
@@ -214,6 +220,9 @@ void lbl_0000B460(void);
 void lbl_0000B654(void);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
+void lbl_0000BDE0(void);
+void lbl_0000BEB8(void);
+void lbl_0000C0D0(void);
 void lbl_0000C1D0(void);
 void lbl_0000CAA8(void);
 void lbl_0000D4D4(void);
@@ -224,57 +233,22 @@ void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
 void lbl_0000DA0C(void);
 void lbl_0000DAF4(void);
-void lbl_0000DBB8(void);
 void lbl_0000DD4C(void);
-void lbl_0000DE10(void);
 void lbl_0000DFA4(void);
 void lbl_0000E22C(void);
-void lbl_0000E2E0(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
 void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
-
-static inline void camera_face_direction(struct Camera *camera, Vec *lookDir)
-{
-    camera->rotY = mathutil_atan2(lookDir->x, lookDir->z) - 32768;
-    camera->rotX = mathutil_atan2(lookDir->y, mathutil_sqrt(mathutil_sum_of_sq_2(lookDir->x, lookDir->z)));
-    camera->rotZ = 0;
-}
+void lbl_0000EC38(void);
+void lbl_0000EDB0(void);
 
 #pragma force_active on
-// lbl_000087CC (0x87CC): ease the camera towards the given eye/lookAt/fov by the
-// fraction `t`, re-derive its Euler angles and record this frame's velocities.
-void lbl_000087CC(struct Camera *camera, Vec *eye, Vec *lookAt, s16 fov, float t)
+asm void lbl_00004BD8(void)
 {
-    Vec sp34;
-    Vec sp28;
-    Vec sp1c;
-
-    sp34 = camera->eye;
-    sp28 = camera->lookAt;
-
-    camera->eye.x = camera->eye.x + t * (eye->x - camera->eye.x);
-    camera->eye.y = camera->eye.y + t * (eye->y - camera->eye.y);
-    camera->eye.z = camera->eye.z + t * (eye->z - camera->eye.z);
-    camera->lookAt.x = camera->lookAt.x + t * (lookAt->x - camera->lookAt.x);
-    camera->lookAt.y = camera->lookAt.y + t * (lookAt->y - camera->lookAt.y);
-    camera->lookAt.z = camera->lookAt.z + t * (lookAt->z - camera->lookAt.z);
-
-    sp1c.x = camera->lookAt.x - camera->eye.x;
-    sp1c.y = camera->lookAt.y - camera->eye.y;
-    sp1c.z = camera->lookAt.z - camera->eye.z;
-    camera_face_direction(camera, &sp1c);
-
-    camera->sub28.fov = camera->sub28.fov + t * (fov - camera->sub28.fov);
-
-    camera->eyeVel.x = camera->eye.x - sp34.x;
-    camera->eyeVel.y = camera->eye.y - sp34.y;
-    camera->eyeVel.z = camera->eye.z - sp34.z;
-    camera->lookAtVel.x = camera->lookAt.x - sp28.x;
-    camera->lookAtVel.y = camera->lookAt.y - sp28.y;
-    camera->lookAtVel.z = camera->lookAt.z - sp28.z;
+    nofralloc
+#include "../asm/nonmatchings/mini_bowling/lbl_00004BD8.s"
 }
 #pragma force_active reset
