@@ -194,6 +194,38 @@ def score(tree, stem, target, label):
     return FAILED, out + '\n(no MATCH/DIFF verdict -- treat as no result)'
 
 
+OBJDUMP = 'C:/devkitPro/devkitPPC/bin/powerpc-eabi-objdump.exe'
+
+
+def section_audit(tree, stem):
+    """Non-.text sections in each of the module's objects.
+
+    sel_ngc, run 7: rel_fdiff locates a function by symbol, so a per-function
+    MATCH survives things that wreck the module layout -- an extra out-of-line
+    copy of a helper declared plain `static` instead of `static inline`, or an
+    unexpected .rodata. Both pass the per-function gate while the REL hashes
+    non-golden, with nothing to point at.
+
+    Run 6's rule makes this readable: a pure-C object that reads pool constants
+    EXTERNALLY emits no .rodata at all, so .rodata on a converted object means
+    either a real int->float conversion (which needs a carve) or something
+    unintended -- `#include <math.h>` alone emits 16 bytes for an inline sqrt's
+    0.5 and 3.0, and that cost sel_ngc a golden hash.
+    """
+    rows = []
+    for obj in sorted(module_objects(tree, stem)):
+        r = subprocess.run([OBJDUMP, '-h', obj], capture_output=True, text=True)
+        secs = []
+        for m in re.finditer(r'^\s*\d+\s+(\.\S+)\s+([0-9a-f]+)', r.stdout, re.M):
+            name, size = m.group(1), int(m.group(2), 16)
+            if size and name not in ('.text', '.comment', '.debug_info'):
+                if not name.startswith(('.debug', '.rela', '.line', '.stab')):
+                    secs.append('%s 0x%x' % (name, size))
+        if secs:
+            rows.append((os.path.basename(obj), secs))
+    return rows
+
+
 def golden_sha1(target):
     """The expected hash for one artifact, from the repo's manifest."""
     with open(os.path.join(REPO, 'supermonkeyball.sha1')) as f:
@@ -224,6 +256,16 @@ def gate(tree, stem, target, tmp):
         print('GOLDEN  %s  %s' % (got, target))
         return 0
     print('NOT GOLDEN\n  got  %s\n  want %s' % (got, want))
+    rows = section_audit(tree, stem)
+    if rows:
+        print('\nobjects carrying non-.text sections -- a converted pure-C object\n'
+              'reading its pool externally should have NONE:')
+        for name, secs in rows:
+            print('  %-34s %s' % (name, ', '.join(secs)))
+        print('Expect only the module stub and any carve-hole owner here. An\n'
+              'unexpected .rodata is usually an int->float conversion needing a\n'
+              'carve, or an #include that emitted constants (math.h emits 16\n'
+              'bytes for an inline sqrt even if unused).')
     return 1
 
 
