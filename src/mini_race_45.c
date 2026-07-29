@@ -377,37 +377,6 @@ void lbl_00012D50(void);
 
 #pragma force_active on
 
-// Squared-distance twin of mathutil.h's mathutil_vec_distance (same asm block,
-// without the trailing mathutil_sqrt).  Not present in mathutil.h; every REL
-// minigame module uses it.  SHOULD BE PROMOTED TO src/mathutil.h.
-static inline float mathutil_vec_sq_distance(register Vec *a, register Vec *b)
-{
-#ifdef C_ONLY
-    return (a->x - b->x) * (a->x - b->x)
-         + (a->y - b->y) * (a->y - b->y)
-         + (a->z - b->z) * (a->z - b->z);
-#else
-    register float x1, y1, z1, x2, y2, z2;
-    register float result;
-    asm
-    {
-        lfs x1, a->x
-        lfs x2, b->x
-        lfs y1, a->y
-        lfs y2, b->y
-        lfs z1, a->z
-        lfs z2, b->z
-        fsubs x1, x1, x2
-        fsubs y1, y1, y2
-        fsubs z1, z1, z2
-        fmuls result, x1, x1
-        fmadds result, y1, y1, result
-        fmadds result, z1, z1, result
-    }
-    return result;
-#endif
-}
-
 struct RacePathHdr
 {
     u8 filler0[0x30];

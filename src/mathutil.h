@@ -327,6 +327,48 @@ static inline float mathutil_vec_distance(register Vec *a, register Vec *b)
 #endif
 }
 
+// Squared-distance twin of mathutil_vec_distance above: the same asm block
+// without the trailing mathutil_sqrt.  The original game clearly had it -- the
+// 12-instruction sequence recurs verbatim across the REL minigames and NO plain
+// C spelling reproduces it (six live FPRs, every load hoisted above the
+// subtractions; mathutil_sum_of_sq_3(a->x - b->x, ...) gives a five-register
+// form that floors at 10 diffs over ~150 variants).  Found in run 7, where
+// adding it locally took a function from 10 diffs to MATCH on the first build
+// and then landed five more.
+//
+// Where the block is FOLLOWED by `bl mathutil_sqrt`, you want
+// mathutil_vec_distance instead -- check the asm before reaching for this.
+//
+// Inline asm inside a `static inline` does NOT trigger the asm-sibling
+// scheduler deopt, which is why this belongs in a header rather than a .c.
+static inline float mathutil_vec_sq_distance(register Vec *a, register Vec *b)
+{
+#ifdef C_ONLY
+    return (a->x - b->x) * (a->x - b->x)
+         + (a->y - b->y) * (a->y - b->y)
+         + (a->z - b->z) * (a->z - b->z);
+#else
+    register float x1, y1, z1, x2, y2, z2;
+    register float result;
+    asm
+    {
+        lfs x1, a->x
+        lfs x2, b->x
+        lfs y1, a->y
+        lfs y2, b->y
+        lfs z1, a->z
+        lfs z2, b->z
+        fsubs x1, x1, x2
+        fsubs y1, y1, y2
+        fsubs z1, z1, z2
+        fmuls result, x1, x1
+        fmadds result, y1, y1, result
+        fmadds result, z1, z1, result
+    }
+    return result;
+#endif
+}
+
 static inline float mathutil_vec_dot_prod(register Vec *a, register Vec *b)
 {
 #ifdef C_ONLY

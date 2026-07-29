@@ -126,6 +126,31 @@ struct Camera
     currentCamera = cameraBackup; \
 }
 
+// Same loop, but reaching currentCamera through a local pointer-to-the-global.
+// The two are NOT interchangeable and the difference is visible in the asm:
+// CAMERA_FOREACH gives the fused `lwzu r6, currentCamera@l(r4)`; this one gives
+// the unfused `lis / addi / lwz`.  Read the original and pick -- neither is the
+// "right" one.  (mini_bowling, runs 7-8.)
+//
+// A third spelling exists: declaring cameraBackup BEFORE camera swaps r3/r4
+// while staying fused.  That instance of the general rule -- for two globals
+// competing for a register, the one referenced first in the source wins -- is
+// worth knowing before you sweep this macro's shape, because the shape is
+// usually not the lever.
+#define CAMERA_FOREACH_2(code) \
+{ \
+    struct Camera **cc = &currentCamera; \
+    struct Camera *camera = &cameraInfo[0]; \
+    struct Camera *cameraBackup = *cc; \
+    int i; \
+    for (i = 0; i < 4; i++, camera++) \
+    { \
+        *cc = camera; \
+        { code } \
+    } \
+    *cc = cameraBackup; \
+}
+
 extern s16 lbl_802F1C30;
 //extern s8 lbl_802F1C32;
 extern s32 u_cameraId2;

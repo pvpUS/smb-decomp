@@ -245,20 +245,6 @@ void lbl_0000E894(void);
 void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
-#define CAMERA_FOREACH_2(code) \
-{ \
-    struct Camera **cc = &currentCamera; \
-    struct Camera *camera = &cameraInfo[0]; \
-    struct Camera *cameraBackup = *cc; \
-    int i; \
-    for (i = 0; i < 4; i++, camera++) \
-    { \
-        *cc = camera; \
-        { code } \
-    } \
-    *cc = cameraBackup; \
-}
-
 #pragma force_active on
 void lbl_00004410(void)
 {
