@@ -152,7 +152,7 @@ extern void func_8009DB40();
 extern void func_8009DB9C();
 extern void func_8009DDC4();
 extern void mini_commend_free_data();
-extern void sqrt();
+extern double sqrt(double);
 extern void u_load_minigame_graphics();
 extern void window_printf_1();
 
@@ -211,7 +211,7 @@ void lbl_00017408(void);
 void lbl_00017A00(void);
 void lbl_00018008(void);
 void lbl_00018474(void);
-void lbl_00018608(void);
+f32 lbl_00018608(double, double, double, double, double, double);
 void lbl_000186EC(void);
 void lbl_000189B4(void);
 void lbl_00018A98(void);
@@ -227,7 +227,7 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm void lbl_00018608(void)
+asm f32 lbl_00018608(double, double, double, double, double, double)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_billiards/lbl_00018608.s"

@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_000056BC.
+ * test_mode.c -- REL module: isolated function lbl_0000253C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -189,18 +189,25 @@ void _unresolved(void);
 void lbl_00000208(void);
 void lbl_00000270(void);
 void lbl_00000630(void);
+void lbl_00000780(void);
 void lbl_00000934(void);
 void lbl_00001B78(void);
 void lbl_00002108(void);
 void lbl_0000215C(void);
+static void lbl_0000253C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
+void lbl_00003C34(void);
+void lbl_00003D94(void);
+void lbl_000040B4(void);
+void lbl_0000502C(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
 void lbl_000057C0(void);
 void lbl_000065F0(void);
+void lbl_00006974(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -210,6 +217,7 @@ void lbl_00008808(void);
 void lbl_0000884C(void);
 void lbl_00008ADC(void);
 void lbl_00008B00(void);
+void lbl_00008B44(void);
 void lbl_00008F40(void);
 void lbl_00009060(void);
 void lbl_00009338(void);
@@ -271,25 +279,8 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_000056BC(void)
+static void lbl_0000253C(void)
 {
-    u8 *p = lbl_0000FE78;
-    GXColor amb;
-
-    amb = *(GXColor *)(p + 0x180);
-    GXSetChanMatColor(GX_COLOR0, *(GXColor *)(p + 0x17C));
-    GXSetChanAmbColor(GX_COLOR0, amb);
-    GXSetChanCtrl(GX_COLOR0A0, GX_FALSE, GX_SRC_REG, GX_SRC_REG, 0, GX_DF_NONE, GX_AF_NONE);
-    GXSetNumChans(1);
-    GXSetTevOrder_cached(GX_TEVSTAGE0, GX_TEXCOORD_NULL, GX_TEXMAP_NULL, GX_COLOR0A0);
-    GXSetTevOp_cached(GX_TEVSTAGE0, GX_PASSCLR);
-    GXSetNumTexGens(0);
-    GXSetNumTevStages_cached(1);
-    mathutil_mtxA_from_mtxB_translate(&currentCamera->lookAt);
-    mathutil_mtxA_scale_s(*(float *)(p + 0x184));
-    GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
-    GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
-    GXSetCurrentMtx(GX_PNMTX0);
-    GXDrawSphere(8, 8);
+    lbl_00009560();
 }
 #pragma force_active reset

@@ -264,11 +264,11 @@ void lbl_000040C0(void);
 void lbl_00004284(void);
 void lbl_000044AC(void);
 void lbl_00004634(struct Ball *);
-static void lbl_0000480C(struct Ball *);
-static void lbl_00004D78(void);
-static void lbl_0000528C(void);
-static void lbl_000055CC(void);
-static void lbl_00005A84(void);
+void lbl_0000480C(struct Ball *);
+void lbl_00004D78(void);
+void lbl_0000528C(void);
+void lbl_000055CC(void);
+void lbl_00005A84(void);
 void lbl_00005CEC(void);
 void lbl_00005DDC(void);
 void lbl_00005FC4(void);
@@ -379,6 +379,14 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
+void lbl_00004910(void);
+void lbl_00004BB0(void);
+void lbl_000050F0(void);
+void lbl_00005428(void);
+void lbl_0000568C(void);
+void lbl_00005884(void);
+void lbl_00005998(void);
+void lbl_00005C20(void);
 #pragma force_active on
 // Per-racer state hanging off struct Ball::unk144 inside this module.
 // INVENTED -- offsets read off the asm, names are placeholders.
@@ -444,30 +452,10 @@ static void lbl_00004718(struct Ball *ball)
     ball->unk148 = 5;
     lbl_0000480C(ball);
 }
-static asm void lbl_0000480C(struct Ball *ball)
+asm void lbl_0000480C(struct Ball *ball)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_0000480C.s"
-}
-static asm void lbl_00004D78(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00004D78.s"
-}
-static asm void lbl_0000528C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000528C.s"
-}
-static asm void lbl_000055CC(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000055CC.s"
-}
-static asm void lbl_00005A84(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00005A84.s"
 }
 
 #pragma force_active reset

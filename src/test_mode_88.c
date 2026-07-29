@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_0000FD8C.
+ * test_mode.c -- REL module: isolated function lbl_0000BE94.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -189,6 +189,7 @@ void _unresolved(void);
 void lbl_00000208(void);
 void lbl_00000270(void);
 void lbl_00000630(void);
+void lbl_00000780(void);
 void lbl_00000934(void);
 void lbl_00001B78(void);
 void lbl_00002108(void);
@@ -196,11 +197,16 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
+void lbl_00003C34(void);
+void lbl_00003D94(void);
+void lbl_000040B4(void);
+void lbl_0000502C(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
 void lbl_000057C0(void);
 void lbl_000065F0(void);
+void lbl_00006974(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -210,6 +216,7 @@ void lbl_00008808(void);
 void lbl_0000884C(void);
 void lbl_00008ADC(void);
 void lbl_00008B00(void);
+void lbl_00008B44(void);
 void lbl_00008F40(void);
 void lbl_00009060(void);
 void lbl_00009338(void);
@@ -271,26 +278,7 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_0000FD8C(void)
+void lbl_0000BE94(void)
 {
-    float *k = (float *)lbl_000101E0;
-    u8 *p = lbl_10003BF8;
-
-    if (*(int *)(p + 0xBC) == 3)
-        lbl_0000E3E8();
-    if (controllerInfo[0].pressed.button & PAD_TRIGGER_L)
-        *(int *)(p + 0xC8) ^= 1;
-    if (*(int *)(p + 0xC8) != 0)
-    {
-        mathutil_mtxA_push();
-        mathutil_mtxA_from_mtxB();
-        mathutil_mtxA_translate_xyz(k[3], k[50], k[3]);
-        mathutil_mtxA_rotate_z(*(s16 *)(p + 0xCC) / 4);
-        mathutil_mtxA_rotate_x(*(s16 *)(p + 0xCC));
-        *(s16 *)(p + 0xCC) = *(s16 *)(p + 0xCC) + 0x20;
-        avdisp_draw_model_unculled_sort_translucent(commonGma->modelEntries[18].model);
-        avdisp_draw_model_unculled_sort_translucent(commonGma->modelEntries[22].model);
-        mathutil_mtxA_pop();
-    }
 }
 #pragma force_active reset

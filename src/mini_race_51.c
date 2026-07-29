@@ -375,10 +375,16 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
+static void lbl_0000A6D4(void);
 #pragma force_active on
 static asm void lbl_0000A4DC(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_0000A4DC.s"
+}
+static asm void lbl_0000A6D4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_0000A6D4.s"
 }
 #pragma force_active reset

@@ -4,7 +4,400 @@
 
 ---
 
-## 0.14 — RUN 8 DONE (2026-07-28): +4,377 insn, 14.81% -> 17.11%. START HERE.
+## 0.15 — RUN 9 DONE (2026-07-29): +3,302 insn, 17.11% -> 18.84%. START HERE.
+
+Nine parallel agents, one per module. **The rate declined again — 75% of run 8,
+which was 58% of run 7.** Three consecutive declines: 7,575 -> 4,377 -> 3,302.
+
+| module | funcs | insn | % | gained |
+|---|---|---|---|---|
+| mini_bowling | 39 asm | 5285/15313 | 34.51% | +3 fns / +319 |
+| mini_race | 83 asm | 5770/19817 | 29.12% | +10 fns / +556 |
+| mini_pilot | 25 asm | 3414/12137 | 28.13% | +1 fn / +61 |
+| sel_ngc | 50/73 | 4145/18084 | 22.92% | +1 fn / +338 |
+| test_mode | 72 C bodies | 3440/16231 | 21.19% | **+17 fns / +606** |
+| option | 43/71 | 2038/12375 | 16.47% | +1 fn / +109 |
+| mini_fight | 142 fns left | 4262/28588 | 14.91% | +5 fns / **+642** |
+| mini_golf | 82/118 | 4456/38919 | 11.45% | +1 fn / +87 |
+| mini_billiards | 33/70 | 3041/28793 | 10.56% | +3 fns / +584 |
+| **TOTAL** | | **35851/190257** | **18.84%** | **+42 / +3,302** |
+
+Run 8 falsified the measurements. **Run 9 falsified the instrument that replaced
+them, and the controls that were supposed to catch it.** Both defects were
+introduced by run 8's own fixes.
+
+### THE BIG LESSON: the controls have been failing silently, and now we know why
+
+Run 8's rule was "always include a deliberately-wrong control, and make it
+STRUCTURALLY wrong." **Four agents' controls failed this run anyway.** mini_golf
+found the mechanism:
+
+> **`rel_ascore.py` and `asweep.py` MASK the displacement field of `b`/`bl`**
+> (`nz()` on opcodes 16/18). A control that only changes a branch target, or
+> which function is called, is **completely invisible** — it scores identical to
+> baseline.
+
+That retroactively explains test_mode's run-8 failure and mini_billiards',
+sel_ngc's and mini_golf's this run. **A control must change an opcode, a
+register, or a NON-BRANCH displacement.** Every "this axis is dead" verdict whose
+only validation was a branch-only or immediate-only control is **unproven** —
+that includes several in §0.14.
+
+Worse, **the aligned score is not proof of proximity.** On mini_golf
+`lbl_0000FBC8`, three structurally *wrong* variants score **4** (they emit an
+`fmul f0,f0,f0` the original never does) while the variant whose instructions
+match the original exactly scores **9**. Aligned >> raw, but you still have to
+read the instructions. `_scratch_mini_golf/regions.py` prints the **contents** of
+each edit region side by side and is what found both of that module's idioms.
+
+### THE SECOND INSTRUMENT BUG: `rel_ascore.py` scores a ROW, not a FUNCTION
+
+Found independently by **mini_race, mini_fight and test_mode**, all three of which
+built their own per-function slicer. 17 of mini_fight's 154 rows hold more than
+one function, so a "309-insn function" is four, and one bad body hides three good
+ones. `pscore.py` slices using the **map's per-function address+size** (a fixed
+offset slides every later slice once a body changes length).
+
+`rel_rowcount.py` has the complementary hole: **its entry heuristic requires
+`mflr`/`stwu`, so it MISSES LEAF FUNCTIONS.** test_mode's second-largest
+conversion (84 insn) starts with a bare `lis` and was invisible to it and to the
+recon; it was found by reading asm. **A leaf-aware entry scan is unfinished work
+in every module.**
+
+### THE COUNTING FINDING, PART 2: classify per FUNCTION, not per ROW
+
+§0.14 established that a row is a file. Run 9 shows the reachability tables
+inherited that bug in the other direction: **one `bctr` (or one `lis rN,0x4330`)
+in a row condemned every sibling in it.** test_mode re-derived per function:
+
+| | run 8 (per row) | run 9 (per function) |
+|---|---|---|
+| c-FREE | 20 fns / 4,432 | **47 fns / 5,874** |
+| d-JUMPTBL | 5 / **3,514** | 5 / **2,632** |
+
+**+1,442 insn appeared with no work done.** A 1,169-insn row written off as a
+jump table holds three `bctr`-free functions worth 484; a 385-insn a-BLOCKED row
+holds seven clean functions, six of which were converted. **Instruction totals are
+unchanged — only classification.** Every module's table needs this treatment;
+only test_mode, mini_fight, mini_billiards and mini_pilot have had it.
+
+And **mini_race falsified §0.14's own function counts**: `lbl_0001157C` = 19 and
+`lbl_00012D50` = 8 are **not established** — both rows contain `bctr`, and the
+detector cannot tell a jump-table arm from a function start, so it over-splits
+(21 and 10, with 1- and 3-instruction phantoms). `lbl_000008B4` = 15 IS confirmed.
+
+### §2 IS ONLY HALF TRUE — and the counter-example is cheap
+
+Partial conversion of a group file works, but **mwcc's address-fold peephole is
+ALSO disabled in a mixed TU**, not just the scheduler and peephole. Nearly every
+mini_race function loads a scalar module global. Same C body:
+
+| `lbl_00001FDC` (15 insn) | result |
+|---|---|
+| in `mini_race_9.c` with 14 asm siblings | **4 in 3** |
+| alone in `mini_race_9o.c` | **MATCH** |
+
+The wrong words are `lis;addi;lwz 0(rX)` instead of `lis;lwz @l(rX)`.
+**RULE: if a residual is an unfolded `@l`, stop sweeping and isolate.**
+
+### THE RECON ERROR THAT KEEPS PAYING: only the SIGNED magic was ever tested
+
+Three modules found hidden magic doubles by adding `43300000 00000000`:
+- **sel_ngc — this FALSIFIES run 8's "capped at ~32%" verdict.** `lbl_00011EC8`
+  sits unowned in the data blob; its carve is **landed and gates GOLDEN**, and
+  run 10's hand-over is "decompile one function, delete one SOURCES line."
+  Ceiling corrected to **34.0%**, and run 8's "HARD STOP" at `lbl_0000C518` is a
+  scheduler risk (bounded by §2), not a wall — a further 1,649 if it holds.
+- **mini_bowling had three uncarved magics, not two** (`recon8.py` tested
+  `words[:2] == ['0x43300000','0x80000000']` only).
+- mini_billiards re-confirmed its six.
+
+**Structural bound proved (sel_ngc): signed and unsigned magic can never share an
+object** — a TU doing both emits them adjacent.
+
+### CARVE: mini_golf's 17,209-insn plan is MECHANICALLY PROVEN
+
+Run 8 costed it; run 9 built it. **All six holes carved simultaneously, module
+gates GOLDEN.** Each hole is filled by a data-only `.s` object at its owning
+`.c`'s SOURCES position — byte-equivalent to the `.c` emitting the 8 bytes itself,
+since a pure-C object reading its pool externally emits no `.rodata`.
+**Segmentation, hole ordering, zero-size aliasing and the SOURCES interleave are
+all correct for the whole plan at once.** The tool confirmed the loosened
+ownership rule five times in its own output. `--from 36fe55d` reproduces the
+committed carve byte-for-byte. **Rank 1 does NOT need the `lbl_00012EEC`
+isolate.** Script: `_scratch_mini_golf/carve_all.py`, re-runnable.
+
+Two corrections in the other direction:
+- **option's carve is worth ~2,055, not 3,389.** `lbl_00008068`(627) is the sole
+  solo-eligible owner of hole `lbl_0000C4B0` **and is itself blocked — that hole
+  is worth 0.**
+- **mini_pilot's `0xC6D8` is NOT gated on `lbl_0000B130`** (an orchestrator
+  relay, checked with the tool rather than argued): `--into src/mini_pilot_50d.c`
+  is accepted, giving `lbl_0000B624` (+298) or `lbl_0000BACC` (+234) with **no
+  prerequisite at all.**
+
+### TWO NEW FICTIONAL-MATCH MODES, both inside run 8's own tools
+
+- **`rel_rematch.py` SILENTLY DELETES CODE.** It reconstructs `--extra-start`
+  only from pure-C files, so a still-asm label `rel_split` cannot auto-detect
+  merges into its predecessor — and **if that predecessor is already pure C the
+  instructions vanish from `.text`.** test_mode lost 48 instructions to a
+  **clean, warning-free, non-golden** build whose only symptom was the hash.
+  Workaround: pass every still-asm row label via `--extra-start-file`. Real fix:
+  derive extra-starts from group files' asm-include set too, and **hard-fail if
+  the re-split changes the total instruction count.**
+- **`rel_ascore.py` scores against a STALE `.plf` after a failed build.** Its
+  "still an asm stub" guard reads the current `src/` tree, so a label that is C in
+  source but asm in the surviving binary reports a confident `ALIGNED 0 — MATCH`.
+  **test_mode got three fictional matches this way.** `rm -f mkbe.<mod>.plf`
+  before every score.
+
+Also: **`isolate.py` names its output `<stem>i.c` unconditionally**, so isolating
+a second function out of an already-split group **silently destroys the first**,
+exit 0 (mini_billiards). And `rel_carve.py --hole LABEL` means *all bytes of that
+label's run* — carving a long-run label without `:8` deletes real data and exits 0
+(mini_bowling). And `rel_xref_spine.py` is **hard-coded to mini_race**.
+
+### IDIOMS ARE CONDITIONAL, NOT GENERAL — four modules found the conditions
+
+This is the most useful methodological output of the run. **An idiom ported
+without sweeping its axis is now a known way to lose builds.**
+
+- **Run-8 idiom 9 INVERTS.** test_mode: a `u8 *` base lets mwcc *rematerialise and
+  sink* the base past calls into a volatile, where a typed base keeps it
+  callee-saved (31 in 11 -> MATCH) — the **exact opposite** of what run 8 recorded.
+- **mini_race supplied its missing precondition:** `((T *)(base + K))[i]` folds K
+  into the load displacement **only when `base` is a `u8 *`** (two functions stuck
+  at 3-in-1 through nine spellings, both MATCH on retyping). And the inverse holds
+  in the same module — a typed struct pointer is materialised *eagerly* into a
+  callee-saved register; `u8 *` is *sunk* to first use. **Both types are needed,
+  chosen by whether you want the address hoisted or the constant folded.**
+- **mini_fight narrowed run-8 idiom 8:** the struct-array form is decisive on a
+  genuinely *indexed global byte array* (9 in 3 -> MATCH vs 16 flat byte-pointer
+  spellings); the discriminator is `global_array + idx*stride + off`.
+- **mini_billiards made run-8 idiom 1 per-site:** the *direction* of the struct-copy
+  pointer local is the axis, and two sites in one function can want opposite
+  directions (0 / 2 / 5 / 7 across the four combinations).
+
+### NEW IDIOMS — ranked, all proven by a golden build
+
+1. **A base address the original RE-MATERIALISES (`lis/addi`) in more than one
+   region is a DIRECT GLOBAL EXPRESSION, not a pointer local** — the tell is a
+   reload into a callee-saved register that was never clobbered. 186 -> 83.
+   **Grep the asm for a repeated `lis <sym>@ha`.** And the second-order finding
+   that explains why past runs missed it: **the declaration-order lever only
+   becomes visible after the globals are spelled right** — with the pointer local
+   present, all six permutations were flat at 186; once removed, swapping two
+   declarations gave **0**. (mini_billiards)
+2. **A NESTED ASSIGNMENT forces mwcc to evaluate the RIGHT subtree first.**
+   `x0 = v.x - (hw = 4.0f*s/3.0f);` scored **0**; the same arithmetic as two
+   statements scored 6. mwcc pushes FP temps in evaluation order and a binop
+   result reuses only the stack top. **The general lever for "the instructions are
+   right but three volatile FP temps are rotated".** (mini_golf)
+3. **A pointer local assigned `&global` is materialised into a scratch and copied;
+   a compiler-created induction variable from an INDEX loop gets the address
+   straight into its register.** The lever is the **loop form**, not the address
+   spelling: rewriting `e = &tbl; while (e->x != -1) ++e;` as an indexed `for`
+   took 3 -> 0 while 11 address spellings held at 3. **Collapse the user variable
+   out of existence rather than respelling its assignment.** (mini_pilot)
+4. **A pointer used only as a loop induction variable must be assigned LATE**, not
+   at its declaration — initialising at the top costs a callee-saved register and
+   computes `i*S+base` in the preheader. Four late-assigned shapes all MATCH; the
+   same shape initialised at declaration scores 8. (test_mode)
+5. **`switch` CASE BODIES are emitted in source order even when the compare tree
+   is a binary search** — read the body order off `.text`, not the tree. Worth
+   -121 aligned in one edit. (sel_ngc)
+6. **mwcc's stack layout is REVERSE declaration order — first-declared gets the
+   HIGHEST address. Read the frame backwards and you have the declaration order.**
+   Worth 52 aligned diffs in one edit. A local **array** declared last gets the
+   **lowest** slot; dead scalars are eliminated, dead arrays are not.
+   (mini_fight, sel_ngc)
+7. **Declared FP locals map onto callee-saved FPRs in declaration order, highest
+   first — but a compiler TEMP that must survive a call is allocated FIRST and
+   steals f31**, pushing every declared local down one. Naming the temp restores
+   the mapping (10 -> 6). (mini_golf)
+8. **Which of two pointers into one record is "primary" decides the register the
+   base sum lands in.** `p = base + i*S; q = p + K;` vs `q = base + i*S + K;
+   p = q - K;`. 4 in 2 -> MATCH after 25 other variants were flat at 4.
+   (mini_fight)
+9. **`if (a >= b) return;` on floats emits `fcmpo; cror 2,1,2; beq`; the
+   original's bare `bge` requires `if (a < b) { body }`.** The `cror` word
+   **`4C411382`** is a greppable tell. (mini_fight)
+10. **Dead stack locals are frame-size-EXACT, not count-exact, and POSITION
+    matters** — six wildly different declarations all match at the right total
+    size; the same pads declared *after* the array score 24. **And they reach
+    REGISTER allocation, not just frame layout** — one moved a clean 2 in 2 to
+    7 in 4. Sweep it; never assume the direction. (option, test_mode)
+11. **A variable-index inner loop over a local array reserves 12 bytes of frame
+    that no source local occupies.** Deleting the index variable and reading
+    through a pointer local took 48 in 18 -> 9 in 6, where no pad count, type or
+    order moved it while the index existed. (option)
+12. **`((struct T *)(base+K))[i].f` and `*(T *)&((u8 *)(base+K))[i*S]` are NOT
+    interchangeable** even computing the same address — **9 vs 92**. The struct
+    form reproduces mwcc's out-of-line remainder-loop preheader, the pointer form
+    the `stbu`-folded rebase, **and you cannot have both.** (mini_billiards)
+13. **Two spellings of the same field DEFEAT a CSE** — 8 -> 1 by writing the guard
+    `*(u16 *)(w+0x2A) & 0x10` while the following read/modify used `s->unk2`;
+    making both `s->unk2` lets mwcc CSE the load. Rewriting *all* accesses
+    w-relative was worse (23). (mini_race)
+14. **`done |= X;` puts the OR accumulator on the LEFT; a single `a|b|c|d` puts it
+    on the RIGHT** — in all 24 orders. (sel_ngc)
+15. **`t = *(T *)expr; dst = t;` allocates a stack temp; `dst = *(T *)expr;` does
+    not.** The original's frame size is ground truth for how many temps to name.
+    (mini_fight)
+16. **mwcc reserves a parameter-home area of `nparams * 4` at `r1+8`** — read the
+    parameter count off the stack offsets before writing C. (sel_ngc)
+17. **Pointer TYPE in a copy loop changes the STACK FRAME SIZE.** (mini_billiards)
+18. **Run-8 idiom 2 (union for 8-byte alignment) works on a struct with NO 8-byte
+    member**, moving a 0x5C struct from r1+0xC to r1+0x10 (15 -> 10). A *trailing*
+    `f64 pad` is dropped entirely; a *leading* one fixes only the frame size.
+    (mini_golf)
+
+**NEW DEAD AXES — proven, do not re-sweep:** `(unsigned)x >= 0` folds in **every**
+spelling (21 forms byte-identical), so the `li/li/subfc/subfze` group is **mwcc's
+switch range-check prologue**, not an unsigned relational (mini_golf); `f64`
+declaration order in mini_billiards `lbl_00018474` (15 groupings, 11 identical);
+the two-term dot-product spellings (byte-identical); 726 declaration-order
+permutations of six integer locals in mini_pilot `lbl_0000A098` (all >= 15).
+
+### THE GENERALISABLE RULE OF THE RUN
+
+**Re-test every near-miss whose draft hand-rolls something since promoted into a
+shared header.** mini_bowling's `lbl_00001B14` was shelved at "18 in 3" and is
+**one `CAMERA_FOREACH_2` call** — the macro landed in `src/camera.h` at `42fc57c`
+*after* run 8 ended, so it was never re-tested. The same fix halved
+`lbl_00001908` (12 in 8 -> 6 in 5). **Span, not the count, is what exposed it:**
+18 diffs spanning only insn 73-86 of 92 was difflib counting a register-renamed
+block.
+
+### RE-MEASUREMENT: correctly scoped, and mostly clean
+
+§1 of RUN9_BRIEF led with re-measuring. The result validates mini_fight's run-8
+exposure analysis rather than run 8's alarm: **mini_bowling re-scored all ten of
+its residuals and every number reproduced exactly; mini_billiards found no
+inherited number wrong** (run 8 had already scored it with an aligned differ).
+**The exposure really was raw-only sweep directories.** Where numbers did move
+they moved **both ways** — option found two residuals *worse* than recorded
+(25->32, 6->7) and two raw figures corrected sharply down (82->37, 98->30);
+sel_ngc found one at 162, not the recorded 110.
+
+### DEAD ENDS RETIRED ON POSITIVE EVIDENCE
+
+- **mini_pilot `lbl_0000B130` — CLOSED.** 20 statement-structure variants, ten
+  scoring exactly 7 in 4; the two that differ both hoist the load into
+  callee-saved f30 with +8 frame, exactly run 8's predicted mechanism.
+- **option `lbl_00007868`/`6AD0`/`5020` — NOT SOURCE-REACHABLE**, proven with a
+  **20-line compile-only micro-benchmark**: an address local used bare (offset 0)
+  anywhere is materialised into a volatile before frame setup and copied after the
+  saves; nine workarounds all still trigger it. **8 functions / 4,261 insn sit
+  behind this, all still asm, and none of the 43 converted functions has that
+  prologue.**
+- **mini_billiards `lbl_0000D7E8`+`lbl_0000E3A4` (1,082 insn)** — need the
+  `lbl_0001CF50` hole owned by `_34.c`, but the `bctr` function `lbl_0000D330`
+  sits between them in `.text`.
+- mini_bowling `lbl_0000EC38`(12 in 9, 83%), `lbl_00004BD8`(14 in 10, 64%),
+  `lbl_00003A10`(26 in 17, 59%); mini_pilot `lbl_00009C18`(205); test_mode
+  `lbl_00009560` (dead code in the original).
+- **RE-CONFIRMED, not restarted:** mini_golf `lbl_000109CC` (14 in 14),
+  mini_billiards `lbl_00006DC0`, test_mode `lbl_0000F940` (50 in 12, 89%).
+
+**FALSIFIED:** run 8's "316 insn behind the `REPEAT_WITH_R_ACCEL` lever, and
+cracking `lbl_00000780` very likely carries `lbl_0000D084`". `lbl_00000780`
+cracked (7 in 3 -> MATCH); the identical lever moved `lbl_0000D084` **23 in 12 ->
+59 in 25** across all nine variants. **The real figure was 98.** The two differ
+because one has a store between the macro uses that kills the CSE.
+
+### THE MICRO-BENCHMARK IS THE METHOD CHANGE WORTH KEEPING
+
+option's `micro/mk.sh` and sel_ngc's `run9/fprobe.py` both compile **without
+linking** (~1 s, or 4x faster than a make round-trip) and answer "what does mwcc
+do with X?" independent of any function. That is how option proved its wall and
+how sel_ngc found three idioms. **Caveat: a `.plf`-based probe is WRONG on
+truncated bodies** — it reads past the function end into the next one.
+
+### STATE FOR RUN 10
+
+- **All nine warm copies merged** with `rel_merge_back.py --all`; each rebuilt
+  GOLDEN in the main tree on merge.
+- **Verified by a completely clean build**: every object, `.rel`/`.plf`/`.map`,
+  the `.dol` and `.elf` deleted first, then `make all` from nothing —
+  **1,167 objects, `sha1sum -c supermonkeyball.sha1` = all 12 OK.**
+- **All nine pass `tools/rel_structcheck.py`** in the merged tree.
+- Diff scanned for game binaries first (`.dol/.elf/.rel/.plf/.o/.map/.bin/.a/.exe`,
+  `baserom*`) — clean; **288 files: 205 `.c`, 82 `.s`, 1 Makefile.**
+- **`C:/tmp/smbm/RUN9_RESULTS.md`** holds all nine per-module reports — every
+  idiom, residual and tool bug in the agents' own words.
+- Warm copies are at run-9 state, NOT reset. `C:/tmp/smbm/warm_reset_run9.sh`
+  is the model for a run-10 script (fetches from the main working tree by path,
+  since the commits are local).
+
+### TOOLS TO PROMOTE BEFORE RUN 10 — this is the run's highest-value follow-up
+
+Six agents independently built tools that work around the same three gaps.
+**Promote these before writing RUN10_BRIEF, or six agents will rebuild them
+again:**
+
+1. **Per-function scoring** — `_scratch_mini_fight/pscore.py` + `pasweep.py`
+   (slices by the map's per-function address+size). Fixes `rel_ascore`'s row bug.
+2. **Row splitting** — `_scratch_mini_race/ssplit.py`. Splits a row's `.s` into
+   per-function bodies and rewrites the owning `.c`; byte-neutral, GOLDEN over 9
+   rows. **Refuses any row containing `bctr`**, and preserves the row label's
+   existing parameter list. This is what turns "that row is 15 functions" into
+   converting one of them.
+3. **Fixed isolate** — `_scratch_mini_race/isolate9.py` (suffixes b-z, strips
+   `static` from shared forward decls, **keeps C preceding the first asm block** —
+   run 8's version silently deleted it).
+4. **Region contents** — `_scratch_mini_golf/regions.py`.
+5. **Compile-only micro-probe** — option's `micro/mk.sh`, sel_ngc's `fprobe.py`.
+6. **Aligned-ranking sweeper** — five agents wrote one (`asweep.py`, `asw9.py`,
+   `h.py`). `rel_sweep --sweep` still ranks on RAW.
+7. **Fix in place:** `rel_ascore.py` (stop masking branch displacements; stat the
+   `.plf`), `rel_rematch.py` (extra-starts from group files, hard-fail on
+   instruction-count change), `rel_rowcount.py` (leaf functions),
+   `rel_xref_spine.py` (un-hard-code mini_race), `isolate.py` (don't clobber),
+   `rel_carve.py` (default `:8`, or refuse a bare long-run label).
+
+### NEXT RUN — ranked
+
+1. **Promote the tools above.** Six agents rebuilt the same three workarounds this
+   run; that is pure waste and it is fixable in one sitting.
+2. **mini_golf: TAKE THE CARVE — 17,209 insn, proven, one command.**
+   `lbl_00013664`(1,967) is the smallest member of rank 1 and its family is
+   nlSprPut/text-draw, with two matched in-module templates. Largest single
+   opportunity in the project by a wide margin.
+3. **sel_ngc: the unsigned-magic carve is LANDED** — decompile `lbl_0000F788`(417)
+   or `lbl_00011424`(153) and delete one SOURCES line. Then test whether
+   `lbl_0000C518`'s "HARD STOP" is really just a scheduler risk (+1,649).
+4. **mini_fight: 2,050 insn never started**, all surveyed. `lbl_00004D14`(438) +
+   `lbl_00004498`(543) are in single-asm-block files — no isolate — and
+   `lbl_00004D14` is the direct sibling of the now-matched `lbl_00003DE0`, so
+   `src/mini_fight_10.c` is a live template. **Best 981 insn in that module.**
+5. **test_mode is FULLY ISOLATED** — 55 asm stubs in 55 files, zero group files,
+   so every conversion gets the scheduler for free. `lbl_000057C0`(908) is the
+   same family as everything that matched this run and **the macro wall is down**.
+   Also: run a **leaf-aware entry scan** here first.
+6. **mini_race: 40 fns / 5,065 insn carve-free, and `mini_race_28.c` now has zero
+   setup cost.** Cheapest-first: `lbl_00000FB4`(35) `lbl_000055CC`(48)
+   `lbl_00005C20`(51) `lbl_0000BCE8`(58) `lbl_00005998`(59) `lbl_0000480C`(65).
+7. **mini_billiards `lbl_0000A054` (2,094) has now gone TWO runs unstarted** and is
+   39% of the module's carve-free remainder. Assign it explicitly or drop it.
+8. **mini_bowling's magic map is a MERGE problem, not a carve problem** —
+   `lbl_00010D58`+`D60` gates **3,372 insn** behind one object emitting both
+   magics. The right question is `grep -l 'lbl_XXXX@' asm/nonmatchings/*/*.s`,
+   never `rel_carve --list`.
+9. **Re-derive every module's reachability table PER FUNCTION** (§ above). Only
+   four of nine have had it; test_mode gained 1,442 insn of classification.
+10. **mini_pilot: two no-prerequisite carves** (`lbl_0000B624` +298 or
+    `lbl_0000BACC` +234) plus `lbl_0000A754`(390), the largest untouched
+    carve-free target.
+11. **option is the most constrained module** — 8 functions / 4,261 insn behind a
+    proven-unreachable prologue, and its carve is 2,055 not 3,389.
+    `lbl_000021D8`(293) and `lbl_00003240`(410) are never-attempted and have the
+    naturally-hoisted prologue.
+
+---
+
+## 0.14 — RUN 8 DONE (2026-07-28): +4,377 insn, 14.81% -> 17.11%. Superseded by §0.15.
 
 Nine parallel agents, one per module. **The rate declined — this is 58% of run
 7.** Two modules finished at or near zero, and three of the nine produced their

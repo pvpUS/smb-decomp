@@ -32,6 +32,7 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "mathutil.h"
 #include "../data/common.nlobj.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
@@ -172,24 +173,8 @@ extern void func_8006AD3C();
 extern void func_8006B3E8();
 extern void item_create();
 extern void item_replace_type_funcs();
-extern void mathutil_atan2();
-extern void mathutil_mtxA_from_rotate_y();
-extern void mathutil_mtxA_from_translate();
-extern void mathutil_mtxA_pop();
-extern void mathutil_mtxA_rotate_y();
-extern void mathutil_mtxA_tf_point();
-extern void mathutil_mtxA_tf_vec();
-extern void mathutil_mtxA_tf_vec_xyz();
-extern void mathutil_mtxA_to_mtx();
-extern void mathutil_mtxA_to_quat();
-extern void mathutil_mtxA_translate_xyz();
-extern void mathutil_sin();
-extern void mathutil_tan();
-extern void mathutil_vec_normalize_len();
-extern void mathutil_vec_set_len();
 extern void mini_commend_free_data();
 extern void spawn_stobj();
-extern void u_math_unk15();
 extern void ape_skel_anim_main();
 extern void avdisp_draw_model_culled_sort_all();
 extern void avdisp_draw_model_culled_sort_translucent();
@@ -199,18 +184,6 @@ extern void func_8006AAEC();
 extern void func_8009D794();
 extern void func_8009D8A4();
 extern void lens_flare_draw();
-extern void mathutil_mtxA_from_identity();
-extern void mathutil_mtxA_from_quat();
-extern void mathutil_mtxA_from_rotate_x();
-extern void mathutil_mtxA_push();
-extern void mathutil_mtxA_rigid_inv_tf_vec();
-extern void mathutil_mtxA_rotate_x();
-extern void mathutil_mtxA_rotate_z();
-extern void mathutil_mtxA_to_euler();
-extern void mathutil_mtxA_translate();
-extern void mathutil_sqrt();
-extern void mathutil_vec_to_euler();
-extern void mathutil_vec_to_euler_xy();
 extern void new_ape_stat_motion();
 extern void u_load_minigame_graphics();
 extern void unref_func_8003938C();
@@ -222,13 +195,6 @@ extern void avdisp_set_bound_sphere_scale();
 extern void avdisp_set_post_add_color();
 extern void avdisp_set_z_mode();
 extern void func_8009DB40();
-extern void mathutil_atan();
-extern void mathutil_mtxA_from_mtx();
-extern void mathutil_mtxA_from_mtxB_translate();
-extern void mathutil_mtxA_mult_left();
-extern void mathutil_mtxA_normalize_basis();
-extern void mathutil_mtxA_rigid_inv_tf_point();
-extern void mathutil_mtxA_scale_s();
 extern void ord_tbl_draw_nodes();
 extern void raycast_stage_down();
 extern void set_ape_model_lod();
@@ -238,13 +204,6 @@ extern void unref_func_800393F8();
 extern void GXSetTevAlphaOp_cached();
 extern void ape_destroy();
 extern void avdisp_draw_model_unculled_sort_none();
-extern void mathutil_mtxA_from_mtxB();
-extern void mathutil_mtxA_from_translate_xyz();
-extern void mathutil_mtxA_rigid_inv_tf_tl();
-extern void mathutil_mtxA_sq_from_identity();
-extern void mathutil_mtxA_tf_point_xyz();
-extern void mathutil_mtxA_translate_neg();
-extern void mathutil_vec_dot_normalized_safe();
 extern void rend_efc_mirror_enable();
 extern void stobj_draw();
 extern void u_ball_init_1();
@@ -252,20 +211,16 @@ extern void GXSetTevAlphaIn_cached();
 extern void avdisp_set_alpha();
 extern void background_draw();
 extern void light_init();
-extern void mathutil_mtxA_from_mtxB_translate_xyz();
 extern void set_bg_ambient();
 extern void u_avdisp_set_some_func_1();
 extern void GXSetTevColorOp_cached();
 extern void alloc_pool_light();
 extern void avdisp_draw_model_culled_sort_none();
 extern void func_8009CD5C();
-extern void mathutil_mtxA_scale_xyz();
 extern void ord_tbl_set_depth_offset();
 extern void GXSetTevColorIn_cached();
 extern void draw_monkey();
 extern void func_8009C5E4();
-extern void mathutil_mtxA_sq_from_mtx();
-extern void mathutil_mtxA_to_euler_yxz();
 extern void rend_efc_draw();
 extern void GXSetTevKAlphaSel_cached();
 extern void background_light_assign();
@@ -308,7 +263,7 @@ void lbl_0000DC24(void);
 void lbl_0000DCA0(void);
 void lbl_0000DF9C(void);
 void lbl_0000E0C4(void);
-void lbl_0000E1B4(void);
+void lbl_0000E1B4(struct Ball *);
 void lbl_0000E2B0(void);
 void lbl_0000E3A8(void);
 void lbl_0000E3E4(void);
@@ -357,14 +312,14 @@ void lbl_0000FFC4(void);
 void lbl_00010018(void);
 void lbl_000107B4(void);
 void lbl_00010ADC(void);
-void lbl_00010B98(void);
+void lbl_00010B98(struct Ball *ball);
 void lbl_0001106C(void);
 void lbl_00011270(void);
 void lbl_00011684(void);
 void lbl_000117CC(void);
 void lbl_0001181C(void);
 void lbl_0001199C(void);
-void lbl_0001212C(void);
+void lbl_0001212C(int, Point3d *);
 void lbl_000121FC(void);
 void lbl_00012248(void);
 void lbl_00013C1C(void);
@@ -399,10 +354,131 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_00010B98(void)
+struct FightRec
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00010B98.s"
+    u8 filler0[0x12];
+    u16 unk12;
+    u8 filler14[4];
+};
+
+struct PhysicsBall
+{
+    u8 filler0[0x5C];
+};
+
+void lbl_00010B98(struct Ball *ball)
+{
+    ball_func_4(ball);
+    ball->flags |= 0x20;
+    if (ball->flags & 0x400000)
+    {
+        *(s16 *)&ball->filler14C[0] -= 1;
+        if (*(s16 *)&ball->filler14C[0] < 0)
+        {
+            ball->flags &= ~0x400000;
+            *(s16 *)&ball->filler14C[0] = 0;
+        }
+    }
 }
 
+void lbl_00010C08(struct Ball *ball)
+{
+    u8 *p;
+
+    ball_func_4(ball);
+    p = lbl_10017664 + 8 + ball->playerId * 0x18;
+    if (*(s16 *)(p + 6) > 0)
+        *(s16 *)(p + 6) -= 1;
+    if (*(s16 *)(p + 0x16) > 0)
+    {
+        *(s16 *)(p + 0x16) -= 1;
+        if (*(s16 *)(p + 0x16) == 0)
+        {
+            lbl_802F1DFC = ball->ape->charaId;
+            u_play_sound_0(0x1E);
+        }
+    }
+}
+
+void lbl_00010CA0(struct Ball *ball)
+{
+    Point3d startPos;
+    Vec pos;
+    struct Effect ef;
+    Vec tvec;
+    Quaternion tquat;
+    struct PhysicsBall physBall;
+    u8 *k = lbl_0001C348;
+
+    pos = ball->pos;
+    u_ball_init_2(ball);
+    ball->colorId = lbl_0001D724[ball->playerId];
+    if (((struct FightRec *)(lbl_10017664 + 8))[ball->playerId].unk12 & 1)
+        ball->flags |= 0x2000000;
+    lbl_0001212C(ball->playerId, &startPos);
+    ball->pos.x = pos.x;
+    ball->pos.y = *(f32 *)(k + 0xA8) + pos.y;
+    ball->pos.z = pos.z;
+    ball->prevPos.x = ball->pos.x;
+    ball->prevPos.y = ball->pos.y;
+    ball->prevPos.z = ball->pos.z;
+    ball->vel.x = *(f32 *)(k + 0x1C);
+    ball->vel.y = *(f32 *)(k + 0x1C);
+    ball->vel.z = *(f32 *)(k + 0x1C);
+    ball->rotX = 0x2000;
+    ball->rotY = decodedStageLzPtr->startPos->yrot - 0x4000;
+    ball->rotZ = 0;
+    mathutil_mtxA_from_translate(&ball->pos);
+    mathutil_mtxA_rotate_y(ball->rotY);
+    mathutil_mtxA_rotate_x(ball->rotX);
+    mathutil_mtxA_rotate_z(ball->rotZ);
+    mathutil_mtxA_to_mtx(ball->unk30);
+    mathutil_mtxA_to_mtx(ball->unkC8);
+    ball->flags |= 0x500;
+    ball->flags |= 0x180000;
+    ball->flags |= 0x10;
+    if (ball->ape != NULL)
+        ball->ape->flags |= 0x20;
+    ball->unk80 = *(f32 *)(k + 0xAC) * mathutil_vec_distance(&pos, &ball->pos);
+    memset(&ef, 0, sizeof(ef));
+    ef.type = 0x18;
+    ef.playerId = ball->playerId;
+    ef.u_otherTimer = ball->unk80;
+    ef.pos = pos;
+    spawn_effect(&ef);
+    lbl_0000E1B4(ball);
+    ball->state = 0x18;
+    ball->unk148 = 0x29;
+    ball->speed = ball->unkC4 = *(f32 *)(k + 0x1C);
+    tvec = *(Vec *)(k + 0x8C);
+    ball->unkB8 = tvec;
+    ball->ape->flags &= ~0x4000;
+    tquat = *(Quaternion *)(k + 0x98);
+    ball->unk98 = tquat;
+    mathutil_mtxA_to_quat(&ball->unkA8);
+    handle_ball_linear_kinematics(ball, &physBall, 1);
+    handle_ball_rotational_kinematics(ball, &physBall, 1);
+    update_ball_ape_transform(ball, &physBall, 1);
+    ball->unk80--;
+    if (ball->unk80 <= 0)
+    {
+        ball->state = 0x18;
+        ball->unk148 = 0x21;
+        ball->unk80 = 0;
+        ball->flags &= ~0x10;
+        ball->flags |= 0x4000;
+        if (ball->ape != NULL)
+            ball->ape->flags &= ~0x20;
+        u_play_sound_0(0x131);
+    }
+}
+
+void lbl_00011018(struct Ball *ball)
+{
+    struct PhysicsBall physBall;
+
+    handle_ball_linear_kinematics(ball, &physBall, 1);
+    handle_ball_rotational_kinematics(ball, &physBall, 1);
+    update_ball_ape_transform(ball, &physBall, 1);
+}
 #pragma force_active reset

@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_00008ADC.
+ * test_mode.c -- REL module: isolated function lbl_00003A4C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -167,7 +167,7 @@ extern void func_800A722C();
 extern void func_800A7314();
 extern void func_800A7370();
 extern void func_800A7440();
-extern void get_font_bitmap_id();
+extern int get_font_bitmap_id();
 extern void item_draw();
 extern void load_model();
 extern void mot_ape_8008BAA8();
@@ -189,6 +189,7 @@ void _unresolved(void);
 void lbl_00000208(void);
 void lbl_00000270(void);
 void lbl_00000630(void);
+void lbl_00000780(void);
 void lbl_00000934(void);
 void lbl_00001B78(void);
 void lbl_00002108(void);
@@ -196,11 +197,16 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
+void lbl_00003C34(void);
+void lbl_00003D94(void);
+void lbl_000040B4(void);
+void lbl_0000502C(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
 void lbl_000057C0(void);
 void lbl_000065F0(void);
+void lbl_00006974(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -208,8 +214,9 @@ void lbl_00007FE8(void);
 void lbl_00008008(void);
 void lbl_00008808(void);
 void lbl_0000884C(void);
-void lbl_00008ADC(s8 *, struct Sprite *);
+void lbl_00008ADC(void);
 void lbl_00008B00(void);
+void lbl_00008B44(void);
 void lbl_00008F40(void);
 void lbl_00009060(void);
 void lbl_00009338(void);
@@ -270,9 +277,73 @@ void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
-#pragma force_active on
-void lbl_00008ADC(s8 *unused, struct Sprite *sprite)
+struct TestFontEntry
 {
-    preview_main(*(struct Preview **)((u8 *)sprite + 0x2C));
+    s32 unk0;
+    char *unk4;
+};
+
+struct TestFontGroup
+{
+    struct TestFontEntry *entries;
+    char *title;
+    s32 unk8;
+};
+
+#pragma force_active on
+void lbl_00003A4C(void)
+{
+    f32 *k = (f32 *)lbl_0000FE78;
+    u8 *p = lbl_10000000;
+    u8 *d = lbl_000102B0;
+    struct TestFontEntry *f;
+    struct TestFontEntry *e;
+    int i;
+
+    window_set_cursor_pos(2, 2);
+    u_debug_print(((struct TestFontGroup *)(d + 0x2C68))[*(int *)(p + 0xB8)].title);
+    reset_text_draw_settings();
+    e = ((struct TestFontGroup *)(d + 0x2C68))[*(int *)(p + 0xB8)].entries;
+    for (i = 0; e->unk0 >= 0; e++, i++)
+    {
+        if (i == *(int *)(p + 0xB4))
+        {
+            window_set_text_color(2);
+            window_set_cursor_pos(1, i + 4);
+            window_printf_2((char *)(d + 0x2CBC), fontStrArray[e->unk0]);
+            window_set_text_color(0);
+        }
+        else
+        {
+            window_set_cursor_pos(1, i + 4);
+            window_printf_2((char *)(d + 0x2CC4), fontStrArray[e->unk0]);
+        }
+    }
+    f = &((struct TestFontGroup *)(d + 0x2C68))[*(int *)(p + 0xB8)].entries[*(int *)(p + 0xB4)];
+    set_text_font(f->unk0);
+    set_text_pos(k[60], k[61]);
+    sprite_puts(f->unk4);
+    if (!(controllerInfo[0].held.button & PAD_BUTTON_B))
+    {
+        NLsprarg params;
+
+        params.sprno = get_font_bitmap_id(((struct TestFontGroup *)(d + 0x2C68))[*(int *)(p + 0xB8)].entries[*(int *)(p + 0xB4)].unk0);
+        params.x = k[62];
+        params.y = k[63];
+        params.z = k[46];
+        params.zm_x = k[46];
+        params.zm_y = k[46];
+        params.u0 = k[24];
+        params.v0 = k[24];
+        params.u1 = k[46];
+        params.v1 = k[46];
+        params.ang = 0;
+        params.trnsl = k[46];
+        params.listType = -1;
+        params.attr = 10;
+        params.base_color = -1;
+        params.offset_color = 0;
+        nlSprPut(&params);
+    }
 }
 #pragma force_active reset

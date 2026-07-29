@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_000055E8.
+ * test_mode.c -- REL module: isolated function lbl_000024FC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -189,18 +189,25 @@ void _unresolved(void);
 void lbl_00000208(void);
 void lbl_00000270(void);
 void lbl_00000630(void);
+void lbl_00000780(void);
 void lbl_00000934(void);
 void lbl_00001B78(void);
 void lbl_00002108(void);
 void lbl_0000215C(void);
+static void lbl_000024FC(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
+void lbl_00003C34(void);
+void lbl_00003D94(void);
+void lbl_000040B4(void);
+void lbl_0000502C(void);
 void lbl_00005384(void);
-void lbl_000055E8(u32 *);
+void lbl_000055E8(void);
 void lbl_000056BC(void);
 void lbl_000057C0(void);
 void lbl_000065F0(void);
+void lbl_00006974(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -210,6 +217,7 @@ void lbl_00008808(void);
 void lbl_0000884C(void);
 void lbl_00008ADC(void);
 void lbl_00008B00(void);
+void lbl_00008B44(void);
 void lbl_00008F40(void);
 void lbl_00009060(void);
 void lbl_00009338(void);
@@ -271,25 +279,12 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_000055E8(u32 *arg)
+static void lbl_000024FC(void)
 {
-    u8 *p = lbl_10000000;
-    OSHeapHandle prevHeap;
-    char name[128];
-
-    prevHeap = OSSetCurrentHeap(stageHeap);
-    sprintf(name, (char *)lbl_000138AC, arg[0], arg[1]);
-    *(struct TPL **)(p + 0x18C) = load_tpl(name);
-    if (*(struct TPL **)(p + 0x18C) != NULL)
-    {
-        sprintf(name, (char *)lbl_000138B8, arg[0], arg[1]);
-        *(struct GMA **)(p + 0x190) = load_gma(name, *(struct TPL **)(p + 0x18C));
-        if (*(struct GMA **)(p + 0x190) == NULL)
-        {
-            free_tpl(*(struct TPL **)(p + 0x18C));
-            *(struct TPL **)(p + 0x18C) = NULL;
-        }
-    }
-    OSSetCurrentHeap(prevHeap);
+    lbl_00009338();
+    event_finish_all();
+    event_start(15);
+    camera_set_state_all(2);
+    gameSubmodeRequest = 0x6A;
 }
 #pragma force_active reset

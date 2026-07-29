@@ -213,7 +213,7 @@ void lbl_0000AD8C(void);
 void lbl_0000AF18(void);
 void lbl_0000AFEC(void);
 void lbl_0000B0AC(void);
-void lbl_0000B1BC(void);
+void lbl_0000B1BC(f32 y);
 void lbl_0000B344(void);
 void lbl_0000B460(void);
 void lbl_0000B654(void);
@@ -224,7 +224,7 @@ void lbl_0000BEB8(void);
 void lbl_0000C0D0(void);
 void lbl_0000C1D0(void);
 void lbl_0000CAA8(void);
-void lbl_0000D4D4(void);
+void lbl_0000D4D4(struct BowlPin *, Vec *);
 void lbl_0000D598(void);
 void lbl_0000D650(void);
 void lbl_0000D7F8(void);
@@ -244,10 +244,59 @@ void lbl_0000E894(void);
 void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
-#pragma force_active on
-asm void lbl_0000B1BC(void)
+struct BowlPin
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000B1BC.s"
+    u32 flags;
+    Vec a[12];
+    Vec b[12];
+    Vec pos;
+    Vec vel;
+    Vec rot;
+    Mtx mtx;
+    u32 unk178;
+    u32 unk17c;
+    u8 filler180[0x184 - 0x180];
+};
+
+#pragma force_active on
+void lbl_0000B1BC(f32 y)
+{
+    u8 *k = lbl_00014800;
+    int i;
+    struct BowlPin *pin;
+    Vec v;
+
+    for (pin = (struct BowlPin *)lbl_10018510, i = 0; i < 10; i++, pin++) {
+        if (!(pin->flags & 1))
+            continue;
+        if (!(pin->flags & 4))
+            continue;
+        {
+            f32 best = *(f32 *)(k + 0x3e8);
+            u8 *p = *(u8 **)(k + 0x3a8);
+            int n = *(u8 *)(k + 0x3ac);
+            int j;
+
+            {
+                u8 *q = (u8 *)pin;
+                for (j = 0; j < n; j++, p += 0x14, q += 0xc) {
+                    f32 d = *(f32 *)(q + 0xc) + *(f32 *)(p + 0xc) - y;
+                    if (d > best)
+                        best = d;
+                }
+            }
+            if (*(f64 *)(k + 0x400) != best) {
+                pin->flags &= ~0x10;
+                pin->flags &= ~2;
+                pin->flags |= 0x20;
+                v.x = *(f32 *)(k + 0x3e8);
+                v.y = *(f32 *)(k + 0x3e8);
+                v.z = -best;
+                lbl_0000D4D4(pin, &v);
+                pin->rot.x += (f32)((rand() & 0x1ff) - 256);
+                pin->rot.z += (f32)((rand() & 0x7f) - 64);
+            }
+        }
+    }
 }
 #pragma force_active reset

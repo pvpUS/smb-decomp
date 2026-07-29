@@ -187,7 +187,7 @@ void lbl_00007C74(void);
 void lbl_00007D18(void);
 void lbl_00007D80(void);
 void lbl_00008EC0(void);
-void lbl_0000939C(void);
+s8 lbl_0000939C(int);
 void lbl_00009540(void);
 void lbl_00009788(void);
 void lbl_00009E34(void);
@@ -206,7 +206,7 @@ void lbl_000115F4(void);
 void lbl_00016D24(void);
 void lbl_00016D9C(void);
 void lbl_0001723C(void);
-void lbl_00017408(void);
+void lbl_00017408(int);
 void lbl_00017A00(void);
 void lbl_00018008(void);
 void lbl_00018474(void);
@@ -226,19 +226,9 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm void lbl_00017408(void)
+asm void lbl_00017408(int)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_billiards/lbl_00017408.s"
-}
-asm void lbl_00017A00(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00017A00.s"
-}
-asm void lbl_00018008(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00018008.s"
 }
 #pragma force_active reset

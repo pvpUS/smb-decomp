@@ -155,9 +155,9 @@ void lbl_00008F44(void);
 void lbl_0000907C(void);
 void lbl_00009178(void);
 void lbl_000091BC(void);
-void lbl_000092C4(void);
+f32 lbl_000092C4(void);
 void lbl_000092D0(void);
-void lbl_000092E0(void);
+f32 lbl_000092E0(void);
 void lbl_000092F0(void);
 void lbl_00009300(void);
 void lbl_00009310(void);
@@ -258,9 +258,32 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-asm void lbl_00023C68(void)
+void lbl_00023C68(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_00023C68.s"
+    u8 *p = (u8 *)lbl_00026550;
+    Vec v;
+    f32 hw, z, s, x0, z0, ex, ez, px, py;
+    f64 pad;
+    NLsprarg params;
+
+    s = *(f64 *)(p + 0x2d8) + stageBoundSphere.radius * *(f32 *)(p + 0x45c);
+    v = stageBoundSphere.pos;
+    z = v.z;
+    z0 = z - s;
+    x0 = v.x - (hw = *(f32 *)(p + 0x284) * s / *(f32 *)(p + 0x3ec));
+    ex = lbl_000092C4() - x0;
+    ez = lbl_000092E0() - z0;
+    px = *(f32 *)(p + 0x4a0) + *(f32 *)(p + 0x248) * ex / ((v.x + hw) - x0);
+    py = *(f32 *)(p + 0x474) * ez / ((z + s) - z0);
+    params = *(NLsprarg *)lbl_0002A4D8;
+    if (px < *(f32 *)(p + 0x4a4))
+        params.x = *(f32 *)(p + 0x4a4);
+    else
+        params.x = px;
+    if (py > *(f32 *)(p + 0x474))
+        params.y = *(f32 *)(p + 0x474);
+    else
+        params.y = py;
+    nlSprPut(&params);
 }
 #pragma force_active reset

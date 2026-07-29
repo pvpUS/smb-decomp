@@ -189,7 +189,7 @@ void _unresolved(void);
 void lbl_00000208(void);
 void lbl_00000270(void);
 void lbl_00000630(void);
-static void lbl_00000780(void);
+void lbl_00000780(void);
 void lbl_00000934(void);
 void lbl_00001B78(void);
 void lbl_00002108(void);
@@ -197,11 +197,16 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
+void lbl_00003C34(void);
+void lbl_00003D94(void);
+void lbl_000040B4(void);
+void lbl_0000502C(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
 void lbl_000057C0(void);
 void lbl_000065F0(void);
+void lbl_00006974(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -211,6 +216,7 @@ void lbl_00008808(void);
 void lbl_0000884C(void);
 void lbl_00008ADC(void);
 void lbl_00008B00(void);
+void lbl_00008B44(void);
 void lbl_00008F40(void);
 void lbl_00009060(void);
 void lbl_00009338(void);
@@ -272,9 +278,8 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-static asm void lbl_00000780(void)
+void lbl_00000780(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00000780.s"
+    printf((char *)lbl_000106B4);
 }
 #pragma force_active reset

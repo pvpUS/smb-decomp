@@ -1,0 +1,110 @@
+# mini_bowling data segment 5 -- rodata continuation after a carved hole
+.include "macros.inc"
+.global lbl_00014CB8
+.global lbl_00014D70
+.global lbl_00014D90
+
+.section .rodata
+.balign 8
+lbl_00014C10:
+    .4byte 0x00000000
+    .4byte 0x3F800000
+    .4byte 0x00000000
+    .4byte 0x00000000
+    .4byte 0xBFF80000
+    .4byte 0x00000000
+    .4byte 0x3FE6A09E
+    .4byte 0x6665983E
+    .4byte 0x3F947AE1
+    .4byte 0x47AE147B
+    .4byte 0x40340000
+    .4byte 0x00000000
+    .4byte 0x00000000
+    .4byte 0x00000000
+    .4byte 0x00000000
+    .4byte 0x00000097
+    .4byte 0x00000096
+    .4byte 0x00000095
+    .4byte 0x28800000
+    .4byte 0x3F800000
+    .4byte 0x3F81E9AF
+    .4byte 0x5BA2BE05
+    .4byte 0x40654000
+    .4byte 0x00000000
+    .4byte 0x3F844673
+    .4byte 0x81D7DBF4
+    .4byte 0x423C0000
+    .4byte 0x41A00000
+    .4byte 0x40400000
+    .4byte 0x00000000
+    .4byte 0x3FEF5C28
+    .4byte 0xF5C28F5C
+    .4byte 0x3F9996FA
+    .4byte 0x82E87D2C
+    .4byte 0x40240000
+    .4byte 0x00000000
+    .4byte 0x3FF00000
+    .4byte 0x00000000
+    .4byte 0x3FE00000
+    .4byte 0x00000000
+    .4byte 0x3FE99999
+    .4byte 0x9999999A
+lbl_00014CB8:
+    # 0x14CB8
+    .4byte 0xBFF00000
+    .4byte 0x00000000
+    .4byte 0x3FE6B851
+    .4byte 0xEB851EB8
+    .4byte 0x403E0000
+    .4byte 0x00000000
+    .4byte 0x40140000
+    .4byte 0x00000000
+    .4byte 0x00000000
+    .4byte 0x00000000
+    .4byte 0x00000000
+    .4byte 0x00000094
+    .4byte 0x00000093
+    .4byte 0x00000092
+    .4byte 0x00000017
+    .4byte 0x00000018
+    .4byte 0x0000001A
+    .4byte 0x40E851EC
+    .4byte 0x3FE66666
+    .4byte 0x66666666
+    .4byte 0x34000000
+    .4byte 0xBF800000
+    .4byte 0x40690000
+    .4byte 0x00000000
+    .4byte 0x3F8FAE14
+    .4byte 0x7AE147AE
+    .4byte 0x41700000
+    .4byte 0x40000000
+    .4byte 0x00000091
+    .4byte 0x00000090
+    .4byte 0x0000008F
+    .4byte 0x00000000
+    .4byte 0x40088000
+    .4byte 0x00000000
+    .4byte 0x3DCCCCCD
+    .4byte 0x00000000
+    .4byte 0x3FD33333
+    .4byte 0x33333333
+    .4byte 0x40568000
+    .4byte 0x00000000
+    .4byte 0xC0568000
+    .4byte 0x00000000
+    .4byte 0x3F847AE1
+    .4byte 0x47AE147B
+    .4byte 0x4003CCCC
+    .4byte 0xCCCCCCCC
+lbl_00014D70:
+    # 0x14D70
+    .4byte 0x3DCCCCCD
+    .4byte 0x3F800000
+    .4byte 0x40000000
+    .4byte 0x3DE147AE
+    .4byte 0x3FA11111
+    .4byte 0x11111111
+    .4byte 0x3FF00000
+    .4byte 0x00000000
+lbl_00014D90:

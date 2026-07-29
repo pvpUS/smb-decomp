@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_0000D844.
+ * test_mode.c -- REL module: isolated function lbl_0000A7E0.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -189,6 +189,7 @@ void _unresolved(void);
 void lbl_00000208(void);
 void lbl_00000270(void);
 void lbl_00000630(void);
+void lbl_00000780(void);
 void lbl_00000934(void);
 void lbl_00001B78(void);
 void lbl_00002108(void);
@@ -196,11 +197,16 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
+void lbl_00003C34(void);
+void lbl_00003D94(void);
+void lbl_000040B4(void);
+void lbl_0000502C(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
 void lbl_000057C0(void);
 void lbl_000065F0(void);
+void lbl_00006974(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -210,6 +216,7 @@ void lbl_00008808(void);
 void lbl_0000884C(void);
 void lbl_00008ADC(void);
 void lbl_00008B00(void);
+void lbl_00008B44(void);
 void lbl_00008F40(void);
 void lbl_00009060(void);
 void lbl_00009338(void);
@@ -252,7 +259,7 @@ void lbl_0000C984(void);
 void lbl_0000CB0C(void);
 void lbl_0000CB10(void);
 void lbl_0000CDE0(void);
-int lbl_0000D084(void);
+void lbl_0000D084(void);
 void lbl_0000D3C0(void);
 void lbl_0000D844(void);
 void lbl_0000D9FC(void);
@@ -270,58 +277,8 @@ void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
-struct TestD8Entry
-{
-    u32 unk0;
-    u32 unk4;
-};
-
 #pragma force_active on
-void lbl_0000D844(void)
+void lbl_0000A7E0(void)
 {
-    u8 *q = lbl_000148E8;
-    u8 *p = lbl_10003BF8;
-    int i;
-
-    window_set_cursor_pos(10, 0);
-    window_printf_2((char *)(q + 0xE50));
-    window_set_cursor_pos(11, 1);
-    window_printf_2((char *)(q + 0xE60), *(u32 *)((u8 *)motInfo + 0x28000), ((u32)((u8 *)motInfo + 0x4E000) - (u32)((u8 *)motInfo + 0x28000)) / 16);
-    window_printf_2((char *)(q + 0xE74), motInfo);
-    if (*(u32 *)(p + 0x88) == 0)
-    {
-        int r = lbl_0000D084();
-
-        if (r == 1)
-        {
-            if (--*(int *)(p + 0x64) < 0)
-                *(int *)(p + 0x64) = *(int *)(p + 0x70) - 1;
-        }
-        else if (r == 2)
-        {
-            if (++*(int *)(p + 0x64) >= *(int *)(p + 0x70))
-                *(int *)(p + 0x64) = 0;
-        }
-    }
-    if (*(u32 *)(p + 0x88) == 0)
-    {
-        window_set_cursor_pos(0x17, 3);
-        window_printf_2((char *)(q + 0xE84));
-        for (i = 0; i < *(int *)(p + 0x70); i++)
-        {
-            if (i == *(int *)(p + 0x64) && *(u32 *)(p + 0x88) == 0)
-            {
-                window_set_text_color(2);
-                window_printf_2((char *)(q + 0xE98));
-            }
-            else
-            {
-                window_set_text_color(0);
-                window_printf_2((char *)(q + 0xE9C));
-            }
-            window_printf_2((char *)(q + 0xEA0), ((struct TestD8Entry *)(q + 0xE08))[i].unk4);
-        }
-    }
-    window_set_text_color(0);
 }
 #pragma force_active reset

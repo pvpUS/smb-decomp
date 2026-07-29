@@ -214,7 +214,7 @@ void lbl_00018474(void);
 void lbl_00018608(void);
 void lbl_000186EC(void);
 void lbl_000189B4(void);
-void lbl_00018A98(void);
+void lbl_00018A98(struct Ape *);
 void lbl_00018C78(void);
 void lbl_00018F4C(void);
 void lbl_00019264(void);
@@ -227,9 +227,49 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm void lbl_00018A98(void)
+void lbl_00018A98(struct Ape *ape)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00018A98.s"
+    u8 *p = lbl_00020B58;
+    u8 *apes = lbl_10009878;
+    Quaternion q;
+    Vec v;
+    Mtx m;
+    Vec d2;
+    Vec d3;
+    Vec d0;
+    Vec d1;
+    f32 t;
+    Vec *pt;
+
+    mathutil_mtxA_from_quat(
+        (Quaternion *)&((s8 *)(apes + 0x54))[ape->ballId * 0x68]);
+    mathutil_mtxA_to_mtx(m);
+    mathutil_mtxA_from_quat(&ape->unk60);
+    mathutil_mtxA_normalize_basis();
+    mathutil_mtxA_mult_left(m);
+    mathutil_mtxA_normalize_basis();
+    if (!(ape->flags & 0x20000) &&
+        ((f32 *)(apes + 0x60))[ape->ballId * 0x1A] < *(f32 *)(p + 0x60))
+        return;
+    mathutil_mtxA_to_mtx(m);
+    d0 = *(Vec *)(p + 0x30);
+    pt = &d0;
+    v = *pt;
+    mathutil_mtxA_rigid_inv_tf_vec(&v, &v);
+    d2 = *(Vec *)(p + 0x3C);
+    t = *(f32 *)(p + 0x64) - mathutil_vec_dot_normalized(&v, &d2);
+    if (!(ape->flags & 0x20000) && t > *(f32 *)(p + 0x68)) {
+        d3 = *(Vec *)(p + 0x48);
+        mathutil_vec_cross_prod(&d3, &v, &v);
+        mathutil_quat_from_axis_angle(&q, &v, 0x38E);
+    } else {
+        pt = &d1;
+        *pt = *(Vec *)(p + 0x54);
+        mathutil_quat_from_dirs(&q, &d1, &v);
+    }
+    mathutil_quat_normalize(&q);
+    mathutil_mtxA_from_quat(&q);
+    mathutil_mtxA_normalize_basis();
+    mathutil_mtxA_mult_left(m);
 }
 #pragma force_active reset

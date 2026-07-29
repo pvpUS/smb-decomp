@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_0000ECB4.
+ * test_mode.c -- REL module: isolated function lbl_0000B364.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -189,6 +189,7 @@ void _unresolved(void);
 void lbl_00000208(void);
 void lbl_00000270(void);
 void lbl_00000630(void);
+void lbl_00000780(void);
 void lbl_00000934(void);
 void lbl_00001B78(void);
 void lbl_00002108(void);
@@ -196,11 +197,16 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
+void lbl_00003C34(void);
+void lbl_00003D94(void);
+void lbl_000040B4(void);
+void lbl_0000502C(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
 void lbl_000057C0(void);
 void lbl_000065F0(void);
+void lbl_00006974(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -210,6 +216,7 @@ void lbl_00008808(void);
 void lbl_0000884C(void);
 void lbl_00008ADC(void);
 void lbl_00008B00(void);
+void lbl_00008B44(void);
 void lbl_00008F40(void);
 void lbl_00009060(void);
 void lbl_00009338(void);
@@ -257,7 +264,7 @@ void lbl_0000D3C0(void);
 void lbl_0000D844(void);
 void lbl_0000D9FC(void);
 void lbl_0000DB2C(void);
-void lbl_0000DC60(char *, char *, ...);
+void lbl_0000DC60(void);
 void lbl_0000DDA4(void);
 void lbl_0000E2E8(void);
 void lbl_0000E3E8(void);
@@ -271,40 +278,26 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_0000ECB4(void)
+void lbl_0000B364(void)
 {
-    u8 *q = lbl_000148E8;
-    u8 *p = lbl_10003BF8;
-    int z0;
-    int z1;
-    int z2;
-    int z3;
-    int z4;
+    float *k = (float *)lbl_00010118;
+    u8 *p = lbl_10000F70;
+    void **q;
 
-    window_set_cursor_pos(4, 7);
-    window_printf_2((char *)(q + 0xFC4));
-    window_set_cursor_pos(1, 8);
-    lbl_0000DC60((char *)(q + 0xFDC), (char *)(q + 0xF0C),
-                 ((u32 *)(q + 0x8C))[*(int *)(p + 0xA8)]);
-    lbl_0000DC60((char *)(q + 0xFF0), (char *)(q + 0xF0C),
-                 ((char **)((u8 **)(q + 0xCD4))[*(int *)(p + 0xA8)])[((s32 *)(p + 0x10))[*(int *)(p + 0xA8)]]);
-    lbl_0000DC60((char *)(q + 0x1004), (char *)(q + 0xF0C),
-                 motLabel[(*(struct SomeMotInfoStruct **)(p + 0xAC))->animId]);
-    lbl_0000DC60((char *)(q + 0x1018), (char *)(q + 0x102C), (*(struct SomeMotInfoStruct **)(p + 0xAC))->unk0);
-    lbl_0000DC60((char *)(q + 0x1034), (char *)(q + 0xEFC), (*(struct SomeMotInfoStruct **)(p + 0xAC))->unk4);
-    lbl_0000DC60((char *)(q + 0x1048), (char *)(q + 0xEFC), (*(struct SomeMotInfoStruct **)(p + 0xAC))->unk8);
-    lbl_0000DC60((char *)(q + 0x105C), (char *)(q + 0xEFC), (*(struct SomeMotInfoStruct **)(p + 0xAC))->unk14);
-    lbl_0000DC60((char *)(q + 0x1070), (char *)(q + 0x1084), (*(struct SomeMotInfoStruct **)(p + 0xAC))->u_maybeSpeed);
-    lbl_0000DC60((char *)(q + 0x108C), (char *)(q + 0xF0C),
-                 ((*(struct SomeMotInfoStruct **)(p + 0xAC))->unkC & 0x1) ? (char *)(q + 0xEA4) : (char *)(q + 0xEA8));
-    lbl_0000DC60((char *)(q + 0x10A0), (char *)(q + 0xF0C),
-                 ((*(struct SomeMotInfoStruct **)(p + 0xAC))->unkC & 0x2) ? (char *)(q + 0xEA4) : (char *)(q + 0xEA8));
-    lbl_0000DC60((char *)(q + 0x10B4), (char *)(q + 0xF0C),
-                 ((*(struct SomeMotInfoStruct **)(p + 0xAC))->unkC & 0x4) ? (char *)(q + 0xEA4) : (char *)(q + 0xEA8));
-    lbl_0000DC60((char *)(q + 0x10C8), (char *)(q + 0xF0C),
-                 ((*(struct SomeMotInfoStruct **)(p + 0xAC))->unkC & 0x8) ? (char *)(q + 0xEA4) : (char *)(q + 0xEA8));
-    lbl_0000DC60((char *)(q + 0x10DC), (char *)(q + 0xF0C),
-                 ((*(struct SomeMotInfoStruct **)(p + 0xAC))->unkC & 0x10) ? (char *)(q + 0xEA4) : (char *)(q + 0xEA8));
-    lbl_0000DC60((char *)(q + 0x10F0), (char *)(q + 0x1100));
+    lbl_0000BE00();
+    q = (void **)(p + 0x38) - 1;
+    *(float *)p = k[0];
+    *(float *)(p + 4) = k[1];
+    *(int *)(p + 8) = 2;
+    *(float *)(p + 0xC) = k[2];
+    if (*q == NULL)
+    {
+        *((u32 *)(p + 0x34) - 1) = GXGetTexBufferSize(0x280, 0x1E0, GX_TF_RGB565, GX_FALSE, 0);
+        *q = OSAllocFromHeap(__OSCurrHeap, *((u32 *)(p + 0x34) - 1));
+    }
+    GXInitTexObj((GXTexObj *)(p + 0x10), *q, currRenderMode->fbWidth,
+                 currRenderMode->efbHeight, GX_TF_RGB565, GX_CLAMP, GX_CLAMP, GX_FALSE);
+    u_replay_test_init();
+    camera_set_state_all(2);
 }
 #pragma force_active reset

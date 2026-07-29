@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_00002048.
+ * test_mode.c -- REL module: isolated function lbl_00001008.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -189,19 +189,25 @@ void _unresolved(void);
 void lbl_00000208(void);
 void lbl_00000270(void);
 void lbl_00000630(void);
+void lbl_00000780(void);
 void lbl_00000934(void);
+static void lbl_00001008(void);
 void lbl_00001B78(void);
-static void lbl_00002048(void);
 void lbl_00002108(void);
 void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
+void lbl_00003C34(void);
+void lbl_00003D94(void);
+void lbl_000040B4(void);
+void lbl_0000502C(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
 void lbl_000057C0(void);
 void lbl_000065F0(void);
+void lbl_00006974(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -211,6 +217,7 @@ void lbl_00008808(void);
 void lbl_0000884C(void);
 void lbl_00008ADC(void);
 void lbl_00008B00(void);
+void lbl_00008B44(void);
 void lbl_00008F40(void);
 void lbl_00009060(void);
 void lbl_00009338(void);
@@ -272,9 +279,57 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-static asm void lbl_00002048(void)
+struct TestSndWork
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00002048.s"
+    /*0x00*/ u8 filler0[0xC];
+    /*0x0C*/ s32 unkC;
+    /*0x10*/ s32 unk10;
+    /*0x14*/ s32 unk14;
+    /*0x18*/ u8 unk18;
+    /*0x19*/ u8 unk19;
+    /*0x1A*/ u8 unk1A;
+    /*0x1B*/ u8 pad1B;
+    /*0x1C*/ s16 unk1C;
+    /*0x1E*/ s16 unk1E;
+    /*0x20*/ s16 unk20;
+    /*0x22*/ u8 unk22;
+    /*0x23*/ u8 unk23;
+    /*0x24*/ s32 unk24;
+    /*0x28*/ u8 unk28;
+    /*0x29*/ u8 pad29[3];
+    /*0x2C*/ s32 unk2C;
+    /*0x30*/ s16 unk30;
+    /*0x32*/ u8 pad32[2];
+    /*0x34*/ s32 unk34;
+    /*0x38*/ s32 unk38;
+    /*0x3C*/ s32 unk3C;
+};
+
+static void lbl_00001008(void)
+{
+    struct TestSndWork *w = (struct TestSndWork *)lbl_10000000;
+
+    event_start(18);
+    u_play_music(1, 3);
+    w->unkC = 1;
+    w->unk10 = 0;
+    w->unk14 = g_soundGroupDesc[0].unused + 1;
+    w->unk18 = 0x7F;
+    w->unk19 = 0;
+    w->unk1A = 0;
+    w->unk1C = 0x2000;
+    w->unk1E = 0x2000;
+    w->unk20 = 0;
+    w->unk22 = 0;
+    w->unk23 = 0;
+    w->unk24 = 0;
+    w->unk28 = 0;
+    w->unk2C = 0;
+    w->unk30 = 0x100;
+    w->unk34 = 0;
+    w->unk38 = 0xFF;
+    w->unk3C = 0;
+    gameSubmodeRequest = 0x66;
 }
+
 #pragma force_active reset

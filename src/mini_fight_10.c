@@ -32,6 +32,9 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "mathutil.h"
+#include "stobj.h"
+#include "obj_collision.h"
 #include "../data/common.nlobj.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
@@ -154,10 +157,8 @@ extern u8 lbl_10018FD4[];
 extern u8 lbl_10019040[];
 extern u8 backgroundInfo[];
 extern u8 g_bgLightInfo[];
-extern u8 g_stobjInfo[];
 extern u8 infoWork[];
 extern u8 lbl_801EED98[];
-extern u8 lbl_8028C0B0[];
 extern u8 pauseMenuState[];
 extern u8 polyDisp[];
 extern u8 worldInfo[];
@@ -168,49 +169,17 @@ extern void collide_ball_with_stage();
 extern void fade_color_base_default();
 extern void func_8000D5B8();
 extern void func_80047518();
-extern void func_8006AD3C();
 extern void func_8006B3E8();
 extern void item_create();
 extern void item_replace_type_funcs();
-extern void mathutil_atan2();
-extern void mathutil_mtxA_from_rotate_y();
-extern void mathutil_mtxA_from_translate();
-extern void mathutil_mtxA_pop();
-extern void mathutil_mtxA_rotate_y();
-extern void mathutil_mtxA_tf_point();
-extern void mathutil_mtxA_tf_vec();
-extern void mathutil_mtxA_tf_vec_xyz();
-extern void mathutil_mtxA_to_mtx();
-extern void mathutil_mtxA_to_quat();
-extern void mathutil_mtxA_translate_xyz();
-extern void mathutil_sin();
-extern void mathutil_tan();
-extern void mathutil_vec_normalize_len();
-extern void mathutil_vec_set_len();
 extern void mini_commend_free_data();
-extern void spawn_stobj();
-extern void u_math_unk15();
 extern void ape_skel_anim_main();
 extern void avdisp_draw_model_culled_sort_all();
 extern void avdisp_draw_model_culled_sort_translucent();
 extern void avdisp_set_post_mult_color();
-extern void func_8006A9B8();
-extern void func_8006AAEC();
 extern void func_8009D794();
 extern void func_8009D8A4();
 extern void lens_flare_draw();
-extern void mathutil_mtxA_from_identity();
-extern void mathutil_mtxA_from_quat();
-extern void mathutil_mtxA_from_rotate_x();
-extern void mathutil_mtxA_push();
-extern void mathutil_mtxA_rigid_inv_tf_vec();
-extern void mathutil_mtxA_rotate_x();
-extern void mathutil_mtxA_rotate_z();
-extern void mathutil_mtxA_to_euler();
-extern void mathutil_mtxA_translate();
-extern void mathutil_sqrt();
-extern void mathutil_vec_to_euler();
-extern void mathutil_vec_to_euler_xy();
 extern void new_ape_stat_motion();
 extern void u_load_minigame_graphics();
 extern void unref_func_8003938C();
@@ -222,13 +191,6 @@ extern void avdisp_set_bound_sphere_scale();
 extern void avdisp_set_post_add_color();
 extern void avdisp_set_z_mode();
 extern void func_8009DB40();
-extern void mathutil_atan();
-extern void mathutil_mtxA_from_mtx();
-extern void mathutil_mtxA_from_mtxB_translate();
-extern void mathutil_mtxA_mult_left();
-extern void mathutil_mtxA_normalize_basis();
-extern void mathutil_mtxA_rigid_inv_tf_point();
-extern void mathutil_mtxA_scale_s();
 extern void ord_tbl_draw_nodes();
 extern void raycast_stage_down();
 extern void set_ape_model_lod();
@@ -238,34 +200,22 @@ extern void unref_func_800393F8();
 extern void GXSetTevAlphaOp_cached();
 extern void ape_destroy();
 extern void avdisp_draw_model_unculled_sort_none();
-extern void mathutil_mtxA_from_mtxB();
-extern void mathutil_mtxA_from_translate_xyz();
-extern void mathutil_mtxA_rigid_inv_tf_tl();
-extern void mathutil_mtxA_sq_from_identity();
-extern void mathutil_mtxA_tf_point_xyz();
-extern void mathutil_mtxA_translate_neg();
-extern void mathutil_vec_dot_normalized_safe();
 extern void rend_efc_mirror_enable();
-extern void stobj_draw();
 extern void u_ball_init_1();
 extern void GXSetTevAlphaIn_cached();
 extern void avdisp_set_alpha();
 extern void background_draw();
 extern void light_init();
-extern void mathutil_mtxA_from_mtxB_translate_xyz();
 extern void set_bg_ambient();
 extern void u_avdisp_set_some_func_1();
 extern void GXSetTevColorOp_cached();
 extern void alloc_pool_light();
 extern void avdisp_draw_model_culled_sort_none();
 extern void func_8009CD5C();
-extern void mathutil_mtxA_scale_xyz();
 extern void ord_tbl_set_depth_offset();
 extern void GXSetTevColorIn_cached();
 extern void draw_monkey();
 extern void func_8009C5E4();
-extern void mathutil_mtxA_sq_from_mtx();
-extern void mathutil_mtxA_to_euler_yxz();
 extern void rend_efc_draw();
 extern void GXSetTevKAlphaSel_cached();
 extern void background_light_assign();
@@ -286,7 +236,7 @@ void lbl_00000270(void);
 void lbl_000033AC(void);
 void lbl_0000351C(void);
 void lbl_00003CC8(void);
-void lbl_00003DE0(void);
+void lbl_00003DE0(struct Stobj *st);
 void lbl_00004314(void);
 void lbl_00004498(void);
 void lbl_00004D14(void);
@@ -393,10 +343,109 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_00003DE0(void)
+void lbl_00003DE0(struct Stobj *st)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00003DE0.s"
-}
+    Vec sp54;
+    Vec sp48;
+    Vec dir;
+    Vec sp30;
+    Vec eye;
+    Vec sp18;
+    Vec spC;
+    u8 *k = lbl_0001BF80;
+    struct Camera *cam;
+    u8 *p;
+    u8 *q;
+    int hit;
+    float r;
+    float d;
+    float s;
+    int sid;
 
+    q = lbl_10017664 + st->index * 0x1B4 + 0x68;
+    p = q - 0x68;
+    hit = *(u32 *)(p + 0x84) & 8;
+    cam = cameraInfo;
+    mathutil_mtxA_from_mtxB();
+    mathutil_mtxA_rigid_inv_tf_tl(&eye);
+    mathutil_mtxA_from_mtx(userWork->matrices[3]);
+    mathutil_mtxA_rigid_inv_tf_tl(&sp18);
+    spC.x = eye.x - sp18.x;
+    spC.y = eye.y - sp18.y;
+    spC.z = eye.z - sp18.z;
+    sp54 = st->pos;
+    sp48 = eye;
+    if (func_8006AAEC(&st->prevPos, &sp54, &sp18, &sp48, st->boundSphereRadius,
+                      *(f32 *)(k + 0x60)) == 0)
+        return;
+    if (hit == 0 || *(s16 *)(q + 0xC) != 0)
+    {
+        dir.x = st->pos.x - eye.x;
+        dir.y = st->pos.y - eye.y;
+        dir.z = st->pos.z - eye.z;
+        r = *(f32 *)(k + 0x60) + st->boundSphereRadius;
+        if (mathutil_vec_len(&dir) < r)
+        {
+        sp30 = dir;
+        mathutil_vec_set_len(&sp30, &sp30, r);
+        sp30.x += eye.x;
+        sp30.y += eye.y;
+        sp30.z += eye.z;
+        st->localPos.x += sp30.x - st->pos.x;
+        st->localPos.y += sp30.y - st->pos.y;
+        st->localPos.z += sp30.z - st->pos.z;
+        st->pos.x = sp30.x;
+        st->pos.y = sp30.y;
+        st->pos.z = sp30.z;
+        mathutil_vec_normalize_len(&dir);
+        d = mathutil_vec_dot_prod(&dir, &st->unk64);
+        if (d < *(f32 *)(k + 8))
+        {
+            s = d * *(f32 *)(k + 0x98);
+            st->unk64.x += dir.x * s;
+            st->unk64.y += dir.y * s;
+            st->unk64.z += dir.z * s;
+        }
+        }
+    }
+    else
+    {
+        st->localPos.x += sp54.x - st->pos.x;
+        st->localPos.y += sp54.y - st->pos.y;
+        st->localPos.z += sp54.z - st->pos.z;
+        st->pos = sp54;
+        eye = sp48;
+        dir.x = sp54.x - eye.x;
+        dir.y = sp54.y - eye.y;
+        dir.z = sp54.z - eye.z;
+        mathutil_vec_normalize_len(&dir);
+        sp30.x = spC.x - st->unk64.x;
+        sp30.y = spC.y - st->unk64.x;
+        sp30.z = spC.z - st->unk64.x;
+        s = *(f32 *)(k + 0xE4) * mathutil_vec_dot_prod(&dir, &sp30);
+        sp30.x = s * dir.x;
+        sp30.y = s * dir.y;
+        sp30.z = s * dir.z;
+        mathutil_mtxA_from_mtxB();
+        mathutil_mtxA_tf_vec(&sp30, &sp30);
+        shake_camera(0, 0x3C, &sp30);
+        cam->lookAtVel.x += *(f32 *)(k + 0x8C) * sp30.x;
+        cam->lookAtVel.y += *(f32 *)(k + 0x8C) * sp30.y;
+        cam->lookAtVel.z += *(f32 *)(k + 0x8C) * sp30.z;
+        func_8006AD3C(&dir, &st->unk64, &spC, *(f32 *)(k + 0xC),
+                      *(f32 *)(k + 0x8C));
+        cam->eye = eye;
+        cam->eyeVel = spC;
+        *(s16 *)(q + 0xC) = 8;
+        if (*(s16 *)(q + 0x12) > 0)
+            sid = 0xFF;
+        else
+            sid = ((s16 *)lbl_0001C9D8)[playerCharacterSelection[*(s32 *)q]];
+        if (*(s16 *)(q + 0x14) > 0)
+            sid |= 0xD800;
+        lbl_802F1DFC = playerCharacterSelection[*(s32 *)q];
+        u_somePlayerId = *(s32 *)q;
+        u_play_sound_0(sid);
+    }
+}
 #pragma force_active reset

@@ -210,7 +210,7 @@ void lbl_0001723C(void);
 void lbl_00017408(void);
 void lbl_00017A00(void);
 void lbl_00018008(void);
-void lbl_00018474(void);
+int lbl_00018474(Vec *, Vec *, Vec *, Vec *, f32, f32, f32 *);
 void lbl_00018608(void);
 void lbl_000186EC(void);
 void lbl_000189B4(void);
@@ -227,7 +227,7 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm void lbl_00018474(void)
+asm int lbl_00018474(Vec *, Vec *, Vec *, Vec *, f32, f32, f32 *)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_billiards/lbl_00018474.s"

@@ -376,6 +376,7 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
+static void lbl_00009BF8(void);
 #pragma force_active on
 asm void lbl_00008B60(void)
 {
@@ -391,6 +392,11 @@ static asm void lbl_00009A08(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_00009A08.s"
+}
+static asm void lbl_00009BF8(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00009BF8.s"
 }
 static asm void lbl_00009D3C(void)
 {

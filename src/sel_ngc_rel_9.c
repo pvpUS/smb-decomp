@@ -107,7 +107,7 @@ extern u8 u_isCompetitionModeCourse[];
 
 // Imported functions the code calls that no included header declares.
 extern void __cvt_fp2unsigned();
-extern void are_all_continues_unlocked();
+extern int are_all_continues_unlocked(void);
 extern void course_first();
 extern void course_floor_count();
 extern void effect_draw();
@@ -117,9 +117,9 @@ extern void file_preload();
 extern void floor_to_stage_id();
 extern void func_8009F4C4();
 extern void func_80067310();
-extern void is_floor_visited();
+extern int is_floor_visited(int, int, int);
 extern void is_load_queue_not_empty();
-extern void is_minigame_unlocked();
+extern int is_minigame_unlocked(int);
 extern void item_draw();
 extern void lens_flare_draw();
 extern void lens_flare_draw_mask();
@@ -143,12 +143,12 @@ void _epilog(void);
 void _unresolved(void);
 void lbl_00000234(void);
 void lbl_0000033C(void);
-void lbl_000005D4(void);
+int lbl_000005D4(int);
 void lbl_00001910(void);
 void lbl_00001968(void);
 void lbl_00001B38(void);
 void lbl_00001D58(void);
-void lbl_00001E10(void);
+void lbl_00001E10(s32 *, int, int, int, int, int, int);
 void lbl_00002358(void);
 void lbl_00002484(void);
 void lbl_0000259C(void);
@@ -208,9 +208,184 @@ void lbl_00011824(void);
 void lbl_000118E4(void);
 
 #pragma force_active on
-asm void lbl_00001E10(void)
+void lbl_00001E10(s32 *cursor, int base, int disp, int tag, int s0, int s1, int s2)
 {
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_00001E10.s"
+    struct Sprite *sprite;
+    int count;
+    s32 n;
+    int i;
+    u8 *w;
+    int states[3];
+
+    states[0] = s0;
+    states[1] = s1;
+    states[2] = s2;
+    n = (tag == 0x48 || tag == 0x45 || tag == 0x4A) ? 1 : 2;
+    if (tag == 0x32)
+    {
+        if (lbl_000005D4(1))
+        {
+            if (--(*cursor) < base)
+                *cursor = n + base;
+            u_play_sound_0(0x6C);
+        }
+        if (lbl_000005D4(0))
+        {
+            if (++(*cursor) > n + base)
+                *cursor = base;
+            u_play_sound_0(0x6C);
+        }
+    }
+    else
+    {
+        if (lbl_000005D4(0))
+        {
+            if (--(*cursor) < base)
+                *cursor = n + base;
+            u_play_sound_0(0x6C);
+        }
+        if (lbl_000005D4(1))
+        {
+            if (++(*cursor) > n + base)
+                *cursor = base;
+            u_play_sound_0(0x6C);
+        }
+    }
+    disp = disp + *cursor - base;
+    sprite = find_sprite_with_tag(0x17);
+    if (sprite != NULL)
+        sprite->userVar = disp;
+
+    switch (tag)
+    {
+    case 0x39:
+        if (*cursor == 2)
+        {
+            count = 0;
+            if (is_floor_visited(0, 1, 0) || is_floor_visited(1, 1, 0)
+             || is_floor_visited(2, 1, 0))
+                count = 1;
+            if (is_minigame_unlocked(6))
+                count++;
+            if (is_minigame_unlocked(7))
+                count++;
+            if (is_minigame_unlocked(8))
+                count++;
+            if (are_all_continues_unlocked())
+                count++;
+            if (count > 0)
+            {
+                sprite = find_sprite_with_tag(0x17);
+                if (sprite != NULL)
+                    sprite->userVar = count + 0x13;
+            }
+            if (count >= 0 && count <= 3 && *(u32 *)g_totalPlayPoints >= 2500)
+            {
+                sprite = find_sprite_with_tag(0x17);
+                if (sprite != NULL)
+                    sprite->userVar = 0x19;
+            }
+        }
+        break;
+    case 0x32:
+        if (*cursor == 0)
+        {
+            count = 0;
+            if (is_minigame_unlocked(6))
+                count++;
+            if (is_minigame_unlocked(7))
+                count++;
+            if (is_minigame_unlocked(8))
+                count++;
+            if (are_all_continues_unlocked())
+                count++;
+            if (count > 0)
+            {
+                sprite = find_sprite_with_tag(0x17);
+                if (sprite != NULL)
+                    sprite->userVar = count + 5;
+            }
+        }
+        else if (*cursor == 1 && states[*cursor] != 0)
+        {
+            sprite = find_sprite_with_tag(0x17);
+            if (sprite != NULL)
+                sprite->userVar = 4;
+        }
+        else if (*cursor == 2 && states[*cursor] != 0)
+        {
+            sprite = find_sprite_with_tag(0x17);
+            if (sprite != NULL)
+                sprite->userVar = 5;
+        }
+        break;
+    case 0x3F:
+        if (*(u32 *)g_totalPlayPoints >= 2500)
+        {
+            for (i = 0; i <= n; i++)
+            {
+                if (states[i] != 0)
+                    states[i] = 2;
+            }
+            if (states[*cursor - base] != 0)
+            {
+                sprite = find_sprite_with_tag(0x17);
+                if (sprite != NULL)
+                    sprite->userVar = 0x3D;
+            }
+        }
+        else
+        {
+            if (states[*cursor - base] != 0)
+            {
+                sprite = find_sprite_with_tag(0x17);
+                if (sprite != NULL)
+                    sprite->userVar = 0x3C;
+            }
+        }
+        break;
+    }
+
+    w = (u8 *)&lbl_801EEDA8;
+    for (i = 0; i <= n; i++)
+    {
+        sprite = find_sprite_with_tag(tag + i);
+        if (sprite != NULL)
+        {
+            if (*cursor == base + i && states[i] == 2)
+            {
+                sprite->userVar = 0xB;
+                *(s32 *)(w + 0x68) = tag + i;
+                *(s32 *)(w + i * 4 + 0x6C) = -1;
+            }
+            else if (*cursor == base + i && states[i] != 0)
+            {
+                sprite->userVar = 9;
+                *(s32 *)(w + 0x68) = tag + i;
+                *(s32 *)(w + i * 4 + 0x6C) = -1;
+            }
+            else if (*cursor == base + i)
+            {
+                sprite->userVar = 1;
+                *(s32 *)(w + 0x68) = tag + i;
+                *(s32 *)(w + i * 4 + 0x6C) = -1;
+            }
+            else if (states[i] == 2)
+            {
+                sprite->userVar = 0xA;
+                *(s32 *)(w + i * 4 + 0x6C) = tag + i;
+            }
+            else if (states[i] != 0)
+            {
+                sprite->userVar = 8;
+                *(s32 *)(w + i * 4 + 0x6C) = tag + i;
+            }
+            else
+            {
+                sprite->userVar = 0;
+                *(s32 *)(w + i * 4 + 0x6C) = tag + i;
+            }
+        }
+    }
 }
 #pragma force_active reset

@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_0000B364.
+ * test_mode.c -- REL module: isolated function lbl_000081BC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -189,6 +189,7 @@ void _unresolved(void);
 void lbl_00000208(void);
 void lbl_00000270(void);
 void lbl_00000630(void);
+void lbl_00000780(void);
 void lbl_00000934(void);
 void lbl_00001B78(void);
 void lbl_00002108(void);
@@ -196,20 +197,27 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
+void lbl_00003C34(void);
+void lbl_00003D94(void);
+void lbl_000040B4(void);
+void lbl_0000502C(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
 void lbl_000057C0(void);
 void lbl_000065F0(void);
+void lbl_00006974(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
 void lbl_00007FE8(void);
 void lbl_00008008(void);
+static void lbl_000081BC(void);
 void lbl_00008808(void);
 void lbl_0000884C(void);
 void lbl_00008ADC(void);
 void lbl_00008B00(void);
+void lbl_00008B44(void);
 void lbl_00008F40(void);
 void lbl_00009060(void);
 void lbl_00009338(void);
@@ -271,26 +279,57 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_0000B364(void)
+struct TestBmpEntry
 {
-    float *k = (float *)lbl_00010118;
-    u8 *p = lbl_10000F70;
-    void **q;
+    /*0x00*/ s32 unk0;
+    /*0x04*/ u16 width;
+    /*0x06*/ u16 height;
+    /*0x08*/ s32 unk8;
+};
 
-    lbl_0000BE00();
-    q = (void **)(p + 0x38) - 1;
-    *(float *)p = k[0];
-    *(float *)(p + 4) = k[1];
-    *(int *)(p + 8) = 2;
-    *(float *)(p + 0xC) = k[2];
-    if (*q == NULL)
+static void lbl_000081BC(void)
+{
+    u8 *w = lbl_10000000;
+    u8 *t = lbl_000102B0;
+    struct TestBmpEntry *e;
+    u32 i;
+    s32 n;
+
+    globalAnimTimer = 0;
+    *(s16 *)(w + 0xD62) = 1;
+    background_set_random_seed(*(s16 *)(w + 0xD62));
+    load_stage(*(s16 *)(w + 0xD62));
+    modeCtrl.gameType = 0;
+    modeCtrl.unk30 = 1;
+    event_finish_all();
+    event_start(1);
+    event_start(4);
+    event_start(13);
+    event_start(19);
+    event_start(15);
+    event_start(5);
+    event_start(16);
+    camera_set_state_all(12);
+    g_poolInfo.playerPool.statusList[0] = 2;
+    g_poolInfo.playerPool.statusList[1] = 0;
+    g_poolInfo.playerPool.statusList[2] = 0;
+    g_poolInfo.playerPool.statusList[3] = 0;
+    e = (struct TestBmpEntry *)(t + 0x4464);
+    *(s32 *)(w + 0xD68) = 0;
+    for (i = 0; i < 9; i++, e++)
     {
-        *((u32 *)(p + 0x34) - 1) = GXGetTexBufferSize(0x280, 0x1E0, GX_TF_RGB565, GX_FALSE, 0);
-        *q = OSAllocFromHeap(__OSCurrHeap, *((u32 *)(p + 0x34) - 1));
+        n = GXGetTexBufferSize(e->width, e->height, 5, 0, 0);
+        if (n > *(s32 *)(w + 0xD68))
+            *(s32 *)(w + 0xD68) = n;
     }
-    GXInitTexObj((GXTexObj *)(p + 0x10), *q, currRenderMode->fbWidth,
-                 currRenderMode->efbHeight, GX_TF_RGB565, GX_CLAMP, GX_CLAMP, GX_FALSE);
-    u_replay_test_init();
-    camera_set_state_all(2);
+    *(void **)(w + 0xD64) = OSAllocFromHeap(__OSCurrHeap, *(s32 *)(w + 0xD68));
+    if (*(void **)(w + 0xD64) == NULL)
+        OSPanic((char *)(t + 0x134), 0x150A, (char *)(t + 0x44D0));
+    modeCtrl.submodeTimer = 0;
+    modeCtrl.unk10 = 0;
+    modeCtrl.courseFlags &= ~4;
+    submodeFinishFunc = lbl_00008808;
+    gameSubmodeRequest = 0x83;
 }
+
 #pragma force_active reset

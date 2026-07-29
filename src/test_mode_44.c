@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_0000A7E4.
+ * test_mode.c -- REL module: isolated function lbl_00006A70.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -189,6 +189,7 @@ void _unresolved(void);
 void lbl_00000208(void);
 void lbl_00000270(void);
 void lbl_00000630(void);
+void lbl_00000780(void);
 void lbl_00000934(void);
 void lbl_00001B78(void);
 void lbl_00002108(void);
@@ -196,11 +197,17 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
+void lbl_00003C34(void);
+void lbl_00003D94(void);
+void lbl_000040B4(void);
+void lbl_0000502C(void);
 void lbl_00005384(void);
-void lbl_000055E8(void);
+void lbl_000055E8(u8 *);
 void lbl_000056BC(void);
 void lbl_000057C0(void);
 void lbl_000065F0(void);
+void lbl_00006974(void);
+static void lbl_00006A70(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -210,6 +217,7 @@ void lbl_00008808(void);
 void lbl_0000884C(void);
 void lbl_00008ADC(void);
 void lbl_00008B00(void);
+void lbl_00008B44(void);
 void lbl_00008F40(void);
 void lbl_00009060(void);
 void lbl_00009338(void);
@@ -271,8 +279,44 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_0000A7E4(void)
+static void lbl_00006A70(void)
 {
-    (*(u32 *)lbl_10000F5C)++;
+    f32 *k = (f32 *)lbl_0000FE78;
+    u8 *w = lbl_10000000;
+    int pad0;
+    int pad1;
+    int pad2;
+    int pad3;
+
+    if (!(debugFlags & 0xA))
+    {
+        *(s32 *)(w + 0x5A8) = 0;
+        *(s32 *)(w + 0x5AC) = 0;
+        *(s16 *)(w + 0xD40) = 0;
+        *(s16 *)(w + 0xD42) = 0;
+        lbl_000055E8(lbl_00013A1C + 4);
+        event_start(15);
+        camera_set_state_all(2);
+        currentCamera->eye.x = k[24];
+        currentCamera->eye.y = k[113];
+        currentCamera->eye.z = k[94];
+        currentCamera->lookAt.x = k[24];
+        currentCamera->lookAt.y = k[24];
+        currentCamera->lookAt.z = k[24];
+        *(s16 *)(w + 0xD48) = 0;
+        *(s16 *)(w + 0xD54) = 0;
+        *(s16 *)(w + 0xD4A) = 0;
+        *(s16 *)(w + 0xD56) = 0;
+        *(s16 *)(w + 0xD4C) = 0;
+        *(s16 *)(w + 0xD58) = 0;
+        *(s16 *)(w + 0xD44) = 0;
+        *(u8 *)(w + 0xD5A) = 1;
+        *(u8 *)(w + 0xD5B) = 1;
+        *(u8 *)(w + 0xD4E) = 0;
+        *(f32 *)(w + 0xD50) = k[24];
+        submodeFinishFunc = lbl_00006974;
+        gameSubmodeRequest = 0x7D;
+    }
 }
+
 #pragma force_active reset

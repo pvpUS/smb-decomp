@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_00001F54.
+ * test_mode.c -- REL module: isolated function lbl_00000AAC.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -189,19 +189,25 @@ void _unresolved(void);
 void lbl_00000208(void);
 void lbl_00000270(void);
 void lbl_00000630(void);
+void lbl_00000780(void);
 void lbl_00000934(void);
+static void lbl_00000AAC(void);
 void lbl_00001B78(void);
-static void lbl_00001F54(void);
 void lbl_00002108(void);
 void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
+void lbl_00003C34(void);
+void lbl_00003D94(void);
+void lbl_000040B4(void);
+void lbl_0000502C(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
 void lbl_000057C0(void);
 void lbl_000065F0(void);
+void lbl_00006974(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -211,6 +217,7 @@ void lbl_00008808(void);
 void lbl_0000884C(void);
 void lbl_00008ADC(void);
 void lbl_00008B00(void);
+void lbl_00008B44(void);
 void lbl_00008F40(void);
 void lbl_00009060(void);
 void lbl_00009338(void);
@@ -272,28 +279,9 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_00001F54(void)
+static asm void lbl_00000AAC(void)
 {
-    u8 *p = lbl_10000000;
-    u32 *q;
-    u32 size;
-
-    *(int *)(p + 0x40) = 0;
-    *(int *)(p + 0x44) = 0xC0;
-    size = GXGetTexBufferSize(0x280, 0x1E0, 6, 0, 0);
-    q = (u32 *)(p + 0x68);
-    if (*(u32 *)(p + 0x68) == 0)
-        *q = (u32)OSAllocFromHeap(__OSCurrHeap, size);
-    if (*q == 0)
-        gameSubmodeRequest = 0x5F;
-    else
-    {
-        GXInitTexObj((GXTexObj *)(p + 0x48), (void *)*q, currRenderMode->fbWidth,
-                     currRenderMode->efbHeight,
-                     ((u32 *)lbl_00010BEC)[*(int *)(p + 0x40) * 2], 0, 0, 0);
-        u_replay_test_init();
-        camera_set_state_all(2);
-        gameSubmodeRequest = 0x68;
-    }
+    nofralloc
+#include "../asm/nonmatchings/test_mode/lbl_00000AAC.s"
 }
 #pragma force_active reset

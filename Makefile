@@ -428,6 +428,7 @@ SOURCES := \
 	src/sel_ngc_rel_27.c \
 	src/sel_ngc_rel_28.c \
 	src/sel_ngc_rel_29.c \
+	asm/sel_ngc_rel_d1.s \
 	src/sel_ngc_rel_31.c \
 	src/sel_ngc_rel_32.c \
 	src/sel_ngc_rel_32i.c \
@@ -446,6 +447,7 @@ SOURCES := \
 	src/sel_ngc_rel_44.c \
 	src/sel_ngc_rel_45.c \
 	src/sel_ngc_rel_46.c \
+	asm/sel_ngc_rel_d1b.s \
 	src/sel_ngc_rel_47.c \
 	src/sel_ngc_rel_48.c \
 	src/sel_ngc_rel_49.c \
@@ -456,7 +458,7 @@ SOURCES := \
 	src/sel_ngc_rel_53.c \
 	src/sel_ngc_rel_54.c \
 	src/sel_ngc_rel_55.c \
-	asm/sel_ngc_rel_d1.s \
+	asm/sel_ngc_rel_d2.s \
 	src/sel_ngc_rel_56.c
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
@@ -487,6 +489,20 @@ SOURCES := \
 	src/mini_race_7.c \
 	src/mini_race_8.c \
 	src/mini_race_9.c \
+	src/mini_race_9b.c \
+	src/mini_race_9c.c \
+	src/mini_race_9d.c \
+	src/mini_race_9e.c \
+	src/mini_race_9f.c \
+	src/mini_race_9g.c \
+	src/mini_race_9h.c \
+	src/mini_race_9i.c \
+	src/mini_race_9j.c \
+	src/mini_race_9k.c \
+	src/mini_race_9l.c \
+	src/mini_race_9m.c \
+	src/mini_race_9n.c \
+	src/mini_race_9o.c \
 	src/mini_race_10.c \
 	src/mini_race_11.c \
 	src/mini_race_11b.c \
@@ -507,6 +523,18 @@ SOURCES := \
 	src/mini_race_26.c \
 	src/mini_race_27.c \
 	src/mini_race_28.c \
+	src/mini_race_28b.c \
+	src/mini_race_28c.c \
+	src/mini_race_28d.c \
+	src/mini_race_28e.c \
+	src/mini_race_28f.c \
+	src/mini_race_28g.c \
+	src/mini_race_28h.c \
+	src/mini_race_28i.c \
+	src/mini_race_28j.c \
+	src/mini_race_28k.c \
+	src/mini_race_28l.c \
+	src/mini_race_28m.c \
 	src/mini_race_29.c \
 	src/mini_race_30.c \
 	src/mini_race_31.c \
@@ -655,11 +683,12 @@ SOURCES := \
 	src/mini_bowling_37.c \
 	src/mini_bowling_38.c \
 	src/mini_bowling_39.c \
+	asm/mini_bowling_d2.s \
 	src/mini_bowling_39i.c \
 	src/mini_bowling_40.c \
 	src/mini_bowling_41.c \
 	src/mini_bowling_42.c \
-	asm/mini_bowling_d2.s \
+	asm/mini_bowling_d3.s \
 	src/mini_bowling_43.c \
 	src/mini_bowling_44.c \
 	src/mini_bowling_45.c \
@@ -680,7 +709,7 @@ SOURCES := \
 	src/mini_bowling_60.c \
 	src/mini_bowling_61.c \
 	src/mini_bowling_62.c \
-	asm/mini_bowling_d3.s \
+	asm/mini_bowling_d4.s \
 	src/mini_bowling_63.c \
 	src/mini_bowling_64.c \
 	src/mini_bowling_65.c \
@@ -692,6 +721,7 @@ SOURCES := \
 	src/mini_bowling_71.c \
 	src/mini_bowling_72.c \
 	src/mini_bowling_73.c \
+	asm/mini_bowling_d5.s \
 	src/mini_bowling_74.c \
 	src/mini_bowling_75.c \
 	src/mini_bowling_76.c \
@@ -716,7 +746,7 @@ SOURCES := \
 	src/mini_bowling_94.c \
 	src/mini_bowling_95.c \
 	src/mini_bowling_96.c \
-	asm/mini_bowling_d4.s
+	asm/mini_bowling_d6.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
 mkbe.rel_mini_bowling.plf: $(O_FILES)
@@ -1074,6 +1104,8 @@ SOURCES := \
 	src/mini_billiards_39.c \
 	src/mini_billiards_40.c \
 	src/mini_billiards_41.c \
+	src/mini_billiards_41h.c \
+	src/mini_billiards_41i.c \
 	src/mini_billiards_42.c \
 	src/mini_billiards_43.c \
 	src/mini_billiards_44.c \
@@ -1192,6 +1224,40 @@ SOURCES := \
 	src/test_mode_86.c \
 	src/test_mode_87.c \
 	src/test_mode_88.c \
+	src/test_mode_89.c \
+	src/test_mode_90.c \
+	src/test_mode_91.c \
+	src/test_mode_92.c \
+	src/test_mode_93.c \
+	src/test_mode_94.c \
+	src/test_mode_95.c \
+	src/test_mode_96.c \
+	src/test_mode_97.c \
+	src/test_mode_98.c \
+	src/test_mode_99.c \
+	src/test_mode_100.c \
+	src/test_mode_101.c \
+	src/test_mode_102.c \
+	src/test_mode_103.c \
+	src/test_mode_104.c \
+	src/test_mode_105.c \
+	src/test_mode_106.c \
+	src/test_mode_107.c \
+	src/test_mode_108.c \
+	src/test_mode_109.c \
+	src/test_mode_110.c \
+	src/test_mode_111.c \
+	src/test_mode_112.c \
+	src/test_mode_113.c \
+	src/test_mode_114.c \
+	src/test_mode_115.c \
+	src/test_mode_116.c \
+	src/test_mode_117.c \
+	src/test_mode_118.c \
+	src/test_mode_119.c \
+	src/test_mode_120.c \
+	src/test_mode_121.c \
+	src/test_mode_122.c \
 	asm/test_mode.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)

@@ -153,10 +153,56 @@ void lbl_0000B218(void);
 void lbl_0000C148(void);
 
 #pragma force_active on
-static asm void lbl_00000AE0(void)
+static void lbl_00000AE0(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00000AE0.s"
-}
+    u8 *w = lbl_10000000;
+    u8 *v = w + 0x15C;
+    u16 *t = (u16 *)lbl_0000C230;
+    s32 *q;
+    s8 *r;
+    s8 *s;
+    u16 *p;
+    u16 *e;
+    char buf[64];
+    u16 a[16];
+    int i;
 
+    *(s8 *)(w + 0x39) = 0;
+    memset(w + 0x278, 0, 0x3000);
+    memset(w + 0x6278, 0, 8);
+    e = a;
+    e[14] = t[0];
+    e[12] = t[2];
+    e[10] = t[4];
+    e[8] = t[6];
+    e[6] = t[8];
+    e[4] = t[10];
+    e[2] = t[12];
+    e[0] = t[14];
+    q = (s32 *)(w + 0x6280);
+    r = (s8 *)(w + 0x6294);
+    s = (s8 *)(w + 0x6290);
+    p = (u16 *)(w + 0x1B8);
+    for (i = 0; i < 4; i++)
+    {
+        *q++ = 0;
+        *r++ = -128;
+        *s++ = -128;
+        p[0] = e[14];
+        p[1] = e[12];
+        p[2] = e[10];
+        p[3] = e[8];
+        p[4] = e[6];
+        p[5] = e[4];
+        p[6] = e[2];
+        p[7] = e[0];
+        p += 8;
+    }
+    memset(w + 0x1F8, 0, 0x40);
+    memset(w + 0x238, 0, 0x40);
+    lbl_0000B040();
+    gameSubmodeRequest = 0xB3;
+    *(s32 *)(v + 0x1C) = 0;
+    *(s32 *)(v + 0x18) = 0;
+}
 #pragma force_active reset

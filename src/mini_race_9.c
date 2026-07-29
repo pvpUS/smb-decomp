@@ -374,10 +374,76 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
+void lbl_00000A68(void);
+void lbl_00000EAC(void);
+void lbl_00000FB4(void);
+void lbl_00001040(void);
+void lbl_000010F4(void);
+void lbl_0000118C(void);
+void lbl_000016F8(void);
+void lbl_0000182C(void);
+void lbl_000019AC(void);
+void lbl_00001CF0(void);
+void lbl_00001E14(void);
+void lbl_00001ED0(void);
+void lbl_00001F94(void);
+void lbl_00001FDC(void);
 #pragma force_active on
-asm void lbl_000008B4(void)
+/* @BODY */
+// INVENTED -- 16-byte sub-block at lbl_10000000 + 0x28.  UNVERIFIED.
+struct RaceModeSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000008B4.s"
+    /*0x00*/ u16 unk0;
+    /*0x02*/ u16 unk2;
+    /*0x04*/ s16 unk4;
+    /*0x06*/ s16 unk6;
+    u8 filler8[0x10 - 8];
+};
+
+void lbl_000008B4(void)
+{
+    u8 *w = lbl_10000000;
+    struct RaceModeSub *s = (struct RaceModeSub *)(w + 0x28);
+    int i;
+    u8 dead[16]; /* UNVERIFIED dead local -- 16 bytes of frame */
+
+    s->unk0 = (s8)lbl_801EED88.unk0;
+    s->unk4 = (s8)lbl_801EED88.unk1[s->unk0];
+    s->unk2 = lbl_801EED88.unk8;
+    if (*(u16 *)(w + 0x2A) & 0x10)
+    {
+        s->unk2 &= ~1;
+        s->unk2 &= ~4;
+        s->unk2 &= ~2;
+        s->unk4 = ((s8 *)lbl_802F02F8)[s->unk0];
+    }
+    if (modeCtrl.unk30 == 1)
+        s->unk2 &= ~0x20;
+    else
+        s->unk2 |= 0x20;
+    if ((s->unk2 & 1) || modeCtrl.unk30 == 3)
+    {
+        for (i = modeCtrl.unk30; i < 4; i++)
+        {
+            g_poolInfo.playerBuf[i] = 2;
+            playerCharacterSelection[i] = (rand() & 0x7FFF) % 4;
+        }
+    }
+    if (s->unk2 & 1)
+        *(s16 *)(w + 0x46) = 4;
+    else
+        *(s16 *)(w + 0x46) = modeCtrl.unk30;
+    if (s->unk2 & 8)
+    {
+        s->unk6 = 0;
+        *(s16 *)(w + 0x48) = 0;
+        *(s16 *)(w + 0x4A) = 0;
+        *(s16 *)(w + 0x4C) = 0;
+        *(s16 *)(w + 0x4E) = 0;
+    }
+    *(s16 *)(w + 0x44) = *(s16 *)(w + 0x38);
+    *(s16 *)(w + 0x38) = 1;
+    *(s32 *)w = 0;
 }
+
 #pragma force_active reset

@@ -178,8 +178,8 @@ void lbl_00007A6C(void);
 void lbl_00007C54(void);
 void lbl_00007E74(void);
 void lbl_00007FE0(void);
-void lbl_000080E0(void);
-void lbl_000082E4(void);
+void lbl_000080E0(struct Ball *ball);
+void lbl_000082E4(struct Ball *);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
 void lbl_000087CC(void);
@@ -245,9 +245,36 @@ void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
 #pragma force_active on
-asm void lbl_000080E0(void)
+void lbl_000080E0(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_000080E0.s"
+    Vec dir;
+
+    ball->prevPos = ball->pos;
+    ball->speed = mathutil_vec_len(&ball->vel);
+    mathutil_mtx_copy(ball->unk30, ball->unkC8);
+    ball->vel.y -= ball->accel;
+    {
+        f64 *k = (f64 *)lbl_000112C0;
+        ball->vel.z = ball->vel.z * *k;
+        ball->unk60 = ball->unk60 * *k;
+    }
+    ball->pos.x = ball->vel.x + ball->pos.x;
+    ball->pos.y = ball->vel.y + ball->pos.y;
+    ball->pos.z = ball->vel.z + ball->pos.z;
+    ball->rotX += ball->unk60;
+    ball->rotY += ball->unk62;
+    ball->rotZ += ball->unk64;
+    mathutil_mtxA_from_rotate_z(ball->rotZ);
+    mathutil_mtxA_rotate_y(ball->rotY);
+    mathutil_mtxA_rotate_x(ball->rotX);
+    mathutil_mtxA_to_quat(&ball->unk98);
+    mathutil_mtxA_set_translate(&ball->pos);
+    mathutil_mtxA_to_mtx(ball->unk30);
+    mathutil_mtxA_to_quat(&ball->unkA8);
+    lbl_000082E4(ball);
+    dir.x = cameraInfo[ball->playerId].eye.x - ball->pos.x;
+    dir.y = cameraInfo[ball->playerId].eye.y - ball->pos.y;
+    dir.z = cameraInfo[ball->playerId].eye.z - ball->pos.z;
+    mot_ape_set_quat_from_vec(ball->ape, &dir);
 }
 #pragma force_active reset

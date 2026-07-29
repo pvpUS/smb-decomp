@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_0000DC60.
+ * test_mode.c -- REL module: isolated function lbl_0000AD30.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -189,6 +189,7 @@ void _unresolved(void);
 void lbl_00000208(void);
 void lbl_00000270(void);
 void lbl_00000630(void);
+void lbl_00000780(void);
 void lbl_00000934(void);
 void lbl_00001B78(void);
 void lbl_00002108(void);
@@ -196,11 +197,16 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
+void lbl_00003C34(void);
+void lbl_00003D94(void);
+void lbl_000040B4(void);
+void lbl_0000502C(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
 void lbl_000057C0(void);
 void lbl_000065F0(void);
+void lbl_00006974(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -210,6 +216,7 @@ void lbl_00008808(void);
 void lbl_0000884C(void);
 void lbl_00008ADC(void);
 void lbl_00008B00(void);
+void lbl_00008B44(void);
 void lbl_00008F40(void);
 void lbl_00009060(void);
 void lbl_00009338(void);
@@ -257,7 +264,7 @@ void lbl_0000D3C0(void);
 void lbl_0000D844(void);
 void lbl_0000D9FC(void);
 void lbl_0000DB2C(void);
-void lbl_0000DC60(char *name, char *fmt, ...);
+void lbl_0000DC60(void);
 void lbl_0000DDA4(void);
 void lbl_0000E2E8(void);
 void lbl_0000E3E8(void);
@@ -271,34 +278,9 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_0000DC60(char *name, char *fmt, ...)
+asm void lbl_0000AD30(void)
 {
-    u8 *s = lbl_000148E8;
-    u8 *p = lbl_10003BF8;
-    va_list ap;
-    char buf[80];
-
-    if (*(int *)(p + 0x78) == *(int *)(p + 0x7C))
-    {
-        window_set_text_color(2);
-        u_debug_print((char *)(s + 0xE98));
-    }
-    else
-    {
-        window_set_text_color(0);
-        u_debug_print((char *)(s + 0xE9C));
-    }
-    u_debug_print(name);
-    if (*(int *)(p + 0x78) == *(int *)(p + 0x7C))
-        window_set_text_color(2);
-    else
-        window_set_text_color(1);
-    va_start(ap, fmt);
-    vsprintf(buf, fmt, ap);
-    u_debug_print(buf);
-    *(int *)(p + 0x7C) = *(int *)(p + 0x7C) + 1;
-    window_set_text_color(0);
-    u_debug_print((char *)(s + 0xEAC));
+    nofralloc
+#include "../asm/nonmatchings/test_mode/lbl_0000AD30.s"
 }
 #pragma force_active reset
-

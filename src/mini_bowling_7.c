@@ -245,10 +245,33 @@ void lbl_0000E894(void);
 void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
+struct BowlSnd4 { s32 id[4]; };
+
 #pragma force_active on
-asm void lbl_00001B14(void)
+void lbl_00001B14(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00001B14.s"
+    u8 *w = lbl_10000000;
+    u8 *tbl = lbl_0000F020;
+    struct BowlSnd4 snd;
+
+    snd = *(struct BowlSnd4 *)(tbl + 0x1e00);
+    if ((s32)lbl_802F1BF0 == 0 && modeCtrl.playerCount >= 2) {
+        if (*(s32 *)w == 0x3b)
+            u_play_sound_0(snd.id[modeCtrl.currPlayer]);
+        else if (*(s32 *)w == 1)
+            u_play_sound_0(0x1f5);
+    } else if (*(s32 *)w == 0x3b) {
+        u_play_sound_0(0x1f5);
+    }
+    if (*(s32 *)w < 0) {
+        if (modeCtrl.playerCount == 1)
+            u_play_sound_0(0xd81e);
+        *(f32 *)(w + 0x160) = *(f32 *)(tbl + 0x1c98);
+        *(f32 *)(w + 0x164) = *(f32 *)(tbl + 0x1dfc);
+        *(s32 *)w = 0x2710;
+        *(s32 *)lbl_00014F20 = 4;
+        *(s32 *)lbl_00014F24 = 0x40a1;
+        CAMERA_FOREACH_2(camera->subState = 2;)
+    }
 }
 #pragma force_active reset

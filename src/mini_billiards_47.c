@@ -215,7 +215,7 @@ void lbl_00018608(void);
 void lbl_000186EC(void);
 void lbl_000189B4(void);
 void lbl_00018A98(void);
-void lbl_00018C78(void);
+f32 lbl_00018C78(struct Ape *);
 void lbl_00018F4C(void);
 void lbl_00019264(void);
 void lbl_0001968C(void);
@@ -227,9 +227,62 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm void lbl_00018C78(void)
+f32 lbl_00018C78(struct Ape *ape)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00018C78.s"
+    u8 *p = lbl_00020B58;
+    f32 t;
+    f32 f;
+    Vec v;
+    Vec g;
+    Quaternion q;
+    Mtx m;
+    Vec e;
+    Vec d;
+    Vec c;
+    Vec b;
+    Vec a;
+    Vec *pt;
+
+    v = *(Vec *)&((s8 *)(lbl_10009878 + 0x34))[ape->ballId * 0x68];
+    v.y = *(f32 *)(p + 0x18);
+    if (mathutil_sqrt(mathutil_vec_sq_len(&v)) < *(f32 *)(p + 0x9C))
+        return *(f32 *)(p + 0x18);
+    mathutil_vec_normalize_len(&v);
+    mathutil_mtxA_rigid_inv_tf_vec(&v, &v);
+    b = *(Vec *)(p + 0x6C);
+    pt = &b;
+    g = *pt;
+    if (v.x > *(f32 *)(p + 0xA0) && v.x < *(f32 *)(p + 0x64)) {
+        e = *(Vec *)(p + 0x78);
+        t = mathutil_vec_dot_prod(&e, &v);
+        if (t >= *(f32 *)(p + 0xA4) || t <= *(f32 *)(p + 0xA8)) {
+            e.x = *(f32 *)(p + 0x18);
+            e.z = *(f32 *)(p + 0xAC);
+        }
+        mathutil_vec_cross_prod(&e, &v, &g);
+        mathutil_quat_from_axis_angle(&q, &g, 0x2D8);
+    } else {
+        pt = &a;
+        *pt = *(Vec *)(p + 0x84);
+        mathutil_quat_from_dirs(&q, &a, &v);
+    }
+    mathutil_mtxA_push();
+    mathutil_mtxA_from_quat(&q);
+    mathutil_mtxA_normalize_basis();
+    mathutil_mtxA_to_mtx(m);
+    mathutil_mtxA_pop();
+    mathutil_mtxA_mult_right(m);
+    mathutil_mtxA_push();
+    d = *(Vec *)(p + 0x90);
+    u_math_unk7((Quaternion *)(lbl_10009878 + ape->ballId * 0x68 + 0x54),
+                &c, &d,
+                *(f32 *)(p + 0xB0));
+    f = mathutil_sqrt(mathutil_vec_sq_len(&c));
+    mathutil_mtxA_pop();
+    if (*(s8 *)lbl_1000000A == 0x13 || *(s8 *)lbl_1000000A == 0xA ||
+        *(s8 *)lbl_1000000A == 0xB || *(s8 *)lbl_1000000A == 0x14 ||
+        *(s8 *)lbl_1000000A == 0x16)
+        return *(f32 *)(p + 0xB4) * (*(f32 *)(p + 0xB8) * f);
+    return *(f32 *)(p + 0x18);
 }
 #pragma force_active reset
