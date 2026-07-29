@@ -263,8 +263,32 @@ control scored identical to baseline on raw and 10-vs-7 on aligned.
 
 ### STATE FOR RUN 9
 
-- **Commits `29f21e9` (run 8) and `14b0911` (tools)** on
-  `wip/rel-drafts-and-dol-matches`. **Not yet pushed.**
+- **Commits `29f21e9` (run 8), `14b0911` (tools) and `42fc57c` (shared headers)**
+  on `wip/rel-drafts-and-dol-matches`. **Not yet pushed** — run 7's push was a
+  separate explicit step and these are local only. Working tree clean.
+- **`mathutil_vec_sq_distance()` is now in `src/mathutil.h` and
+  `CAMERA_FOREACH_2` in `src/camera.h`**, with the 6 + 3 per-file duplicates
+  removed. §0.13 flagged this as a decision for whoever upstreams; **between
+  runs is the only workable time**, because `rel_merge_back` drops header edits
+  so an agent cannot land it from a warm copy — it can only re-duplicate.
+  Verified byte-neutral by its own full clean rebuild (all 12 OK); the plan was
+  to revert if it had not been. mini_fight alone has 11 functions containing the
+  sq-distance block, so this saves nine more copies next run.
+- **All nine warm copies at `C:/tmp/smbm/<mod>` are RESET to `42fc57c`, clean,
+  and each rebuilt to its golden sha1 with `rel_sweep --gate`** — every module
+  object plus the `.rel`/`.plf` DELETED first, not incrementally. All nine
+  GOLDEN, `fail=0`. Re-run with `C:/tmp/smbm/warm_reset_run9.sh`, which fetches
+  from the main working tree by path (the commits are local, so the GitHub
+  remotes cannot serve them). CW temps `C:/tmp/tmp_<mod>` exist.
+- **`C:/tmp/smbm/RUN9_BRIEF.md` is written** — hand it to every module agent. It
+  leads with **re-measuring**, not with a target list, because rescoring
+  inherited residuals is the highest-value action available and one such
+  re-measurement already turned a "retired at 16" function into a 3.
+- **Near-miss drafts were NOT re-exported to a `run8-nearmiss-drafts/` dir this
+  run** — each module's drafts and READMEs are in its own
+  `C:/tmp/smbm/_scratch_<mod>/nearmiss/`, and `RUN8_RESULTS.md` indexes them.
+  run5/6/7 dirs are still next door and their unconverted entries remain valid
+  **but every residual in them is a RAW count.**
 - **Verified by a completely clean build**: all objects, every `.rel`/`.plf`/
   `.map`, the `.dol` and `.elf` deleted first, then `make all` from nothing —
   **1,101 objects, `sha1sum -c supermonkeyball.sha1` = all 12 OK.** Diff scanned
