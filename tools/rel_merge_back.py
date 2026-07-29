@@ -17,7 +17,10 @@ What moves
   Makefile SOURCES      the module's block, in .text order, including the
                         interleaved data objects that carving introduces
 
-asm/nonmatchings/<mod>/ is deterministic from the split and is NOT copied.
+asm/nonmatchings/<mod>/ IS synced, by content -- see the comment at the sync
+loop.  (This line used to say it was not copied; that was wrong, and run 8's
+test_mode merge depended on the sync working: 5 new bodies, 3 rewritten by a
+re-split.)
 Never copy *.rel/.plf/.elf/.map/.o -- those are build outputs (and gitignored
 game binaries).
 
@@ -170,14 +173,24 @@ def merge(module, dry):
         for name in os.listdir(warm_nm):
             src_p = os.path.join(warm_nm, name)
             dst_p = os.path.join(main_nm, name)
+            # copyfile + utime(now), NEVER copy2: copy2 preserves the SOURCE
+            # mtime, which is routinely older than what is already in main.
+            # That is the exact bug run 6 found in the .c path -- make then
+            # skips the recompile and links a stale object while reporting
+            # GOLDEN.  These are .s bodies rather than .c, and merge() deletes
+            # the module's objects below, so it cannot bite today; it is fixed
+            # anyway because the next person to reorder this function should
+            # not have to rediscover it.
             if not os.path.exists(dst_p):
-                shutil.copy2(src_p, dst_p)
+                shutil.copyfile(src_p, dst_p)
+                os.utime(dst_p, None)
                 added += 1
                 continue
             a = open(src_p, 'rb').read().replace(b'\r\n', b'\n')
             b = open(dst_p, 'rb').read().replace(b'\r\n', b'\n')
             if a != b:
-                shutil.copy2(src_p, dst_p)
+                shutil.copyfile(src_p, dst_p)
+                os.utime(dst_p, None)
                 changed += 1
         stale = sorted(set(os.listdir(main_nm)) - set(os.listdir(warm_nm)))
         if added:
