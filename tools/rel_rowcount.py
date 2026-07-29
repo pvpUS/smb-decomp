@@ -44,9 +44,17 @@ for mod in mods:
         txt = open(f, errors='replace').read()
         defined = re.findall(r'^(lbl_[0-9A-Fa-f]+):', txt, re.M)
         targets = set()
+        # RUN 9: the optional-operand group used to be `(?:[^,]*,\s*)?`, which is
+        # WRONG -- a negated character class matches newlines, so on a branch
+        # with no comma operand it ran on through the following LINES until it
+        # found a comma, capturing a label from an unrelated instruction while
+        # MISSING the real target.  `bne lbl_000007F4` in mini_pilot
+        # `lbl_000007B8.s` was invisible, so a 61-instruction single function was
+        # counted as five.  Every "row holds N functions" figure before run 9 is
+        # an OVER-count for the same reason.  Keep this line-anchored.
         for m in re.finditer(
-                r'/\* [0-9A-F]{8} [0-9A-F]{8} \*/[ \t]+b[a-z]*[ \t]+(?:[^,]*,\s*)?'
-                r'(lbl_[0-9A-Fa-f]+)', txt):
+                r'(?m)^/\* [0-9A-F]{8} [0-9A-F]{8} \*/[ \t]+b[a-z]*[+-]?[ \t]+'
+                r'[^\n]*?(lbl_[0-9A-Fa-f]+)', txt):
             targets.add(m.group(1))
         # A label is a FUNCTION ENTRY only if it is unreferenced by any branch in
         # the file AND is preceded by a `blr` (end of the previous body) AND
