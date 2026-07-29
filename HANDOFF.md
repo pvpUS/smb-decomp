@@ -264,8 +264,12 @@ control scored identical to baseline on raw and 10-vs-7 on aligned.
 ### STATE FOR RUN 9
 
 - **Commits `29f21e9` (run 8), `14b0911` (tools) and `42fc57c` (shared headers)**
-  on `wip/rel-drafts-and-dol-matches`. **Not yet pushed** — run 7's push was a
-  separate explicit step and these are local only. Working tree clean.
+  on `wip/rel-drafts-and-dol-matches`. **Pushed**: `fork/wip/rel-drafts-and-dol-matches`
+  at `354f976` (was `4f1b2b2`). Diff scanned for game binaries first
+  (`.dol/.elf/.rel/.plf/.o/.map/.bin/.a/.exe`, `baserom*`) — clean; 167 files,
+  all `.c`/`.s`/`.py`/`.h`/`.md`/Makefile. Working tree clean.
+  (167 rather than the run-8 commit's 260 because many test_mode files differed
+  only in line endings, which git normalises away.)
 - **`mathutil_vec_sq_distance()` is now in `src/mathutil.h` and
   `CAMERA_FOREACH_2` in `src/camera.h`**, with the 6 + 3 per-file duplicates
   removed. §0.13 flagged this as a decision for whoever upstreams; **between
