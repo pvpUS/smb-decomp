@@ -375,9 +375,56 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_00000228(void)
+
+// INVENTED -- 20-byte record, 256 of them at lbl_802C4960 (unnamed DOL bss).
+struct RaceTrail
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00000228.s"
+    f32 unk0;
+    f32 unk4;
+    f32 unk8;
+    u8 fillerC[0x10 - 0xC];
+    f32 unk10;
+};
+
+void lbl_00000228(void)
+{
+    u8 *w = lbl_10000000;
+    u8 *pool = lbl_00013680;
+    u8 *q = w + 0x28;
+    struct ItemFuncs funcs;
+    s16 i;
+
+    for (i = 0; i < 256; i++)
+    {
+        ((struct RaceTrail *)lbl_802C4960)[i].unk0 = *(f32 *)(pool + 0x1C);
+        ((struct RaceTrail *)lbl_802C4960)[i].unk4 = *(f32 *)(pool + 0x20);
+        ((struct RaceTrail *)lbl_802C4960)[i].unk8 = *(f32 *)(pool + 0x20);
+        ((struct RaceTrail *)lbl_802C4960)[i].unk10 = *(f32 *)(pool + 0x20);
+    }
+    event_finish_all();
+    unload_stage();
+    u_free_minigame_graphics();
+    lbl_000030DC();
+    free_all_bitmap_groups_except_com();
+    func_800249D4();
+    funcs = *(struct ItemFuncs *)pool;
+    item_replace_type_funcs(2, &funcs);
+    lbl_00012D50();
+    for (i = 0; i < 4; i++)
+    {
+        w[4 + i] = g_poolInfo.playerBuf[i];
+        ((s32 *)(w + 8))[i] = playerCharacterSelection[i];
+    }
+
+    *(s16 *)(w + 0x38) = 0;
+    *(s32 *)(w + 0x3C) = 0;
+    SoundGroupLoad(0xD);
+    lbl_00003094();
+    call_bitmap_load_group(7);
+    *(s16 *)(q + 0) = 0;
+    *(s16 *)(q + 2) = 0;
+    *(s16 *)(q + 4) = 3;
+    *(f32 *)(q + 8) = *(f32 *)(pool + 0x20);
+    *(s16 *)(q + 6) = 0;
 }
 #pragma force_active reset

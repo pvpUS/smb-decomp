@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_000094C0.
+ * test_mode.c -- REL module: isolated function lbl_00007FE8.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -196,10 +196,11 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
-void lbl_00003C34(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
+void lbl_000057C0(void);
+void lbl_000065F0(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -260,34 +261,18 @@ void lbl_0000DC60(void);
 void lbl_0000DDA4(void);
 void lbl_0000E2E8(void);
 void lbl_0000E3E8(void);
+void lbl_0000E628(void);
+void lbl_0000ECB4(void);
+void lbl_0000EEF4(void);
 void lbl_0000F6F0(void);
+void lbl_0000F7BC(void);
 void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_000094C0(void)
+void lbl_00007FE8(void)
 {
-    int i;
-    u8 *p;
-
-    lbl_0000A78C();
-    lbl_0000ADEC();
-    p = lbl_10000E00;
-    for (i = 2; i > 0; i--)
-    {
-        if (*(void **)(p + 0x94) != NULL)
-        {
-            OSFreeToHeap(__OSCurrHeap, *(void **)(p + 0x94));
-            *(void **)(p + 0x94) = NULL;
-        }
-        if (*(void **)(p + 0x98) != NULL)
-        {
-            OSFreeToHeap(__OSCurrHeap, *(void **)(p + 0x98));
-            *(void **)(p + 0x98) = NULL;
-        }
-        p += 0x9C;
-    }
-    lbl_0000A7E0();
+    func_800A5704();
 }
 #pragma force_active reset

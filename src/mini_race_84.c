@@ -330,8 +330,8 @@ void lbl_0000D19C(void);
 void lbl_0000D20C(void);
 void lbl_0000D2B8(void);
 void lbl_0000D41C(void);
-void lbl_0000D4E4(void);
-void lbl_0000D69C(void);
+void lbl_0000D4E4(struct Sprite *);
+void lbl_0000D69C(struct Sprite *);
 void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
@@ -375,14 +375,114 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_0000D4E4(void)
+
+// Per-racer state hanging off struct Ball::unk144 inside this module.
+struct RaceSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000D4E4.s"
+    u8 filler0[0x264];
+    u8 unk264[4];
+};
+
+struct RaceModelTbl
+{
+    s16 v[10];
+};
+
+void lbl_0000D4E4(struct Sprite *sprite)
+{
+    u8 *cfg = lbl_00013C48;
+    struct RaceModelTbl tblA = *(struct RaceModelTbl *)(cfg + 0x110);
+    struct RaceModelTbl tblB = *(struct RaceModelTbl *)(cfg + 0x124);
+    NLsprarg params;
+    struct RaceSub *st = (struct RaceSub *)ballInfo[sprite->userVar].unk144;
+    f32 x;
+    f32 y;
+    s16 i;
+
+    if (st->unk264[0] == 0)
+        return;
+    params.zm_x = *(f32 *)(cfg + 8);
+    params.zm_y = *(f32 *)(cfg + 8);
+    params.u0 = params.v0 = *(f32 *)(cfg + 0x18);
+    params.u1 = params.v1 = *(f32 *)(cfg + 8);
+    params.ang = 0;
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = NLSPR_DISP_LT;
+    params.trnsl = *(f32 *)(cfg + 8);
+    params.base_color = 0xFFFFFF;
+    params.offset_color = 0;
+    x = sprite->x;
+    y = sprite->y;
+    params.sprno = tblA.v[st->unk264[0]];
+    params.x = x;
+    params.y = y;
+    params.z = *(f32 *)(cfg + 0xD8);
+    nlSprPut(&params);
+    x = x + *(f32 *)(cfg + 0x138);
+    for (i = 1; i < 3; i++)
+    {
+        if (st->unk264[i] == 0)
+            return;
+        y = y - *(f32 *)(cfg + 0x34);
+        params.sprno = tblB.v[st->unk264[i]];
+        params.x = x;
+        params.y = y;
+        params.z = *(f32 *)(cfg + 0xD8);
+        nlSprPut(&params);
+    }
 }
-asm void lbl_0000D69C(void)
+
+void lbl_0000D69C(struct Sprite *sprite)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000D69C.s"
+    u8 *cfg = lbl_00013C48;
+    struct RaceModelTbl tblA = *(struct RaceModelTbl *)(cfg + 0x13C);
+    struct RaceModelTbl tblB = *(struct RaceModelTbl *)(cfg + 0x150);
+    NLsprarg params;
+    struct RaceSub *st = (struct RaceSub *)ballInfo[sprite->userVar].unk144;
+    f32 x;
+    f32 y;
+    s16 i;
+
+    if (st->unk264[0] == 0)
+        return;
+    params.zm_x = *(f32 *)(cfg + 0x14);
+    params.zm_y = *(f32 *)(cfg + 0x14);
+    params.u0 = params.v0 = *(f32 *)(cfg + 0x18);
+    params.u1 = params.v1 = *(f32 *)(cfg + 8);
+    params.ang = 0;
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = NLSPR_DISP_LT;
+    params.trnsl = *(f32 *)(cfg + 8);
+    params.base_color = 0xFFFFFF;
+    params.offset_color = 0;
+    x = sprite->x;
+    y = sprite->y;
+    params.sprno = tblA.v[st->unk264[0]];
+    params.x = x;
+    params.y = y;
+    params.z = *(f32 *)(cfg + 0xD8);
+    nlSprPut(&params);
+    x = x + *(f32 *)(cfg + 0x5C);
+    params.zm_x = *(f32 *)(cfg + 8);
+    params.zm_y = *(f32 *)(cfg + 8);
+    params.u0 = params.v0 = *(f32 *)(cfg + 0x18);
+    params.u1 = params.v1 = *(f32 *)(cfg + 8);
+    params.ang = 0;
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = NLSPR_DISP_LT;
+    params.trnsl = *(f32 *)(cfg + 8);
+    params.base_color = 0xFFFFFF;
+    params.offset_color = 0;
+    for (i = 1; i < 3; i++)
+    {
+        if (st->unk264[i] == 0)
+            return;
+        y = y - *(f32 *)(cfg + 0x164);
+        params.sprno = tblB.v[st->unk264[i]];
+        params.x = x;
+        params.y = y;
+        params.z = *(f32 *)(cfg + 0xD8);
+        nlSprPut(&params);
+    }
 }
 #pragma force_active reset

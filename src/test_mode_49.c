@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_0000BE94.
+ * test_mode.c -- REL module: isolated function lbl_0000AE7C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -54,6 +54,11 @@
 #include "perf.h"
 #include "course.h"
 
+struct TestModeVecKey
+{
+    /*0x00*/ Vec pos;
+    /*0x0C*/ float f;
+};
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/test_mode.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000FE78[];
@@ -196,10 +201,11 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
-void lbl_00003C34(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
+void lbl_000057C0(void);
+void lbl_000065F0(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -229,7 +235,7 @@ void lbl_0000ADEC(void);
 void lbl_0000ADF0(void);
 void lbl_0000AE7C(void);
 void lbl_0000AEB8(void);
-void lbl_0000AEDC(void);
+void lbl_0000AEDC(struct TestModeVecKey *, int);
 void lbl_0000B364(void);
 void lbl_0000B44C(void);
 void lbl_0000B4A0(void);
@@ -260,13 +266,26 @@ void lbl_0000DC60(void);
 void lbl_0000DDA4(void);
 void lbl_0000E2E8(void);
 void lbl_0000E3E8(void);
+void lbl_0000E628(void);
+void lbl_0000ECB4(void);
+void lbl_0000EEF4(void);
 void lbl_0000F6F0(void);
+void lbl_0000F7BC(void);
 void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_0000BE94(void)
+void lbl_0000AE7C(void)
 {
+    struct TestModeVecKey *keys = (struct TestModeVecKey *)lbl_10000F60;
+    int i;
+
+    for (i = 0; i < 1; i++)
+    {
+        lbl_0000AEDC(keys, 0);
+        keys++;
+    }
 }
 #pragma force_active reset
+

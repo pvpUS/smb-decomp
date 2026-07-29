@@ -250,7 +250,7 @@ void lbl_000025E4(void);
 void lbl_00002968(void);
 void lbl_00002B54(void);
 void lbl_00002BBC(void);
-void lbl_00002E04(void);
+void lbl_00002E04(int);
 void lbl_00002FA4(void);
 void lbl_00003094(void);
 void lbl_000030DC(void);
@@ -376,9 +376,66 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_00002E04(void)
+
+// INVENTED -- the per-racer records this module ranks.  Offsets read off the asm.
+struct RaceEnt
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00002E04.s"
+    u16 unk0;
+    u8 filler2[0x1E - 2];
+    u16 unk1E;
+    u16 unk20;
+};
+
+#define RACE_LIST ((struct RaceEnt **)(w + 0x54))
+#define RACE_TMP  ((struct RaceEnt **)(w + 0x1AE0))
+#define RACE_KEY  ((s16 *)(w + 0x48))
+
+void lbl_00002E04(int commit)
+{
+    u8 *w = lbl_10000000;
+    struct RaceEnt *a;
+    struct RaceEnt *b;
+    s16 i;
+    s16 j;
+
+    for (i = 0; i < 4; i++)
+        RACE_TMP[i] = RACE_LIST[i];
+    for (i = *(s16 *)(w + 0x46) - 1; i >= 1; i--)
+    {
+        a = RACE_TMP[0];
+        for (j = 0; j < i; j++)
+        {
+            if ((b = RACE_TMP[j + 1]) == NULL)
+                break;
+            if (RACE_KEY[a->unk0] < RACE_KEY[b->unk0])
+            {
+                RACE_TMP[j] = b;
+                RACE_TMP[j + 1] = a;
+            }
+            else
+                a = b;
+        }
+    }
+    a = RACE_TMP[0];
+    for (i = 0; i < *(s16 *)(w + 0x46); i++)
+    {
+        b = RACE_TMP[i];
+        if (b == NULL)
+            break;
+        if (i >= 1 && RACE_KEY[b->unk0] == RACE_KEY[a->unk0])
+            b->unk20 = a->unk20;
+        else
+            b->unk20 = i + 1;
+        a = b;
+    }
+    if (commit != 0)
+    {
+        for (i = 0; i < 4; i++)
+        {
+            RACE_LIST[i] = RACE_TMP[i];
+            if (RACE_LIST[i] != NULL)
+                RACE_LIST[i]->unk1E = RACE_LIST[i]->unk20;
+        }
+    }
 }
 #pragma force_active reset

@@ -32,7 +32,22 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "mathutil.h"
 #include "../data/common.nlobj.h"
+
+struct FightPanel
+{
+    /*0x00*/ u8 unk0;
+    /*0x01*/ u8 unk1;
+    /*0x02*/ s16 state;
+    /*0x04*/ s16 timer;
+    /*0x06*/ s16 unk6;
+    /*0x08*/ Vec pos;
+    /*0x14*/ Vec vel;
+    /*0x20*/ Vec target;
+    /*0x2C*/ u8 *unk2C;
+    /*0x30*/ u8 *unk30;
+};
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_fight.s) or imported.  Declared so mwcc accepts `@ha/@l`.
@@ -172,24 +187,8 @@ extern void func_8006AD3C();
 extern void func_8006B3E8();
 extern void item_create();
 extern void item_replace_type_funcs();
-extern void mathutil_atan2();
-extern void mathutil_mtxA_from_rotate_y();
-extern void mathutil_mtxA_from_translate();
-extern void mathutil_mtxA_pop();
-extern void mathutil_mtxA_rotate_y();
-extern void mathutil_mtxA_tf_point();
-extern void mathutil_mtxA_tf_vec();
-extern void mathutil_mtxA_tf_vec_xyz();
-extern void mathutil_mtxA_to_mtx();
-extern void mathutil_mtxA_to_quat();
-extern void mathutil_mtxA_translate_xyz();
-extern void mathutil_sin();
-extern void mathutil_tan();
-extern void mathutil_vec_normalize_len();
-extern void mathutil_vec_set_len();
 extern void mini_commend_free_data();
 extern void spawn_stobj();
-extern void u_math_unk15();
 extern void ape_skel_anim_main();
 extern void avdisp_draw_model_culled_sort_all();
 extern void avdisp_draw_model_culled_sort_translucent();
@@ -199,18 +198,6 @@ extern void func_8006AAEC();
 extern void func_8009D794();
 extern void func_8009D8A4();
 extern void lens_flare_draw();
-extern void mathutil_mtxA_from_identity();
-extern void mathutil_mtxA_from_quat();
-extern void mathutil_mtxA_from_rotate_x();
-extern void mathutil_mtxA_push();
-extern void mathutil_mtxA_rigid_inv_tf_vec();
-extern void mathutil_mtxA_rotate_x();
-extern void mathutil_mtxA_rotate_z();
-extern void mathutil_mtxA_to_euler();
-extern void mathutil_mtxA_translate();
-extern void mathutil_sqrt();
-extern void mathutil_vec_to_euler();
-extern void mathutil_vec_to_euler_xy();
 extern void new_ape_stat_motion();
 extern void u_load_minigame_graphics();
 extern void unref_func_8003938C();
@@ -222,13 +209,6 @@ extern void avdisp_set_bound_sphere_scale();
 extern void avdisp_set_post_add_color();
 extern void avdisp_set_z_mode();
 extern void func_8009DB40();
-extern void mathutil_atan();
-extern void mathutil_mtxA_from_mtx();
-extern void mathutil_mtxA_from_mtxB_translate();
-extern void mathutil_mtxA_mult_left();
-extern void mathutil_mtxA_normalize_basis();
-extern void mathutil_mtxA_rigid_inv_tf_point();
-extern void mathutil_mtxA_scale_s();
 extern void ord_tbl_draw_nodes();
 extern void raycast_stage_down();
 extern void set_ape_model_lod();
@@ -238,13 +218,6 @@ extern void unref_func_800393F8();
 extern void GXSetTevAlphaOp_cached();
 extern void ape_destroy();
 extern void avdisp_draw_model_unculled_sort_none();
-extern void mathutil_mtxA_from_mtxB();
-extern void mathutil_mtxA_from_translate_xyz();
-extern void mathutil_mtxA_rigid_inv_tf_tl();
-extern void mathutil_mtxA_sq_from_identity();
-extern void mathutil_mtxA_tf_point_xyz();
-extern void mathutil_mtxA_translate_neg();
-extern void mathutil_vec_dot_normalized_safe();
 extern void rend_efc_mirror_enable();
 extern void stobj_draw();
 extern void u_ball_init_1();
@@ -252,20 +225,16 @@ extern void GXSetTevAlphaIn_cached();
 extern void avdisp_set_alpha();
 extern void background_draw();
 extern void light_init();
-extern void mathutil_mtxA_from_mtxB_translate_xyz();
 extern void set_bg_ambient();
 extern void u_avdisp_set_some_func_1();
 extern void GXSetTevColorOp_cached();
 extern void alloc_pool_light();
 extern void avdisp_draw_model_culled_sort_none();
 extern void func_8009CD5C();
-extern void mathutil_mtxA_scale_xyz();
 extern void ord_tbl_set_depth_offset();
 extern void GXSetTevColorIn_cached();
 extern void draw_monkey();
 extern void func_8009C5E4();
-extern void mathutil_mtxA_sq_from_mtx();
-extern void mathutil_mtxA_to_euler_yxz();
 extern void rend_efc_draw();
 extern void GXSetTevKAlphaSel_cached();
 extern void background_light_assign();
@@ -330,12 +299,12 @@ void lbl_0000EF8C(void);
 void lbl_0000EF90(void);
 void lbl_0000F078(void);
 void lbl_0000F2C4(void);
-void lbl_0000F2C8(void);
-void lbl_0000F38C(void);
-void lbl_0000F4C8(void);
-void lbl_0000F628(void);
-void lbl_0000F6F4(void);
-void lbl_0000F848(void);
+void lbl_0000F2C8(int arg);
+void lbl_0000F38C(struct FightPanel *p);
+void lbl_0000F4C8(struct FightPanel *p);
+void lbl_0000F628(struct FightPanel *p);
+void lbl_0000F6F4(struct FightPanel *p);
+void lbl_0000F848(struct FightPanel *p);
 void lbl_0000F9A0(void);
 void lbl_0000F9DC(void);
 void lbl_0000FA18(void);
@@ -392,9 +361,66 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_0000F078(void)
+void lbl_0000F078(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000F078.s"
+    f32 *k = (f32 *)lbl_0001C308;
+    int i;
+    struct FightPanel *base;
+    struct FightPanel *p;
+    u8 *m;
+    Vec v;
+
+    base = *(struct FightPanel **)(lbl_100188E8 + 0x14);
+    switch (globalAnimTimer & 0x3FF)
+    {
+    case 0:
+        lbl_0000F2C8((rand() & 0x7FFF) % 19 + 1);
+        break;
+    case 0x100:
+        lbl_0000F2C8(0);
+        break;
+    }
+    p = base;
+    for (i = 0; i < 0x31; i++, p++)
+    {
+        switch (p->unk1)
+        {
+        case 0:
+            lbl_0000F38C(p);
+            break;
+        case 1:
+            lbl_0000F4C8(p);
+            break;
+        case 2:
+            lbl_0000F628(p);
+            break;
+        case 3:
+            lbl_0000F6F4(p);
+            break;
+        case 4:
+            lbl_0000F848(p);
+            break;
+        }
+        p->vel.x = p->vel.x * k[0];
+        p->vel.y = p->vel.y * k[0];
+        p->vel.z = p->vel.z * k[0];
+        p->vel.x = p->vel.x + k[1] * (p->target.x - p->pos.x);
+        p->vel.y = p->vel.y + k[1] * (p->target.y - p->pos.y);
+        p->vel.z = p->vel.z + k[1] * (p->target.z - p->pos.z);
+        p->pos.x = p->pos.x + p->vel.x;
+        p->pos.y = p->pos.y + p->vel.y;
+        p->pos.z = p->pos.z + p->vel.z;
+        m = p->unk30;
+        mathutil_mtxA_from_identity();
+        mathutil_mtxA_translate(&p->pos);
+        mathutil_mtxA_to_mtx((void *)(m + 0x24));
+        mathutil_mtxA_from_identity();
+        v.x = p->pos.x - p->vel.x;
+        v.y = p->pos.y - p->vel.y;
+        v.z = p->pos.z - p->vel.z;
+        mathutil_mtxA_translate(&v);
+        mathutil_mtxA_to_mtx((void *)(m + 0x54));
+    }
 }
+
 #pragma force_active reset

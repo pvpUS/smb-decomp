@@ -118,7 +118,7 @@ void lbl_00003F6C(void);
 void lbl_00003FF0(void);
 void lbl_00004204(void);
 void lbl_00004260(void);
-void lbl_000042BC(void);
+void lbl_000042BC(NLsprarg *sp, f32 w, f32 h);
 void lbl_000047D0(void);
 void lbl_00004858(void);
 void lbl_00004EB4(void);
@@ -149,10 +149,110 @@ void lbl_0000B10C(void);
 void lbl_0000B218(void);
 void lbl_0000C148(void);
 
+//@SUB void lbl_000042BC(void);|void lbl_000042BC(NLsprarg *sp, f32 w, f32 h);
 #pragma force_active on
-asm void lbl_000042BC(void)
+void lbl_000042BC(NLsprarg *sp, f32 w, f32 h)
 {
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_000042BC.s"
+    f64 *c = (f64 *)lbl_0000C370;
+    NLsprarg p;
+    f64 g, hv, i, k, hy, hx, mh, j, l, mw;
+
+    mw = w * sp->zm_x;
+    mh = h * sp->zm_y;
+
+    p = *sp;
+    p.u0 = g = *(c + 7) / w;
+    p.v0 = hv = *(c + 7) / h;
+    p.u1 = i = *(c + 8) - g;
+    p.v1 = j = *(c + 8) - hv;
+    p.zm_x = k = (mw - *(c + 9)) / w;
+    p.zm_y = l = (mh - *(c + 9)) / h;
+    nlSprPut(&p);
+
+    p = *sp;
+    hy = *(c + 11) * mh;
+    p.y = *(c + 10) + (sp->y - hy);
+    p.u0 = g;
+    p.v0 = *(f32 *)c;
+    p.u1 = i;
+    p.v1 = hv;
+    p.zm_x = k;
+    p.zm_y = hv;
+    nlSprPut(&p);
+
+    p = *sp;
+    p.y = (sp->y + hy) - *(c + 10);
+    p.u0 = g;
+    p.v0 = j;
+    p.u1 = i;
+    p.v1 = *(f32 *)(c + 12);
+    p.zm_x = k;
+    p.zm_y = hv;
+    nlSprPut(&p);
+
+    p = *sp;
+    hx = *(c + 11) * mw;
+    p.x = *(c + 10) + (sp->x - hx);
+    p.u0 = *(f32 *)c;
+    p.v0 = hv;
+    p.u1 = g;
+    p.v1 = j;
+    p.zm_x = g;
+    p.zm_y = l;
+    nlSprPut(&p);
+
+    p = *sp;
+    p.x = (sp->x + hx) - *(c + 10);
+    p.u0 = i;
+    p.v0 = hv;
+    p.u1 = *(f32 *)(c + 12);
+    p.v1 = j;
+    p.zm_x = g;
+    p.zm_y = l;
+    nlSprPut(&p);
+
+    p = *sp;
+    p.x = *(c + 10) + (sp->x - hx);
+    p.y = *(c + 10) + (sp->y - hy);
+    p.u0 = *(f32 *)c;
+    p.v0 = *(f32 *)c;
+    p.u1 = g;
+    p.v1 = hv;
+    p.zm_x = g;
+    p.zm_y = hv;
+    nlSprPut(&p);
+
+    p = *sp;
+    p.x = (sp->x + hx) - *(c + 10);
+    p.y = *(c + 10) + (sp->y - hy);
+    p.u0 = i;
+    p.v0 = *(f32 *)c;
+    p.u1 = *(f32 *)(c + 12);
+    p.v1 = hv;
+    p.zm_x = g;
+    p.zm_y = hv;
+    nlSprPut(&p);
+
+    p = *sp;
+    p.x = *(c + 10) + (sp->x - hx);
+    p.y = (sp->y + hy) - *(c + 10);
+    p.u0 = *(f32 *)c;
+    p.v0 = j;
+    p.u1 = g;
+    p.v1 = *(f32 *)(c + 12);
+    p.zm_x = g;
+    p.zm_y = hv;
+    nlSprPut(&p);
+
+    p = *sp;
+    p.x = (sp->x + hx) - *(c + 10);
+    p.y = (sp->y + hy) - *(c + 10);
+    p.u0 = i;
+    p.v0 = j;
+    p.u1 = *(f32 *)(c + 12);
+    p.v1 = *(f32 *)(c + 12);
+    p.zm_x = g;
+    p.zm_y = hv;
+    nlSprPut(&p);
 }
 #pragma force_active reset

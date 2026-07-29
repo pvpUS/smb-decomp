@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_0000C0B0.
+ * test_mode.c -- REL module: isolated function lbl_0000B57C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -196,10 +196,11 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
-void lbl_00003C34(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
+void lbl_000057C0(void);
+void lbl_000065F0(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -260,29 +261,19 @@ void lbl_0000DC60(void);
 void lbl_0000DDA4(void);
 void lbl_0000E2E8(void);
 void lbl_0000E3E8(void);
+void lbl_0000E628(void);
+void lbl_0000ECB4(void);
+void lbl_0000EEF4(void);
 void lbl_0000F6F0(void);
+void lbl_0000F7BC(void);
 void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_0000C0B0(void)
+asm void lbl_0000B57C(void)
 {
-    u8 *p = (u8 *)lbl_10000FA8;
-    void **q;
-
-    lbl_0000C984();
-    q = (void **)(p + 0x2C28) - 1;
-    if (*q == NULL)
-        *q = OSAllocFromHeap(__OSCurrHeap,
-                             GXGetTexBufferSize(0x100, 0x100, GX_TF_I8, GX_FALSE, 0));
-    GXInitTexObj((GXTexObj *)(p + 0x2C04), *q, 0x100, 0x100, GX_TF_I8, GX_CLAMP,
-                 GX_CLAMP, GX_FALSE);
-    q = (void **)(p + 0x2C4C) - 1;
-    if (*q == NULL)
-        *q = OSAllocFromHeap(__OSCurrHeap,
-                             GXGetTexBufferSize(0x280, 0x1E0, GX_TF_RGB565, GX_FALSE, 0));
-    GXInitTexObj((GXTexObj *)(p + 0x2C28), *q, currRenderMode->fbWidth,
-                 currRenderMode->efbHeight, GX_TF_RGB565, GX_CLAMP, GX_CLAMP, GX_FALSE);
+    nofralloc
+#include "../asm/nonmatchings/test_mode/lbl_0000B57C.s"
 }
 #pragma force_active reset

@@ -263,8 +263,8 @@ void lbl_00003474(void);
 void lbl_000040C0(void);
 void lbl_00004284(void);
 void lbl_000044AC(void);
-void lbl_00004634(void);
-static void lbl_0000480C(void);
+void lbl_00004634(struct Ball *);
+static void lbl_0000480C(struct Ball *);
 static void lbl_00004D78(void);
 static void lbl_0000528C(void);
 static void lbl_000055CC(void);
@@ -283,7 +283,7 @@ void lbl_00006CF0(void);
 void lbl_00006FF4(void);
 void lbl_000070FC(void);
 void lbl_00007688(void);
-void lbl_00007710(void);
+void lbl_00007710(struct Ball *);
 void lbl_00007800(void);
 void lbl_00007900(void);
 void lbl_00007950(void);
@@ -380,12 +380,71 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_00004634(void)
+// Per-racer state hanging off struct Ball::unk144 inside this module.
+// INVENTED -- offsets read off the asm, names are placeholders.
+struct RaceSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00004634.s"
+    u8 filler0[0x14];
+    u32 unk14;
+    u8 filler18[0x1C - 0x18];
+    s16 unk1C;
+    u8 filler1E[0x1CE - 0x1E];
+    s16 unk1CE;
+    u8 filler1D0[0x1D4 - 0x1D0];
+    f32 unk1D4;
+    f32 unk1D8;
+    f32 unk1DC;
+    f32 unk1E0;
+    u8 filler1E4[0x1E8 - 0x1E4];
+    f32 unk1E8;
+    f32 unk1EC;
+    f32 unk1F0;
+    f32 unk1F4;
+    f32 unk1F8;
+    u8 filler1FC[0x23C - 0x1FC];
+    f32 unk23C;
+    f32 unk240;
+    f32 unk244;
+};
+
+void lbl_00004634(struct Ball *ball)
+{
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+
+    if (st->unk1C <= 0)
+    {
+        u_play_sound_0(0x281E);
+        ball->vel.x = ball->vel.y = ball->vel.z = *(f32 *)lbl_00013748;
+        st->unk23C = st->unk240 = st->unk244 = *(f32 *)lbl_00013748;
+        ball->unk148 = 1;
+    }
+    lbl_00007710(ball);
+    ball->prevPos = ball->pos;
+    ball->speed = mathutil_vec_len(&ball->vel);
+    ball->flags &= ~0x20;
+    ball->vel.y = ball->vel.y - ball->accel;
+    ball->pos.y = ball->pos.y + ball->vel.y;
 }
-static asm void lbl_0000480C(void)
+
+static void lbl_00004718(struct Ball *ball)
+{
+    u8 *pool = lbl_00013740;
+    Vec v;
+    Quaternion q;
+    Vec dead;  /* UNVERIFIED: dead 12-byte local; the original reserves the slot */
+
+    ball->speed = ball->unkC4 = *(f32 *)(pool + 8);
+    v = *(Vec *)(pool + 0xBC);
+    ball->unkB8 = *(Vec *)&v;
+    q = *(Quaternion *)(pool + 0xC8);
+    ball->unkA8 = *(Quaternion *)&q;
+    ball->unk98 = ball->unkA8;
+    mathutil_mtxA_to_quat(&ball->unkA8);
+    ball->ape->flags &= 0x20000;
+    ball->unk148 = 5;
+    lbl_0000480C(ball);
+}
+static asm void lbl_0000480C(struct Ball *ball)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_0000480C.s"
@@ -410,4 +469,5 @@ static asm void lbl_00005A84(void)
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_00005A84.s"
 }
+
 #pragma force_active reset

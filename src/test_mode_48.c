@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_0000BE00.
+ * test_mode.c -- REL module: isolated function lbl_0000ADF0.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -196,10 +196,11 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
-void lbl_00003C34(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
+void lbl_000057C0(void);
+void lbl_000065F0(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -260,28 +261,26 @@ void lbl_0000DC60(void);
 void lbl_0000DDA4(void);
 void lbl_0000E2E8(void);
 void lbl_0000E3E8(void);
+void lbl_0000E628(void);
+void lbl_0000ECB4(void);
+void lbl_0000EEF4(void);
 void lbl_0000F6F0(void);
+void lbl_0000F7BC(void);
 void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_0000BE00(void)
+void lbl_0000ADF0(void)
 {
-    event_finish_all();
-    func_80044920();
-    load_stage(loadingStageIdRequest);
-    event_start(EVENT_STAGE);
-    event_start(EVENT_WORLD);
-    event_start(EVENT_BALL);
-    event_start(EVENT_STOBJ);
-    event_start(EVENT_INFO);
-    event_start(EVENT_ITEM);
-    event_start(EVENT_OBJ_COLLISION);
-    event_start(EVENT_CAMERA);
-    event_start(EVENT_SPRITE);
-    event_start(EVENT_SOUND);
-    event_start(EVENT_EFFECT);
-    event_start(EVENT_BACKGROUND);
+    float *k = (float *)lbl_00010080;
+    Vec *v = (Vec *)lbl_10000F60;
+    struct Camera **cam = &currentCamera;
+
+    if (controllerInfo[0].held.button & PAD_BUTTON_RIGHT)
+        return;
+    v->x = v->x + k[31] * ((*cam)->lookAt.x - v->x);
+    v->y = v->y + k[31] * ((*cam)->lookAt.y - v->y);
+    v->z = v->z + k[31] * ((*cam)->lookAt.z - v->z);
 }
 #pragma force_active reset

@@ -186,8 +186,8 @@ void lbl_00007974(void);
 void lbl_00007C74(void);
 void lbl_00007D18(void);
 void lbl_00007D80(void);
-void lbl_00008EC0(void);
-void lbl_0000939C(void);
+void lbl_00008EC0(int, int);
+s8 lbl_0000939C(int);
 void lbl_00009540(void);
 void lbl_00009788(void);
 void lbl_00009E34(void);
@@ -226,16 +226,6 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm void lbl_000059A8(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_000059A8.s"
-}
-asm void lbl_00005DD0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00005DD0.s"
-}
 asm void lbl_00006DC0(void)
 {
     nofralloc

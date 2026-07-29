@@ -1,6 +1,6 @@
 /*
  * test_mode.c -- REL module, structurally split for per-function
- * byte-matching (part 36 of 69; contiguous .text range).  Each function
+ * byte-matching (part 36 of 88; contiguous .text range).  Each function
  * below is an asm-include of its body in asm/nonmatchings/test_mode/.
  * To convert one to C, isolate it into its own pure-C file (see the
  * --isolate option of tools/rel_split.py) -- an asm sibling in the same
@@ -195,10 +195,11 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
-void lbl_00003C34(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
+void lbl_000057C0(void);
+void lbl_000065F0(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -259,15 +260,24 @@ void lbl_0000DC60(void);
 void lbl_0000DDA4(void);
 void lbl_0000E2E8(void);
 void lbl_0000E3E8(void);
+void lbl_0000E628(void);
+void lbl_0000ECB4(void);
+void lbl_0000EEF4(void);
 void lbl_0000F6F0(void);
+void lbl_0000F7BC(void);
 void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_0000A7FC(void)
+asm void lbl_00009560(void)
 {
     nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000A7FC.s"
+#include "../asm/nonmatchings/test_mode/lbl_00009560.s"
+}
+asm void lbl_000095F8(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/test_mode/lbl_000095F8.s"
 }
 #pragma force_active reset

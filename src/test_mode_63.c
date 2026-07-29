@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_0000DC60.
+ * test_mode.c -- REL module: isolated function lbl_0000C00C.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -196,10 +196,11 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
-void lbl_00003C34(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
+void lbl_000057C0(void);
+void lbl_000065F0(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -256,43 +257,27 @@ void lbl_0000D3C0(void);
 void lbl_0000D844(void);
 void lbl_0000D9FC(void);
 void lbl_0000DB2C(void);
+void lbl_0000DC60(void);
 void lbl_0000DDA4(void);
 void lbl_0000E2E8(void);
 void lbl_0000E3E8(void);
+void lbl_0000E628(void);
+void lbl_0000ECB4(void);
+void lbl_0000EEF4(void);
 void lbl_0000F6F0(void);
+void lbl_0000F7BC(void);
 void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_0000DC60(char *name, char *fmt, ...)
+void lbl_0000C00C(void)
 {
-    u8 *s = lbl_000148E8;
-    u8 *p = lbl_10003BF8;
-    va_list ap;
-    char buf[80];
-
-    if (*(int *)(p + 0x78) == *(int *)(p + 0x7C))
-    {
-        window_set_text_color(2);
-        u_debug_print((char *)(s + 0xE98));
-    }
-    else
-    {
-        window_set_text_color(0);
-        u_debug_print((char *)(s + 0xE9C));
-    }
-    u_debug_print(name);
-    if (*(int *)(p + 0x78) == *(int *)(p + 0x7C))
-        window_set_text_color(2);
-    else
-        window_set_text_color(1);
-    va_start(ap, fmt);
-    vsprintf(buf, fmt, ap);
-    u_debug_print(buf);
-    *(int *)(p + 0x7C) = *(int *)(p + 0x7C) + 1;
-    window_set_text_color(0);
-    u_debug_print((char *)(s + 0xEAC));
+    lbl_0000C260();
+    draw_normal_game_scene();
+    lbl_0000C3F0();
+    GXSetBlendMode_cached(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR);
+    GXSetZMode_cached(GX_ENABLE, GX_LESS, GX_ENABLE);
+    fog_gx_set();
 }
 #pragma force_active reset
-

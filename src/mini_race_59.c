@@ -31,6 +31,7 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "background.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_race.s) or imported.  Declared so mwcc accepts `@ha/@l`.
@@ -172,9 +173,9 @@ extern u8 pauseMenuState[];
 extern u8 g_currPlayerButtons[];
 extern u8 controllerInfo[];
 extern u8 lbl_802F16BC[];
-extern u8 backgroundInfo[];
 
 // Imported functions the code calls that no included header declares.
+extern void ord_tbl_set_depth_offset();
 extern void item_replace_type_funcs();
 extern void u_load_minigame_graphics();
 extern void u_ball_init_1();
@@ -225,7 +226,6 @@ extern void func_8009D794();
 extern void func_8009DB40();
 extern void func_800AC5E0();
 extern void mini_commend_free_data();
-extern void ord_tbl_set_depth_offset();
 extern void rend_efc_draw();
 extern void reset_light_group();
 extern void u_draw_ball_shadow();
@@ -375,9 +375,61 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_0000B67C(void)
+void lbl_0000B67C(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000B67C.s"
+    int i;
+    /* UNVERIFIED: the original reserves 8 bytes of otherwise-unused frame
+       here.  Any dead local 5..8 bytes wide reproduces it exactly (f64 /
+       two f32 / char[8] / int[2] all MATCH); the real declaration is
+       unknown. */
+    f64 unused;
+    f32 *k = (f32 *)lbl_00013BD0;
+    struct Ball *oldBall = currentBall;
+
+    for (i = 0; i < 4; i++)
+    {
+        if (cameraInfo[i].sub28.vp.width > k[0] && cameraInfo[i].sub28.vp.height > k[0])
+        {
+            if (g_poolInfo.playerPool.statusList[i] == STAT_NULL
+             || g_poolInfo.playerPool.statusList[i] == STAT_FREEZE)
+                continue;
+            currentBall = &ballInfo[i];
+            change_current_camera(i);
+            u_draw_ball_shadow();
+            background_light_assign();
+            reset_light_group(i);
+            if (eventInfo[EVENT_REND_EFC].state == EV_STATE_RUNNING)
+                rend_efc_draw(4);
+            func_8009CD5C();
+            if (eventInfo[EVENT_STAGE].state == EV_STATE_RUNNING
+             || eventInfo[EVENT_STAGE].state == EV_STATE_SUSPENDED)
+                stage_draw();
+            poly_shadow_draw();
+            if (eventInfo[EVENT_BACKGROUND].state == EV_STATE_RUNNING)
+            {
+                ord_tbl_set_depth_offset(k[1]);
+                background_draw();
+                ord_tbl_set_depth_offset(k[0]);
+            }
+            if (eventInfo[EVENT_REND_EFC].state == EV_STATE_RUNNING)
+                rend_efc_draw(16);
+            if (eventInfo[EVENT_ITEM].state == EV_STATE_RUNNING)
+                item_draw();
+            if (eventInfo[EVENT_STOBJ].state == EV_STATE_RUNNING)
+                stobj_draw();
+            if (eventInfo[EVENT_EFFECT].state == EV_STATE_RUNNING)
+                effect_draw();
+            if (eventInfo[EVENT_BALL].state == EV_STATE_RUNNING)
+                ball_draw();
+            draw_test_camera_target();
+            ord_tbl_draw_nodes();
+            if (backgroundInfo.unk8 & 1)
+                lens_flare_draw(i);
+            if (eventInfo[EVENT_REND_EFC].state == EV_STATE_RUNNING)
+                rend_efc_draw(8);
+        }
+    }
+    currentBall = oldBall;
+    default_camera_env();
 }
 #pragma force_active reset

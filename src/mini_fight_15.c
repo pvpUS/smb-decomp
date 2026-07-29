@@ -32,6 +32,7 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "avdisp.h"
 #include "../data/common.nlobj.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
@@ -191,9 +192,6 @@ extern void mini_commend_free_data();
 extern void spawn_stobj();
 extern void u_math_unk15();
 extern void ape_skel_anim_main();
-extern void avdisp_draw_model_culled_sort_all();
-extern void avdisp_draw_model_culled_sort_translucent();
-extern void avdisp_set_post_mult_color();
 extern void func_8006A9B8();
 extern void func_8006AAEC();
 extern void func_8009D794();
@@ -216,11 +214,6 @@ extern void u_load_minigame_graphics();
 extern void unref_func_8003938C();
 extern void vibration_control();
 extern void GXSetNumTevStages_cached();
-extern void avdisp_draw_model_unculled_sort_all();
-extern void avdisp_draw_model_unculled_sort_translucent();
-extern void avdisp_set_bound_sphere_scale();
-extern void avdisp_set_post_add_color();
-extern void avdisp_set_z_mode();
 extern void func_8009DB40();
 extern void mathutil_atan();
 extern void mathutil_mtxA_from_mtx();
@@ -237,7 +230,6 @@ extern void unref_func_80039320();
 extern void unref_func_800393F8();
 extern void GXSetTevAlphaOp_cached();
 extern void ape_destroy();
-extern void avdisp_draw_model_unculled_sort_none();
 extern void mathutil_mtxA_from_mtxB();
 extern void mathutil_mtxA_from_translate_xyz();
 extern void mathutil_mtxA_rigid_inv_tf_tl();
@@ -249,15 +241,12 @@ extern void rend_efc_mirror_enable();
 extern void stobj_draw();
 extern void u_ball_init_1();
 extern void GXSetTevAlphaIn_cached();
-extern void avdisp_set_alpha();
 extern void background_draw();
 extern void light_init();
 extern void mathutil_mtxA_from_mtxB_translate_xyz();
 extern void set_bg_ambient();
-extern void u_avdisp_set_some_func_1();
 extern void GXSetTevColorOp_cached();
 extern void alloc_pool_light();
-extern void avdisp_draw_model_culled_sort_none();
 extern void func_8009CD5C();
 extern void mathutil_mtxA_scale_xyz();
 extern void ord_tbl_set_depth_offset();
@@ -295,8 +284,8 @@ void lbl_000058A0(void);
 void lbl_00005A08(void);
 void lbl_00007444(void);
 void lbl_000074DC(void);
-void lbl_00007640(void);
-void lbl_00007AD4(void);
+void lbl_00007640(struct Effect *);
+void lbl_00007AD4(struct Effect *);
 void lbl_00007F7C(void);
 void lbl_000080D4(void);
 void lbl_0000A690(void);
@@ -399,39 +388,40 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_000074DC(void)
+void lbl_000074DC(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000074DC.s"
+    effect_replace_type_funcs(0x18, NULL);
+    effect_replace_type_funcs(0x19, NULL);
+    effect_replace_type_funcs(0x1A, NULL);
+    effect_replace_type_funcs(0x1C, NULL);
+    effect_replace_type_funcs(0x1D, NULL);
+    effect_replace_type_funcs(0x1E, NULL);
+    effect_replace_type_funcs(0x1F, NULL);
+    effect_replace_type_funcs(0x2A, NULL);
+    effect_replace_type_funcs(0x2B, NULL);
 }
-asm void lbl_00007640(void)
+
+void lbl_00007564(struct Effect *e)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00007640.s"
+    u8 *k = lbl_0001C108;
+
+    e->model = commonGma->modelEntries[0x13].model;
+    e->state = 0;
+    e->scale.x = *(f32 *)k;
+    e->rotX = rand() & 0x7FFF;
+    e->rotY = rand() & 0x7FFF;
+    e->rotZ = rand() & 0x7FFF;
+    e->unk52 = (rand() & 0xFFF) - 0x800;
+    e->unk54 = (rand() & 0xFFF) - 0x800;
+    e->unk56 = (rand() & 0xFFF) - 0x800;
 }
-asm void lbl_00007AD4(void)
+
+void lbl_0000760C(struct Effect *e)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00007AD4.s"
+    if (e->state < 2)
+        lbl_00007640(e);
+    else
+        lbl_00007AD4(e);
 }
-asm void lbl_00007F7C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00007F7C.s"
-}
-asm void lbl_000080D4(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000080D4.s"
-}
-asm void lbl_0000A690(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000A690.s"
-}
-asm void lbl_0000A974(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000A974.s"
-}
+
 #pragma force_active reset

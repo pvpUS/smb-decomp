@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_0000D9FC.
+ * test_mode.c -- REL module: isolated function lbl_0000BFA0.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -196,10 +196,11 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
-void lbl_00003C34(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
+void lbl_000057C0(void);
+void lbl_000065F0(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -254,42 +255,29 @@ void lbl_0000CDE0(void);
 void lbl_0000D084(void);
 void lbl_0000D3C0(void);
 void lbl_0000D844(void);
+void lbl_0000D9FC(void);
 void lbl_0000DB2C(void);
 void lbl_0000DC60(void);
 void lbl_0000DDA4(void);
 void lbl_0000E2E8(void);
 void lbl_0000E3E8(void);
+void lbl_0000E628(void);
+void lbl_0000ECB4(void);
+void lbl_0000EEF4(void);
 void lbl_0000F6F0(void);
+void lbl_0000F7BC(void);
 void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_0000D9FC(void)
+void lbl_0000BFA0(void)
 {
-    u8 *p = lbl_10003BF8;
-    float *k = (float *)lbl_000101E0;
-    int i;
-    s32 *q;
-
-    if ((*(struct Ape **)(p + 4)) != NULL)
-        ape_destroy((*(struct Ape **)(p + 4)));
-    (*(struct Ape **)(p + 4)) = u_make_ape(*(int *)(p + 0x6C));
-    *(float *)(p + 0xC) = k[0];
-    mathutil_mtxA_from_identity();
-    mathutil_mtxA_rotate_y(*(float *)(p + 0xC));
-    mathutil_mtxA_to_quat(&(*(struct Ape **)(p + 4))->unk60);
-    if (*(int *)(p + 0x6C) == 3)
-        (*(struct Ape **)(p + 4))->pos.y = k[1];
-    else
-        (*(struct Ape **)(p + 4))->pos.y = k[2];
-    (*(struct Ape **)(p + 4))->unk3C.x = (*(struct Ape **)(p + 4))->unk3C.y = (*(struct Ape **)(p + 4))->unk3C.z = k[3];
-    *(int *)(p + 0xA8) = 0;
-    q = (s32 *)(p + 0x10);
-    for (i = 0; i < 16; i++, q++)
-        *q = 0;
-    *(struct SomeMotInfoStruct **)(p + 0xAC) = &((struct SomeMotInfoStruct *)((u8 *)motInfo + 0x2000))[*(int *)(p + 0x6C) * 0x80];
-    *(float *)(p + 8) = (*(struct SomeMotInfoStruct **)(p + 0xAC))->u_maybeSpeed;
+    lbl_0000C1B8();
+    if (*(struct TPL **)lbl_10000FA8 != NULL)
+    {
+        bitmap_free_tpl(*(struct TPL **)lbl_10000FA8);
+        *(struct TPL **)lbl_10000FA8 = NULL;
+    }
 }
 #pragma force_active reset
-

@@ -34,6 +34,15 @@
 #include "window.h"
 #include "../data/common.nlobj.h"
 
+struct FightDepthMaskParams
+{
+    float unk0;
+    float unk4;
+    float unk8;
+    float unkC;
+    float unk10;
+};
+
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_fight.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0001BF80[];
@@ -382,7 +391,7 @@ void lbl_00019464(void);
 void lbl_00019B3C(void);
 void lbl_00019B40(void);
 void lbl_00019C94(void);
-void lbl_00019E2C(void);
+void lbl_00019E2C(struct FightDepthMaskParams *a);
 void lbl_0001A0A8(void);
 void lbl_0001A330(void);
 void lbl_0001A348(void);
@@ -395,10 +404,40 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_00019B40(void)
+void lbl_00019B40(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00019B40.s"
+    struct FightDepthMaskParams p;
+    f32 *k = (f32 *)lbl_0001C7D8;
+    u8 *d = lbl_10018FD4;
+
+    if (*(f32 *)(d + 0xC) <= k[0])
+        return;
+    if (*(f32 *)(d + 0xC) >= k[6])
+    {
+        p.unk10 = k[31];
+        p.unk4 = p.unk10 * currentCamera->sub28.unk38;
+        p.unkC = -p.unk4;
+        p.unk0 = p.unk4 * currentCamera->sub28.aspect;
+        p.unk8 = -p.unk0;
+        lbl_00019E2C(&p);
+    }
+    else
+    {
+        p.unk10 = k[32];
+        p.unk4 = p.unk10 * currentCamera->sub28.unk38;
+        p.unkC = -p.unk4;
+        p.unk0 = p.unk4 * currentCamera->sub28.aspect;
+        p.unk8 = -p.unk0;
+        lbl_00019E2C(&p);
+        lbl_0001A0A8();
+    }
+    lbl_00019C94();
+    p.unk10 = k[31];
+    p.unk4 = p.unk10 * currentCamera->sub28.unk38;
+    p.unkC = -p.unk4;
+    p.unk0 = p.unk4 * currentCamera->sub28.aspect;
+    p.unk8 = -p.unk0;
+    lbl_00019E2C(&p);
 }
 
 #pragma force_active reset

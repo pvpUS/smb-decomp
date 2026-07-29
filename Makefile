@@ -456,8 +456,8 @@ SOURCES := \
 	src/sel_ngc_rel_53.c \
 	src/sel_ngc_rel_54.c \
 	src/sel_ngc_rel_55.c \
-	src/sel_ngc_rel_56.c \
-	asm/sel_ngc_rel_d1.s
+	asm/sel_ngc_rel_d1.s \
+	src/sel_ngc_rel_56.c
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
 mkbe.sel_ngc.plf: $(O_FILES)
@@ -623,7 +623,10 @@ SOURCES := \
 	src/mini_bowling_9.c \
 	src/mini_bowling_10.c \
 	src/mini_bowling_11.c \
-	src/mini_bowling_12.c \
+	src/mini_bowling_12i.c \
+	src/mini_bowling_12zi.c \
+	src/mini_bowling_12zzi.c \
+	src/mini_bowling_12zzz.c \
 	src/mini_bowling_13.c \
 	src/mini_bowling_14.c \
 	src/mini_bowling_15.c \
@@ -652,6 +655,7 @@ SOURCES := \
 	src/mini_bowling_37.c \
 	src/mini_bowling_38.c \
 	src/mini_bowling_39.c \
+	src/mini_bowling_39i.c \
 	src/mini_bowling_40.c \
 	src/mini_bowling_41.c \
 	src/mini_bowling_42.c \
@@ -696,7 +700,8 @@ SOURCES := \
 	src/mini_bowling_79.c \
 	src/mini_bowling_80.c \
 	src/mini_bowling_81.c \
-	src/mini_bowling_82.c \
+	src/mini_bowling_82i.c \
+	src/mini_bowling_82z.c \
 	src/mini_bowling_83.c \
 	src/mini_bowling_84.c \
 	src/mini_bowling_85.c \
@@ -731,11 +736,21 @@ SOURCES := \
 	src/mini_fight_8.c \
 	src/mini_fight_9.c \
 	src/mini_fight_10.c \
+	src/mini_fight_10b.c \
+	src/mini_fight_10c.c \
+	src/mini_fight_10d.c \
+	src/mini_fight_10e.c \
 	src/mini_fight_11.c \
 	src/mini_fight_12.c \
 	src/mini_fight_13.c \
 	src/mini_fight_14.c \
 	src/mini_fight_15.c \
+	src/mini_fight_15b.c \
+	src/mini_fight_15c.c \
+	src/mini_fight_15d.c \
+	src/mini_fight_15e.c \
+	src/mini_fight_15f.c \
+	src/mini_fight_15g.c \
 	src/mini_fight_16.c \
 	src/mini_fight_17.c \
 	src/mini_fight_18.c \
@@ -812,6 +827,11 @@ SOURCES := \
 	src/mini_fight_76.c \
 	src/mini_fight_77.c \
 	src/mini_fight_78.c \
+	src/mini_fight_78b.c \
+	src/mini_fight_78c.c \
+	src/mini_fight_78d.c \
+	src/mini_fight_78e.c \
+	src/mini_fight_78f.c \
 	src/mini_fight_79.c \
 	src/mini_fight_80.c \
 	src/mini_fight_81.c \
@@ -1029,7 +1049,9 @@ SOURCES := \
 	src/mini_billiards_18.c \
 	src/mini_billiards_19.c \
 	src/mini_billiards_20i.c \
-	src/mini_billiards_20z.c \
+	src/mini_billiards_20zi.c \
+	src/mini_billiards_20zz.c \
+	src/mini_billiards_20zzi.c \
 	src/mini_billiards_21.c \
 	src/mini_billiards_22.c \
 	src/mini_billiards_23.c \
@@ -1151,6 +1173,25 @@ SOURCES := \
 	src/test_mode_67.c \
 	src/test_mode_68.c \
 	src/test_mode_69.c \
+	src/test_mode_70.c \
+	src/test_mode_71.c \
+	src/test_mode_72.c \
+	src/test_mode_73.c \
+	src/test_mode_74.c \
+	src/test_mode_75.c \
+	src/test_mode_76.c \
+	src/test_mode_77.c \
+	src/test_mode_78.c \
+	src/test_mode_79.c \
+	src/test_mode_80.c \
+	src/test_mode_81.c \
+	src/test_mode_82.c \
+	src/test_mode_83.c \
+	src/test_mode_84.c \
+	src/test_mode_85.c \
+	src/test_mode_86.c \
+	src/test_mode_87.c \
+	src/test_mode_88.c \
 	asm/test_mode.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)

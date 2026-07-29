@@ -31,6 +31,7 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "avdisp.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_race.s) or imported.  Declared so mwcc accepts `@ha/@l`.
@@ -197,8 +198,6 @@ extern void func_800AB6F8();
 extern void stcoli_sub33();
 extern void avdisp_get_eff_vtxinfo();
 extern void lens_flare_draw();
-extern void avdisp_set_bound_sphere_scale();
-extern void avdisp_set_post_mult_color();
 extern void bitmap_init_tev();
 extern void avdisp_draw_model_unculled_sort_none();
 extern void ape_skel_anim_main();
@@ -206,9 +205,7 @@ extern void set_ape_model_lod();
 extern void func_800AB444();
 extern void func_8006AD3C();
 extern void ord_tbl_draw_nodes();
-extern void avdisp_set_alpha();
 extern void ape_destroy();
-extern void avdisp_set_z_mode();
 extern void func_800AB2A0();
 extern void func_8006AAEC();
 extern void draw_test_camera_target();
@@ -301,7 +298,7 @@ void lbl_0000ACF4(void);
 void lbl_0000AD74(void);
 void lbl_0000ADDC(void);
 void lbl_0000AFF8(void);
-void lbl_0000B2F0(void);
+void lbl_0000B2F0(struct Ball *);
 void lbl_0000B560(void);
 void lbl_0000B67C(void);
 void lbl_0000B834(void);
@@ -375,10 +372,95 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_0000B2F0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000B2F0.s"
-}
 
+// Per-racer state hanging off struct Ball::unk144 inside this module.
+struct RaceSub
+{
+    u8 filler0[0x14];
+    u32 unk14;
+};
+
+// INVENTED -- 4 model ids packed at lbl_00013BD0 + 0x30.
+struct RaceModelIds
+{
+    s16 v[4];
+};
+
+// INVENTED -- 3-float RGB rows at lbl_801B7CF8 (DOL bss).
+struct RaceRgb
+{
+    f32 r;
+    f32 g;
+    f32 b;
+};
+
+void lbl_0000B2F0(struct Ball *ball)
+{
+    u8 *cfg = lbl_00013BD0;
+    struct Ball *b;
+    struct RaceSub *st;
+    struct RaceModelIds tbl = *(struct RaceModelIds *)(cfg + 0x30);
+    struct Camera *cam = cameraInfo + ball->playerId;
+    f32 k = *(f32 *)(cfg + 0x44) * cam->sub28.vp.height;
+    f32 q = *(f64 *)(cfg + 0x48) / k;
+    Vec v2;
+    Vec v1;
+    Vec *p1 = &v1;
+    f32 dist;
+    f32 t;
+    f32 scale;
+    f32 u;
+    s16 i;
+
+    for (i = 0, b = ballInfo; i < 4; i++, b++)
+    {
+        st = (struct RaceSub *)b->unk144;
+        if ((s8)b->unk0 != 2)
+            continue;
+        if (st->unk14 & 0x40)
+            continue;
+        if (!(st->unk14 & 0x20) && b->playerId == ball->playerId)
+            continue;
+        v1 = *(Vec *)(cfg + 0x38);
+        v1.x = b->pos.x;
+        v1.y = b->pos.y + b->currRadius;
+        v1.z = b->pos.z;
+        v2 = *p1;
+        dist = mathutil_vec_distance((Vec *)cam, &v2);
+        dist = cam->sub28.unk38 * dist;
+        t = k / dist;
+        if (t < *(f32 *)(cfg + 0x50))
+        {
+            u = *(f32 *)(cfg + 0x50) * dist;
+            scale = u * q;
+        }
+        else if (t > *(f32 *)(cfg + 0x54))
+        {
+            u = *(f32 *)(cfg + 0x54) * dist;
+            scale = u * q;
+        }
+        else
+            scale = *(f32 *)(cfg + 0x18);
+        mathutil_mtxA_from_mtxB_translate(&v2);
+        mathutil_mtxA_sq_from_identity();
+        mathutil_mtxA_scale_s(scale);
+        avdisp_set_bound_sphere_scale(scale);
+        gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+        if (st->unk14 & 0x20)
+        {
+            avdisp_set_post_mult_color(((struct RaceRgb *)lbl_801B7CF8)[b->playerId].r,
+                                       ((struct RaceRgb *)lbl_801B7CF8)[b->playerId].g,
+                                       ((struct RaceRgb *)lbl_801B7CF8)[b->playerId].b,
+                                       *(f32 *)(cfg + 0x18));
+            avdisp_draw_model_culled_sort_translucent(commonGma->modelEntries[88].model);
+            avdisp_set_post_mult_color(*(f32 *)(cfg + 0x18), *(f32 *)(cfg + 0x18),
+                                       *(f32 *)(cfg + 0x18), *(f32 *)(cfg + 0x18));
+        }
+        else
+        {
+            avdisp_draw_model_culled_sort_translucent(
+                commonGma->modelEntries[tbl.v[b->playerId]].model);
+        }
+    }
+}
 #pragma force_active reset

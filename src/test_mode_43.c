@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_0000B364.
+ * test_mode.c -- REL module: isolated function lbl_0000A7E0.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -196,10 +196,11 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
-void lbl_00003C34(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
+void lbl_000057C0(void);
+void lbl_000065F0(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -260,32 +261,17 @@ void lbl_0000DC60(void);
 void lbl_0000DDA4(void);
 void lbl_0000E2E8(void);
 void lbl_0000E3E8(void);
+void lbl_0000E628(void);
+void lbl_0000ECB4(void);
+void lbl_0000EEF4(void);
 void lbl_0000F6F0(void);
+void lbl_0000F7BC(void);
 void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_0000B364(void)
+void lbl_0000A7E0(void)
 {
-    float *k = (float *)lbl_00010118;
-    u8 *p = lbl_10000F70;
-    void **q;
-
-    lbl_0000BE00();
-    q = (void **)(p + 0x38) - 1;
-    *(float *)p = k[0];
-    *(float *)(p + 4) = k[1];
-    *(int *)(p + 8) = 2;
-    *(float *)(p + 0xC) = k[2];
-    if (*q == NULL)
-    {
-        *((u32 *)(p + 0x34) - 1) = GXGetTexBufferSize(0x280, 0x1E0, GX_TF_RGB565, GX_FALSE, 0);
-        *q = OSAllocFromHeap(__OSCurrHeap, *((u32 *)(p + 0x34) - 1));
-    }
-    GXInitTexObj((GXTexObj *)(p + 0x10), *q, currRenderMode->fbWidth,
-                 currRenderMode->efbHeight, GX_TF_RGB565, GX_CLAMP, GX_CLAMP, GX_FALSE);
-    u_replay_test_init();
-    camera_set_state_all(2);
 }
 #pragma force_active reset

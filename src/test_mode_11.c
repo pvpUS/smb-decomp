@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_000055E8.
+ * test_mode.c -- REL module: isolated function lbl_00002108.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -196,10 +196,11 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
-void lbl_00003C34(void);
 void lbl_00005384(void);
-void lbl_000055E8(u32 *);
+void lbl_000055E8(void);
 void lbl_000056BC(void);
+void lbl_000057C0(void);
+void lbl_000065F0(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -260,31 +261,22 @@ void lbl_0000DC60(void);
 void lbl_0000DDA4(void);
 void lbl_0000E2E8(void);
 void lbl_0000E3E8(void);
+void lbl_0000E628(void);
+void lbl_0000ECB4(void);
+void lbl_0000EEF4(void);
 void lbl_0000F6F0(void);
+void lbl_0000F7BC(void);
 void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_000055E8(u32 *arg)
+void lbl_00002108(void)
 {
-    u8 *p = lbl_10000000;
-    OSHeapHandle prevHeap;
-    char name[128];
-
-    prevHeap = OSSetCurrentHeap(stageHeap);
-    sprintf(name, (char *)lbl_000138AC, arg[0], arg[1]);
-    *(struct TPL **)(p + 0x18C) = load_tpl(name);
-    if (*(struct TPL **)(p + 0x18C) != NULL)
+    if (*(void **)(lbl_10000040 + 0x28) != NULL)
     {
-        sprintf(name, (char *)lbl_000138B8, arg[0], arg[1]);
-        *(struct GMA **)(p + 0x190) = load_gma(name, *(struct TPL **)(p + 0x18C));
-        if (*(struct GMA **)(p + 0x190) == NULL)
-        {
-            free_tpl(*(struct TPL **)(p + 0x18C));
-            *(struct TPL **)(p + 0x18C) = NULL;
-        }
+        OSFreeToHeap(__OSCurrHeap, *(void **)(lbl_10000040 + 0x28));
+        *(void **)(lbl_10000040 + 0x28) = NULL;
     }
-    OSSetCurrentHeap(prevHeap);
 }
 #pragma force_active reset

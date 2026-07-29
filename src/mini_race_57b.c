@@ -31,6 +31,7 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "avdisp.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_race.s) or imported.  Declared so mwcc accepts `@ha/@l`.
@@ -197,8 +198,6 @@ extern void func_800AB6F8();
 extern void stcoli_sub33();
 extern void avdisp_get_eff_vtxinfo();
 extern void lens_flare_draw();
-extern void avdisp_set_bound_sphere_scale();
-extern void avdisp_set_post_mult_color();
 extern void bitmap_init_tev();
 extern void avdisp_draw_model_unculled_sort_none();
 extern void ape_skel_anim_main();
@@ -206,9 +205,7 @@ extern void set_ape_model_lod();
 extern void func_800AB444();
 extern void func_8006AD3C();
 extern void ord_tbl_draw_nodes();
-extern void avdisp_set_alpha();
 extern void ape_destroy();
-extern void avdisp_set_z_mode();
 extern void func_800AB2A0();
 extern void func_8006AAEC();
 extern void draw_test_camera_target();
@@ -375,10 +372,122 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_0000AFF8(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000AFF8.s"
-}
 
+// INVENTED -- offsets read off the asm; the header's struct
+// DecodedStageLzPtr_child5 has these count slots as `u8 filler[4]`.
+struct RaceStageSub
+{
+    u8 filler0[0x20];
+    s32 count24;
+    struct StageGoal *arr24;
+    u8 filler28[0x30 - 0x28];
+    s32 count34;
+    struct StageGoal *arr34;
+    u8 filler38[0x40 - 0x38];
+    s32 count44;
+    struct StageGoal *arr44;
+    u8 filler48[0x60 - 0x48];
+    s32 count64;
+    struct StageGoal *arr64;
+};
+
+// INVENTED -- 0x48-byte per-course record at lbl_00015768.
+struct RaceCourseInfo2
+{
+    u8 filler0[2];
+    s16 unk2;
+    s16 unk4;
+    u8 filler6[0x48 - 6];
+};
+
+// Per-racer state hanging off struct Ball::unk144 inside this module.
+struct RaceSub
+{
+    u8 filler0[0x14];
+    u32 unk14;
+    u8 filler18[0x22 - 0x18];
+    s16 unk22;
+};
+
+void lbl_0000AFF8(void)
+{
+    struct RaceStageSub *sub = (struct RaceStageSub *)decodedStageLzPtr->unk78;
+    u8 *w = lbl_10000028;
+    struct StageGoal *a = sub->arr24;
+    struct StageGoal *b = sub->arr34;
+    struct StageGoal *c = sub->arr44;
+    struct StageGoal *d = sub->arr64;
+    struct RaceCourseInfo2 *ci =
+        &((struct RaceCourseInfo2 *)lbl_00015768)[*(u16 *)w];
+    struct RaceSub *st = (struct RaceSub *)currentBall->unk144;
+    struct RaceSub *p;
+    int i;
+    Quaternion dead;
+
+    p = st;
+    if (st->unk14 & 0x40)
+        p = *(struct RaceSub **)lbl_10000054;
+    if (*(u16 *)(w + 4) - 1 <= p->unk22)
+    {
+        if (ci->unk4 >= 0)
+        {
+            mathutil_mtxA_from_mtxB();
+            gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+            avdisp_draw_model_culled_sort_translucent(
+                decodedStageGmaPtr->modelEntries[ci->unk4].model);
+        }
+    }
+    else if (ci->unk2 >= 0)
+    {
+        mathutil_mtxA_from_mtxB();
+        gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+        avdisp_draw_model_culled_sort_translucent(
+            decodedStageGmaPtr->modelEntries[ci->unk2].model);
+    }
+    for (i = 0; i < sub->count24; i++, a++)
+    {
+        mathutil_mtxA_from_mtxB_translate(&a->pos);
+        mathutil_mtxA_rotate_z(a->rotZ);
+        mathutil_mtxA_rotate_y(a->rotY);
+        mathutil_mtxA_rotate_x(a->rotX);
+        gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+        avdisp_draw_model_culled_sort_translucent(minigameGma->modelEntries[10].model);
+    }
+    for (i = 0; i < sub->count44; i++, c++)
+    {
+        mathutil_mtxA_from_mtxB_translate(&c->pos);
+        mathutil_mtxA_rotate_z(c->rotZ);
+        mathutil_mtxA_rotate_y(c->rotY);
+        mathutil_mtxA_rotate_x(c->rotX);
+        gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+        switch ((u8)c->type)
+        {
+        case 'R':
+            avdisp_draw_model_culled_sort_translucent(minigameGma->modelEntries[7].model);
+            break;
+        case 'B':
+        default:
+            avdisp_draw_model_culled_sort_translucent(minigameGma->modelEntries[6].model);
+            break;
+        }
+    }
+    for (i = 0; i < sub->count64; i++, d++)
+    {
+        mathutil_mtxA_from_mtxB_translate(&d->pos);
+        mathutil_mtxA_rotate_z(d->rotZ);
+        mathutil_mtxA_rotate_y(d->rotY);
+        mathutil_mtxA_rotate_x(d->rotX);
+        gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+        avdisp_draw_model_culled_sort_translucent(minigameGma->modelEntries[2].model);
+    }
+    for (i = 0; i < sub->count34; i++, b++)
+    {
+        mathutil_mtxA_from_mtxB_translate(&b->pos);
+        mathutil_mtxA_rotate_z(b->rotZ);
+        mathutil_mtxA_rotate_y(b->rotY);
+        mathutil_mtxA_rotate_x(b->rotX);
+        gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+        avdisp_draw_model_culled_sort_translucent(minigameGma->modelEntries[8].model);
+    }
+}
 #pragma force_active reset

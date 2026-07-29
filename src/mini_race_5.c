@@ -376,9 +376,23 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_0000048C(void)
+void lbl_0000048C(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000048C.s"
+    u8 *w = lbl_10000000;
+    s16 i;
+    struct ItemFuncs funcs;
+
+    event_finish_all();
+    lbl_000030DC();
+    reset_camera_viewport();
+    call_bitmap_free_group(7);
+    SoundGroupFree();
+    funcs = *(struct ItemFuncs *)lbl_000136A4;
+    item_replace_type_funcs(2, &funcs);
+    for (i = 0; i < 4; i++)
+    {
+        g_poolInfo.playerBuf[i] = w[4 + i];
+        playerCharacterSelection[i] = ((s32 *)(w + 8))[i];
+    }
 }
 #pragma force_active reset

@@ -336,7 +336,7 @@ void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
 void lbl_0000DE5C(void);
-void lbl_0000DF6C(void);
+void lbl_0000DF6C(struct Sprite *);
 void lbl_0000E11C(void);
 void lbl_0000E1CC(void);
 void lbl_0000E520(void);
@@ -375,9 +375,84 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_0000DF6C(void)
+
+// Per-racer state hanging off struct Ball::unk144 inside this module.
+struct RaceSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000DF6C.s"
+    u8 filler0[0x14];
+    u32 unk14;
+    u8 filler18[0x1D4 - 0x18];
+    f32 unk1D4;
+};
+
+// INVENTED -- 0x48-byte per-course record at lbl_00015768.
+struct RaceCourseInfo3
+{
+    u8 filler0[0x2C];
+    struct RaceIconSpan *unk2C;
+    u8 filler30[0x48 - 0x30];
+};
+
+// INVENTED -- 12-byte span records; the list is terminated by unk8 == 0.
+struct RaceIconSpan
+{
+    f32 unk0;
+    f32 unk4;
+    u32 unk8;
+};
+
+// INVENTED -- 5 sprite ids packed at lbl_00013C48 + 0x1A8.
+struct RaceIconTbl
+{
+    s16 v[5];
+};
+
+void lbl_0000DF6C(struct Sprite *sprite)
+{
+    u8 *cfg = lbl_00013C48;
+    struct RaceCourseInfo3 *ci =
+        &((struct RaceCourseInfo3 *)lbl_00015768)[*(u16 *)lbl_10000028];
+    struct Ball *ball = &ballInfo[sprite->userVar];
+    struct RaceIconSpan *e = ci->unk2C;
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+    NLsprarg params;
+    struct RaceIconTbl tbl = *(struct RaceIconTbl *)(cfg + 0x1A8);
+
+    if (globalAnimTimer & 8)
+        return;
+    if (st->unk14 & 1)
+        return;
+    if (mathutil_vec_sq_len(&ball->vel) < *(f32 *)(cfg + 0x1B4))
+        return;
+    for (; e->unk8 != 0; e++)
+    {
+        if (e->unk0 < st->unk1D4 && st->unk1D4 < e->unk4)
+        {
+            params.zm_x = sprite->scaleX;
+            params.zm_y = sprite->scaleY;
+            params.u0 = params.v0 = *(f32 *)(cfg + 0x18);
+            params.u1 = params.v1 = *(f32 *)(cfg + 8);
+            params.ang = 0;
+            params.listType = NLSPR_LISTTYPE_AUTO;
+            params.attr = 5;
+            params.trnsl = sprite->opacity;
+            params.base_color = 0xFFFFFF;
+            params.offset_color = 0;
+            params.attr = sprite->flags | 0xA;
+            if (e->unk8 & 0x10000)
+            {
+                params.attr |= 0x80000;
+                params.ang = 0x2000;
+            }
+            else
+                params.ang = 0xE000;
+            params.sprno = tbl.v[(u16)e->unk8 - 1];
+            params.x = sprite->x;
+            params.y = sprite->y;
+            params.z = sprite->depth;
+            nlSprPut(&params);
+            return;
+        }
+    }
 }
 #pragma force_active reset

@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_0000DB2C.
+ * test_mode.c -- REL module: isolated function lbl_0000BFE8.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -196,10 +196,11 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
-void lbl_00003C34(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
+void lbl_000057C0(void);
+void lbl_000065F0(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -255,43 +256,24 @@ void lbl_0000D084(void);
 void lbl_0000D3C0(void);
 void lbl_0000D844(void);
 void lbl_0000D9FC(void);
+void lbl_0000DB2C(void);
 void lbl_0000DC60(void);
 void lbl_0000DDA4(void);
 void lbl_0000E2E8(void);
 void lbl_0000E3E8(void);
+void lbl_0000E628(void);
+void lbl_0000ECB4(void);
+void lbl_0000EEF4(void);
 void lbl_0000F6F0(void);
+void lbl_0000F7BC(void);
 void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_0000DB2C(void)
+void lbl_0000BFE8(void)
 {
-    u8 *p = lbl_10003BF8;
-    s32 i;
-    s32 j;
-    char *tmp;
-    s32 tmp2;
-
-    *(s32 **)(p + 0xB0) = OSAllocFromHeap(__OSCurrHeap, u_motAnimCount * 4);
-    *(char ***)(p + 0xB4) = OSAllocFromHeap(__OSCurrHeap, (u_motAnimCount + 1) * 4);
-    for (i = 0; i < u_motAnimCount; i++)
-    {
-        (*(s32 **)(p + 0xB0))[i] = i + 1;
-        (*(char ***)(p + 0xB4))[i] = (char *)motLabel[i + 1];
-        for (j = i - 1; j >= 0; j--)
-        {
-            if (strcmp((*(char ***)(p + 0xB4))[j], (*(char ***)(p + 0xB4))[j + 1]) <= 0)
-                break;
-            tmp = (*(char ***)(p + 0xB4))[j];
-            (*(char ***)(p + 0xB4))[j] = (*(char ***)(p + 0xB4))[j + 1];
-            (*(char ***)(p + 0xB4))[j + 1] = tmp;
-            tmp2 = (*(s32 **)(p + 0xB0))[j];
-            (*(s32 **)(p + 0xB0))[j] = (*(s32 **)(p + 0xB0))[j + 1];
-            (*(s32 **)(p + 0xB0))[j + 1] = tmp2;
-        }
-    }
-    (*(char ***)(p + 0xB4))[i] = NULL;
+    lbl_0000C240();
+    u_replay_test_main();
 }
 #pragma force_active reset
-

@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_0000C00C.
+ * test_mode.c -- REL module: isolated function lbl_0000B4A0.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -196,10 +196,11 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
-void lbl_00003C34(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
+void lbl_000057C0(void);
+void lbl_000065F0(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -260,19 +261,36 @@ void lbl_0000DC60(void);
 void lbl_0000DDA4(void);
 void lbl_0000E2E8(void);
 void lbl_0000E3E8(void);
+void lbl_0000E628(void);
+void lbl_0000ECB4(void);
+void lbl_0000EEF4(void);
 void lbl_0000F6F0(void);
+void lbl_0000F7BC(void);
 void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_0000C00C(void)
+void lbl_0000B4A0(void)
 {
-    lbl_0000C260();
-    draw_normal_game_scene();
-    lbl_0000C3F0();
-    GXSetBlendMode_cached(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR);
-    GXSetZMode_cached(GX_ENABLE, GX_LESS, GX_ENABLE);
-    fog_gx_set();
+    u8 *p = lbl_10000F70;
+    u16 btn;
+    Vec sp;
+
+    lbl_0000BE94();
+    btn = controllerInfo[0].pressed.button;
+    if (btn & PAD_BUTTON_UP)
+        *(int *)(p + 8) += 1;
+    if (*((int *)(p + 0xC) - 1) > 0 && (btn & PAD_BUTTON_DOWN))
+        *((int *)(p + 0xC) - 1) -= 1;
+    btn = controllerInfo[0].held.button;
+    if (btn & PAD_BUTTON_RIGHT)
+        *(float *)(p + 0xC) -= *(float *)lbl_00010124;
+    if (btn & PAD_BUTTON_LEFT)
+        *(float *)(p + 0xC) += *(float *)lbl_00010124;
+    mathutil_mtxA_from_mtxB();
+    mathutil_mtxA_tf_point(&currentCamera->lookAt, &sp);
+    *(float *)p = -sp.z;
+    u_replay_test_main();
 }
 #pragma force_active reset

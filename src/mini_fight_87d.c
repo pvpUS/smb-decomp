@@ -32,6 +32,7 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "gxcache.h"
 #include "../data/common.nlobj.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
@@ -215,7 +216,6 @@ extern void new_ape_stat_motion();
 extern void u_load_minigame_graphics();
 extern void unref_func_8003938C();
 extern void vibration_control();
-extern void GXSetNumTevStages_cached();
 extern void avdisp_draw_model_unculled_sort_all();
 extern void avdisp_draw_model_unculled_sort_translucent();
 extern void avdisp_set_bound_sphere_scale();
@@ -235,7 +235,6 @@ extern void set_ape_model_lod();
 extern void thread_create();
 extern void unref_func_80039320();
 extern void unref_func_800393F8();
-extern void GXSetTevAlphaOp_cached();
 extern void ape_destroy();
 extern void avdisp_draw_model_unculled_sort_none();
 extern void mathutil_mtxA_from_mtxB();
@@ -248,32 +247,24 @@ extern void mathutil_vec_dot_normalized_safe();
 extern void rend_efc_mirror_enable();
 extern void stobj_draw();
 extern void u_ball_init_1();
-extern void GXSetTevAlphaIn_cached();
 extern void avdisp_set_alpha();
 extern void background_draw();
 extern void light_init();
 extern void mathutil_mtxA_from_mtxB_translate_xyz();
 extern void set_bg_ambient();
 extern void u_avdisp_set_some_func_1();
-extern void GXSetTevColorOp_cached();
 extern void alloc_pool_light();
 extern void avdisp_draw_model_culled_sort_none();
 extern void func_8009CD5C();
 extern void mathutil_mtxA_scale_xyz();
 extern void ord_tbl_set_depth_offset();
-extern void GXSetTevColorIn_cached();
 extern void draw_monkey();
 extern void func_8009C5E4();
 extern void mathutil_mtxA_sq_from_mtx();
 extern void mathutil_mtxA_to_euler_yxz();
 extern void rend_efc_draw();
-extern void GXSetTevKAlphaSel_cached();
 extern void background_light_assign();
-extern void GXSetTevOrder_cached();
 extern void u_draw_ball_shadow();
-extern void GXSetCullMode_cached();
-extern void GXSetFog_cached();
-extern void GXSetBlendMode_cached();
 extern void gxutil_set_vtx_attrs();
 
 // Forward declarations so mwcc accepts `<fn>@ha/@l` and cross-function

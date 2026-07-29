@@ -118,7 +118,7 @@ extern void floor_to_stage_id();
 extern void func_8009F4C4();
 extern void func_80067310();
 extern void is_floor_visited();
-extern void is_load_queue_not_empty();
+extern int is_load_queue_not_empty(void);
 extern void is_minigame_unlocked();
 extern void item_draw();
 extern void lens_flare_draw();
@@ -208,9 +208,63 @@ void lbl_00011824(void);
 void lbl_000118E4(void);
 
 #pragma force_active on
-asm void lbl_000118E4(void)
+void lbl_000118E4(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_000118E4.s"
+    f32 x;
+    f32 y;
+
+    x = (*(f32 *)((u8 *)&lbl_801EEDA8 + 0xF8) < 641.0) ? *(f32 *)((u8 *)&lbl_801EEDA8 + 0xF8) : 641.0;
+    y = *(f32 *)((u8 *)&lbl_801EEDA8 + 0x100);
+    if (x < 0.0f)
+    {
+        f32 e = y + x;
+
+        y = (e < 0.0f) ? 0.0f : ((e > 640.0f) ? 640.0f : e);
+        x = 0.0f;
+    }
+    if (is_load_queue_not_empty())
+        y = 0.0f;
+    if (0.0f == y)
+    {
+        setup_camera_viewport(0, 0.0f, 0.0f, 1.0f, 1.0f);
+        set_current_camera(0);
+    }
+    else
+    {
+        setup_camera_viewport(0, x / 640.0f, *(f32 *)((u8 *)&lbl_801EEDA8 + 0xFC) / 448.0f, y / 640.0f, *(f32 *)((u8 *)&lbl_801EEDA8 + 0x104) / 448.0f);
+        set_current_camera(0);
+        background_light_assign();
+        if (modeCtrl.gameType != GAMETYPE_MINI_FIGHT)
+        {
+            mathutil_mtxA_from_mtxB();
+            mathutil_mtxA_translate((Vec *)decodedStageLzPtr->startPos);
+            mathutil_mtxA_rotate_y(stageInfo.unk0 << 9);
+            nl2ngc_draw_model_sort_translucent_alt2(((void **)g_commonNlObj)[11]);
+        }
+        stage_draw();
+        if (eventInfo[EVENT_BACKGROUND].state == EV_STATE_RUNNING)
+        {
+            ord_tbl_set_depth_offset(400.0f);
+            background_draw();
+            ord_tbl_set_depth_offset(0.0f);
+        }
+        if (eventInfo[EVENT_REND_EFC].state == EV_STATE_RUNNING)
+            rend_efc_draw(0x10);
+        if (eventInfo[EVENT_ITEM].state == EV_STATE_RUNNING)
+            item_draw();
+        if (eventInfo[EVENT_STOBJ].state == EV_STATE_RUNNING)
+            stobj_draw();
+        if (eventInfo[EVENT_EFFECT].state == EV_STATE_RUNNING)
+            effect_draw();
+        if (backgroundInfo.unk8 & 1)
+            lens_flare_draw_mask(0);
+        ord_tbl_draw_nodes();
+        if (backgroundInfo.unk8 & 1)
+            lens_flare_draw(0);
+        if (eventInfo[EVENT_REND_EFC].state == EV_STATE_RUNNING)
+            rend_efc_draw(8);
+        setup_camera_viewport(0, 0.0f, 0.0f, 1.0f, 1.0f);
+        set_current_camera(0);
+    }
 }
 #pragma force_active reset

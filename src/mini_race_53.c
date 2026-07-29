@@ -31,6 +31,7 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "background.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_race.s) or imported.  Declared so mwcc accepts `@ha/@l`.
@@ -172,7 +173,6 @@ extern u8 pauseMenuState[];
 extern u8 g_currPlayerButtons[];
 extern u8 controllerInfo[];
 extern u8 lbl_802F16BC[];
-extern u8 backgroundInfo[];
 
 // Imported functions the code calls that no included header declares.
 extern void item_replace_type_funcs();
@@ -301,8 +301,8 @@ void lbl_0000ACF4(void);
 void lbl_0000AD74(void);
 void lbl_0000ADDC(void);
 void lbl_0000AFF8(void);
-void lbl_0000B2F0(void);
-void lbl_0000B560(void);
+void lbl_0000B2F0(struct Ball *);
+void lbl_0000B560(struct Ball *);
 void lbl_0000B67C(void);
 void lbl_0000B834(void);
 void lbl_0000B8C8(void);
@@ -375,9 +375,88 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_0000A9EC(void)
+
+// Per-racer state hanging off struct Ball::unk144 inside this module.
+// INVENTED -- offsets read off the asm, names are placeholders.
+struct RaceSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000A9EC.s"
+    u8 filler0[0x14];
+    u32 unk14;
+};
+
+void lbl_0000A9EC(void)
+{
+    int i;
+    f32 *k = (f32 *)lbl_00013BD0;
+    struct Ball *oldBall = currentBall;
+
+    for (i = 0; i < 4; i++)
+    {
+        if (cameraInfo[i].sub28.vp.width > k[0] && cameraInfo[i].sub28.vp.height > k[0])
+        {
+            struct RaceSub *st;
+
+            if (g_poolInfo.playerPool.statusList[i] == STAT_NULL
+             || g_poolInfo.playerPool.statusList[i] == STAT_FREEZE)
+                continue;
+            currentBall = &ballInfo[i];
+            if ((s8)ballInfo[i].unk0 != 2)
+                continue;
+            st = (struct RaceSub *)ballInfo[i].unk144;
+            if (st->unk14 & 0x20)
+            {
+                if (modeCtrl.unk30 != 3)
+                    continue;
+                if (modeCtrl.splitscreenMode != 3)
+                    continue;
+            }
+            change_current_camera(i);
+            u_draw_ball_shadow();
+            background_light_assign();
+            reset_light_group(i);
+            if (eventInfo[EVENT_REND_EFC].state == EV_STATE_RUNNING)
+                rend_efc_draw(4);
+            draw_monkey();
+            if (eventInfo[EVENT_STAGE].state == EV_STATE_RUNNING
+             || eventInfo[EVENT_STAGE].state == EV_STATE_SUSPENDED)
+            {
+                stage_draw();
+                if (decodedStageLzPtr->unk78 != NULL)
+                    lbl_0000AFF8();
+            }
+            poly_shadow_draw();
+            if (eventInfo[EVENT_BACKGROUND].state == EV_STATE_RUNNING)
+            {
+                ord_tbl_set_depth_offset(k[1]);
+                background_draw();
+                ord_tbl_set_depth_offset(k[0]);
+            }
+            if (eventInfo[EVENT_REND_EFC].state == EV_STATE_RUNNING)
+                rend_efc_draw(16);
+            if (eventInfo[EVENT_ITEM].state == EV_STATE_RUNNING)
+                item_draw();
+            if (eventInfo[EVENT_STOBJ].state == EV_STATE_RUNNING)
+                stobj_draw();
+            if (eventInfo[EVENT_EFFECT].state == EV_STATE_RUNNING)
+                effect_draw();
+            if (eventInfo[EVENT_BALL].state == EV_STATE_RUNNING)
+            {
+                ball_draw();
+                lbl_0000AC30();
+                lbl_0000ADDC();
+                lbl_0000B2F0(currentBall);
+                if (!(st->unk14 & 0x20) && !(st->unk14 & 2) && (st->unk14 & 0x4000))
+                    lbl_0000B560(currentBall);
+            }
+            draw_test_camera_target();
+            ord_tbl_draw_nodes();
+            if (backgroundInfo.unk8 & 1)
+                lens_flare_draw(i);
+            if (eventInfo[EVENT_REND_EFC].state == EV_STATE_RUNNING)
+                rend_efc_draw(8);
+        }
+    }
+    currentBall = oldBall;
+    default_camera_env();
 }
 #pragma force_active reset

@@ -1,5 +1,5 @@
 /*
- * test_mode.c -- REL module: isolated function lbl_0000A304.
+ * test_mode.c -- REL module: isolated function lbl_00008B00.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
  * translation unit.  That matters: mwcc's inline assembler turns off the
@@ -196,10 +196,11 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
-void lbl_00003C34(void);
 void lbl_00005384(void);
 void lbl_000055E8(void);
 void lbl_000056BC(void);
+void lbl_000057C0(void);
+void lbl_000065F0(void);
 void lbl_000073EC(void);
 void lbl_00007BE0(void);
 void lbl_00007D20(void);
@@ -208,7 +209,7 @@ void lbl_00008008(void);
 void lbl_00008808(void);
 void lbl_0000884C(void);
 void lbl_00008ADC(void);
-void lbl_00008B00(void);
+void lbl_00008B00(struct Sprite *);
 void lbl_00008F40(void);
 void lbl_00009060(void);
 void lbl_00009338(void);
@@ -217,6 +218,7 @@ void lbl_00009560(void);
 void lbl_000095F8(void);
 void lbl_00009998(void);
 void lbl_00009A0C(void);
+void lbl_0000A304(void);
 void lbl_0000A440(void);
 void lbl_0000A78C(void);
 void lbl_0000A7DC(void);
@@ -259,43 +261,19 @@ void lbl_0000DC60(void);
 void lbl_0000DDA4(void);
 void lbl_0000E2E8(void);
 void lbl_0000E3E8(void);
+void lbl_0000E628(void);
+void lbl_0000ECB4(void);
+void lbl_0000EEF4(void);
 void lbl_0000F6F0(void);
+void lbl_0000F7BC(void);
 void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-void lbl_0000A304(Mtx m, GXTexMtx id)
+void lbl_00008B00(struct Sprite *sprite)
 {
-    float *k = (float *)lbl_00010080;
-    int i;
-    u8 *cam;
-    Mtx sp70;
-    Mtx sp40;
-    Mtx sp10;
-
-    PSMTXIdentity(sp40);
-    sp40[0][2] = k[16];
-    sp40[1][2] = k[16];
-    C_MTXScale(sp70, k[0], k[0], k[0]);
-    sp70[2][3] = k[3];
-    cam = lbl_10000E00;
-    for (i = 2; i > 0; i--)
-    {
-        sp40[0][0] = k[15] * *(float *)(cam + 0x60);
-        sp40[1][1] = k[16] * *(float *)(cam + 0x60);
-        PSMTXConcat(sp40, (float (*)[4])(cam + 0x2C), sp10);
-        PSMTXConcat(sp10, m, sp10);
-        GXLoadTexMtxImm(sp10, id, GX_MTX3x4);
-        id += 3;
-        sp70[0][2] = k[15] / *(float *)(cam + 0x28);
-        sp70[0][3] = k[16] + k[15] * *(float *)(cam + 0x24) / *(float *)(cam + 0x28);
-        PSMTXConcat(sp70, (float (*)[4])(cam + 0x2C), sp10);
-        PSMTXConcat(sp10, m, sp10);
-        GXLoadTexMtxImm(sp10, id, GX_MTX3x4);
-        id += 3;
-        cam += 0x9C;
-    }
+    preview_draw(*(struct Preview **)((u8 *)sprite + 0x2C), -1, 0, sprite->x,
+                 sprite->y, sprite->depth, sprite->scaleX, sprite->scaleY);
 }
 #pragma force_active reset
-

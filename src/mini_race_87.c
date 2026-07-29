@@ -31,6 +31,7 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "avdisp.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_race.s) or imported.  Declared so mwcc accepts `@ha/@l`.
@@ -197,8 +198,6 @@ extern void func_800AB6F8();
 extern void stcoli_sub33();
 extern void avdisp_get_eff_vtxinfo();
 extern void lens_flare_draw();
-extern void avdisp_set_bound_sphere_scale();
-extern void avdisp_set_post_mult_color();
 extern void bitmap_init_tev();
 extern void avdisp_draw_model_unculled_sort_none();
 extern void ape_skel_anim_main();
@@ -206,9 +205,7 @@ extern void set_ape_model_lod();
 extern void func_800AB444();
 extern void func_8006AD3C();
 extern void ord_tbl_draw_nodes();
-extern void avdisp_set_alpha();
 extern void ape_destroy();
-extern void avdisp_set_z_mode();
 extern void func_800AB2A0();
 extern void func_8006AAEC();
 extern void draw_test_camera_target();
@@ -335,7 +332,8 @@ void lbl_0000D69C(void);
 void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
-static void lbl_0000DB70(void);
+struct RaceDrawArg;
+static void lbl_0000DB70(struct RaceDrawArg *);
 void lbl_0000DE5C(void);
 void lbl_0000DF6C(void);
 void lbl_0000E11C(void);
@@ -376,14 +374,196 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_0000D8EC(void)
+
+// INVENTED -- the argument block lbl_0000D8EC fills in and hands to
+// lbl_0000DB70.  Offsets read off the asm; names are placeholders.
+struct RaceDrawArg
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000D8EC.s"
+    /*0x00*/ s16 modelId;
+    /*0x02*/ u16 rotZ;
+    /*0x04*/ f32 scale;
+    /*0x08*/ Vec *pos;
+    /*0x0C*/ f32 alpha;
+    /*0x10*/ f32 apeAlpha;
+    /*0x14*/ s16 slot;
+};
+
+// INVENTED -- 0x48-byte per-course record at lbl_00015768; +0x10 points at the
+// banner layout table this function walks.
+struct RaceCourseInfo4
+{
+    u8 filler0[0x10];
+    u8 *unk10;
+    u8 filler14[0x48 - 0x14];
+};
+
+// Per-racer state hanging off struct Ball::unk144 inside this module.
+struct RaceSub
+{
+    u8 filler0[0x14];
+    u32 unk14;
+};
+
+// INVENTED -- 4 model ids packed at lbl_00013C48 + 0x184.
+struct RaceModelIds
+{
+    s16 v[4];
+};
+
+void lbl_0000D8EC(void)
+{
+    u8 *cfg = lbl_00013C48;
+    u8 *p = (&((struct RaceCourseInfo4 *)lbl_00015768)[*(u16 *)lbl_10000028])->unk10;
+    Vec dead1;
+    struct RaceDrawArg arg;
+    s16 i;
+    s32 dead2;
+
+    if (p == NULL)
+        return;
+    arg.modelId = *(s32 *)p;
+    arg.rotZ = *(u16 *)(p + 4);
+    switch (modeCtrl.unk30)
+    {
+    case 1:
+        arg.scale = *(f32 *)(p + 8);
+        arg.pos = (Vec *)(p + 0xC);
+        arg.alpha = *(f32 *)(cfg + 8);
+        arg.apeAlpha = *(f32 *)(cfg + 8);
+        arg.slot = 0;
+        lbl_0000DB70(&arg);
+        break;
+    case 2:
+        arg.scale = *(f32 *)(p + 0x18);
+        arg.pos = (Vec *)(p + 0x1C);
+        arg.alpha = *(f32 *)(cfg + 0xD0);
+        arg.apeAlpha = *(f32 *)(cfg + 0x180);
+        arg.slot = 0;
+        for (i = 0; i < 2; i++)
+        {
+            lbl_0000DB70(&arg);
+            arg.pos = (Vec *)((u8 *)arg.pos + 0xC);
+            arg.slot = arg.slot + 1;
+        }
+        break;
+    case 3:
+        if (modeCtrl.splitscreenMode != 3)
+        {
+            arg.slot = modeCtrl.splitscreenMode;
+            arg.alpha = *(f32 *)(cfg + 0xD0);
+            arg.apeAlpha = *(f32 *)(cfg + 0x180);
+            arg.scale = *(f32 *)(p + 0x18);
+            arg.pos = (Vec *)(p + 0x1C);
+            if (modeCtrl.splitscreenMode == 2)
+                arg.pos = (Vec *)((u8 *)arg.pos + 0xC);
+            lbl_0000DB70(&arg);
+            arg.scale = *(f32 *)(p + 0x34);
+            arg.pos = (Vec *)(p + 0x38);
+            if (modeCtrl.splitscreenMode != 2)
+                arg.pos = (Vec *)((u8 *)arg.pos + 0x18);
+            for (i = 0; i < 3; i++)
+            {
+                if (i != modeCtrl.splitscreenMode)
+                {
+                    arg.slot = i;
+                    lbl_0000DB70(&arg);
+                    arg.pos = (Vec *)((u8 *)arg.pos + 0xC);
+                }
+            }
+            break;
+        }
+        /* fall through */
+    case 4:
+        arg.scale = *(f32 *)(p + 0x34);
+        arg.pos = (Vec *)(p + 0x38);
+        i = 0;
+        arg.alpha = *(f32 *)(cfg + 0xD0);
+        arg.apeAlpha = *(f32 *)(cfg + 0x180);
+        arg.slot = i;
+        for (; i < modeCtrl.unk30; i++)
+        {
+            arg.pos = (Vec *)(p + 0x38 + i * 0xC);
+            arg.slot = i;
+            lbl_0000DB70(&arg);
+        }
+        break;
+    }
+    bitmap_init_tev();
+    mathutil_mtxA_from_identity();
+    gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
 }
-static asm void lbl_0000DB70(void)
+
+static void lbl_0000DB70(struct RaceDrawArg *arg)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000DB70.s"
+    u8 *cfg = lbl_00013C48;
+    struct RaceModelIds tbl = *(struct RaceModelIds *)(cfg + 0x184);
+    struct Ball *balls[4];
+    Vec pos;
+    Vec dir;
+    Vec t;
+    Vec *pt;
+    struct Ball *bb;
+    struct Ball *tmp;
+    struct RaceSub *st;
+    f32 sc;
+    u16 ang;
+    s16 i;
+
+    if (ballInfo[arg->slot].unk148 == 0x10 || ballInfo[arg->slot].unk148 == 0x12)
+        return;
+    mathutil_mtxA_from_identity();
+    mathutil_mtxA_translate(arg->pos);
+    mathutil_mtxA_rotate_z(arg->rotZ);
+    mathutil_mtxA_rotate_x(0x4000);
+    mathutil_mtxA_scale_s(arg->scale);
+    avdisp_set_bound_sphere_scale(arg->scale);
+    mathutil_mtxA_push();
+    avdisp_set_alpha(arg->alpha);
+    gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+    avdisp_draw_model_unculled_sort_none(
+        decodedStageGmaPtr->modelEntries[arg->modelId].model);
+    for (i = 0; i < 4; i++)
+        balls[i] = &ballInfo[i];
+    tmp = balls[3];
+    balls[3] = &ballInfo[arg->slot];
+    balls[arg->slot] = tmp;
+    for (i = 0; i < 4; i++)
+    {
+        bb = balls[i];
+        if ((s8)bb->unk0 != 2)
+            continue;
+        st = (struct RaceSub *)bb->unk144;
+        if (st->unk14 & 0x40)
+            continue;
+        pos = bb->pos;
+        pos.y = *(f32 *)(cfg + 0x18);
+        dir.x = bb->pos.x - bb->prevPos.x;
+        dir.y = bb->pos.y - bb->prevPos.y;
+        dir.z = bb->pos.z - bb->prevPos.z;
+        if (mathutil_vec_sq_len(&dir) < *(f32 *)(cfg + 0x198))
+        {
+            mathutil_mtxA_from_quat(&bb->ape->unk60);
+            pt = &t;
+            t = *(Vec *)(cfg + 0x18C);
+            dir = *pt;
+            mathutil_mtxA_tf_vec(&dir, &dir);
+        }
+        ang = mathutil_atan2(dir.x, dir.z) + 0xC000;
+        mathutil_mtxA_peek();
+        mathutil_mtxA_translate(&pos);
+        mathutil_mtxA_rotate_y(ang);
+        if (i == 3)
+            sc = *(f32 *)(cfg + 0xE4);
+        else
+            sc = *(f32 *)(cfg + 0x19C);
+        sc = (*(f32 *)(cfg + 0x1A0) * sc) / arg->scale;
+        mathutil_mtxA_scale_s(sc);
+        avdisp_set_bound_sphere_scale(sc * arg->scale);
+        avdisp_set_alpha(arg->apeAlpha);
+        gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+        avdisp_draw_model_unculled_sort_none(
+            minigameGma->modelEntries[tbl.v[bb->colorId]].model);
+    }
+    mathutil_incr_mtx_stack();
 }
 #pragma force_active reset
