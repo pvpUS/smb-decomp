@@ -315,6 +315,36 @@ do with X?" independent of any function. That is how option proved its wall and
 how sel_ngc found three idioms. **Caveat: a `.plf`-based probe is WRONG on
 truncated bodies** — it reads past the function end into the next one.
 
+### RUN-10 PREP DONE (post-run-9, commit `a80b64f`)
+
+- **Pushed**: `fork/wip/rel-drafts-and-dol-matches` at `f470ac9` (was `354f976`).
+- **`tools/rel_ascore.py` had THREE defects, all fixed and regression-tested**
+  against 577 converted functions across all nine modules (0 non-zero):
+  it masked every branch displacement (so branch-only controls were invisible);
+  it scored a stale `.plf` after a failed build (three fictional MATCHes); and
+  it scored a whole ROW as one function. It now prints a **per-function
+  breakdown** automatically, taking expected boundaries from the label names and
+  got boundaries from consecutive map addresses.
+- **`tools/rel_rowcount.py`'s branch regex was wrong**: `(?:[^,]*,\s*)?` matches
+  newlines, so it ran past the end of the line, captured a label from an
+  unrelated instruction and MISSED the real target. A 61-instruction function
+  counted as five. **Project total corrected from 940 rows / 50 multi-function /
+  211 unaccounted to 992 / 29 / 159.** `lbl_000008B4`=15, `lbl_00010B98`=4 and
+  `lbl_000022D8`=21 survive; **`lbl_0001157C`=19 and `lbl_00012D50`=8 remain
+  UNVERIFIED** (both rows contain `bctr`).
+- **Promoted**: `tools/rel_ssplit.py` (row -> per-function bodies; refuses `bctr`
+  rows) and `tools/rel_isolate.py` (the fixed isolate, now `--tree`-aware).
+- **All nine warm copies RESET to `a80b64f`, clean, each rebuilt to its golden
+  sha1 with `rel_sweep --gate` from DELETED objects.** `fail=0`. Re-run with
+  `C:/tmp/smbm/warm_reset_run10.sh`. CW temps `C:/tmp/tmp_<mod>` exist.
+- **`C:/tmp/smbm/RUN10_BRIEF.md` is written** — hand it to every module agent. It
+  leads with the control/scorer failure, not with a target list.
+- **`C:/tmp/smbm/RUN9_RESULTS.md`** holds all nine per-module reports.
+- Still NOT promoted (worth doing): the compile-only micro-probe (option's
+  `micro/mk.sh`, sel_ngc's `run9/fprobe.py`), mini_golf's `regions.py`, and an
+  aligned-ranking `--sweep` inside `rel_sweep.py` (it still ranks on RAW).
+  `rel_xref_spine.py` is still hard-coded to mini_race.
+
 ### STATE FOR RUN 10
 
 - **All nine warm copies merged** with `rel_merge_back.py --all`; each rebuilt
