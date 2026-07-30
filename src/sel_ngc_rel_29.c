@@ -479,4 +479,24 @@ asm void lbl_0000B1C0(void)
     nofralloc
 #include "../asm/nonmatchings/sel_ngc_rel/lbl_0000B1C0.s"
 }
+asm void lbl_0000B920(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/sel_ngc_rel/lbl_0000B920.s"
+}
+asm void lbl_0000BEE8(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/sel_ngc_rel/lbl_0000BEE8.s"
+}
+static asm void lbl_0000C518(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/sel_ngc_rel/lbl_0000C518.s"
+}
+asm void lbl_0000C970(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/sel_ngc_rel/lbl_0000C970.s"
+}
 #pragma force_active reset

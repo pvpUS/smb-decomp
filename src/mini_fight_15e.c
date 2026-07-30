@@ -428,11 +428,22 @@ static void lbl_0000A320(void);
 static void lbl_0000A324(void);
 static void lbl_0000A4DC(void);
 static void lbl_0000A5D0(void);
+static void lbl_00008238(void);
+static void lbl_0000823C(void);
+static void lbl_0000A68C(void);
 #pragma force_active on
 asm void lbl_000080D4(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_000080D4.s"
+}
+static void lbl_00008238(void)
+{
+}
+static asm void lbl_0000823C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_0000823C.s"
 }
 static asm void lbl_000082E8(void)
 {
@@ -565,6 +576,9 @@ static asm void lbl_0000A5D0(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_0000A5D0.s"
+}
+static void lbl_0000A68C(void)
+{
 }
 
 #pragma force_active reset

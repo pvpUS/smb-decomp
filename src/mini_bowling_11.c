@@ -157,7 +157,7 @@ void lbl_000045E8(void);
 void lbl_00004A80(void);
 void lbl_00004BD8(void);
 void lbl_00004D10(void);
-void lbl_00004DF8(void);
+void lbl_00004DF8(u8 *);
 void lbl_00005128(void);
 void lbl_000051E0(void);
 void lbl_000054BC(void);
@@ -173,7 +173,7 @@ void lbl_000076D0(void);
 void lbl_00007740(void);
 void lbl_00007778(void);
 void lbl_00007878(void);
-void lbl_00007964(void);
+void lbl_00007964(int idx, struct Ball *ball);
 void lbl_000079E8(void);
 void lbl_00007A6C(void);
 void lbl_00007C54(void);
@@ -215,8 +215,8 @@ void lbl_0000AF18(void);
 void lbl_0000AFEC(void);
 void lbl_0000B0AC(void);
 void lbl_0000B1BC(void);
-void lbl_0000B344(void);
-void lbl_0000B460(void);
+int lbl_0000B344(void);
+void lbl_0000B460(int);
 void lbl_0000B654(void);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
@@ -246,9 +246,57 @@ void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
 #pragma force_active on
-asm void lbl_000027B0(void)
+// lbl_10000000 + 0xc is an array of four 0x4c-byte per-player records; the rest
+// of the work area resumes at +0x13c (== 0xc + 4*0x4c).  Indexing it AS AN
+// ARRAY OF STRUCTS is load-bearing: it is the only spelling that emits
+// `add r30, r31, r0` (base in rA) instead of `add r30, r0, r31`.  Every
+// byte-offset spelling -- `&w[i*0x4c + 0xc]`, `w + i*0x4c + 0xc`,
+// `&(w + 0xc)[i*0x4c]` -- gives the other operand order, and the two-step
+// `p = w + i*0x4c; p += 0xc;` sinks the +0xc into every later displacement.
+struct BowlPlayer {
+    u8 filler0[0x4c];
+};
+
+void lbl_000027B0(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_000027B0.s"
+    u8 *w = lbl_10000000;
+    u8 *p;
+    u8 v;
+
+    if (currentBall->pos.z < *(f64 *)lbl_00010EE0 && *(s8 *)(w + 0x140) <= 0) {
+        lbl_00007964(1, currentBall);
+        lbl_0000B460(1);
+        *(s8 *)(w + 0x140) = 1;
+    }
+    if ((((!(currentBall->flags & 0x1000) && func_800246F4(currentBall)) || currentBall->pos.y < *(f64 *)lbl_00010EE8) && lbl_0000B344()) || *(s32 *)w < 0) {
+        p = (u8 *)&((struct BowlPlayer *)(w + 0xc))[modeCtrl.currPlayer];
+        lbl_00004DF8(p);
+        if ((s32)lbl_802F1BF0 == 0) {
+            v = p[(s8)p[8] + 0x35];
+            if ((s8)v == 2 && *(s8 *)(w + 0x140) > 0) {
+                *(s8 *)(w + 0x140) = 2;
+                *(s8 *)(w + 0x13f) = 0;
+                lbl_00007964(0, currentBall);
+                lbl_0000B460(0);
+                lbl_00004A80();
+            } else if ((s8)v == 3 && *(s8 *)(w + 0x140) > 0) {
+                *(s8 *)(w + 0x140) = 1;
+                *(s8 *)(w + 0x13f) = 0;
+                lbl_00007964(0, currentBall);
+                lbl_0000B460(0);
+                lbl_00004A80();
+            } else {
+                lbl_000029A8();
+            }
+        } else if (*(u16 *)(w + 0x13c) == 0 && *(s8 *)(w + 0x140) > 0) {
+            *(s8 *)(w + 0x140) = 2;
+            *(s8 *)(w + 0x13f) = 0;
+            lbl_00007964(0, currentBall);
+            lbl_0000B460(0);
+            lbl_00004A80();
+        } else {
+            lbl_00004410();
+        }
+    }
 }
 #pragma force_active reset

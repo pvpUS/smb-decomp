@@ -161,9 +161,9 @@ extern void func_80036000();
 extern void func_80086D20();
 extern void func_8008B9DC();
 extern void func_8008BFD8();
-extern void func_800948EC();
+extern int func_800948EC();
 extern void func_800A71B0();
-extern void func_800A722C();
+extern void *func_800A722C();
 extern void func_800A7314();
 extern void func_800A7370();
 extern void func_800A7440();
@@ -271,7 +271,7 @@ void lbl_0000E3E8(void);
 void lbl_0000E628(void);
 void lbl_0000ECB4(void);
 void lbl_0000EEF4(void);
-static void lbl_0000F4D8(void);
+static void lbl_0000F4D8(int arg);
 void lbl_0000F6F0(void);
 void lbl_0000F7BC(void);
 void lbl_0000F940(void);
@@ -279,9 +279,60 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-static asm void lbl_0000F4D8(void)
+static void lbl_0000F4D8(int arg)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000F4D8.s"
+    u8 *d = lbl_000148E8;
+    void *h;
+    char name[128];
+
+    if (arg == 0)
+        return;
+    if (func_800948EC() == 0)
+        return;
+    func_800A71B0((char *)(d + 0x113C), name);
+    if (strcmp(name, (char *)(d + 0x1144)) == 0)
+    {
+        char path[64];
+        OSCalendarTime ct;
+        void *buf;
+
+        buf = OSAllocFromHeap(__OSCurrHeap, 0x4E000);
+        OSTicksToCalendarTime(OSGetTime(), &ct);
+        sprintf(path, (char *)(d + 0x114C), ct.mon + 1, ct.mday, ct.hour, ct.min,
+                ct.sec);
+        h = func_800A722C((char *)(d + 0x1174), 1);
+        func_800A7370(h, buf, 0x4E000);
+        func_800A7314(h);
+        h = func_800A722C(path, 2);
+        func_800A7440(h, buf, 0x4E000);
+        func_800A7314(h);
+        OSFreeToHeap(__OSCurrHeap, buf);
+        h = func_800A722C((char *)(d + 0x118C), 2);
+    }
+    else if (strcmp(name, (char *)(d + 0x11A0)) == 0)
+    {
+        char path[64];
+        OSCalendarTime ct;
+        void *buf;
+
+        buf = OSAllocFromHeap(__OSCurrHeap, 0x4E000);
+        OSTicksToCalendarTime(OSGetTime(), &ct);
+        sprintf(path, (char *)(d + 0x11AC), ct.year, ct.mon + 1, ct.mday, ct.hour,
+                ct.min, ct.sec);
+        h = func_800A722C((char *)(d + 0x11E0), 1);
+        func_800A7370(h, buf, 0x4E000);
+        func_800A7314(h);
+        h = func_800A722C(path, 2);
+        func_800A7440(h, buf, 0x4E000);
+        func_800A7314(h);
+        OSFreeToHeap(__OSCurrHeap, buf);
+        h = func_800A722C((char *)(d + 0x11E0), 2);
+    }
+    else
+    {
+        h = func_800A722C((char *)(d + 0x1200), 2);
+    }
+    func_800A7440(h, motInfo, 0x4E000);
+    func_800A7314(h);
 }
 #pragma force_active reset

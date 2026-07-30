@@ -224,7 +224,7 @@ void lbl_00009FB0(void);
 void lbl_0000A098(void);
 void lbl_0000A69C(void);
 void lbl_0000A754(void);
-void lbl_0000AD6C(void);
+void lbl_0000AD6C(u32 mulColor, u32 addColor, f32 x, f32 y, char *fmt, ...);
 void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
@@ -241,10 +241,117 @@ void lbl_00001BB4(void);
 void lbl_00001CE4(void);
 void lbl_00001DE0(void);
 #pragma force_active on
-asm void lbl_00001DE0(void)
+void lbl_00001DE0(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00001DE0.s"
+    u8 *m = (u8 *)lbl_10000000;
+    struct Ball *ball = currentBall;
+    u8 *k = (u8 *)lbl_0000BE80;
+    char *s = (char *)lbl_0000C740;
+    NLsprarg params;
+    u32 c2;
+    u32 c1;
+    f32 x;
+    f32 y;
+    f64 ny;
+
+    lbl_802F1FF0++;
+    if (lbl_802F1FF0 < 20)
+        return;
+
+    x = *(f32 *)(k + 0x110);
+    y = *(f32 *)(k + 0x114);
+
+    if (*(s32 *)(m + 0x8C) < 30)
+    {
+        if (*(s16 *)(m + 0x20) != 0)
+        {
+            c1 = 0xFFFFFF80;
+            c2 = 0xFF808080;
+        }
+        else
+        {
+            c1 = 0xFF808080;
+            c2 = 0xFFFFFF80;
+        }
+        if (*(s32 *)(m + 0x8C) >= 0 && (globalAnimTimer & 4))
+        {
+            c1 &= 0xFF808080;
+            c2 &= 0xFF808080;
+        }
+
+        params.zm_x = *(f32 *)(k + 0x34);
+        params.zm_y = *(f32 *)(k + 0x34);
+        params.u0 = params.v0 = *(f32 *)(k + 0x30);
+        params.u1 = params.v1 = *(f32 *)(k + 0x34);
+        params.ang = 0;
+        params.listType = NLSPR_LISTTYPE_AUTO;
+        params.attr = 5;
+        params.trnsl = *(f32 *)(k + 0x34);
+        params.base_color = 0x00FFFFFF;
+        params.offset_color = 0;
+        params.zm_x = *(f32 *)(k + 0x118);
+        params.zm_y = *(f32 *)(k + 0x11C);
+        params.sprno = 0xB31;
+        params.x = *(f32 *)(k + 0x110);
+        params.y = *(f32 *)(k + 0x114) - *(f64 *)(k + 0x120);
+        params.z = *(f32 *)(k + 0x128);
+        nlSprPut(&params);
+
+        reset_text_draw_settings();
+        set_text_font(0xB1);
+        func_80071B50(0x200000);
+        lbl_0000AD6C(0x00FFFFFF, 0, *(f64 *)(k + 0x130) + x, y, s + 0x5A0);
+        lbl_0000AD6C(c1, 0, *(f64 *)(k + 0x138) + (*(f64 *)(k + 0x140) + x), ny = *(f64 *)(k + 0x130) + y, s + 0x5AC);
+        lbl_0000AD6C(c2, 0, *(f64 *)(k + 0x138) + (*(f64 *)(k + 0x148) + x), ny, s + 0x5B0);
+    }
+
+    if (lbl_802F1FF0 < 30)
+        return;
+
+    if (*(s32 *)(m + 0x8C) == -1)
+    {
+        if ((controllerInfo[playerControllerIDs[ball->playerId]].pressed.button
+             & (PAD_BUTTON_LEFT | PAD_BUTTON_RIGHT))
+         || (analogInputs[playerControllerIDs[ball->playerId]].pressed
+             & (ANALOG_STICK_LEFT | ANALOG_STICK_RIGHT)))
+        {
+            u_play_sound_0(9);
+            *(s16 *)(m + 0x20) ^= 1;
+        }
+        if ((controllerInfo[playerControllerIDs[ball->playerId]].pressed.button & PAD_BUTTON_A)
+         && lbl_802F1FF0 > 38)
+        {
+            if (*(s16 *)(m + 0x20) != 0)
+            {
+                *(u32 *)lbl_802F1FD0 |= 0x400;
+                lbl_0000215C();
+                lbl_000021B4();
+                u_play_sound_0(0x10);
+                u_play_music(0, 8);
+            }
+            else
+            {
+                u_play_sound_0(0x36);
+            }
+            *(s32 *)(m + 0x8C) = 0;
+        }
+    }
+    else
+    {
+        *(s32 *)(m + 0x8C) += 1;
+        if (*(u32 *)lbl_802F1FD0 & 0x400)
+        {
+            if (*(s32 *)(m + 0x8C) == 20)
+                u_play_sound_0(0x11E);
+            else if (*(s32 *)(m + 0x8C) >= 0x73)
+                *(s16 *)lbl_802F1FF4 = 7;
+        }
+        else
+        {
+            if (*(s32 *)(m + 0x8C) >= 30)
+                *(s16 *)lbl_802F1FF4 = 7;
+        }
+    }
 }
 
 #pragma force_active reset

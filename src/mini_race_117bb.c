@@ -368,7 +368,7 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
-void lbl_00012E00(void);
+void lbl_00012E00(struct Effect *e, s32 a1, s32 a2);
 void lbl_00012ED0(struct Effect *);
 void lbl_00012F34(void);
 void lbl_00013120(struct Effect *);
@@ -381,10 +381,22 @@ void lbl_00013328(void);
 void lbl_0001356C(void);
 void lbl_00013670(struct Effect *);
 #pragma force_active on
-asm void lbl_00012E00(void)
+void lbl_00012E00(struct Effect *e, s32 a1, s32 a2)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00012E00.s"
+    struct Effect effect;
+    Vec a;
+    Vec b;
+
+    e->u_otherTimer = -1;
+    e->timer = 100;
+    memset(&effect, 0, sizeof(effect));
+    effect.type = 0x29;
+    effect.playerId = e->playerId;
+    *(Vec *)&a = *(Vec *)lbl_00014090;
+    effect.scale = a;
+    *(Vec *)&b = *(Vec *)lbl_0001409C;
+    effect.unk88 = b;
+    spawn_effect(&effect);
 }
 
 #pragma force_active reset

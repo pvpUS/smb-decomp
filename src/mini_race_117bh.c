@@ -183,7 +183,6 @@ extern void raycast_stage_down();
 extern void vibration_control();
 extern void func_800246F4();
 extern void mot_ape_set_quat_from_vec();
-extern void avdisp_get_eff_vertices();
 extern void item_create();
 extern void gxutil_load_pos_nrm_matrix();
 extern void mathutil_incr_mtx_stack();
@@ -194,7 +193,6 @@ extern void func_8002BB20();
 extern void fade_color_base_default();
 extern void func_800AB6F8();
 extern void stcoli_sub33();
-extern void avdisp_get_eff_vtxinfo();
 extern void lens_flare_draw();
 extern void bitmap_init_tev();
 extern void ape_skel_anim_main();
@@ -378,18 +376,13 @@ void lbl_00013268(struct Effect *);
 void lbl_00013318(struct Effect *);
 void lbl_0001331C(struct Effect *);
 void lbl_00013328(void);
-void lbl_0001356C(void);
+void lbl_0001356C(struct Effect *);
 void lbl_00013670(struct Effect *);
 #pragma force_active on
 asm void lbl_00013328(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_00013328.s"
-}
-asm void lbl_0001356C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0001356C.s"
 }
 
 #pragma force_active reset

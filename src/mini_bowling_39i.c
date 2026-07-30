@@ -46,6 +46,8 @@
 #include "shadow.h"
 #include "vibration.h"
 
+extern int u_play_sound_1_dupe(int arg0);
+
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_bowling.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000F020[];
@@ -179,8 +181,8 @@ void lbl_00007C54(void);
 void lbl_00007E74(void);
 void lbl_00007FE0(void);
 void lbl_000080E0(void);
-void lbl_000082E4(void);
-void lbl_000086E4(void);
+int lbl_000082E4(struct Ball *ball);
+f32 lbl_000086E4(Vec *v);
 void lbl_0000871C(void);
 void lbl_000087CC(void);
 void lbl_000089FC(void);
@@ -240,14 +242,111 @@ void lbl_0000E510(void);
 void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
-void lbl_0000E894(void);
+f32 lbl_0000E894(Vec *pos, Vec *prevPos, Vec *outNormal, f32 *outDepth,
+                 s32 *outType, f32 radius);
 void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
 #pragma force_active on
-asm void lbl_000082E4(void)
+// lbl_000082E4 (0x82E4): resolve the bowling ball against the lane collision,
+// bounce the velocity, and drive the impact sound / rumble.  Returns the
+// surface type lbl_0000E894 reported.
+//
+// Three things here are load-bearing, each worth a whole edit region:
+//   * `snd` must be declared BEFORE `tbl` -- the second such pointer local is
+//     the one that lands in r31.
+//   * `amp` must be assigned BEFORE the u_play_sound_0 call, or `u` has to
+//     live across it and mwcc burns f29 as a fourth callee-saved FPR (+8 on
+//     the frame, +2 insn).
+//   * `vol` must hold ONLY the float->int conversion, with `<< 11 & 0x3f800`
+//     left in the call argument.  Folding the shift into `vol` schedules the
+//     rlwinm/ori before the MIN ternary's branch instead of after it, and
+//     inlining the whole thing into the call gives mwcc two 8-byte fctiwz
+//     temps instead of one shared slot at 0x48 (+8 on the frame).
+// The second occurrence of the vector length is `lbl_000086E4`, which IS
+// mwcc's out-of-line copy of mathutil_vec_len -- in the unsplit TU it sat
+// right after this function.  Spelling it mathutil_vec_len() twice would make
+// this object emit its own copy and move the .text.
+int lbl_000082E4(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_000082E4.s"
+    s32 *snd = (s32 *)lbl_000153E0;
+    u8 *tbl = lbl_00011258;
+    Vec normal;
+    f32 depth;
+    s32 type;
+    Vec proj;
+    Vec tang;
+    Vec push;
+    f32 t;
+    f32 impact;
+    f32 k;
+    f32 u;
+    f32 dot;
+    f32 len;
+    int amp;
+    int vol;
+
+    t = lbl_0000E894(&ball->pos, &ball->prevPos, &normal, &depth, &type,
+                     ball->currRadius);
+    if (t <= *(f32 *)(tbl + 0x14)) {
+        if (t < *(f64 *)(tbl + 0x78))
+            ball->flags &= ~BALL_FLAG_00;
+        if (snd[0] != -1) {
+            SoundOff(snd[0]);
+            snd[0] = -1;
+        }
+        return type;
+    }
+    dot = mathutil_vec_dot_prod(&normal, &ball->vel);
+    proj.x = normal.x * dot;
+    proj.y = normal.y * dot;
+    proj.z = normal.z * dot;
+    tang.x = ball->vel.x - proj.x;
+    tang.y = ball->vel.y - proj.y;
+    tang.z = ball->vel.z - proj.z;
+    k = *(f64 *)(tbl + 0x80) - ball->restitution * depth;
+    ball->vel.x += k * proj.x - *(f32 *)(tbl + 0x88) * tang.x;
+    ball->vel.y += k * proj.y - *(f32 *)(tbl + 0x88) * tang.y;
+    ball->vel.z += k * proj.z - *(f32 *)(tbl + 0x88) * tang.z;
+    impact = __fabs(dot) < *(f64 *)(tbl + 0x90) ? __fabs(dot)
+                                                : *(f64 *)(tbl + 0x90);
+    if (impact > *(f64 *)(tbl + 0x98) && snd[0] == -1
+        && (type == 0 || type == 1 || type == 8 || type == 9))
+        u_play_sound_0(0xa09b);
+    if (impact > *(f64 *)(tbl + 0xa0) && snd[0] == -1) {
+        u = (impact - *(f64 *)(tbl + 0xa0)) / *(f64 *)(tbl + 0xa8);
+        vol = *(f32 *)(tbl + 0xb0) + *(f32 *)(tbl + 0xb4) * u;
+        amp = *(f32 *)(tbl + 0xb8) * u < *(f32 *)(tbl + 0xb8)
+                  ? *(f32 *)(tbl + 0xb8) * u
+                  : *(f32 *)(tbl + 0xb8);
+        u_play_sound_0(vol << 11 & 0x3f800 | 0x99);
+        if (ball->unk148 != 4) {
+            if (impact > *(f64 *)(tbl + 0xc0))
+                u_play_sound_0(0x1a);
+            else if (impact > *(f64 *)(tbl + 0xc8))
+                u_play_sound_0(0x18);
+            else
+                u_play_sound_0(0x17);
+        }
+        if (amp >= 2)
+            vibration_control(playerControllerIDs[modeCtrl.currPlayer],
+                              VIBRATION_STATE_1, amp);
+    }
+    if (snd[0] == -1) {
+        snd[0] = u_play_sound_1_dupe(0x9a);
+    } else {
+        len = mathutil_vec_len(&ball->vel) < *(f64 *)(tbl + 0xd0)
+                  ? lbl_000086E4(&ball->vel)
+                  : *(f64 *)(tbl + 0xd0);
+        SoundVol(snd[0], *(f32 *)(tbl + 0xd8) * len / *(f64 *)(tbl + 0xd0));
+    }
+    push.x = normal.x * t;
+    push.y = normal.y * t;
+    push.z = normal.z * t;
+    ball->pos.x = push.x + ball->pos.x;
+    ball->pos.y = push.y + ball->pos.y;
+    ball->pos.z = push.z + ball->pos.z;
+    ball->flags |= BALL_FLAG_00;
+    return type;
 }
 #pragma force_active reset

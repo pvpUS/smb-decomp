@@ -279,9 +279,59 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-static asm void lbl_000051C4(void)
+static void lbl_000051C4(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_000051C4.s"
+    u8 *p = lbl_10000000;
+    u8 *d = lbl_000102B0;
+    u16 rep;
+    int i;
+
+    window_set_cursor_pos(2, 2);
+    window_printf_2((char *)(d + 0x2FA8));
+    window_set_cursor_pos(4, 5);
+    rep = controllerInfo[0].repeat.button;
+    if (rep & PAD_BUTTON_UP)
+        *(s32 *)(p + 0x170) += 4;
+    if (rep & PAD_BUTTON_DOWN)
+        *(s32 *)(p + 0x170) += 1;
+    *(s32 *)(p + 0x170) %= 5;
+    if (controllerInfo[0].pressed.button & PAD_BUTTON_A)
+    {
+        s32 sel = *(s32 *)(p + 0x170);
+
+        ((s32 *)(p + 0x174))[sel] ^= 1;
+        switch (sel)
+        {
+        case 0:
+            break;
+        case 1:
+            set_shape_flags_in_model(*(struct GMAModel **)(p + 0x160), 8);
+            break;
+        case 2:
+            set_shape_flags_in_model(*(struct GMAModel **)(p + 0x160), 1);
+            break;
+        case 3:
+            set_shape_flags_in_model(*(struct GMAModel **)(p + 0x160), 2);
+            break;
+        case 4:
+            set_shape_flags_in_model(*(struct GMAModel **)(p + 0x160), 4);
+            break;
+        }
+    }
+    for (i = 0; i < 5U; i++)
+    {
+        if (i == *(s32 *)(p + 0x170))
+        {
+            window_set_text_color(2);
+            u_debug_print((char *)(d + 0x2FC0));
+        }
+        else
+        {
+            window_set_text_color(0);
+            u_debug_print((char *)(d + 0x2FC4));
+        }
+        u_debug_print(((char **)(d + 0x2F64))[i * 2 + ((s32 *)(p + 0x174))[i]]);
+        u_debug_print((char *)(d + 0x140));
+    }
 }
 #pragma force_active reset

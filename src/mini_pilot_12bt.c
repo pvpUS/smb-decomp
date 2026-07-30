@@ -128,13 +128,13 @@ extern u8 lbl_80285A58[];
 extern u8 lbl_80285A68[];
 extern u8 lbl_80285A80[];
 extern u8 lbl_802F1F10[];
-extern u8 lbl_802F1FD0[];
+extern u32 lbl_802F1FD0;
 extern u8 lbl_802F1FD8[];
 extern u8 lbl_802F1FDC[];
 extern u8 lbl_802F1FE0[];
 extern u8 lbl_802F1FE4[];
 extern u8 lbl_802F1FEC[];
-extern u8 lbl_802F1FF4[];
+extern s16 lbl_802F1FF4;
 
 // Imported functions the code calls that no included header declares.
 extern void ball_8003BBF4();
@@ -147,7 +147,7 @@ extern void func_8009DB40();
 extern void func_800AB2A0();
 extern void func_800AB444();
 extern void func_800AB6F8();
-extern void func_800AC43C();
+extern int func_800AC43C(int, void *, int);
 extern void func_800AC5E0();
 extern void gxutil_draw_line_multicolor();
 extern void item_create();
@@ -252,10 +252,64 @@ void lbl_00003860(void);
 void lbl_000038D4(void);
 void lbl_00003AD0(void);
 #pragma force_active on
-asm void lbl_000038D4(void)
+// UNVERIFIED: the 8-byte high-score record handed to func_800AC43C.  Games
+// 6/7/8 use the 8-byte "pair" layout -- cf. struct MiniScoreU16Pair in
+// src/mini_ranking.c, which is itself invented.
+struct PilotRankRec
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_000038D4.s"
+    u8 name[3];
+    u8 chara;
+    u16 score;
+    u8 unk6;
+    u8 unk7;
+};
+
+void lbl_000038D4(void)
+{
+    struct PilotRankRec recs[5];
+    u8 flags = 0;
+    int game;
+    int i;
+
+    u_free_minigame_graphics();
+    lbl_802F1FD4 = NULL;
+    mini_commend_free_data();
+    lbl_802F1FD0 &= ~4;
+    event_finish_all();
+    event_start(0x10);
+    event_start(0x12);
+    if (lbl_802F1FD0 & 8)
+        flags |= 1;
+    if (lbl_802F1FD0 & 0x10)
+        flags |= 2;
+    switch (*(s16 *)lbl_10000064)
+    {
+    case 5:
+        game = 6;
+        break;
+    case 10:
+        game = 7;
+        break;
+    default:
+        game = 8;
+        break;
+    }
+    for (i = 0; i < 4; i++)
+    {
+        if (g_poolInfo.playerPool.statusList[i] == 0)
+            break;
+        recs[i].chara = playerCharacterSelection[i];
+        recs[i].score = ((s32 *)lbl_10000044)[i];
+        recs[i].unk6 = flags;
+    }
+    if (func_800AC43C(game, recs, modeCtrl.playerCount) != 0)
+        func_800AB2A0(game, 1);
+    else
+        func_800AB2A0(game, 0);
+    modeCtrl.submodeTimer = 0;
+    lbl_802F1FF6 = 0x1c;
+    lbl_802F1FF4 = -1;
+    ((void (**)(void))lbl_0000C748)[28]();
 }
 
 #pragma force_active reset

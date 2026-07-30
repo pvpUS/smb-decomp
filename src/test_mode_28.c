@@ -279,9 +279,99 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-static asm void lbl_000037B0(void)
+struct TestFontEntry
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_000037B0.s"
+    s32 unk0;
+    char *unk4;
+};
+
+struct TestFontGroup
+{
+    struct TestFontEntry *entries;
+    char *title;
+    s32 unk8;
+};
+
+struct TestBmGroup
+{
+    s32 id;
+    s32 pad[2];
+};
+
+static void lbl_000037B0(void)
+{
+    u8 *p = lbl_10000000;
+    u8 *d = lbl_000102B0;
+    struct TestFontEntry *e;
+    int grp;
+    int ent;
+
+    if (debugFlags & 0xA)
+        return;
+    grp = *(int *)(p + 0xB8);
+    if (REPEAT_WITH_R_ACCEL(0, PAD_BUTTON_RIGHT))
+    {
+        struct TestBmGroup *bg = (struct TestBmGroup *)(d + 0x2C70);
+        struct TestBmGroup *q;
+
+        q = bg;
+        q += grp;
+        if (q->id != 0)
+            call_bitmap_free_group(q->id);
+        grp++;
+        if (((struct TestFontGroup *)(d + 0x2C68))[grp].entries == NULL)
+            grp = 0;
+        q = bg;
+        q += grp;
+        if (q->id != 0)
+            call_bitmap_load_group(q->id);
+    }
+    if (REPEAT_WITH_R_ACCEL(0, PAD_BUTTON_LEFT))
+    {
+        struct TestBmGroup *bg = (struct TestBmGroup *)(d + 0x2C70);
+        struct TestBmGroup *q;
+
+        q = bg;
+        q += grp;
+        if (q->id != 0)
+            call_bitmap_free_group(q->id);
+        grp--;
+        if (grp < 0)
+        {
+            grp = 0;
+            while (((struct TestFontGroup *)(d + 0x2C68))[grp].entries != NULL)
+                grp++;
+            grp--;
+        }
+        q = bg;
+        q += grp;
+        if (q->id != 0)
+            call_bitmap_load_group(q->id);
+    }
+    if (grp != *(int *)(p + 0xB8))
+    {
+        *(int *)(p + 0xB4) = 0;
+        *(int *)(p + 0xB8) = grp;
+    }
+    ent = *(int *)(p + 0xB4);
+    e = ((struct TestFontGroup *)(d + 0x2C68))[*(int *)(p + 0xB8)].entries;
+    if (REPEAT_WITH_R_ACCEL(0, PAD_BUTTON_DOWN))
+    {
+        ent++;
+        if (e[ent].unk0 == -1)
+            ent = 0;
+    }
+    if (REPEAT_WITH_R_ACCEL(0, PAD_BUTTON_UP))
+    {
+        ent--;
+        if (ent < 0)
+        {
+            ent = 0;
+            while (e[ent].unk0 != -1)
+                ent++;
+            ent--;
+        }
+    }
+    *(int *)(p + 0xB4) = ent;
 }
 #pragma force_active reset

@@ -226,9 +226,150 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm void lbl_00009788(void)
+struct BilPk7 { Vec v[7]; };
+
+struct BilBall {
+    /*0x00*/ s8 state;
+    /*0x01*/ u8 pad1[0xF];
+    /*0x10*/ Vec pos;
+    /*0x1C*/ u8 pad2[0x18];
+    /*0x34*/ Vec vel;
+    /*0x40*/ u8 pad3[0x14];
+    /*0x54*/ f32 q[4];
+    /*0x64*/ u8 pad4[4];
+};
+
+struct BilSeg { f32 hw; u8 pad[0x24]; };
+
+struct BilHole { Vec pos; f32 r; f32 pad[2]; };
+
+#define BALL(n) (((struct BilBall *)(ms + 0x9878))[n])
+#define SEG(n) (((struct BilSeg *)(q + 0x20))[n])
+#define HOLE(n) (((struct BilHole *)(q + 0x820))[n])
+
+void lbl_00009788(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00009788.s"
+    u8 *ms = lbl_10000000;
+    u8 *q = lbl_0001C2B8;
+    u8 *st = lbl_00020DA0;
+    struct BilPk7 tbl;
+    Vec d;
+    s8 cnt[7];
+    Vec a;
+    Vec b;
+    Vec c;
+    int i;
+    int m;
+    int k;
+    int j;
+    s8 n;
+    int w;
+    s8 state;
+    s8 moved;
+
+    do {
+        tbl = *(struct BilPk7 *)(q + 0xAFC);
+        state = 0;
+        for (i = 0; i < 10; i++) {
+            if (BALL(i).state != 1)
+                continue;
+            for (k = 0; k < 7; k++) {
+                cnt[k] = 0;
+                for (m = 0; m < 52; m++) {
+                    mathutil_mtxA_from_mtx(((Mtx *)(ms + 0xA4))[m]);
+                    mathutil_mtxA_rigid_inv_tf_point(&BALL(i).pos, &a);
+                    mathutil_mtxA_rigid_inv_tf_point(&tbl.v[k], &b);
+                    if (a.z < *(f32 *)(q + 0x8C0) && a.z > *(f32 *)(q + 0xB50)
+                        && a.x < SEG(m).hw && a.x > -SEG(m).hw) {
+                        state = 1;
+                        if (dipSwitches & DIP_DISP)
+                            printf((char *)(st + 0x198), i, m, powerOnTimer);
+                        a.z = *(f32 *)(q + 0xB54);
+                        mathutil_mtxA_tf_point(&a, &BALL(i).pos);
+                        mathutil_mtxA_rigid_inv_tf_vec(&BALL(i).vel, &c);
+                        if (c.z < *(f32 *)(q + 0x8B4)) {
+                            c.z = -c.z;
+                            mathutil_mtxA_tf_vec(&c, &BALL(i).vel);
+                        }
+                        goto resolve;
+                    }
+                    if ((a.z <= *(f32 *)(q + 0x8B4)
+                         && b.z >= *(f32 *)(q + 0x8B4))
+                        || (a.z >= *(f32 *)(q + 0x8B4)
+                            && b.z <= *(f32 *)(q + 0x8B4))) {
+                        f32 t = a.z / (a.z - b.z);
+                        f32 u = *(f32 *)(q + 0x8B8) - t;
+
+                        c.x = b.x * t + a.x * u;
+                        c.y = b.y * t + a.y * u;
+                        c.z = b.z * t + a.z * u;
+                        if (c.x < SEG(m).hw && c.x > -SEG(m).hw)
+                            cnt[k]++;
+                    }
+                }
+            }
+            n = 0;
+            for (k = 0; k < 7; k++) {
+                if ((cnt[k] & 1) == 1)
+                    n++;
+            }
+            if (n != 0 && n != 7 && (dipSwitches & DIP_DISP))
+                printf((char *)(st + 0x1AC), i, n, powerOnTimer);
+            if (n >= 4)
+                continue;
+            state = 2;
+            if (dipSwitches & DIP_DISP)
+                printf((char *)(st + 0x1C4), i, powerOnTimer);
+            break;
+        }
+    resolve:
+        if (state != 0) {
+            d.x = -BALL(i).pos.x;
+            d.y = *(f32 *)(q + 0x8B4);
+            d.z = -BALL(i).pos.z;
+            mathutil_vec_normalize_len(&d);
+            if (state == 2) {
+                BALL(i).pos.x += d.x;
+                BALL(i).pos.z += d.z;
+            }
+            do {
+                moved = 0;
+                for (j = 0; j < 10; j++) {
+                    if (BALL(j).state == 1 && j != i
+                        && mathutil_sum_of_sq_2(
+                               BALL(j).pos.x - BALL(i).pos.x,
+                               BALL(j).pos.z - BALL(i).pos.z)
+                               < *(f32 *)(q + 0x9F0)) {
+                        moved = 1;
+                        BALL(i).pos.x += d.x;
+                        BALL(i).pos.z += d.z;
+                    }
+                }
+                for (w = 0; w < 6; w++) {
+                    f32 r = *(f32 *)(q + 0x944)
+                            + (*(f32 *)(q + 0x8C0) + HOLE(w).r);
+
+                    if (mathutil_sum_of_sq_2(
+                            BALL(i).pos.x - HOLE(w).pos.x,
+                            BALL(i).pos.z - HOLE(w).pos.z)
+                        < r * r) {
+                        moved = 1;
+                        BALL(i).pos.x += d.x;
+                        BALL(i).pos.z += d.z;
+                    }
+                }
+            } while (moved == 1);
+            if (state == 2) {
+                BALL(i).vel.x = *(f32 *)(q + 0x8B4);
+                BALL(i).vel.y = *(f32 *)(q + 0x8B4);
+                BALL(i).vel.z = *(f32 *)(q + 0x8B4);
+                BALL(i).q[0] = *(f32 *)(q + 0x8B4);
+                BALL(i).q[1] = *(f32 *)(q + 0x8B4);
+                BALL(i).q[2] = *(f32 *)(q + 0x8B4);
+                BALL(i).q[3] = *(f32 *)(q + 0x8B8);
+            }
+        }
+    } while (state != 0);
 }
+
 #pragma force_active reset

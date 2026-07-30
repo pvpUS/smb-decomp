@@ -245,9 +245,80 @@ void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
 #pragma force_active on
-asm void lbl_00003DC0(void)
+#define BOWL_PAD (playerControllerIDs[currentBall->playerId])
+
+void lbl_00003DC0(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00003DC0.s"
+    u8 *w = lbl_10000000;
+    s8 *sel = (s8 *)(w + 7);
+    u32 i;
+    s32 n;
+    s32 mask;
+    int k;
+
+    n = *sel;
+    mask = *(u16 *)(w + 4);
+    for (k = 0; k < 10; k++) {
+        i = n;
+        if (!(mask & (1 << n)))
+            break;
+        i++;
+        if (i >= 10)
+            i = 0;
+    }
+    *sel = i;
+
+    if ((controllerInfo[BOWL_PAD].repeat.button & PAD_BUTTON_RIGHT) ||
+        (analogInputs[BOWL_PAD].repeat & ANALOG_STICK_RIGHT)) {
+        mask = *(u16 *)(w + 4);
+        for (k = 0; k < 10; k++) {
+            i++;
+            if (i >= 10)
+                i = 0;
+            if (!(mask & (1 << i)))
+                break;
+        }
+        *sel = i;
+        u_play_sound_0(0x6c);
+    } else if ((controllerInfo[BOWL_PAD].repeat.button & PAD_BUTTON_LEFT) ||
+               (analogInputs[BOWL_PAD].repeat & ANALOG_STICK_LEFT)) {
+        mask = *(u16 *)(w + 4);
+        for (k = 0; k < 10; k++) {
+            i--;
+            if ((s32)i < 0)
+                i = 9;
+            if (!(mask & (1 << i)))
+                break;
+        }
+        *sel = i;
+        u_play_sound_0(0x6c);
+    } else if ((controllerInfo[BOWL_PAD].repeat.button & PAD_BUTTON_UP) ||
+               (analogInputs[BOWL_PAD].repeat & ANALOG_STICK_UP)) {
+        i -= 5;
+        if ((s32)i < 0)
+            i += 10;
+        if (!(*(u16 *)(w + 4) & (1 << i)))
+            *sel = i;
+        u_play_sound_0(0x6c);
+    } else if ((controllerInfo[BOWL_PAD].repeat.button & PAD_BUTTON_DOWN) ||
+               (analogInputs[BOWL_PAD].repeat & ANALOG_STICK_DOWN)) {
+        i += 5;
+        if (i >= 10)
+            i -= 10;
+        if (!(*(u16 *)(w + 4) & (1 << i)))
+            *sel = i;
+        u_play_sound_0(0x6c);
+    }
+
+    if (controllerInfo[BOWL_PAD].pressed.button & PAD_BUTTON_A) {
+        if (*(u16 *)(w + 4) & (1 << *sel)) {
+            u_play_sound_0(0x6b);
+        } else {
+            u_play_sound_0(0x6a);
+            *(s32 *)lbl_00014F20 = 0x1000;
+            *(s32 *)lbl_00014F24 = 0x20;
+            *(s32 *)w = 0x2710;
+        }
+    }
 }
 #pragma force_active reset

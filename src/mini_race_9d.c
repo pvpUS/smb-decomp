@@ -389,10 +389,34 @@ void lbl_00001ED0(void);
 void lbl_00001F94(void);
 void lbl_00001FDC(void);
 #pragma force_active on
-asm void lbl_00000FB4(void)
+// INVENTED -- 16-byte sub-block at lbl_10000000 + 0x28.  UNVERIFIED.
+struct RaceModeSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00000FB4.s"
+    /*0x00*/ u16 unk0;
+    /*0x02*/ u16 unk2;
+    /*0x04*/ s16 unk4;
+    /*0x06*/ u16 unk6;
+    u8 filler8[0x10 - 8];
+};
+
+void lbl_00000FB4(void)
+{
+    u8 *w = lbl_10000000;
+    struct RaceModeSub *s = (struct RaceModeSub *)(w + 0x28);
+
+    if (debugFlags & 0xa)
+        return;
+    if ((s->unk2 & 8) && *(s32 *)(w + 0x3c) == 0x78)
+    {
+        u_play_sound_0(s->unk6 + 0x1f8);
+        lbl_00010484();
+    }
+    if (*(s32 *)(w + 0x3c) == 0)
+    {
+        *(s16 *)(w + 0x44) = *(s16 *)(w + 0x38);
+        *(s16 *)(w + 0x38) = 4;
+        *(s32 *)w = 0;
+    }
 }
 
 #pragma force_active reset

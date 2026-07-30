@@ -292,10 +292,10 @@ void lbl_000084A0(void);
 void lbl_000085D8(void);
 void lbl_00008A10(void);
 void lbl_00008B60(void);
-void lbl_00008C4C(void);
-static void lbl_00009A08(void);
-static void lbl_00009D3C(void);
-void lbl_0000A364(void);
+void lbl_00008C4C(u8 *, struct Ball *);
+void lbl_00009A08(void);
+void lbl_00009D3C(void);
+void lbl_0000A364(u8 *, struct Ball *);
 void lbl_0000A9C4(void);
 void lbl_0000A9EC(void);
 void lbl_0000AC30(void);
@@ -376,31 +376,24 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
-static void lbl_00009BF8(void);
+void lbl_00009BF8(void);
+void lbl_00008CC8(void);
+void lbl_00008EC8(void);
+void lbl_0000933C(void);
+void lbl_000098A8(void);
+void lbl_0000A088(void);
+void lbl_0000A31C(u8 *, struct Ball *);
 #pragma force_active on
 asm void lbl_00008B60(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_00008B60.s"
 }
-asm void lbl_00008C4C(void)
+// INVENTED -- per-racer state hanging off struct Ball::unk144.  UNVERIFIED.
+struct RaceSub49
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00008C4C.s"
-}
-static asm void lbl_00009A08(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00009A08.s"
-}
-static asm void lbl_00009BF8(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00009BF8.s"
-}
-static asm void lbl_00009D3C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00009D3C.s"
-}
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+};
+
 #pragma force_active reset

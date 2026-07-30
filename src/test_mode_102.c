@@ -278,9 +278,80 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_0000CDE0(void)
+struct TestQuad
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000CDE0.s"
+    /*0x00*/ float x;
+    /*0x04*/ float y;
+    /*0x08*/ u8 filler8[0x1C - 0x08];
+    /*0x1C*/ s16 rotZ;
+    /*0x1E*/ u8 filler1E[2];
+    /*0x20*/ Vec scale;
+};
+
+void lbl_0000CDE0(void)
+{
+    int d1;
+    int d2;
+    float *k = (float *)lbl_00010150;
+    int i;
+    struct TestQuad *p;
+    GXColor c;
+    float z;
+    float a;
+    float b;
+
+    c.r = 0x80;
+    c.g = 0x80;
+    c.b = 0x80;
+    c.a = 0xFF;
+    GXSetChanMatColor(GX_COLOR0A0, c);
+    c.r = 0;
+    c.g = 0;
+    c.b = 0;
+    c.a = 0xFF;
+    GXSetChanAmbColor(GX_COLOR0A0, c);
+    GXSetChanCtrl(GX_COLOR0A0, 0, 0, 0, 0, 2, 1);
+    GXSetNumChans(1);
+    GXLoadTexObj_cached(*(GXTexObj **)(*(u8 **)lbl_10000FA8 + 0xC), GX_TEXMAP0);
+    GXSetTexCoordGen2(GX_TEXCOORD0, 1, 4, 0x3C, 0, 0x7D);
+    GXSetTevOrder_cached(GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR0A0);
+    GXSetTevOp_cached(GX_TEVSTAGE0, 0);
+    GXSetTevDirect(GX_TEVSTAGE0);
+    GXSetNumTevStages_cached(1);
+    GXSetNumTexGens(1);
+    GXSetNumIndStages(0);
+    GXSetBlendMode_cached(1, 1, 1, 0);
+    GXSetZMode_cached(1, 7, 0);
+    fog_gx_set();
+    gxutil_set_vtx_attrs(0x2200);
+    GXSetVtxAttrFmt(6, 9, 1, 4, 0);
+    GXSetVtxAttrFmt(6, 0xD, 1, 1, 0);
+    p = (struct TestQuad *)lbl_10000FAC;
+    for (i = 0x100; i > 0; i--)
+    {
+        mathutil_mtxA_from_identity();
+        mathutil_mtxA_translate_xyz(p->x, p->y, k[35]);
+        mathutil_mtxA_scale(&p->scale);
+        mathutil_mtxA_rotate_z(p->rotZ);
+        GXLoadPosMtxImm(mathutilData->mtxA, 0);
+        GXBegin(0x80, 6, 4);
+        z = k[1];
+        a = k[3];
+        b = k[17];
+        GXPosition3f32(b, a, z);
+        GXWGFifo.u8 = 0;
+        GXWGFifo.u8 = 0;
+        GXPosition3f32(a, a, z);
+        GXWGFifo.u8 = 1;
+        GXWGFifo.u8 = 0;
+        GXPosition3f32(a, b, z);
+        GXWGFifo.u8 = 1;
+        GXWGFifo.u8 = 1;
+        GXPosition3f32(b, b, z);
+        GXWGFifo.u8 = 0;
+        GXWGFifo.u8 = 1;
+        GXEnd();
+        p++;
+    }
 }
 #pragma force_active reset

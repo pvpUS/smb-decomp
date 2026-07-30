@@ -124,17 +124,17 @@ extern u8 lbl_100000B0[];
 extern u8 lbl_100000B8[];
 extern u8 neutralFaceTable[];
 extern u8 smileFaceTable[];
-extern u8 lbl_80285A58[];
+extern s32 lbl_80285A58[];
 extern u8 lbl_80285A68[];
 extern u8 lbl_80285A80[];
 extern u8 lbl_802F1F10[];
-extern u8 lbl_802F1FD0[];
+extern u32 lbl_802F1FD0;
 extern u8 lbl_802F1FD8[];
 extern u8 lbl_802F1FDC[];
 extern u8 lbl_802F1FE0[];
 extern u8 lbl_802F1FE4[];
-extern u8 lbl_802F1FEC[];
-extern u8 lbl_802F1FF4[];
+extern s16 lbl_802F1FEC;
+extern s16 lbl_802F1FF4;
 
 // Imported functions the code calls that no included header declares.
 extern void ball_8003BBF4();
@@ -252,10 +252,77 @@ void lbl_00003860(void);
 void lbl_000038D4(void);
 void lbl_00003AD0(void);
 #pragma force_active on
-asm void lbl_00002FF4(void)
+void lbl_00002FF4(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00002FF4.s"
+    struct Ball *ball = currentBall;
+    u8 *w = (u8 *)lbl_10000000;
+
+    lbl_802F1FF0++;
+    if (lbl_802F1FF0 == 0xf)
+    {
+        if (!(lbl_802F1FD0 & 0x40))
+        {
+            u_somePlayerId = ball->playerId;
+            lbl_802F1DFC = playerCharacterSelection[u_somePlayerId];
+            if (*(s32 *)(w + 0x74) >= 0x1f4)
+                u_play_sound_0(0x12d);
+            else if (*(s32 *)(w + 0x74) >= 0x12c)
+                u_play_sound_0(0x130);
+            else if (*(s32 *)(w + 0x74) >= 0x64)
+                u_play_sound_0(0x12f);
+            else if (*(s32 *)(w + 0x74) >= 0xa)
+                u_play_sound_0(0x12e);
+            else
+                u_play_sound_0(0x12c);
+        }
+    }
+    else if (lbl_802F1FF0 == 0x1e)
+    {
+        if (*(s32 *)(w + 0x74) >= 0x12c)
+        {
+            func_8002BFCC(0x15f, 0x160);
+            *(s32 *)(w + 0x94) = 0x1fe;
+        }
+        else if (*(s32 *)(w + 0x74) >= 0x64)
+        {
+            func_8002BFCC(0x163, 0x15c);
+            *(s32 *)(w + 0x94) = 0x10e;
+        }
+        else if (*(s32 *)(w + 0x74) >= 0xa)
+        {
+            func_8002BFCC(0x15d, 0x15e);
+            *(s32 *)(w + 0x94) = 0xf0;
+        }
+        else
+        {
+            func_8002BFCC(0x16a, 0x16b);
+            *(s32 *)(w + 0x94) = 0xd2;
+        }
+    }
+    if (lbl_802F1FF0 == *(s32 *)(w + 0x94))
+        u_play_music(100, 8);
+
+    {
+        int cp = modeCtrl.currPlayer;
+
+        if (lbl_80285A58[cp] == 0)
+        {
+            *(s32 *)(w + 0x8c) += 1;
+        }
+        else if (controllerInfo[playerControllerIDs[ball->playerId]].pressed.button & 0x100)
+        {
+            ((s32 *)(w + 0x44))[cp] += lbl_80285A58[cp];
+            lbl_80285A58[cp] = 0;
+            lbl_802F1FEC = 0;
+        }
+    }
+
+    if (*(s32 *)(w + 0x8c) > 0x14 && lbl_802F1FF0 > 0x78
+     && ((controllerInfo[playerControllerIDs[ball->playerId]].pressed.button & 0x100)
+      || lbl_802F1FF0 > 0x1e0))
+        lbl_802F1FF4 = 0;
+    else
+        lbl_00004A14();
 }
 
 #pragma force_active reset

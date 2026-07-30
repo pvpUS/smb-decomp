@@ -267,7 +267,7 @@ void lbl_00004634(struct Ball *);
 void lbl_0000480C(struct Ball *);
 void lbl_00004D78(void);
 void lbl_0000528C(void);
-void lbl_000055CC(void);
+void lbl_000055CC(struct Ball *);
 void lbl_00005A84(void);
 void lbl_00005CEC(void);
 void lbl_00005DDC(void);
@@ -388,10 +388,30 @@ void lbl_00005884(void);
 void lbl_00005998(void);
 void lbl_00005C20(void);
 #pragma force_active on
-asm void lbl_000055CC(void)
+// Per-racer state hanging off struct Ball::unk144 inside this module.
+// INVENTED -- offsets read off the asm, names are placeholders.  UNVERIFIED.
+struct RaceSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000055CC.s"
+    u8 filler0[0x14];
+    u32 unk14;
+    u8 filler18[0x1C - 0x18];
+    /*0x1C*/ s16 unk1C;
+};
+
+void lbl_000055CC(struct Ball *ball)
+{
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+
+    ball->prevPos = ball->pos;
+    ball->speed = mathutil_vec_len(&ball->vel);
+    ball->flags &= ~0x20;
+    ball->vel.y = ball->vel.y + ball->accel;
+    ball->pos.y = ball->pos.y + ball->vel.y;
+    if (st->unk1C == 0)
+    {
+        ball->flags &= ~0x240;
+        ball->unk148 = 0xF;
+    }
 }
 
 #pragma force_active reset

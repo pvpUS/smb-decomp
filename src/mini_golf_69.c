@@ -186,7 +186,7 @@ void lbl_00009800(void);
 void lbl_0000982C(void);
 void lbl_00009880(void);
 void lbl_00009968(void);
-void lbl_000099B4(void);
+void lbl_000099B4(Mtx m);
 void lbl_000099E0(void);
 void lbl_00009B68(void);
 void lbl_00009C10(void);
@@ -244,7 +244,7 @@ void lbl_000240C0(void);
 void lbl_000245D4(void);
 void lbl_000246E8(void);
 void lbl_00024A40(void);
-void lbl_00024E70(void);
+s32 lbl_00024E70(f32 *v);
 void lbl_000252C0(void);
 void lbl_0002544C(void);
 void lbl_000255CC(void);
@@ -258,9 +258,80 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-asm void lbl_00024E70(void)
+s32 lbl_00024E70(f32 *v)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_00024E70.s"
+    u8 *cfg = (u8 *)lbl_00026A38;
+    u8 *s = (u8 *)lbl_0002A9E8;
+
+    if (*s != 3) {
+        *s = 3;
+        *(s32 *)(s + 4) = 0;
+        *(u32 *)((u8 *)ballInfo[modeCtrl.currPlayer].ape + 0x14) &= ~0x2000;
+        *(u32 *)((u8 *)ballInfo[modeCtrl.currPlayer].ape + 0x14) &= ~0x1000;
+    }
+
+    mathutil_mtxA_from_translate_xyz(*(f32 *)(cfg + 0), *(f32 *)(cfg + 4), *(f32 *)(cfg + 8));
+    mathutil_mtxA_rotate_z(0x8000);
+    mathutil_mtxA_rotate_y(-9102);
+    mathutil_mtxA_rotate_x(-18204);
+    mathutil_mtxA_to_mtx((f32 (*)[4])lbl_10000210);
+    lbl_000099B4((f32 (*)[4])lbl_10000210);
+
+    if (*(f64 *)(cfg + 0x48) <= *v && *v < *(f64 *)(cfg + 0x50)) {
+        if (*(u32 *)(s + 4) > 0x3c && *(u32 *)(s + 4) <= 0x5f) {
+            new_ape_stat_motion(ballInfo[modeCtrl.currPlayer].ape, 0xd, 7, 0, *(f32 *)(cfg + 0xc));
+            *(u32 *)(s + 4) += 1;
+            if (*(u32 *)(s + 4) == 0x5a)
+                u_play_sound_0(0xcd);
+            if (*(u32 *)(s + 4) == 0x5c)
+                u_play_sound_1(0x1f);
+            return 0;
+        } else if (*(u32 *)(s + 4) > 0x5f) {
+            *(u32 *)((u8 *)ballInfo[modeCtrl.currPlayer].ape + 0x14) &= ~0x1000;
+            *(u32 *)((u8 *)ballInfo[modeCtrl.currPlayer].ape + 0x14) &= ~0x2000;
+            return 1;
+        } else {
+            *(u32 *)(s + 4) += 1;
+            return 0;
+        }
+    } else if (*(f64 *)(cfg + 0x50) <= *v && *v < *(f64 *)(cfg + 0x58)) {
+        if (*(u32 *)(s + 4) > 0x3c && *(u32 *)(s + 4) <= 0x61) {
+            new_ape_stat_motion(ballInfo[modeCtrl.currPlayer].ape, 0xd, 6, 0, *(f32 *)(cfg + 0xc));
+            *(u32 *)(s + 4) += 1;
+            if (*(u32 *)(s + 4) == 0x5b)
+                u_play_sound_0(0xcc);
+            if (*(u32 *)(s + 4) == 0x5d)
+                u_play_sound_1(0x1f);
+            return 0;
+        } else if (*(u32 *)(s + 4) > 0x61) {
+            *(u32 *)((u8 *)ballInfo[modeCtrl.currPlayer].ape + 0x14) &= ~0x1000;
+            *(u32 *)((u8 *)ballInfo[modeCtrl.currPlayer].ape + 0x14) &= ~0x2000;
+            return 1;
+        } else {
+            *(u32 *)(s + 4) += 1;
+            return 0;
+        }
+    } else if (*(f64 *)(cfg + 0x58) <= *v) {
+        if (*(u32 *)(s + 4) > 0x3c && *(u32 *)(s + 4) <= 0x63) {
+            new_ape_stat_motion(ballInfo[modeCtrl.currPlayer].ape, 0xd, 5, 0, *(f32 *)(cfg + 0xc));
+            *(u32 *)(s + 4) += 1;
+            if (*(u32 *)(s + 4) == 0x5c) {
+                u_somePlayerId = modeCtrl.currPlayer;
+                lbl_802F1DFC = playerCharacterSelection[u_somePlayerId];
+                u_play_sound_0(0xbf);
+            }
+            if (*(u32 *)(s + 4) == 0x5e)
+                u_play_sound_1(0x20);
+            return 0;
+        } else if (*(u32 *)(s + 4) > 0x63) {
+            *(u32 *)((u8 *)ballInfo[modeCtrl.currPlayer].ape + 0x14) &= ~0x1000;
+            *(u32 *)((u8 *)ballInfo[modeCtrl.currPlayer].ape + 0x14) &= ~0x2000;
+            return 1;
+        } else {
+            *(u32 *)(s + 4) += 1;
+            return 0;
+        }
+    }
+    return 0;
 }
 #pragma force_active reset

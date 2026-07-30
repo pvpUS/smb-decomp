@@ -115,7 +115,8 @@ static void lbl_00002DA4(void);
 static void lbl_00002F14(void);
 static void lbl_00003240(void);
 void lbl_000038A8(void);
-void lbl_00003B90(void);
+//@SUB void lbl_00003B90(void);|void lbl_00003B90(int);
+void lbl_00003B90(int);
 void lbl_00003F10(void);
 void lbl_00003F6C(void);
 void lbl_00003FF0(void);
@@ -153,10 +154,87 @@ void lbl_0000B218(void);
 void lbl_0000C148(void);
 
 #pragma force_active on
-static asm void lbl_00002F14(void)
+static void lbl_00002F14(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00002F14.s"
+    struct Ball *ball;
+    struct RenderEffect focusEffect;
+    u8 *b = lbl_10000000;
+    u8 *w = b + 0x5C;
+    s16 song;
+    f32 t;
+    *(s16 *)(b + 0x6EB4) = 0;
+    *(s16 *)(b + 0x6EB6) = -1;
+    *(s32 *)(b + 0x6EB8) = 0;
+    *(s32 *)(b + 0x6EBC) = -1;
+    g_recplayInfo.u_playerId = 0;
+    g_recplayInfo.u_replayIndexes[g_recplayInfo.u_playerId] = 11;
+    t = recplay_get_time(g_recplayInfo.u_replayIndexes[g_recplayInfo.u_playerId]);
+    g_recplayInfo.u_timeOffset = t;
+    if (*(f32 *)lbl_0000C348 == t)
+    {
+        gameSubmodeRequest = 0xB8;
+        return;
+    }
+    recplay_get_header(g_recplayInfo.u_replayIndexes[g_recplayInfo.u_playerId],
+                       (struct ReplayHeader *)(b + 0x6E9C));
+    currStageId = *(u8 *)(b + 0x6E9E);
+    event_finish_all();
+    modeCtrl.gameType = 0;
+    modeCtrl.playerCount = 1;
+    modeCtrl.unk30 = 1;
+    camera_setup_splitscreen_viewports(modeCtrl.playerCount);
+    func_80044920();
+    u_clear_buffers_2_and_5();
+    event_start(EVENT_INFO);
+    func_80049514(g_recplayInfo.u_replayIndexes[g_recplayInfo.u_playerId]);
+    infoWork.flags |= INFO_FLAG_REPLAY|INFO_FLAG_11;
+    load_stage(currStageId);
+    event_start(EVENT_STAGE);
+    event_start(EVENT_WORLD);
+    event_start(EVENT_BALL);
+    event_start(EVENT_STOBJ);
+    event_start(EVENT_ITEM);
+    event_start(EVENT_OBJ_COLLISION);
+    event_start(EVENT_MINIMAP);
+    event_start(EVENT_CAMERA);
+    event_start(EVENT_SPRITE);
+    event_start(EVENT_SOUND);
+    event_start(EVENT_EFFECT);
+    event_start(EVENT_REND_EFC);
+    event_start(EVENT_BACKGROUND);
+    infoWork.flags |= INFO_FLAG_TIMER_PAUSED;
+    rend_efc_mirror_enable();
+    memset(&focusEffect, 0, sizeof(focusEffect));
+    focusEffect.cameraMask = 0xFFFF;
+    rend_efc_enable(2, REND_EFC_FOCUS, &focusEffect);
+    song = backgroundSongs[backgroundInfo.bgId];
+    if (song != -1 && song != lbl_802014E0.unk0 && song + 1 != lbl_802014E0.unk0)
+    {
+        u_play_music(song, 0);
+    }
+    else
+    {
+        if (lbl_802014E0.unk0 == -1)
+            u_play_music(1, 3);
+        else if (song == -1)
+            u_play_music(0, 1);
+    }
+    ball = &ballInfo[g_recplayInfo.u_playerId];
+    ball->state = 9;
+    lbl_00003B90(*(s16 *)(b + 0x6EB4));
+    infoWork.flags |= INFO_FLAG_REPLAY;
+    g_recplayInfo.u_timeOffset =
+        recplay_get_time(g_recplayInfo.u_replayIndexes[g_recplayInfo.u_playerId]);
+    animate_anim_groups(
+        recplay_get_stage_timer(g_recplayInfo.u_timeOffset,
+                                g_recplayInfo.u_replayIndexes[g_recplayInfo.u_playerId]));
+    call_bitmap_load_group(5);
+    start_screen_fade(FADE_IN|FADE_ABOVE_SPRITES, RGBA(0, 0, 0, 0), 30);
+    *(s32 *)(w + 0x1C) = 0;
+    gameSubmodeRequest = 0xC1;
+    if (*(u16 *)(b + 0x6E9C) & REPLAY_FLAG_FALLOUT)
+        modeCtrl.unk18 = 60;
+    else
+        modeCtrl.unk18 = 180;
 }
-
 #pragma force_active reset

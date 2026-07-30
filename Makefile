@@ -429,7 +429,6 @@ SOURCES := \
 	src/sel_ngc_rel_28.c \
 	src/sel_ngc_rel_29.c \
 	asm/sel_ngc_rel_d1.s \
-	src/sel_ngc_rel_32.c \
 	src/sel_ngc_rel_32i.c \
 	src/sel_ngc_rel_32z.c \
 	src/sel_ngc_rel_33.c \
@@ -557,6 +556,9 @@ SOURCES := \
 	src/mini_race_47.c \
 	src/mini_race_48.c \
 	src/mini_race_49.c \
+	src/mini_race_49b.c \
+	src/mini_race_49c.c \
+	src/mini_race_49d.c \
 	src/mini_race_50.c \
 	src/mini_race_51.c \
 	src/mini_race_52.c \
@@ -625,8 +627,13 @@ SOURCES := \
 	src/mini_race_113.c \
 	src/mini_race_114.c \
 	src/mini_race_115.c \
+	src/mini_race_115l.c \
+	src/mini_race_115m.c \
+	src/mini_race_115n.c \
 	src/mini_race_115b.c \
 	src/mini_race_115c.c \
+	src/mini_race_115cb.c \
+	src/mini_race_115cc.c \
 	src/mini_race_115d.c \
 	src/mini_race_115e.c \
 	src/mini_race_115f.c \
@@ -646,6 +653,7 @@ SOURCES := \
 	src/mini_race_117bg.c \
 	src/mini_race_117bgb.c \
 	src/mini_race_117bh.c \
+	src/mini_race_117bhb.c \
 	src/mini_race_117bi.c \
 	asm/mini_race_d1.s
 O_FILES := $(addsuffix .o,$(SOURCES))
@@ -661,6 +669,8 @@ SOURCES := \
 	src/mini_bowling_2.c \
 	src/mini_bowling_3.c \
 	src/mini_bowling_4.c \
+	src/mini_bowling_4b.c \
+	src/mini_bowling_4bb.c \
 	src/mini_bowling_5.c \
 	src/mini_bowling_6.c \
 	src/mini_bowling_7.c \
@@ -685,6 +695,8 @@ SOURCES := \
 	src/mini_bowling_23.c \
 	src/mini_bowling_24.c \
 	src/mini_bowling_25.c \
+	src/mini_bowling_25b.c \
+	src/mini_bowling_25c.c \
 	src/mini_bowling_26.c \
 	src/mini_bowling_27.c \
 	src/mini_bowling_28.c \
@@ -778,6 +790,9 @@ SOURCES := \
 	src/mini_fight_3.c \
 	src/mini_fight_4.c \
 	src/mini_fight_5.c \
+	src/mini_fight_5d.c \
+	src/mini_fight_5c.c \
+	src/mini_fight_5b.c \
 	src/mini_fight_6.c \
 	src/mini_fight_7.c \
 	src/mini_fight_8.c \
@@ -790,6 +805,9 @@ SOURCES := \
 	src/mini_fight_11.c \
 	src/mini_fight_12.c \
 	src/mini_fight_13.c \
+	src/mini_fight_13d.c \
+	src/mini_fight_13c.c \
+	src/mini_fight_13b.c \
 	src/mini_fight_14.c \
 	src/mini_fight_15.c \
 	src/mini_fight_15b.c \
@@ -872,6 +890,12 @@ SOURCES := \
 	src/mini_fight_66.c \
 	src/mini_fight_67.c \
 	src/mini_fight_68.c \
+	src/mini_fight_68i.c \
+	src/mini_fight_68h.c \
+	src/mini_fight_68g.c \
+	src/mini_fight_68f.c \
+	src/mini_fight_68e.c \
+	src/mini_fight_68d.c \
 	src/mini_fight_68b.c \
 	src/mini_fight_68c.c \
 	src/mini_fight_69.c \
@@ -935,6 +959,7 @@ SOURCES := \
 	src/mini_pilot_10c.c \
 	src/mini_pilot_10d.c \
 	src/mini_pilot_10e.c \
+	src/mini_pilot_10eb.c \
 	src/mini_pilot_10f.c \
 	src/mini_pilot_10g.c \
 	src/mini_pilot_10h.c \
@@ -1169,6 +1194,7 @@ SOURCES := \
 	src/mini_billiards_35.c \
 	src/mini_billiards_36.c \
 	src/mini_billiards_37.c \
+	src/mini_billiards_37b.c \
 	src/mini_billiards_38.c \
 	src/mini_billiards_39.c \
 	src/mini_billiards_40.c \

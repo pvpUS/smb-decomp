@@ -278,9 +278,49 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_0000F7BC(void)
+struct TestMotWork
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000F7BC.s"
+    /*0x00*/ u8 filler0[4];
+    /*0x04*/ struct Ape *ape;
+    /*0x08*/ float unk8;
+    /*0x0C*/ u8 fillerC[4];
+    /*0x10*/ s32 unk10[23];
+    /*0x6C*/ s32 charaId;
+    /*0x70*/ u8 filler70[0xA8 - 0x70];
+    /*0xA8*/ s32 unkA8;
+    /*0xAC*/ struct SomeMotInfoStruct *unkAC;
+};
+
+void lbl_0000F7BC(void)
+{
+    struct TestMotWork *w = (struct TestMotWork *)lbl_10003BF8;
+    s32 animGroup;
+    s32 frame;
+    s32 b;
+    s32 f;
+
+    b = w->unkA8;
+    if (b == 7 && (f = w->unk10[b]) >= (s32)((struct MotInfo *)&motInfo[w->charaId])->unk70[b])
+    {
+        animGroup = b;
+        frame = f;
+        mot_ape_8008BAA8(&animGroup, &frame);
+        w->unkAC = (struct SomeMotInfoStruct *)((struct MotInfo *)&motInfo[w->charaId])->unk30[animGroup] + frame;
+    }
+    else
+    {
+        w->unkAC = (struct SomeMotInfoStruct *)((struct MotInfo *)&motInfo[w->charaId])->unk30[w->unkA8]
+                   + w->unk10[w->unkA8];
+    }
+    if (w->unkAC != w->ape->unk1C || w->unkAC->animId != w->ape->unk0->u_animId)
+    {
+        w->ape->unk1C = w->unkAC;
+        if (w->unkAC->animId > u_motAnimCount)
+            w->unkAC->animId = 1;
+        w->ape->unk28 = w->unkA8;
+        w->ape->unkB0 = w->unk10[w->unkA8];
+        func_8008B9DC(w->ape, w->unkAC->animId);
+        w->unk8 = w->unkAC->u_maybeSpeed;
+    }
 }
 #pragma force_active reset

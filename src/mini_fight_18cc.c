@@ -300,6 +300,7 @@ void lbl_0000ABE8(void);
 void lbl_0000AD9C(void);
 void lbl_0000BC94(void);
 void lbl_0000CE28(void);
+static void lbl_0000CE24(void);
 void lbl_0000CF98(void);
 void lbl_0000D2F8(void);
 void lbl_0000D890(void);
@@ -413,6 +414,9 @@ asm void lbl_0000CD30(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_0000CD30.s"
+}
+static void lbl_0000CE24(void)
+{
 }
 
 #pragma force_active reset

@@ -167,7 +167,7 @@ void lbl_000068C4(void);
 void lbl_00006E64(void);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
-void lbl_00007650(void);
+void lbl_00007650(s32, s32, s32);
 void lbl_000076D0(void);
 void lbl_00007740(void);
 void lbl_00007778(void);
@@ -231,9 +231,9 @@ void lbl_0000D7F8(void);
 void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
 void lbl_0000DA0C(void);
-void lbl_0000DAF4(void);
-void lbl_0000DD4C(void);
-void lbl_0000DFA4(void);
+void lbl_0000DAF4(int, void *);
+void lbl_0000DD4C(int, void *);
+void lbl_0000DFA4(int, int);
 void lbl_0000E22C(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
@@ -245,9 +245,82 @@ void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
 #pragma force_active on
-asm void lbl_000029A8(void)
+struct BowlScore {  // 0x4c per-player bowling score sheet, array based at +0xc
+    u8 filler0[6];
+    s8 unk6;          // 0x06
+    s8 unk7;          // 0x07
+    s8 roll;          // 0x08 index of the roll just completed
+    s8 unk9;          // 0x09 pin-pattern / frame index (0..12)
+    s16 total[11];    // 0x0a
+    s8 pins[21];      // 0x20
+    s8 state[21];     // 0x35
+    u8 filler4A[2];
+};
+struct BowlMsgs { char *text[13]; };
+struct BowlSnds { s32 id[13]; };
+
+void lbl_000029A8(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_000029A8.s"
+    u8 *w = lbl_10000000;
+    u8 *p = lbl_00014F20;
+    struct BowlScore *sheet;
+    struct BowlMsgs msg;
+    struct BowlSnds snd;
+    int i;
+
+    sheet = (struct BowlScore *)(w + 0xc) + modeCtrl.currPlayer;
+
+    if (!(currentBall->flags & BALL_FLAG_GOAL)) {
+        CAMERA_FOREACH_2(camera->subState = 5;)
+        lbl_0000DD4C(0x78, p + 0x310);
+    } else {
+        i = sheet->roll;
+        switch (sheet->state[i]) {
+        case 2:
+            msg = *(struct BowlMsgs *)lbl_00010EF0;
+            snd = *(struct BowlSnds *)lbl_00010F24;
+            if (sheet->unk6 == 10 && sheet->unk7 == 3 && sheet->unk9 < 12 &&
+                sheet->unk9 >= 3) {
+                lbl_0000DAF4(0xb4, p + 0x31c);
+                u_play_sound_0(0x1ca);
+            } else {
+                lbl_0000DAF4(0xb4, msg.text[sheet->unk9]);
+                u_play_sound_0(snd.id[sheet->unk9]);
+            }
+            if (sheet->unk9 < 3)
+                lbl_00007650(0xa3, 0xa4, 0x14a);
+            else if (sheet->unk9 < 12)
+                lbl_00007650(0xa9, 0xaa, 0x12c);
+            else
+                lbl_00007650(0xa7, 0xa8, 0x1fe);
+            break;
+        case 3:
+            lbl_0000DAF4(0xb4, p + 0x328);
+            u_play_sound_0(0x1cb);
+            lbl_00007650(0xa1, 0xa2, 0xf0);
+            break;
+        case 1:
+        case 4:
+            lbl_0000DFA4(0xb4, sheet->pins[i]);
+            lbl_00007650(0xa5, 0xa6, 0xd2);
+            break;
+        default:
+            lbl_0000DD4C(0xb4, p + 0x330);
+            u_play_sound_0(0x1c9);
+            lbl_00007650(0x9f, 0xa0, 0xb4);
+            break;
+        }
+        BALL_FOREACH(ball->unk148 = 3;)
+        CAMERA_FOREACH_2(camera->subState = 6;)
+        *(s32 *)(w + 0x144) = 0x168;
+    }
+    if (sheet->unk9 == 12)
+        *(s32 *)w = 0x21c;
+    else if (!(currentBall->flags & BALL_FLAG_GOAL))
+        *(s32 *)w = 0xf0;
+    else
+        *(s32 *)w = 0x168;
+    *(s32 *)p = 0x80;
+    *(s32 *)(p + 4) = 0x60;
 }
 #pragma force_active reset

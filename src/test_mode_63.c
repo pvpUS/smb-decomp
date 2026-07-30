@@ -278,9 +278,63 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_00009338(void)
+struct TestCamWork
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00009338.s"
+    /*0x00*/ Vec pos;
+    /*0x0C*/ Vec target;
+    /*0x18*/ Vec up;
+    /*0x24*/ float unk24;
+    /*0x28*/ float unk28;
+    /*0x2C*/ Mtx mtx;
+    /*0x5C*/ float unk5C;
+    /*0x60*/ float unk60;
+    /*0x64*/ void *unk64;
+    /*0x68*/ void *unk68;
+    /*0x6C*/ void *unk6C;
+    /*0x70*/ GXTexObj tex;
+    /*0x90*/ s32 idx;
+    /*0x94*/ void *bufs[2];
+};
+
+void lbl_00009338(void)
+{
+    float *k = (float *)lbl_00010080;
+    int i;
+    struct TestCamWork *e;
+    u32 size;
+
+    lbl_0000A7DC();
+    e = (struct TestCamWork *)lbl_10000E00;
+    for (i = 2; i > 0; i--) {
+        e->pos.x = k[0];
+        e->pos.y = k[1];
+        e->pos.z = k[1];
+        mathutil_mtxA_from_identity();
+        mathutil_mtxA_rotate_y((i << 16) / 2);
+        mathutil_mtxA_tf_point(&e->pos, &e->pos);
+        e->target.x = k[0];
+        e->target.y = k[0];
+        e->target.z = k[2];
+        e->up.x = k[0];
+        e->up.y = k[3];
+        e->up.z = k[0];
+        e->unk24 = k[3];
+        e->unk28 = k[4];
+        C_MTXLookAt(e->mtx, &e->pos, &e->up, &e->target);
+        e->unk5C = k[3];
+        e->unk60 = k[3] / e->unk5C;
+        e->unk64 = NULL;
+        e->unk68 = NULL;
+        e->unk6C = NULL;
+        e->idx = 0;
+        size = GXGetTexBufferSize(0x100, 0x100, 1, GX_FALSE, 0);
+        e->bufs[0] = OSAllocFromHeap(__OSCurrHeap, size);
+        e->bufs[1] = OSAllocFromHeap(__OSCurrHeap, size);
+        GXInitTexObj(&e->tex, e->bufs[e->idx], 0x100, 0x100, GX_TF_I8,
+                     GX_CLAMP, GX_CLAMP, GX_FALSE);
+        e++;
+    }
+    lbl_0000AD30();
+    lbl_0000A440();
 }
 #pragma force_active reset

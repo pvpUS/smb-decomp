@@ -108,7 +108,7 @@ extern u8 lbl_100004C0[];
 extern u8 lbl_100004E0[];
 extern u8 lbl_10012140[];
 extern u8 lbl_10012180[];
-extern u8 lbl_10018510[];
+extern struct BowlPin lbl_10018510[];
 
 // Imported functions the code calls that no included header declares.
 extern void draw_test_camera_target();
@@ -223,12 +223,12 @@ void lbl_0000BDE0(void);
 void lbl_0000BEB8(void);
 void lbl_0000C0D0(void);
 void lbl_0000C1D0(void);
-void lbl_0000CAA8(void);
-void lbl_0000D4D4(void);
-void lbl_0000D598(void);
+void lbl_0000CAA8(int idx);
+void lbl_0000D4D4(struct BowlPin *, Vec *);
+void lbl_0000D598(f32 *, Vec *, Vec *, Vec *, Vec *, f32, f32);
 void lbl_0000D650(void);
-void lbl_0000D7F8(void);
-void lbl_0000D8CC(void);
+void lbl_0000D7F8(Vec *, Vec *, s16, u8 *, u8 *);
+void lbl_0000D8CC(Vec *, Vec *, Vec *);
 void lbl_0000D90C(void);
 void lbl_0000DA0C(void);
 void lbl_0000DAF4(void);
@@ -245,9 +245,233 @@ void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
 #pragma force_active on
-asm void lbl_0000CAA8(void)
+struct BowlPt {            // 0x14 -- entry of the pin collision-point table
+    Vec pos;
+    f32 radius;            // 0x0c
+    f32 mass;              // 0x10  (UNVERIFIED name)
+};
+struct BowlPin {
+    u32 flags;                 // 0x000
+    Vec unk4[12];              // 0x004
+    Vec unk94[12];             // 0x094
+    Vec unk124;                // 0x124
+    Vec unk130;                // 0x130
+    Vec unk13c;                // 0x13c
+    Mtx unk148;                // 0x148
+    u32 unk178;                // 0x178
+    u32 unk17c;                // 0x17c
+    s16 unk180;                // 0x180
+    u8 filler182[2];
+};
+struct BowlSnd3 { s32 id[3]; };
+
+// lbl_0000CAA8 (0xCAA8): pin-vs-pin collision for pin `idx` against every pin
+// after it.  Finds the deepest overlapping collision-point pair, exchanges
+// linear momentum along the contact normal (tbl+0x4a0 / tbl+0x398), applies the
+// resulting torque to both spins, pushes the two pins apart along the
+// horizontal separation and plays the clack.  tbl+0x3e8 is 0.0f, tbl+0x400 the
+// same value as a double, tbl+0x3a8/0x3ac the collision-point table and count.
+void lbl_0000CAA8(int idx)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000CAA8.s"
+    u8 *tbl = lbl_00014800;
+    f32 depth;
+    Vec normal;
+    Vec velA;
+    Vec velB;
+    Vec newA;
+    Vec newB;
+    Vec rel;
+    Vec vcm;
+    Vec imp;
+    Vec ptA;
+    Vec ptB;
+    Vec dv;
+    Vec force;
+    Vec tmp;
+    Vec dir;
+    Vec pushA;
+    Vec pushB;
+    struct BowlSnd3 snd;
+    u8 panA;
+    u8 panB;
+    Vec armB;
+    Vec tqB;
+    Vec armA;
+    Vec tqA;
+    int j;
+    struct BowlPin *a;
+    struct BowlPin *b;
+    int k;
+    int l;
+    int best_k;
+    int best_l;
+    int h;
+    int v;
+    s8 sidx;
+    f32 best;
+    f32 mk;
+    f32 ml;
+    f32 e;
+    f32 inv;
+    f32 dotA;
+    f32 dotB;
+    f32 scaleB;
+    f32 scaleA;
+    f32 negS;
+    f32 posS;
+    f32 len;
+    f32 t;
+
+    a = &lbl_10018510[idx];
+    for (j = idx + 1, b = &lbl_10018510[j]; j < 10; j++, b++) {
+        best = *(f32 *)(tbl + 0x3E8);
+        if (!(b->flags & 1))
+            continue;
+        if (b->flags & 0x18)
+            continue;
+        if (*(f64 *)(tbl + 0x538) < mathutil_vec_sq_distance(&a->unk124, &b->unk124))
+            continue;
+        for (k = 0; k < *(u8 *)(tbl + 0x3AC); k++) {
+            for (l = 0; l < *(u8 *)(tbl + 0x3AC); l++) {
+                lbl_0000D598(&depth, &a->unk94[k], &a->unk4[k], &b->unk94[l], &b->unk4[l],
+                             (*(struct BowlPt **)(tbl + 0x3A8))[k].radius,
+                             (*(struct BowlPt **)(tbl + 0x3A8))[l].radius);
+                if (depth > best) {
+                    best = depth;
+                    best_k = k;
+                    best_l = l;
+                }
+            }
+        }
+        if (*(f64 *)(tbl + 0x400) == best)
+            continue;
+        a->flags &= ~2;
+        b->flags &= ~2;
+        a->flags |= 4;
+        b->flags |= 4;
+        mk = (*(struct BowlPt **)(tbl + 0x3A8))[best_k].mass;
+        ml = (*(struct BowlPt **)(tbl + 0x3A8))[best_l].mass;
+        e = *(f32 *)(tbl + 0x398);
+        ptA = a->unk4[best_k];
+        ptB = b->unk4[best_l];
+        func_8006AAEC(&a->unk94[best_k], &ptA, &b->unk94[best_l], &ptB,
+                      (*(struct BowlPt **)(tbl + 0x3A8))[k].radius,
+                      (*(struct BowlPt **)(tbl + 0x3A8))[l].radius);
+        normal.x = ptA.x - ptB.x;
+        normal.y = ptA.y - ptB.y;
+        normal.z = ptA.z - ptB.z;
+        if (*(f64 *)(tbl + 0x400) == mathutil_vec_normalize_len(&normal)) {
+            normal.x = *(f32 *)(tbl + 0x3E8);
+            normal.y = *(f32 *)(tbl + 0x3E8);
+            normal.z = *(f32 *)(tbl + 0x540);
+        }
+        dv.x = a->unk4[best_k].x - a->unk94[best_k].x;
+        dv.y = a->unk4[best_k].y - a->unk94[best_k].y;
+        dv.z = a->unk4[best_k].z - a->unk94[best_k].z;
+        dotA = mathutil_vec_dot_prod(&normal, &dv);
+        velA.x = normal.x * dotA;
+        velA.y = normal.y * dotA;
+        velA.z = normal.z * dotA;
+        dv.x = b->unk4[best_l].x - b->unk94[best_l].x;
+        dv.y = b->unk4[best_l].y - b->unk94[best_l].y;
+        dv.z = b->unk4[best_l].z - b->unk94[best_l].z;
+        dotB = mathutil_vec_dot_prod(&normal, &dv);
+        velB.x = normal.x * dotB;
+        velB.y = normal.y * dotB;
+        velB.z = normal.z * dotB;
+        rel.x = velA.x - velB.x;
+        rel.y = velA.y - velB.y;
+        rel.z = velA.z - velB.z;
+        if ((a->flags & 0x20) || (b->flags & 0x20)) {
+            rel.x = *(f64 *)(tbl + 0x548) * rel.x;
+            rel.y = *(f64 *)(tbl + 0x548) * rel.y;
+            rel.z = *(f64 *)(tbl + 0x548) * rel.z;
+        }
+        inv = *(f64 *)(tbl + 0x4A0) / (mk + ml);
+        vcm.x = inv * (mk * velA.x + ml * velB.x);
+        vcm.y = inv * (mk * velA.y + ml * velB.y);
+        vcm.z = inv * (mk * velA.z + ml * velB.z);
+        imp.x = inv * (e * rel.x);
+        imp.y = inv * (e * rel.y);
+        imp.z = inv * (e * rel.z);
+        newA.x = vcm.x - imp.x * ml;
+        newA.y = vcm.y - imp.y * ml;
+        newA.z = vcm.z - imp.z * ml;
+        newB.x = vcm.x + imp.x * mk;
+        newB.y = vcm.y + imp.y * mk;
+        newB.z = vcm.z + imp.z * mk;
+        a->unk130.x = a->unk130.x + (newA.x - velA.x);
+        a->unk130.y = a->unk130.y + (newA.y - velA.y);
+        a->unk130.z = a->unk130.z + (newA.z - velA.z);
+        b->unk130.x = b->unk130.x + (newB.x - velB.x);
+        b->unk130.y = b->unk130.y + (newB.y - velB.y);
+        b->unk130.z = b->unk130.z + (newB.z - velB.z);
+        force.x = rel.x * (*(f64 *)(tbl + 0x550) * ml);
+        force.y = rel.y * (*(f64 *)(tbl + 0x550) * ml);
+        force.z = rel.z * (*(f64 *)(tbl + 0x550) * ml);
+        armB.x = b->unk4[best_l].x - b->unk124.x;
+        armB.y = b->unk4[best_l].y - b->unk124.y;
+        armB.z = b->unk4[best_l].z - b->unk124.z;
+        lbl_0000D8CC(&armB, &force, &tqB);
+        scaleB = *(f64 *)(tbl + 0x4C8) + *(f64 *)(tbl + 0x4D0) / (*(struct BowlPt **)(tbl + 0x3A8))[best_l].mass;
+        tqB.x = tqB.x * (*(f32 *)(tbl + 0x388) * scaleB);
+        tqB.y = tqB.y * (*(f32 *)(tbl + 0x38C) * scaleB);
+        tqB.z = tqB.z * (*(f32 *)(tbl + 0x390) * scaleB);
+        tmp = tqB;
+        b->unk13c.x = tmp.x + b->unk13c.x;
+        b->unk13c.y = tmp.y + b->unk13c.y;
+        b->unk13c.z = tmp.z + b->unk13c.z;
+        force.x = rel.x * (*(f64 *)(tbl + 0x558) * mk);
+        force.y = rel.y * (*(f64 *)(tbl + 0x558) * mk);
+        force.z = rel.z * (*(f64 *)(tbl + 0x558) * mk);
+        armA.x = a->unk4[best_k].x - a->unk124.x;
+        armA.y = a->unk4[best_k].y - a->unk124.y;
+        armA.z = a->unk4[best_k].z - a->unk124.z;
+        lbl_0000D8CC(&armA, &force, &tqA);
+        scaleA = *(f64 *)(tbl + 0x4C8) + *(f64 *)(tbl + 0x4D0) / (*(struct BowlPt **)(tbl + 0x3A8))[best_k].mass;
+        tqA.x = tqA.x * (*(f32 *)(tbl + 0x388) * scaleA);
+        tqA.y = tqA.y * (*(f32 *)(tbl + 0x38C) * scaleA);
+        tqA.z = tqA.z * (*(f32 *)(tbl + 0x390) * scaleA);
+        tmp = tqA;
+        a->unk13c.x = tmp.x + a->unk13c.x;
+        a->unk13c.y = tmp.y + a->unk13c.y;
+        a->unk13c.z = tmp.z + a->unk13c.z;
+        dir.x = a->unk124.x - b->unk124.x;
+        dir.y = *(f32 *)(tbl + 0x3E8);
+        dir.z = a->unk124.z - b->unk124.z;
+        len = mathutil_vec_sq_len(&dir);
+        if (len <= *(f32 *)(tbl + 0x458)) {
+            dir.x = *(f32 *)(tbl + 0x3E8);
+            dir.z = *(f32 *)(tbl + 0x50C);
+        } else {
+            len = mathutil_rsqrt(len);
+            dir.x = dir.x * len;
+            dir.z = dir.z * len;
+        }
+        posS = *(f64 *)(tbl + 0x4B0) * (best * (mk * inv));
+        negS = *(f64 *)(tbl + 0x4B0) * (best * (ml * inv));
+        pushA.x = dir.x * posS;
+        pushA.y = dir.y * posS;
+        pushA.z = dir.z * posS;
+        pushB.x = dir.x * -negS;
+        pushB.y = dir.y * -negS;
+        pushB.z = dir.z * -negS;
+        lbl_0000D4D4(a, &pushA);
+        lbl_0000D4D4(b, &pushB);
+        len = mathutil_vec_len(&rel);
+        if (len > *(f64 *)(tbl + 0x560)) {
+            snd = *(struct BowlSnd3 *)(tbl + 0x528);
+            t = MIN(*(f64 *)(tbl + 0x568) * len, *(f64 *)(tbl + 0x3C0));
+            v = *(f32 *)(tbl + 0x478) * t - *(f32 *)(tbl + 0x47C);
+            sidx = *(f32 *)(tbl + 0x480) * t;
+            h = u_play_sound_1_dupe(((v & 0x7F) << 11) | snd.id[sidx]);
+            if (h != -1) {
+                SoundDop(h, (rand() & 0xFFF) + 0x1800);
+                lbl_0000D7F8(&a->unk124, (Vec *)(tbl + 0x3B0),
+                             cameraInfo[modeCtrl.currPlayer].rotY, &panA, &panB);
+                SoundPan(h, panA, panB);
+            }
+        }
+    }
 }
 #pragma force_active reset

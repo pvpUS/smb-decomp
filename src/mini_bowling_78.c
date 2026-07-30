@@ -218,16 +218,16 @@ void lbl_0000B344(void);
 void lbl_0000B460(void);
 void lbl_0000B654(void);
 void lbl_0000B848(void);
-void lbl_0000B914(void);
-void lbl_0000BDE0(void);
-void lbl_0000BEB8(void);
+void lbl_0000B914(struct BowlPin *pin);
+void lbl_0000BDE0(Vec *, Vec *, Vec *, f32, f32);
+void lbl_0000BEB8(struct BowlPin *, Vec *, int);
 void lbl_0000C0D0(void);
 void lbl_0000C1D0(void);
 void lbl_0000CAA8(void);
-void lbl_0000D4D4(void);
+void lbl_0000D4D4(struct BowlPin *, Vec *);
 void lbl_0000D598(void);
 void lbl_0000D650(void);
-void lbl_0000D7F8(void);
+void lbl_0000D7F8(Vec *, Vec *, s16, u8 *, u8 *);
 void lbl_0000D8CC(void);
 void lbl_0000D90C(void);
 void lbl_0000DA0C(void);
@@ -240,14 +240,133 @@ void lbl_0000E510(void);
 void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
-void lbl_0000E894(void);
+f32 lbl_0000E894(Vec *, Vec *, f32, Vec *, f32 *, s32 *);
 void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
 #pragma force_active on
-asm void lbl_0000B914(void)
+struct BowlPt {            // 0x14 -- entry of the pin collision-point table
+    Vec pos;
+    f32 radius;            // 0x0c
+    u8 filler10[0x14 - 0x10];
+};
+struct BowlPin {
+    u32 flags;                 // 0x000
+    Vec unk4[12];              // 0x004
+    Vec unk94[12];             // 0x094
+    Vec unk124;                // 0x124
+    Vec unk130;                // 0x130
+    Vec unk13c;                // 0x13c
+    Mtx unk148;                // 0x148
+    u32 unk178;                // 0x178
+    u32 unk17c;                // 0x17c
+    s16 unk180;                // 0x180
+    u8 filler182[2];
+};
+struct BowlSnd3 { s32 id[3]; };
+
+void lbl_0000B914(struct BowlPin *pin)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000B914.s"
+    u8 *k = lbl_00014800;
+    Vec acc;
+    f32 depth;
+    Vec sp38;
+    s32 spi34;
+    Vec sp28;
+    struct BowlSnd3 snd;
+    u8 panA;
+    u8 panB;
+    Vec sp0c;
+    int i;
+    Vec *a;
+    Vec *b;
+    int count;
+    int best_i;
+    int h;
+    f32 best;
+    f32 d;
+    f32 len;
+    f32 t;
+    s8 idx;
+    int v;
+    f32 s;
+
+    a = pin->unk4;
+    b = pin->unk94;
+    count = 0;
+    best_i = 0;
+    best = *(f32 *)(k + 0x3e8);
+    acc = *(Vec *)(k + 0x440);
+    pin->unk17c = pin->unk178;
+    pin->unk178 = 0;
+    for (i = 0; i < *(u8 *)(k + 0x3ac); i++, a++, b++) {
+        d = lbl_0000E894(a, b, (*(struct BowlPt **)(k + 0x3a8))[i].radius,
+                         &sp38, &depth, &spi34);
+        if (d <= *(f64 *)(k + 0x400))
+            continue;
+        count++;
+        pin->unk178 |= 1 << i;
+        if (d > best) {
+            best = d;
+            best_i = i;
+            acc.x = sp38.x + acc.x;
+            acc.y = sp38.y + acc.y;
+            acc.z = sp38.z + acc.z;
+        }
+    }
+    if (*(f64 *)(k + 0x400) == best)
+        return;
+
+    if (*(f32 *)(k + 0x458) >= mathutil_vec_sq_len(&acc))
+        acc.y = *(f32 *)(k + 0x45c);
+    else
+        mathutil_vec_normalize_len(&acc);
+
+    lbl_0000BDE0(&pin->unk130, &acc, &sp28, *(f32 *)(k + 0x398) * depth,
+                 *(f32 *)(k + 0x39c));
+    pin->unk130.x = pin->unk130.x + sp28.x;
+    pin->unk130.y = pin->unk130.y + (sp28.y - *(f64 *)(k + 0x460));
+    pin->unk130.z = pin->unk130.z + sp28.z;
+    sp28.x = *(f64 *)(k + 0x468) * sp28.x;
+    sp28.y = *(f64 *)(k + 0x468) * sp28.y;
+    sp28.z = *(f64 *)(k + 0x468) * sp28.z;
+    lbl_0000BEB8(pin, &sp28, best_i);
+    len = mathutil_vec_len(&sp28);
+    if (len > *(f64 *)(k + 0x438)) {
+        snd = *(struct BowlSnd3 *)(k + 0x44c);
+        t = MIN(*(f64 *)(k + 0x470) * len, *(f64 *)(k + 0x3c0));
+        v = *(f32 *)(k + 0x478) * t - *(f32 *)(k + 0x47c);
+        idx = *(f32 *)(k + 0x480) * t;
+        h = u_play_sound_1_dupe(((v << 11) & 0x3f800) | snd.id[idx]);
+        if (h != -1) {
+            SoundDop(h, (rand() & 0xfff) + 0x1800);
+            lbl_0000D7F8(&pin->unk124, (Vec *)(k + 0x3b0),
+                         cameraInfo[modeCtrl.currPlayer].rotY, &panA, &panB);
+            SoundPan(h, panA, panB);
+        }
+    }
+    if (count < 3) {
+        pin->unk13c.x = *(f64 *)(k + 0x488) * pin->unk13c.x;
+        pin->unk13c.y = *(f64 *)(k + 0x488) * pin->unk13c.y;
+        pin->unk13c.z = *(f64 *)(k + 0x488) * pin->unk13c.z;
+        if (*(f64 *)(k + 0x490) > __fabs(pin->unk130.x) + __fabs(pin->unk130.y) + __fabs(pin->unk130.z)
+            && *(f64 *)(k + 0x498) > __fabs(pin->unk13c.x) + __fabs(pin->unk13c.y) + __fabs(pin->unk13c.z)
+            && pin->unk148[1][1] >= *(f64 *)(k + 0x4a0)) {
+            pin->flags |= 2;
+            pin->flags &= ~4;
+        }
+    } else {
+        pin->unk13c.x = *(f64 *)(k + 0x4a8) * pin->unk13c.x;
+        pin->unk13c.y = *(f64 *)(k + 0x4a8) * pin->unk13c.y;
+        pin->unk13c.z = *(f64 *)(k + 0x4a8) * pin->unk13c.z;
+        if (*(f64 *)(k + 0x490) > __fabs(pin->unk130.x) + __fabs(pin->unk130.y) + __fabs(pin->unk130.z)
+            && *(f64 *)(k + 0x498) > __fabs(pin->unk13c.x) + __fabs(pin->unk13c.y) + __fabs(pin->unk13c.z))
+            pin->flags |= 2;
+    }
+    s = *(f64 *)(k + 0x4b0) * best;
+    sp0c.x = acc.x * s;
+    sp0c.y = acc.y * s;
+    sp0c.z = acc.z * s;
+    lbl_0000D4D4(pin, &sp0c);
 }
 #pragma force_active reset

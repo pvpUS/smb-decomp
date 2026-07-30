@@ -452,10 +452,26 @@ static void lbl_00004718(struct Ball *ball)
     ball->unk148 = 5;
     lbl_0000480C(ball);
 }
-asm void lbl_0000480C(struct Ball *ball)
+void lbl_0000480C(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000480C.s"
+    u8 *cfg = lbl_00013740;
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+
+    if (st->unk1C <= 0)
+    {
+        u_play_sound_0(0x281E);
+        ball->vel.x = ball->vel.y = ball->vel.z = *(f32 *)(cfg + 8);
+        st->unk23C = st->unk240 = st->unk244 = *(f32 *)(cfg + 8);
+        ball->unk148 = 1;
+    }
+    lbl_00007710(ball);
+    ball->prevPos = ball->pos;
+    ball->speed = mathutil_vec_len(&ball->vel);
+    ball->flags &= ~0x20;
+    ball->vel.y = ball->vel.y - ball->accel;
+    ball->vel.x = ball->vel.z = *(f32 *)(cfg + 8);
+    ball->pos.y = ball->pos.y + ball->vel.y;
+    lbl_00007710(ball);
 }
 
 #pragma force_active reset

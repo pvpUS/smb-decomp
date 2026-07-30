@@ -278,9 +278,65 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_00005384(void)
+struct TestSpark
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00005384.s"
+    /*0x00*/ Vec pos;
+    /*0x0C*/ Vec vel;
+    /*0x18*/ u8 filler18[0x40 - 0x18];
+};
+
+struct TestSparkWork
+{
+    /*0x000*/ u8 filler0[0x160];
+    /*0x160*/ struct GMAModel *model;
+    /*0x164*/ struct TestSpark *sparks;
+    /*0x168*/ u32 *count;
+    /*0x16C*/ Vec *saved;
+};
+
+void lbl_00005384(void)
+{
+    u8 *k = lbl_0000FE78;
+    struct TestSparkWork *w = (struct TestSparkWork *)lbl_10000000;
+    int i;
+    float amp;
+
+    mathutil_mtxA_from_mtxB();
+    mathutil_mtxA_translate(&currentCamera->lookAt);
+    gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+    mathutil_mtxA_scale_s(*(float *)(k + 0x78));
+    lbl_000056BC();
+    mathutil_mtxA_from_mtxB();
+    mathutil_mtxA_translate_xyz(*(float *)(k + 0x60), *(float *)(k + 0x6C),
+                                *(float *)(k + 0x88));
+    mathutil_mtxA_rotate_x(-0x4000);
+    mathutil_mtxA_rotate_z(-0x4000);
+    gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+    for (i = 0; i < *w->count; i++)
+    {
+        w->saved[i] = w->sparks[i].pos;
+        switch (i % 3)
+        {
+        case 0:
+            amp = *(double *)(k + 0x160) * mathutil_sin(powerOnTimer << 9);
+            break;
+        case 1:
+            amp = *(float *)(k + 0x168) * mathutil_sin(powerOnTimer << 8);
+            break;
+        case 2:
+            amp = *(float *)(k + 0x16C) * mathutil_sin(powerOnTimer << 10);
+            break;
+        }
+        w->sparks[i].pos.x += amp * w->sparks[i].vel.x;
+        w->sparks[i].pos.y += amp * w->sparks[i].vel.y;
+        w->sparks[i].pos.z += amp * w->sparks[i].vel.z;
+    }
+    avdisp_set_fog_params(2, *(float *)(k + 0x170), *(float *)(k + 0x174));
+    avdisp_set_fog_color(0, 0x59, 0x69);
+    u_gxutil_set_fog_enabled(1);
+    avdisp_draw_model_unculled_sort_translucent(w->model);
+    u_gxutil_fog_something_2();
+    for (i = 0; i < *w->count; i++)
+        w->sparks[i].pos = w->saved[i];
 }
 #pragma force_active reset

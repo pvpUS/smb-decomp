@@ -201,9 +201,9 @@ void lbl_0000D330(void);
 void lbl_0000D7E8(void);
 void lbl_0000E8D0(void);
 void lbl_00010FD0(void);
-void lbl_000111B4(void);
+void lbl_000111B4(s8 arg0);
 void lbl_000115F4(void);
-static void lbl_00012D4C(void);
+void lbl_00012D4C(void);
 void lbl_00016D24(void);
 void lbl_00016D9C(void);
 void lbl_0001723C(void);
@@ -227,19 +227,112 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm void lbl_000111B4(void)
+struct PocketTbl { Vec v[17]; };
+
+void lbl_000111B4(s8 arg0)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_000111B4.s"
+    u8 *p = lbl_0001CFD0;
+    struct PocketTbl tbl;
+    Vec v;
+    f32 sn;
+    f32 cs;
+    f32 alpha;
+    f32 len;
+    f32 ny;
+    f32 inv;
+    int j;
+    int i;
+
+    tbl = *(struct PocketTbl *)(p + 0x3884);
+    avdisp_set_z_mode(GX_TRUE, GX_LEQUAL, GX_FALSE);
+    for (i = 0; i < 17; i++) {
+        for (j = 0; j < 10; j++) {
+            if (*(s8 *)(lbl_10009878 + j * 0x68) == 0)
+                continue;
+            if (*(f32 *)(lbl_10009878 + j * 0x68 + 0x14) < *(f32 *)(p + 0x3778))
+                continue;
+            v.x = *(f32 *)(lbl_10009878 + j * 0x68 + 0x10) - tbl.v[i].x;
+            v.y = *(f32 *)(p + 0x3778);
+            v.z = *(f32 *)(lbl_10009878 + j * 0x68 + 0x18) - tbl.v[i].z;
+            if (mathutil_vec_sq_len(&v) < *(f32 *)(p + 0x37D0))
+                v.x = *(f32 *)(p + 0x37A8);
+            else
+                mathutil_vec_normalize_len(&v);
+            sn = v.x;
+            cs = v.z;
+            v.x = *(f32 *)(lbl_10009878 + j * 0x68 + 0x10) - tbl.v[i].x;
+            v.y = -tbl.v[i].y;
+            v.z = *(f32 *)(lbl_10009878 + j * 0x68 + 0x18) - tbl.v[i].z;
+            alpha = *(f32 *)(p + 0x37DC)
+                        * (*(f32 *)(p + 0x37A8)
+                           - mathutil_vec_sq_len(&v) / *(f32 *)(p + 0x3950))
+                    - *(f32 *)(p + 0x37A0)
+                        * (*(f32 *)(lbl_10009878 + j * 0x68 + 0x14)
+                           - *(f32 *)(p + 0x37BC));
+            if (alpha < *(f32 *)(p + 0x3778))
+                continue;
+            mathutil_vec_normalize_len(&v);
+            ny = -v.y;
+            len = mathutil_sqrt(v.x * v.x + v.z * v.z);
+            inv = *(f32 *)(p + 0x37A8) / ny;
+            mathutil_mtxA_from_mtxB();
+            mathutil_mtxA_translate_xyz(
+                *(f32 *)(lbl_10009878 + j * 0x68 + 0x10), *(f32 *)(p + 0x3868),
+                *(f32 *)(lbl_10009878 + j * 0x68 + 0x18));
+            mathutil_mtxA_rotate_y_sin_cos(sn, cs);
+            mathutil_mtxA_translate_xyz(*(f32 *)(p + 0x3778),
+                                        *(f32 *)(p + 0x3778),
+                                        *(f32 *)(p + 0x37BC) * len);
+            mathutil_mtxA_scale_xyz(*(f32 *)(p + 0x37BC), *(f32 *)(p + 0x37BC),
+                                    *(f32 *)(p + 0x37BC) * inv);
+            mathutil_mtxA_translate_xyz(
+                *(f32 *)(p + 0x3778), *(f32 *)(p + 0x3778),
+                *(f32 *)(lbl_10009878 + j * 0x68 + 0x14) - *(f32 *)(p + 0x37BC));
+            mathutil_mtxA_rotate_x(0x4000);
+            GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+            GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
+            avdisp_set_post_mult_color(alpha, alpha, alpha,
+                                       *(f32 *)(p + 0x37A8));
+            avdisp_draw_model_unculled_sort_none(
+                commonGma->modelEntries[78].model);
+            if (*(s8 *)lbl_10000004 == 0 || (arg0 == 0 && j == 0)
+                || (arg0 != 0 && j <= 1) || j == 9) {
+                mathutil_mtxA_from_mtxB();
+                mathutil_mtxA_translate(
+                    (Vec *)(lbl_10009878 + j * 0x68 + 0x10));
+                mathutil_mtxA_rotate_y_sin_cos(sn, cs);
+                mathutil_mtxA_rotate_x_sin_cos(-ny, -len);
+                avdisp_set_post_mult_color(
+                    *(f32 *)(p + 0x37A8), *(f32 *)(p + 0x37A8),
+                    *(f32 *)(p + 0x37A8), *(f32 *)(p + 0x37A8));
+                mathutil_mtxA_scale_s(*(f32 *)(p + 0x37A8));
+                mathutil_mtxA_translate_xyz(*(f32 *)(p + 0x3778),
+                                            *(f32 *)(p + 0x37C0),
+                                            *(f32 *)(p + 0x3778));
+                alpha = alpha * *(f32 *)(p + 0x3954);
+                GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+                GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
+                if (alpha > *(f32 *)(p + 0x37A8))
+                    avdisp_draw_model_unculled_sort_none(
+                        minigameGma->modelEntries[30].model);
+                else if (alpha > *(f32 *)(p + 0x3958))
+                    avdisp_draw_model_unculled_sort_none(
+                        minigameGma->modelEntries[40].model);
+                else if (alpha > *(f32 *)(p + 0x37BC))
+                    avdisp_draw_model_unculled_sort_none(
+                        minigameGma->modelEntries[41].model);
+                else if (alpha > *(f32 *)(p + 0x37C8))
+                    avdisp_draw_model_unculled_sort_none(
+                        minigameGma->modelEntries[42].model);
+                else
+                    avdisp_draw_model_unculled_sort_none(
+                        minigameGma->modelEntries[43].model);
+            }
+        }
+    }
+    avdisp_set_post_mult_color(*(f32 *)(p + 0x37A8), *(f32 *)(p + 0x37A8),
+                               *(f32 *)(p + 0x37A8), *(f32 *)(p + 0x37A8));
+    avdisp_set_z_mode(GX_TRUE, GX_LEQUAL, GX_TRUE);
 }
-asm void lbl_000115F4(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_000115F4.s"
-}
-static asm void lbl_00012D4C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00012D4C.s"
-}
+
 #pragma force_active reset

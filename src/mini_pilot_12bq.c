@@ -134,7 +134,7 @@ extern u8 lbl_802F1FDC[];
 extern u8 lbl_802F1FE0[];
 extern u8 lbl_802F1FE4[];
 extern u8 lbl_802F1FEC[];
-extern u8 lbl_802F1FF4[];
+extern s16 lbl_802F1FF4;
 
 // Imported functions the code calls that no included header declares.
 extern void ball_8003BBF4();
@@ -148,7 +148,7 @@ extern void func_800AB2A0();
 extern void func_800AB444();
 extern void func_800AB6F8();
 extern void func_800AC43C();
-extern void func_800AC5E0();
+extern int func_800AC5E0();
 extern void gxutil_draw_line_multicolor();
 extern void item_create();
 extern void mini_commend_free_data();
@@ -199,7 +199,7 @@ void lbl_00006B5C(void);
 void lbl_00006B94(void);
 void lbl_00006BF4(void);
 void lbl_00006CCC(void);
-void lbl_00006D14(void);
+int lbl_00006D14(void);
 void lbl_00006DFC(void);
 void lbl_00007EF8(void);
 void lbl_00008134(void);
@@ -252,10 +252,66 @@ void lbl_00003860(void);
 void lbl_000038D4(void);
 void lbl_00003AD0(void);
 #pragma force_active on
-asm void lbl_00003374(void)
+void lbl_00003374(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00003374.s"
+    u8 *w = (u8 *)lbl_10000000;
+    s32 i;
+    s32 sel;
+    s32 flags;
+    u8 rec[8];
+    s32 dead[2];
+
+    lbl_802F1FF0++;
+    if (lbl_00006D14() && lbl_802F1FF0 > 50)
+    {
+        *(s32 *)(w + 0x98) = *(s32 *)(w + 0x44);
+        *(s32 *)(w + 0x9c) = *(s32 *)(w + 0x48);
+        *(s32 *)(w + 0xa0) = *(s32 *)(w + 0x4c);
+        *(s32 *)(w + 0xa4) = *(s32 *)(w + 0x50);
+    }
+    for (i = 0; i < 4; i++)
+    {
+        if (g_poolInfo.playerPool.statusList[i] != 0
+         && ((s32 *)(w + 0x98))[i] != ((s32 *)(w + 0x44))[i])
+            break;
+    }
+    if (i == 4)
+        *(s32 *)(w + 0x8c) += 1;
+    if ((lbl_00006D14() && *(s32 *)(w + 0x8c) > 20) || lbl_802F1FF0 > 720)
+    {
+        *(s8 *)(w + 0x34) = -1;
+        if (modeCtrl.playerCount == 1)
+        {
+            flags = 0;
+            if (*(u32 *)lbl_802F1FD0 & (1 << 3))
+                flags |= 1;
+            if (*(u32 *)lbl_802F1FD0 & (1 << 4))
+                flags |= 2;
+            switch (*(s16 *)(w + 0x64))
+            {
+            case 5:
+                sel = 6;
+                break;
+            case 10:
+                sel = 7;
+                break;
+            default:
+                sel = 8;
+                break;
+            }
+            rec[3] = playerCharacterSelection[0];
+            *(u16 *)(rec + 4) = *(s32 *)(w + 0x44);
+            rec[6] = flags;
+            *(s8 *)(w + 0x34) = (s8)func_800AC5E0(sel, rec);
+            if (*(s8 *)(w + 0x34) < 0)
+            {
+                lbl_802F1FF4 = 0x1b;
+                return;
+            }
+        }
+        pauseMenuState.unk4 |= 2;
+        lbl_802F1FF4 = 0x19;
+    }
 }
 
 #pragma force_active reset

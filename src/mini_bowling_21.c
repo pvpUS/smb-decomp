@@ -46,6 +46,21 @@
 #include "shadow.h"
 #include "vibration.h"
 
+// Per-player bowling score sheet: 0x4c bytes, four of them at lbl_10000000+0xc.
+// The 0x0a/0x20/0x35 layout is taken from the already-matched lbl_00005128
+// (mini_bowling_22.c) and lbl_000051E0 (mini_bowling_23.c).
+struct BowlScore {
+    char *split;      // 0x00 name of the split pattern left standing, or NULL
+    s16 score;        // 0x04
+    s8 frame;         // 0x06 1..10
+    s8 ball;          // 0x07 1..3
+    s8 idx;           // 0x08 index of the current ball, 0..20
+    s8 streak;        // 0x09 consecutive strikes
+    s16 total[11];    // 0x0a
+    s8 pins[21];      // 0x20
+    s8 state[21];     // 0x35
+};
+
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_bowling.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000F020[];
@@ -156,10 +171,10 @@ void lbl_000045E8(void);
 void lbl_00004A80(void);
 void lbl_00004BD8(void);
 void lbl_00004D10(void);
-void lbl_00004DF8(void);
+void lbl_00004DF8(struct BowlScore *p);
 void lbl_00005128(void);
 void lbl_000051E0(void);
-void lbl_000054BC(void);
+char *lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
 void lbl_000066C4(void);
@@ -209,7 +224,7 @@ void lbl_0000A878(void);
 void lbl_0000AAAC(void);
 void lbl_0000AB98(void);
 void lbl_0000AC60(void);
-void lbl_0000AD8C(void);
+int lbl_0000AD8C(u8 *outCount);
 void lbl_0000AF18(void);
 void lbl_0000AFEC(void);
 void lbl_0000B0AC(void);
@@ -245,9 +260,80 @@ void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
 #pragma force_active on
-asm void lbl_00004DF8(void)
+// lbl_00004DF8 (0x4DF8): score the ball that has just come to rest for one
+// player.  g+0x13c is the bitmask of pins left standing, g+0x13e their count.
+// The `(s8)` casts are load-bearing, not cosmetic: when the whole RHS of a
+// byte store is narrowable mwcc drops the `extsb` of every s8 leaf, so the
+// plain `down - p->pins[i - 1]` loses one instruction.  A cast applied to a
+// non-leaf (`(s8)(int)x`, `(s8)down`) survives that pass and is what the
+// original emits.  Verified by tools/rel_probe.py, 30 spellings.
+void lbl_00004DF8(struct BowlScore *p)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00004DF8.s"
+    u8 *g = lbl_10000000;
+    s8 i = p->idx;
+    int down;
+
+    *(u16 *)(g + 0x13c) = lbl_0000AD8C(g + 0x13e);
+    lbl_0000AFEC();
+    p->split = NULL;
+    if (p->ball == 1) {
+        p->pins[i] = 10 - *(s8 *)(g + 0x13e);
+        if (*(s8 *)(g + 0x13e) == 0) {
+            p->state[i] = 2;
+        } else if (*(s8 *)(g + 0x13e) == 10) {
+            p->state[i] = 5;
+        } else {
+            p->split = lbl_000054BC();
+            if (p->split == NULL)
+                p->state[i] = 1;
+            else
+                p->state[i] = 4;
+        }
+    } else if (p->frame == 10 && p->ball == 2) {
+        down = 10 - *(s8 *)(g + 0x13e);
+        if (p->state[i - 1] == 2)
+            p->pins[i] = (s8)down;
+        else
+            p->pins[i] = down - (s8)(int)p->pins[i - 1];
+        if (*(s8 *)(g + 0x13e) == 0) {
+            if (p->state[i - 1] == 2)
+                p->state[i] = 2;
+            else
+                p->state[i] = 3;
+        } else if (down == p->pins[i - 1] || down == 0) {
+            if (p->state[i - 1] == 2)
+                p->state[i] = 5;
+            else
+                p->state[i] = 7;
+        } else {
+            p->split = lbl_000054BC();
+            if (p->split == NULL)
+                p->state[i] = 1;
+            else
+                p->state[i] = 4;
+        }
+    } else {
+        down = 10 - *(s8 *)(g + 0x13e);
+        if (p->frame == 10 && p->ball == 3
+            && (p->state[i - 1] == 2 || p->state[i - 1] == 3))
+            p->pins[i] = (s8)down;
+        else
+            p->pins[i] = down - (s8)(int)p->pins[i - 1];
+        if (*(s8 *)(g + 0x13e) == 0) {
+            if (p->frame == 10
+                && (p->state[i - 1] == 2 || p->state[i - 1] == 3))
+                p->state[i] = 2;
+            else
+                p->state[i] = 3;
+        } else if (down == p->pins[i - 1]) {
+            p->state[i] = 7;
+        } else {
+            p->state[i] = 1;
+        }
+    }
+    if (p->state[i] == 2)
+        p->streak = p->streak + 1;
+    else
+        p->streak = 0;
 }
 #pragma force_active reset

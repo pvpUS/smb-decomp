@@ -31,6 +31,7 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "avdisp.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_race.s) or imported.  Declared so mwcc accepts `@ha/@l`.
@@ -182,10 +183,7 @@ extern void raycast_stage_down();
 extern void vibration_control();
 extern void func_800246F4();
 extern void mot_ape_set_quat_from_vec();
-extern void avdisp_get_eff_vertices();
 extern void item_create();
-extern void avdisp_draw_model_unculled_sort_translucent();
-extern void avdisp_draw_model_culled_sort_translucent();
 extern void gxutil_load_pos_nrm_matrix();
 extern void mathutil_incr_mtx_stack();
 extern void thread_create();
@@ -195,20 +193,14 @@ extern void func_8002BB20();
 extern void fade_color_base_default();
 extern void func_800AB6F8();
 extern void stcoli_sub33();
-extern void avdisp_get_eff_vtxinfo();
 extern void lens_flare_draw();
-extern void avdisp_set_bound_sphere_scale();
-extern void avdisp_set_post_mult_color();
 extern void bitmap_init_tev();
-extern void avdisp_draw_model_unculled_sort_none();
 extern void ape_skel_anim_main();
 extern void set_ape_model_lod();
 extern void func_800AB444();
 extern void func_8006AD3C();
 extern void ord_tbl_draw_nodes();
-extern void avdisp_set_alpha();
 extern void ape_destroy();
-extern void avdisp_set_z_mode();
 extern void func_800AB2A0();
 extern void func_8006AAEC();
 extern void draw_test_camera_target();
@@ -387,7 +379,7 @@ void lbl_00011E50(void);
 void lbl_000120D8(void);
 void lbl_000121A4(u8 *);
 void lbl_000121D0(u8 *);
-void lbl_000121F4(void);
+void lbl_000121F4(u8 *, s32, s32);
 void lbl_000122B8(u8 *);
 void lbl_000122E4(u8 *);
 void lbl_00012308(void);
@@ -397,10 +389,29 @@ void lbl_00012424(void);
 void lbl_000124E0(void);
 void lbl_0001280C(u8 *);
 #pragma force_active on
-asm void lbl_000121F4(void)
+void lbl_000121F4(u8 *w, s32 arg1, s32 arg2)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000121F4.s"
+    u8 *k = lbl_00013F40;
+    GXColor t;
+    Vec v;
+    f32 s;
+
+    *(u8 **)(w + 0x1c) = lbl_00015EAC;
+    *(u32 *)(w + 8) |= 0x22;
+    *(f32 *)(w + 0x14) = *(f32 *)(k + 0x14);
+    *(f32 *)(w + 0x18) = *(f32 *)(k + 0x54);
+    *(struct GMAModel **)(w + 0x68) = commonGma->modelEntries[78].model;
+    *(u32 *)&t = *(u32 *)(k + 0xc8);
+    *(GXColor *)(w + 0x78) = t;
+    v = *(Vec *)(k + 0xcc);
+    s = *(f32 *)(w + 0x14);
+    v.x = s;
+    v.y = *(f32 *)(k + 0x58) * s;
+    v.z = s;
+    *(Vec *)(w + 0x7c) = v;
+    *(s16 *)(w + 0x40) = 0x300;
+    *(s16 *)(w + 0x12) = 0x3c;
+    *(s16 *)(w + 0xe) = 1;
 }
 
 #pragma force_active reset

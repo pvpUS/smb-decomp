@@ -174,7 +174,7 @@ void lbl_000007B8(void);
 void lbl_000008AC(void);
 void lbl_00000A30(void);
 void lbl_00000BFC(void);
-void lbl_00000DC8(void);
+s32 lbl_00000DC8(struct PilotTgt *tgt, Vec *pos);
 void lbl_0000215C(void);
 void lbl_000021B4(void);
 void lbl_000022D8(void);
@@ -241,10 +241,67 @@ void lbl_00001BB4(void);
 void lbl_00001CE4(void);
 void lbl_00001DE0(void);
 #pragma force_active on
-asm void lbl_00000DC8(void)
+struct PilotTgt
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00000DC8.s"
+    /*0x00*/ Vec pos;
+    /*0x0C*/ f32 unkC;
+    /*0x10*/ f32 unk10;
+    /*0x14*/ s8 unk14;
+    /*0x15*/ u8 pad15[3];
+};
+struct PilotIdTbl3 { s16 v[3]; };
+struct PilotIdTbl6 { s16 v[6]; };
+
+s32 lbl_00000DC8(struct PilotTgt *tgt, Vec *pos)
+{
+    u8 *k = (u8 *)lbl_0000BE80;
+    u8 *tgtTbl = (u8 *)lbl_0000C740;
+    // The original reserves an 8-byte frame slot at 0x54..0x5B that it never
+    // reads or writes (frame is 0x60 with only r31 saved; the live locals stop
+    // at 0x54).  Its name/type are unrecoverable -- without it the whole local
+    // block, and hence every stack offset below, moves.
+
+    if (tgt == (struct PilotTgt *)(tgtTbl + 0x4B0))
+    {
+        f32 dist = mathutil_unk(tgt->pos.x, tgt->pos.z, pos->x, pos->z);
+
+        if (dist < *(f64 *)(k + 0xD8))
+            return 4;
+        if (dist < *(f64 *)(k + 0xE0))
+            return 3;
+        return 2;
+    }
+    if (tgt == (struct PilotTgt *)(tgtTbl + 0x528))
+    {
+        Vec delta;
+        struct PilotIdTbl3 ids = *(struct PilotIdTbl3 *)(k + 0xB8);
+
+        delta.x = pos->x - tgt->pos.x;
+        delta.y = pos->y - tgt->pos.y;
+        delta.z = pos->z - tgt->pos.z;
+        return ids.v[(u16)mathutil_atan2(-delta.x, -delta.z) / (0x10000 / 3)];
+    }
+    if (tgt == (struct PilotTgt *)(tgtTbl + 0x540))
+    {
+        Vec delta;
+        struct PilotIdTbl6 ids = *(struct PilotIdTbl6 *)(k + 0xC0);
+
+        delta.x = pos->x - tgt->pos.x;
+        delta.y = pos->y - tgt->pos.y;
+        delta.z = pos->z - tgt->pos.z;
+        return ids.v[(u16)mathutil_atan2(-delta.x, -delta.z) / (0x10000 / 6)];
+    }
+    if (tgt == (struct PilotTgt *)(tgtTbl + 0x558))
+    {
+        Vec delta;
+        struct PilotIdTbl6 ids = *(struct PilotIdTbl6 *)(k + 0xCC);
+
+        delta.x = pos->x - tgt->pos.x;
+        delta.y = pos->y - tgt->pos.y;
+        delta.z = pos->z - tgt->pos.z;
+        return ids.v[(u16)mathutil_atan2(-delta.z, delta.x) / (0x10000 / 6)];
+    }
+    return tgt->unk14;
 }
 
 #pragma force_active reset

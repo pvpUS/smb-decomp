@@ -29,6 +29,7 @@
 #include "sound.h"
 #include "sprite.h"
 #include "stage.h"
+#include "stcoli.h"
 #include "variables.h"
 #include "window.h"
 #include "avdisp.h"
@@ -179,11 +180,9 @@ extern u8 backgroundInfo[];
 extern void item_replace_type_funcs();
 extern void u_load_minigame_graphics();
 extern void u_ball_init_1();
-extern void raycast_stage_down();
 extern void vibration_control();
 extern void func_800246F4();
 extern void mot_ape_set_quat_from_vec();
-extern void avdisp_get_eff_vertices();
 extern void item_create();
 extern void gxutil_load_pos_nrm_matrix();
 extern void mathutil_incr_mtx_stack();
@@ -194,7 +193,6 @@ extern void func_8002BB20();
 extern void fade_color_base_default();
 extern void func_800AB6F8();
 extern void stcoli_sub33();
-extern void avdisp_get_eff_vtxinfo();
 extern void lens_flare_draw();
 extern void bitmap_init_tev();
 extern void ape_skel_anim_main();
@@ -372,7 +370,7 @@ void lbl_00012E00(void);
 void lbl_00012ED0(struct Effect *);
 void lbl_00012F34(void);
 void lbl_00013120(struct Effect *);
-void lbl_00013124(void);
+void lbl_00013124(struct Effect *e);
 void lbl_000131FC(struct Effect *);
 void lbl_00013268(struct Effect *);
 void lbl_00013318(struct Effect *);
@@ -381,10 +379,23 @@ void lbl_00013328(void);
 void lbl_0001356C(void);
 void lbl_00013670(struct Effect *);
 #pragma force_active on
-asm void lbl_00013124(void)
+void lbl_00013124(struct Effect *e)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00013124.s"
+    struct RaycastHit hit;
+
+    if ((u32)raycast_stage_down(&ballInfo[e->playerId].pos, &hit, NULL) == 0)
+    {
+        g_poolInfo.effectPool.statusList[e->poolIndex] = STAT_DEST;
+    }
+    else
+    {
+        e->pos = hit.pos;
+        e->pos.y += *(f64 *)lbl_000140B8;
+        mathutil_vec_to_euler_xy(&hit.normal, &e->rotX, &e->rotY);
+        e->rotX += 0x8000;
+        e->colorFactor = *(f32 *)lbl_000140AC;
+        e->timer = 1000;
+    }
 }
 
 #pragma force_active reset

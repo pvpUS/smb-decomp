@@ -268,7 +268,7 @@ void lbl_0000480C(struct Ball *);
 void lbl_00004D78(void);
 void lbl_0000528C(void);
 void lbl_000055CC(void);
-void lbl_00005A84(void);
+void lbl_00005A84(struct Ball *);
 void lbl_00005CEC(void);
 void lbl_00005DDC(void);
 void lbl_00005FC4(void);
@@ -352,11 +352,11 @@ void lbl_0000EC20(void);
 void lbl_0000F084(void);
 void lbl_0000F118(void);
 void lbl_0000F174(void);
-void lbl_0000F3D4(void);
+void lbl_0000F3D4(int);
 void lbl_0000FC8C(void);
 void lbl_0000FCC4(void);
 void lbl_0000FD48(void);
-void lbl_0000FDD8(void);
+void lbl_0000FDD8(int);
 void lbl_0000FE90(void);
 void lbl_0000FEF8(void);
 void lbl_000100B4(void);
@@ -385,13 +385,49 @@ void lbl_000050F0(void);
 void lbl_00005428(void);
 void lbl_0000568C(void);
 void lbl_00005884(void);
-void lbl_00005998(void);
+void lbl_00005998(struct Ball *ball);
 void lbl_00005C20(void);
 #pragma force_active on
-asm void lbl_00005998(void)
+// INVENTED -- per-racer state hanging off struct Ball::unk144.  UNVERIFIED.
+struct RaceSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00005998.s"
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+};
+
+// INVENTED -- 16-byte sub-block at lbl_10000000 + 0x28.  UNVERIFIED.
+struct RaceModeSub
+{
+    /*0x00*/ u16 unk0;
+    /*0x02*/ u16 unk2;
+    u8 filler4[0x10 - 4];
+};
+
+void lbl_00005998(struct Ball *ball)
+{
+    struct RaceSub *sub = (struct RaceSub *)ball->unk144;
+    struct RaceModeSub *s = (struct RaceModeSub *)lbl_10000028;
+
+    if (!(sub->unk14 & 0x20))
+    {
+        destroy_sprite_with_tag(ball->playerId + 0x67);
+        if (sub->unk14 & 2)
+        {
+            lbl_0000F3D4(ball->playerId);
+        }
+        else
+        {
+            u_play_music(0, 10);
+            *(s16 *)lbl_10000042 = 0x96;
+            func_8002BFCC(0x164, 0x165);
+            if ((s->unk2 & 8) || modeCtrl.unk30 >= 2)
+                lbl_0000F3D4(ball->playerId);
+            else
+                lbl_0000FDD8(ball->playerId);
+        }
+    }
+    ball->unk148 = 0x12;
+    lbl_00005A84(ball);
 }
 
 #pragma force_active reset

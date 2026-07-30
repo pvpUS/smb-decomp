@@ -172,7 +172,7 @@ void lbl_000076D0(void);
 void lbl_00007740(void);
 void lbl_00007778(void);
 void lbl_00007878(void);
-void lbl_00007964(void);
+void lbl_00007964(int, struct Ball *);
 void lbl_000079E8(void);
 void lbl_00007A6C(void);
 void lbl_00007C54(void);
@@ -215,7 +215,7 @@ void lbl_0000AFEC(void);
 void lbl_0000B0AC(void);
 void lbl_0000B1BC(void);
 void lbl_0000B344(void);
-void lbl_0000B460(void);
+void lbl_0000B460(int);
 void lbl_0000B654(void);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
@@ -250,19 +250,5 @@ asm void lbl_0000020C(void)
     nofralloc
 #include "../asm/nonmatchings/mini_bowling/lbl_0000020C.s"
 }
-asm void lbl_00000718(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00000718.s"
-}
-asm void lbl_000009EC(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_000009EC.s"
-}
-asm void lbl_00000F98(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00000F98.s"
-}
+
 #pragma force_active reset

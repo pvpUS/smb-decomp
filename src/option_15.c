@@ -117,8 +117,10 @@ void lbl_00003B90(void);
 void lbl_00003F10(void);
 void lbl_00003F6C(void);
 void lbl_00003FF0(void);
-void lbl_00004204(void);
-void lbl_00004260(void);
+//@SUB void lbl_00004204(void);|void lbl_00004204(int);
+void lbl_00004204(int);
+//@SUB void lbl_00004260(void);|void lbl_00004260(int);
+void lbl_00004260(int);
 void lbl_000042BC(void);
 void lbl_000047D0(void);
 void lbl_00004858(void);
@@ -151,9 +153,173 @@ void lbl_0000B218(void);
 void lbl_0000C148(void);
 
 #pragma force_active on
-static asm void lbl_000021D8(void)
+static void lbl_000021D8(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_000021D8.s"
+    int sel;
+    u8 *e;
+    OSHeapHandle prev;
+    u8 *p = lbl_10000000 + 0x9C;
+
+    if (!(modeCtrl.courseFlags & (1 << 2)))
+    {
+        u16 rep = g_currPlayerButtons[4];
+        u16 pr;
+
+        sel = *(s32 *)(p + 0x14);
+        if ((rep & 1) || (g_currPlayerAnalogButtons[4] & 1))
+        {
+            if (--sel < 0)
+                sel = 2;
+        }
+        if ((rep & 2) || (g_currPlayerAnalogButtons[4] & 2))
+        {
+            if ((u32)++sel >= 3)
+                sel = 0;
+        }
+        if (sel != *(s32 *)(p + 0x14))
+        {
+            u_play_sound_0(0x6C);
+            *(s32 *)(p + 0x14) = sel;
+        }
+        pr = g_currPlayerButtons[2];
+        if (pr & 0x100)
+        {
+            u_play_sound_0(0x6A);
+            if (*(s32 *)(p + 0x14) == 0)
+                modeCtrl.submodeTimer = 30;
+            else
+                modeCtrl.submodeTimer = 30;
+            lbl_00004204(0x5B);
+            modeCtrl.courseFlags |= (1 << 2);
+        }
+        else if (pr & 0x200)
+        {
+            u_play_sound_0(0x6B);
+            lbl_00004260(0x5B);
+            gameSubmodeRequest = 0xAE;
+        }
+        return;
+    }
+
+    if (*(s32 *)(p + 0x14) == 0)
+    {
+        if (modeCtrl.submodeTimer > 0)
+        {
+            modeCtrl.submodeTimer--;
+            if (modeCtrl.submodeTimer <= 0)
+            {
+                *(s32 *)(p + 0x1C) = 30;
+                *(s32 *)(p + 0x18) = 0;
+                prev = OSSetCurrentHeap(stageHeap);
+                call_bitmap_load_group(3);
+                OSSetCurrentHeap(prev);
+                func_800885EC();
+                init_ranking_screen(0);
+                func_800AB68C();
+                func_800AB5F8();
+            }
+        }
+        else
+        {
+            if (func_80088AF4() && *(s32 *)(p + 0x1C) <= 0)
+            {
+                u16 rep = g_currPlayerButtons[4];
+
+                sel = *(s32 *)(p + 0x18);
+                if ((rep & 1) || (g_currPlayerAnalogButtons[4] & 1) ||
+                    (rep & 0x40))
+                {
+                    if (--sel < 0)
+                        sel = 0;
+                }
+                if ((rep & 2) || (g_currPlayerAnalogButtons[4] & 2) ||
+                    (rep & 0x20))
+                {
+                    if (++sel >= 3)
+                        sel = 2;
+                }
+                if (sel != *(s32 *)(p + 0x18))
+                {
+                    destroy_sprite_with_tag(0x65);
+                    ranking_screen_8008897C(0);
+                    init_ranking_screen(sel);
+                    switch (sel)
+                    {
+                    case 0:
+                    default:
+                        func_800AB5F8();
+                        break;
+                    case 1:
+                        func_800AB5F8();
+                        func_800AB564();
+                        break;
+                    case 2:
+                        func_800AB564();
+                        break;
+                    }
+                    *(s32 *)(p + 0x18) = sel;
+                }
+            }
+            if (*(s32 *)(p + 0x1C) > 0)
+                (*(s32 *)(p + 0x1C))--;
+        }
+    }
+    else if (modeCtrl.submodeTimer > 0)
+    {
+        modeCtrl.submodeTimer--;
+        if (modeCtrl.submodeTimer <= 0)
+        {
+            e = lbl_0000C850 + *(s32 *)(p + 0x14) * 8;
+            *(s32 *)(p + 0x18) = 0;
+            prev = OSSetCurrentHeap(stageHeap);
+            func_800AB2A0((s8)(*(u8 **)e)[*(s32 *)(p + 0x18)], 0);
+            OSSetCurrentHeap(prev);
+            func_800AB5F8();
+        }
+    }
+    else
+    {
+        u16 rep = g_currPlayerButtons[4];
+
+        sel = *(s32 *)(p + 0x18);
+        e = lbl_0000C850 + *(s32 *)(p + 0x14) * 8;
+        if ((rep & 1) || (g_currPlayerAnalogButtons[4] & 1) || (rep & 0x40))
+        {
+            if (--sel < 0)
+                sel = 0;
+        }
+        if ((rep & 2) || (g_currPlayerAnalogButtons[4] & 2) || (rep & 0x20))
+        {
+            if (++sel >= (s8)e[4])
+                sel = (s8)e[4] - 1;
+        }
+        if (sel != *(s32 *)(p + 0x18))
+        {
+            func_800AB358((s8)(*(u8 **)e)[sel], 0);
+            if (sel != 0)
+                func_800AB564();
+            if (sel < (s8)e[4] - 1)
+                func_800AB5F8();
+            u_play_sound_0(0x65);
+            *(s32 *)(p + 0x18) = sel;
+        }
+    }
+
+    if (g_currPlayerButtons[2] & 0x200)
+    {
+        if (*(s32 *)(p + 0x14) == 0)
+        {
+            ranking_screen_8008897C(1);
+            destroy_sprite_with_tag(0x65);
+            call_bitmap_free_group(3);
+        }
+        else if (modeCtrl.submodeTimer <= 0)
+        {
+            func_800AB444();
+        }
+        lbl_0000925C();
+        u_play_sound_0(0x6B);
+        modeCtrl.courseFlags &= ~(1 << 2);
+    }
 }
 #pragma force_active reset

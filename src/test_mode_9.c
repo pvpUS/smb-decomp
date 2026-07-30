@@ -279,9 +279,78 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-static asm void lbl_00000AAC(void)
+static void lbl_00000AAC(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00000AAC.s"
+    u8 *d = lbl_000102B0;
+    int n = *(int *)lbl_10000008;
+
+    if (controllerInfo[0].held.button & PAD_TRIGGER_L)
+    {
+        if (controllerInfo[0].pressed.button & PAD_BUTTON_LEFT)
+        {
+            if (--n < 0)
+                n = 0;
+        }
+        if (controllerInfo[0].pressed.button & PAD_BUTTON_RIGHT)
+        {
+            if (++n >= 4)
+                n = 3;
+        }
+    }
+    *(int *)lbl_10000008 = n;
+
+    window_set_cursor_pos(1, 1);
+    window_printf_2((char *)(d + 0x424));
+    window_set_cursor_pos(3, 3);
+    window_set_text_color(2);
+    window_printf_2((char *)(d + 0x430), n);
+    window_set_text_color(0);
+    window_printf_2((char *)(d + 0x140));
+
+    window_printf_2((char *)(d + 0x448), (controllerInfo[n].held.button & PAD_BUTTON_LEFT) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x45C), (controllerInfo[n].held.button & PAD_BUTTON_RIGHT) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x470), (controllerInfo[n].held.button & PAD_BUTTON_DOWN) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x484), (controllerInfo[n].held.button & PAD_BUTTON_UP) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x498), (controllerInfo[n].held.button & PAD_TRIGGER_Z) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x4AC), (controllerInfo[n].held.button & PAD_TRIGGER_L) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x4C0), (controllerInfo[n].held.button & PAD_TRIGGER_R) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x4D4), (controllerInfo[n].held.button & PAD_BUTTON_A) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x4E8), (controllerInfo[n].held.button & PAD_BUTTON_B) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x4FC), (controllerInfo[n].held.button & PAD_BUTTON_X) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x510), (controllerInfo[n].held.button & PAD_BUTTON_Y) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x524), (controllerInfo[n].held.button & PAD_BUTTON_MENU) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x140));
+    window_printf_2((char *)(d + 0x538), controllerInfo[n].held.stickX);
+    window_printf_2((char *)(d + 0x54C), controllerInfo[n].held.stickY);
+    window_printf_2((char *)(d + 0x560), controllerInfo[n].held.substickX);
+    window_printf_2((char *)(d + 0x574), controllerInfo[n].held.substickY);
+    window_printf_2((char *)(d + 0x588), controllerInfo[n].held.triggerLeft);
+    window_printf_2((char *)(d + 0x59C), controllerInfo[n].held.triggerRight);
+    window_printf_2((char *)(d + 0x5B0), controllerInfo[n].held.analogA);
+    window_printf_2((char *)(d + 0x5C4), controllerInfo[n].held.analogB);
+    window_printf_2((char *)(d + 0x5D8), controllerInfo[n].held.err);
+
+    window_set_cursor_pos(0x17, 3);
+    window_printf_2((char *)(d + 0x5EC));
+    window_printf_2((char *)(d + 0x140));
+    window_printf_2((char *)(d + 0x5F8), (analogInputs[n].held & ANALOG_STICK_LEFT) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x60C), (analogInputs[n].held & ANALOG_STICK_RIGHT) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x620), (analogInputs[n].held & ANALOG_STICK_DOWN) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x634), (analogInputs[n].held & ANALOG_STICK_UP) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x648), (analogInputs[n].held & ANALOG_CSTICK_LEFT) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x65C), (analogInputs[n].held & ANALOG_CSTICK_RIGHT) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x670), (analogInputs[n].held & ANALOG_CSTICK_DOWN) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x684), (analogInputs[n].held & ANALOG_CSTICK_UP) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x4AC), (analogInputs[n].held & ANALOG_TRIGGER_LEFT) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+    window_printf_2((char *)(d + 0x4C0), (analogInputs[n].held & ANALOG_TRIGGER_RIGHT) ? (char *)(d + 0x444) : (char *)(d + 0x414));
+
+    window_set_cursor_pos(0x16, 0x12);
+    window_printf_2((char *)(d + 0x698));
+    window_printf_2((char *)(d + 0x140));
+    window_printf_2((char *)(d + 0x6A8));
+    window_printf_2((char *)(d + 0x6B8));
+    window_printf_2((char *)(d + 0x6C4));
+    window_printf_2((char *)(d + 0x6D8));
+    window_printf_2((char *)(d + 0x6E4));
 }
 #pragma force_active reset
