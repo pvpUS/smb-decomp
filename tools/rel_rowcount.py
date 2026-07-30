@@ -174,9 +174,28 @@ def main():
 
     tree = a.tree or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     root = os.path.join(tree, 'asm', 'nonmatchings')
-    mods = a.modules or sorted(
-        os.path.basename(d) for d in glob.glob(os.path.join(root, '*'))
-        if os.path.isdir(d))
+    present = sorted(os.path.basename(d) for d in glob.glob(os.path.join(root, '*'))
+                     if os.path.isdir(d))
+
+    # RUN 10 (sel_ngc): `rel_rowcount.py sel_ngc` printed 0 rows / 0 insn with NO
+    # ERROR, because the row directory is asm/nonmatchings/sel_ngc_rel/ -- the
+    # STEM, not the warm-dir name.  scan() returned None and main() dropped it
+    # silently, which reads exactly like "nothing left to do" in the one place a
+    # module's whole reachability table starts.  The brief's own §10 step-1
+    # command had this bug in it.  Accept either spelling, and hard-fail on a
+    # name that matches neither.
+    ALIAS = {'sel_ngc': 'sel_ngc_rel'}
+    mods = []
+    for m in (a.modules or present):
+        if m in present:
+            mods.append(m)
+        elif ALIAS.get(m) in present:
+            print('note: %s\'s asm rows live under %r (the stem, not the warm '
+                  'dir name) -- using that.' % (m, ALIAS[m]), file=sys.stderr)
+            mods.append(ALIAS[m])
+        else:
+            sys.exit('no asm/nonmatchings/%s in %s.\n  present: %s'
+                     % (m, tree, ', '.join(present)))
 
     grand = collections.Counter()
     for mod in mods:
