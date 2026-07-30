@@ -21,7 +21,24 @@ import os
 # moment a warm copy has re-split .s files.  Callers that cross trees set this.
 REPO = os.environ.get('FDIFF_REPO') or os.path.dirname(
     os.path.dirname(os.path.abspath(__file__)))
-MOD = os.environ.get('FDIFF_MODULE', 'mini_race')
+
+# RUN 10 (test_mode): this used to DEFAULT to 'mini_race'.  Invoked directly
+# without FDIFF_MODULE set -- which is exactly how someone reaches for it when
+# debugging -- it silently diffed the module you named against MINI_RACE's asm,
+# reporting a confident number about the wrong function, or crashing on a label
+# mini_race does not have.  It reads as "hard-coded to mini_race".  Its callers
+# (rel_ascore, rel_sweep, rel_regions) all set the variable; nothing else did.
+# No default: an unset module is a mistake, not a mini_race request.
+MOD = os.environ.get('FDIFF_MODULE')
+if not MOD:
+    raise SystemExit(
+        'FDIFF_MODULE is not set. rel_fdiff resolves asm/nonmatchings/<MOD>/,\n'
+        'and it used to default to mini_race -- so this ran green against the\n'
+        'wrong module\'s asm.  Set it to the src/asm STEM (note sel_ngc\'s stem\n'
+        'is sel_ngc_rel), e.g.:\n'
+        '  FDIFF_MODULE=test_mode python tools/rel_fdiff.py mkbe.test_mode.plf lbl_X\n'
+        'Or use tools/rel_ascore.py, which takes the module as an argument and\n'
+        'scores an ALIGNED diff rather than a raw one.')
 
 
 def load_text(plf):
