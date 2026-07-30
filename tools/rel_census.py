@@ -111,6 +111,11 @@ DEFN = re.compile(r'^(lbl_[0-9A-Fa-f]+):')
 # defined-label set and dropped the bias hit-rate from 100% to 37-74%, i.e. it
 # read as "the decoder does not work here" rather than as a bug.
 DEFN_M = re.compile(r'(?m)^(lbl_[0-9A-Fa-f]+):')
+# A CONVERTED function's definition in src/: `[static] [asm] <type> lbl_X(` at
+# column 0.  Deliberately matches the `asm` stubs too -- they are entry points
+# just the same, and a stub's label is already in the asm scan anyway.
+CDEFN = re.compile(r'(?m)^(?:static\s+)?(?:asm\s+)?[A-Za-z_][A-Za-z0-9_ \*]*?\b'
+                   r'(lbl_[0-9A-Fa-f]+)\s*\(')
 BRANCH = re.compile(r'(?m)^/\* [0-9A-F]{8} [0-9A-F]{8} \*/[ \t]+b[a-z]*[+-]?[ \t]+'
                     r'[^\n]*?(lbl_[0-9A-Fa-f]+)')
 MAGIC_S = ['0x43300000', '0x80000000']
@@ -128,12 +133,25 @@ def data_text(tree, stem):
 
 
 def defined_labels(tree, stem):
+    """Every function entry point in the module -- STILL-ASM *AND* CONVERTED.
+
+    Both halves are required, and run 11 proved it by regression.  Scanning only
+    `asm/nonmatchings/` measures the bias against still-asm labels alone, so
+    every `_prolog +` target whose function has since been CONVERTED counts as a
+    miss: mini_fight's hit rate decayed 149/149 -> 146/149 across its own run and
+    the tool began printing "distrust d-JUMPTBL" at a module that gates GOLDEN.
+    The hit rate is supposed to say "the decoder works here", and instead it was
+    silently reporting "this module made progress".
+    """
     out = set()
     for f in glob.glob(os.path.join(tree, 'asm', 'nonmatchings', stem, '*.s')):
         b = os.path.basename(f)[:-2]
         if re.fullmatch(r'lbl_[0-9A-Fa-f]+', b):
             out.add(int(b[4:], 16))
         for m in DEFN_M.finditer(open(f, errors='surrogateescape').read()):
+            out.add(int(m.group(1)[4:], 16))
+    for f in glob.glob(os.path.join(tree, 'src', stem + '*.c')):
+        for m in CDEFN.finditer(open(f, errors='surrogateescape').read()):
             out.add(int(m.group(1)[4:], 16))
     return out
 

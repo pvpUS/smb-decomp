@@ -82,9 +82,29 @@ def purify(tree, rel, apply_):
         return None
 
     prefix = body[:starts[0][0]]
+
+    # TRAILING FILE-SCOPE DECLARATIONS BELONG TO EVERY OUTPUT, NOT THE LAST ONE.
+    #
+    # rel_split puts a file's invented `struct` above `#pragma force_active
+    # reset` -- i.e. AFTER the final function body, not in the prefix.  Slicing
+    # blocks by definition-start alone hands it to whichever group holds the last
+    # function, and every other output that references the type dies with
+    # `illegal use of incomplete struct`.  mini_race hit exactly this purifying
+    # mini_race_49.c (`struct RaceSub49`) in run 11 and repaired it by hand.
+    #
+    # It fails loudly at compile time, so this is not in the file-destroying
+    # class -- but it makes the tool unusable on any file carrying a type.
+    # Everything after the last function's closing brace is a suffix.
+    last = len(body)
+    while last > starts[-1][0] and body[last - 1].strip() != '}':
+        last -= 1
+    suffix = body[last:]
+    while suffix and suffix[0].strip() == '':
+        suffix.pop(0)
+
     blocks = []
     for k, (s, lbl, is_asm) in enumerate(starts):
-        e = starts[k + 1][0] if k + 1 < len(starts) else len(body)
+        e = starts[k + 1][0] if k + 1 < len(starts) else last
         blk = body[s:e]
         while blk and blk[-1].strip() == '':
             blk.pop()
@@ -153,6 +173,10 @@ def purify(tree, rel, apply_):
             blk += [first] + b[1:] + ['']
         while blk and blk[-1].strip() == '':
             blk.pop()
+        if suffix:
+            blk += [''] + list(suffix)
+            while blk and blk[-1].strip() == '':
+                blk.pop()
         # The shared header carries a forward declaration for everything in the
         # original TU.  A `static` one in a file that no longer defines that
         # function is a promise the file cannot keep, so strip exactly those.

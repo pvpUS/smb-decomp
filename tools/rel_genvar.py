@@ -40,7 +40,16 @@ base = sys.argv[1]
 varf = sys.argv[2]
 outdir = sys.argv[3]
 
-s = open(base, encoding='utf-8', errors='surrogateescape').read()
+# Read with newline='' so the base file's OWN line ending is observable, then
+# normalise to '\n' for all the internal rewriting and re-apply it on the way
+# out.  Without this the tool emitted bare LF into a CRLF tree, so copying a
+# winning variant straight into src/ silently rewrote the whole file's line
+# endings -- a whole-file diff on harvest, for a byte-identical object.
+# Reported independently by mini_bowling, test_mode and mini_bowling's own
+# worker in run 11; two of them had to normalise a match by hand afterwards.
+_raw = open(base, encoding='utf-8', errors='surrogateescape', newline='').read()
+NL = '\r\n' if '\r\n' in _raw else '\n'
+s = _raw.replace('\r\n', '\n')
 i = s.index('#pragma force_active on')
 head = s[:i]
 
@@ -90,5 +99,5 @@ for n, (name, body) in enumerate(ns['VARIANTS']):
             print('  prototype rewritten: %s  ->  %s' % (old, new))
     p = os.path.join(outdir, '%02d_%s.c' % (n, name))
     open(p, 'w', encoding='utf-8', errors='surrogateescape',
-         newline='\n').write(h + body)
+         newline='').write((h + body).replace('\r\n', '\n').replace('\n', NL))
 print('wrote %d variants to %s' % (len(ns['VARIANTS']), outdir))
