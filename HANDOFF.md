@@ -329,49 +329,93 @@ module, so **option currently has no way to test a second carve**;
 `rel_probe.py` **needs the module's full include preamble**, not `global.h`
 (documented at `c4f61c4`, but the tool could read it automatically).
 
+### RUN-11 PREP DONE (post-run-10, commit `26b82df`)
+
+- **Pushed**: `fork/wip/rel-drafts-and-dol-matches` at `27223b0` (was `1ef703e`).
+- **`tools/rel_census.py` is BUILT** — the per-function census, the run's #1
+  follow-up. It decodes the `.data` jump tables instead of guessing. Two things
+  run 10's two independent versions both got wrong, now fixed:
+  - **the `_prolog +` bias is MODULE-DEPENDENT** — measured **0xD0** for
+    mini_bowling/mini_race/mini_pilot/sel_ngc/test_mode, **0xC8** for
+    mini_fight/mini_billiards/option, **0x14C** for mini_golf. mini_race
+    hard-coded 0xD0; test_mode used no bias, making its filter hit 12% of
+    targets, i.e. **nearly inert** — the `blr` rule was doing all its work.
+    The tool derives it per module and reports the hit rate (100% everywhere,
+    runner-up 13-50%).
+  - **a `_prolog + X` target is NOT always a switch arm** — it is equally often
+    a **vtable entry, i.e. a real function**. Excluding them wholesale dropped
+    9 real functions from mini_race and 23 from mini_fight. A switch arm only
+    exists in a row that contains a `bctr`, so the exclusion is scoped to those.
+  Validated against the agents' own tables: mini_race 108/13,850,
+  mini_billiards 36/25,672, **test_mode 53/12,649 with all four categories
+  identical**, plus option, mini_golf, sel_ngc, mini_bowling exact. Conservative
+  inside `bctr` rows (mini_fight: 108 vs the agent's hand-derived 127).
+- **`tools/rel_purify.py` is PROMOTED** (mini_race's + mini_fight's merged) —
+  and promoting it **caught a file-destroying bug both versions ship**. They
+  name outputs `<base>b.c`, `<base>c.c` … unconditionally; in an already-split
+  tree those names are taken. Purifying `mini_race_28.c` **overwrote
+  `src/mini_race_28b.c`, deleting `lbl_00004910` (168 instructions)**, added a
+  duplicate SOURCES line, and built clean, non-golden, exit 0. **That is the
+  run-9 `isolate.py` defect reintroduced — the third tool to hit it.** Fixed by
+  choosing free suffixes. Also fixed: both strip `static` from every definition,
+  promoting file-local symbols to global and changing the REL's symbol table
+  even when `.text` is byte-identical. Verified: `mini_race_28.c` purified into
+  a pure-C and a pure-asm TU **gates GOLDEN**.
+- **All nine warm copies RESET to `26b82df`, each rebuilt to its golden sha1
+  with `rel_sweep --gate` from DELETED objects. `fail=0`.** Re-run with
+  `C:/tmp/smbm/warm_reset_run11.sh`. CW temps `C:/tmp/tmp_<mod>` exist.
+- **`C:/tmp/smbm/RUN11_BRIEF.md` is written** — hand it to every module agent.
+  It leads with the census, not with a target list.
+- **`C:/tmp/smbm/RUN10_RESULTS.md`** holds all nine per-module reports.
+- **Harvested but NOT promoted**, in `C:/tmp/smbm/_run10_harvest/`:
+  `leafsplit.py` (does what `rel_ssplit` cannot — `bctr` rows — but is
+  **unaudited for the naming hazard above**), mini_race's `rel_ssplit` patches
+  (`--extra-start`, a *checked* `--allow-bctr`), and `magicmap.py`.
+- Still unfixed: `rel_merge_tu.py` drops per-file `//@SUB` prototype retypes;
+  `rel_isolate.py` leaves a stray blank line before `#pragma force_active
+  reset`; `rel_carve.py` refuses `--list` and `--from worktree` on an
+  already-carved module, so **option has no way to test a second carve**;
+  `rel_ssplit.py` still misses leaf functions.
+
 ### NEXT RUN — ranked
 
-1. **Build the `_prolog +` entry decoder** (§ above), then **re-derive every
-   module's census per FUNCTION with both magic patterns.** Two modules were
+1. **Run `tools/rel_census.py` in every module first.** Two modules' tables were
    wrong by 6,170 insn this run and only four of nine have had a trustworthy
-   pass. This is still the cheapest instruction in the project.
-2. **Promote `rel_purify.py` / `isolate_mixed.py` / `leafsplit.py`** — two agents
-   built the same isolate-a-mixed-TU tool independently, which is exactly the
-   waste run 9 flagged and run 10 repeated.
-3. **mini_fight `lbl_00004D14`(438) is one register-numbering away** — fully
+   pass. Still the cheapest instruction in the project.
+2. **mini_fight `lbl_00004D14`(438) is one register-numbering away** — fully
    decoded, byte-exact except three callee-saved registers, and the mechanism is
    understood (the original keeps `lbl_0001C068` out of the auto-hoisted class).
    Then `lbl_00004498`(543) in the same shape. **Best ~981 insn in the project.**
-4. **mini_golf: the carve is landed and the small functions are the way in.**
+3. **mini_golf: the carve is landed and the small functions are the way in.**
    214-253 insn each, `lbl_0000E99C`(480) fully analysed but unwritten, three
    arms ending in the verbatim body of the already-matched `lbl_0000C230`.
-5. **test_mode `lbl_000057C0`(908) has now gone TWO runs unstarted** — its #1
+4. **test_mode `lbl_000057C0`(908) has now gone TWO runs unstarted** — its #1
    target both times, and the module is fully isolated so it gets the scheduler
    free. Assign it explicitly or drop it. (This is the mini_billiards `A054`
    pattern; that one turned out to be a genuine drop.)
-6. **mini_pilot: nine c-FREE functions / 2,151 insn untouched**, module now fully
+5. **mini_pilot: nine c-FREE functions / 2,151 insn untouched**, module now fully
    isolated (35 fns, 35 files, zero group files). Plus the free carve
    `lbl_0000B624`(+298) or `lbl_0000BACC`(+234), **verified accepted**. Also
    re-measure `lbl_000097C8` and `lbl_00003BDC` — their figures are inherited,
    **and this is the module where a function was retired on a number wrong by 13.**
-7. **mini_bowling: 11 never-attempted c-FREE functions / 5,206 insn**, every one
+6. **mini_bowling: 11 never-attempted c-FREE functions / 5,206 insn**, every one
    in a single-asm-block file. **That, not the magic carve, is where its volume
    is** — its own closing words. Plus `lbl_000027B0` at **1 in 1** (a commutative
    operand swap).
-8. **mini_billiards `lbl_0000C10C`(468)** — isolated, c-FREE, and A054's own
+7. **mini_billiards `lbl_0000C10C`(468)** — isolated, c-FREE, and A054's own
    static helper; plus `lbl_0000C85C`(530), both now scheduler-on at zero setup.
    **`lbl_0000A054` is DROPPED** (608 in 290, span 100%).
-9. **sel_ngc's tree is staged**: `lbl_0000B1C0`(472) already sits in the
+8. **sel_ngc's tree is staged**: `lbl_0000B1C0`(472) already sits in the
    magic-owning TU and gates GOLDEN, so run 11 iterates in place. Then
    `B920`(370) + `BEE8`(396) with **zero already-C functions deoptimised.**
    Corrected ceiling **39.65%**, not 34.0%.
-10. **mini_race: 61 fns / 6,703 reachable no-carve** (run 9 said 40 / 5,065), and
-    the `lbl_00015E08` phase-1 family is **247 insn in 5 near-identical
-    functions** — crack one, the other four are near-free.
-11. **option is genuinely capped at ~42%**: 8 fns / 4,261 behind a proven-
-    unreachable prologue. Its live plays are the `C270` merge (**1,299**) and
-    finishing the `C380` group. `lbl_000021D8`(293) is **56 in 41 and the whole
-    residual is ONE callee-saved transposition.**
+9. **mini_race: 61 fns / 6,703 reachable no-carve** (run 9 said 40 / 5,065), and
+   the `lbl_00015E08` phase-1 family is **247 insn in 5 near-identical
+   functions** — crack one, the other four are near-free.
+10. **option is genuinely capped at ~42%**: 8 fns / 4,261 behind a proven-
+   unreachable prologue. Its live plays are the `C270` merge (**1,299**) and
+   finishing the `C380` group. `lbl_000021D8`(293) is **56 in 41 and the whole
+   residual is ONE callee-saved transposition.**
 
 ---
 
