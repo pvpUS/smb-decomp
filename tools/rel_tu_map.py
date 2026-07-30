@@ -51,8 +51,28 @@ import os
 import re
 import sys
 
-MODULES = ['mini_bowling', 'mini_race', 'mini_fight',
-           'mini_pilot', 'mini_golf', 'mini_billiards']
+MODULES = ['mini_bowling', 'mini_race', 'mini_fight', 'mini_pilot',
+           'mini_golf', 'mini_billiards', 'sel_ngc', 'option', 'test_mode']
+
+# THE MODULE NAME AND THE ASM STEM DIVERGE, AND ONLY FOR sel_ngc.
+#
+# `rel_sweep`, `rel_census`, `rel_merge_tu` and friends take the MODULE name
+# (`sel_ngc`); this tool and `rel_carve` used the argument directly as the asm
+# STEM, so `rel_tu_map.py sel_ngc` died with `FileNotFoundError: asm\sel_ngc.s`
+# and only `sel_ngc_rel` worked.  That inconsistency is not a papercut: the same
+# hazard made `rel_rowcount` silently report ZERO rows for sel_ngc in run 10 --
+# a wrong answer, not an error.  Accept either spelling everywhere.
+STEM = {'sel_ngc': 'sel_ngc_rel'}
+
+
+def resolve_stem(name):
+    """module name -> asm/src stem.  Accepts a stem unchanged."""
+    if name in STEM:
+        return STEM[name]
+    if name in STEM.values() or name in MODULES:
+        return name
+    sys.exit('unknown module %r -- expected one of: %s'
+             % (name, ', '.join(MODULES)))
 
 INSN = re.compile(r'/\* [0-9A-Fa-f]{8} ')
 LABEL = re.compile(r'\blbl_[0-9A-Fa-f]+\b')
@@ -178,7 +198,8 @@ def main():
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     args = [a for a in sys.argv[1:] if a != '-v']
     verbose = '-v' in sys.argv[1:]
-    mods = MODULES if (not args or args == ['--all']) else args
+    mods = [resolve_stem(a)
+            for a in (MODULES if (not args or args == ['--all']) else args)]
     rows = [r for r in (analyse(root, m, verbose or len(mods) == 1) for m in mods) if r]
     if len(rows) > 1:
         print('\n=== summary ===')

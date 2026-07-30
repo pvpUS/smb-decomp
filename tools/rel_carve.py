@@ -327,7 +327,11 @@ def main():
     ap.add_argument('--force', action='store_true',
                     help='carve even if --into is not the first-use owner')
     a = ap.parse_args()
-    mod = a.module
+    # Accept the MODULE name as well as the asm STEM.  Every other tool
+    # (rel_sweep, rel_census, rel_merge_tu, rel_structcheck) takes `sel_ngc`,
+    # and this one silently required `sel_ngc_rel` -- the same module-vs-stem
+    # hazard that made rel_rowcount report ZERO rows in run 10.
+    mod = {'sel_ngc': 'sel_ngc_rel'}.get(a.module, a.module)
 
     if a.list:
         return do_list(mod, a.ref)
