@@ -201,16 +201,71 @@ void lbl_000101BC(void);
 void lbl_00010214(void);
 void lbl_00010438(void);
 void lbl_00011330(void);
-void lbl_00011424(void);
 void lbl_00011688(void);
 void lbl_00011728(void);
 void lbl_00011824(void);
 void lbl_000118E4(void);
 
 #pragma force_active on
-asm void lbl_00011424(void)
+void lbl_00011424(u8 *out, u8 *e)
 {
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_00011424.s"
+    u8 *p = lbl_00011CB0;
+    u8 *t = lbl_00012730;
+    f32 cur = *(f32 *)(e + 4);
+    s32 idx = *(s8 *)(e + 0xF) - 5;
+    if (cur > *(f32 *)(p + 0x498) ||
+        (cur < *(f32 *)(p + 0x49C) && *(s32 *)(e + 0x48) == 5))
+    {
+        *out = 0;
+        return;
+    }
+
+    switch (*(s32 *)(e + 0x48))
+    {
+    case 4:
+        *(f32 *)(e + 4) += *(f64 *)(p + 0x330) * (((f32 **)(t + 0x4D30))[idx][*(s32 *)(e + 0x48)] - cur);
+        break;
+    case 5:
+        *(f32 *)(e + 4) += *(f64 *)(p + 0x58) * (((f32 **)(t + 0x4D30))[idx][*(s32 *)(e + 0x48)] - cur);
+        break;
+    default:
+        *(f32 *)(e + 4) += *(f64 *)(p + 0x180) * (((f32 **)(t + 0x4D30))[idx][*(s32 *)(e + 0x48)] - cur);
+        break;
+    }
+
+    *(s16 *)(e + 0x68) = *(f32 *)(p + 0x358) *
+        (((f32 **)(t + 0x4D30))[idx][1] - *(f32 *)(e + 4));
+
+    switch (*(s32 *)(e + 0x48))
+    {
+    case 1:
+        *(e + 0xC) = 0x80;
+        break;
+    default:
+        *(e + 0xC) = 0xFF;
+        break;
+    }
+    *(e + 0xD) = *(e + 0xC);
+    *(e + 0xE) = *(e + 0xC);
+
+    switch (*(s32 *)(e + 0x48))
+    {
+    case 2:
+        *(e + 0x70) = *(f64 *)(p + 0x198) *
+            (*(f64 *)(p + 0x30) - __fabs(mathutil_sin(globalAnimTimer << 9)));
+        break;
+    case 3:
+        *(e + 0x70) = *(f64 *)(p + 0x198) *
+            (*(f64 *)(p + 0x30) - (f64)((globalAnimTimer >> 2) & 1));
+        break;
+    default:
+        *(e + 0x70) = 0;
+        break;
+    }
+    *(e + 0x71) = *(e + 0x70);
+    *(e + 0x72) = *(e + 0x70);
+
+    if (*(s32 *)(e + 0x48) == 3)
+        *(f32 *)(e + 0x4C) = *(f32 *)(p + 0x200);
 }
 #pragma force_active reset

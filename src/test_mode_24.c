@@ -278,9 +278,10 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_00002760(void)
+void lbl_00002760(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00002760.s"
+    u8 *p = lbl_1000006C;
+
+    nlObjModelListFree(p + 8, p + 0xC);
 }
 #pragma force_active reset

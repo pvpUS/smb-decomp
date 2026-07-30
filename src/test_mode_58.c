@@ -216,7 +216,7 @@ void lbl_00008808(void);
 void lbl_0000884C(void);
 void lbl_00008ADC(void);
 void lbl_00008B00(void);
-void lbl_00008B44(void);
+void lbl_00008B44(u8 *p);
 void lbl_00008F40(void);
 void lbl_00009060(void);
 void lbl_00009338(void);
@@ -278,9 +278,8 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_00008B44(void)
+void lbl_00008B44(u8 *p)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00008B44.s"
+    preview_free(*(struct Preview **)(p + 0x2C));
 }
 #pragma force_active reset

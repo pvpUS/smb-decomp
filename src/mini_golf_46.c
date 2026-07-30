@@ -159,7 +159,7 @@ void lbl_000092D0(void);
 void lbl_000092E0(void);
 void lbl_000092F0(void);
 void lbl_00009300(void);
-void lbl_00009310(void);
+u8 lbl_00009310(void);
 void lbl_00009320(void);
 void lbl_00009340(void);
 void lbl_00009360(void);
@@ -209,9 +209,9 @@ void lbl_0000F750(void);
 void lbl_0000F7E8(void);
 void lbl_0000FA18(void);
 void lbl_0000FBC8(void);
-void lbl_0000FCE0(void);
+void lbl_0000FCE0(struct Ball *ball);
 void lbl_000100D4(void);
-void lbl_00010304(void);
+void lbl_00010304(struct Ball *ball, struct PhysicsBall *physBall, int c);
 void lbl_000106B8(void);
 void lbl_00010808(void);
 void lbl_000109CC(void);
@@ -257,9 +257,99 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-asm void lbl_0000FCE0(void)
+void lbl_0000FCE0(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_0000FCE0.s"
+    struct PhysicsBall pb;
+    u8 *pool = (u8 *)lbl_000264A8;
+    u8 *st = (u8 *)lbl_10000170;
+    s32 ang;
+    f32 t;
+    f32 sq;
+    f32 v;
+
+    ball->flags |= 0x10000;
+    if (globalAnimTimer - *(u32 *)(st + 0x14) != 1) {
+        *(s32 *)(st + 0x18) = 0;
+        *(u32 *)(st + 0x14) = globalAnimTimer;
+    } else {
+        *(s32 *)(st + 0x18) = *(s32 *)(st + 0x18) + 1;
+        *(u32 *)(st + 0x14) = globalAnimTimer;
+    }
+    lbl_00010304(ball, &pb, 0);
+    handle_ball_rotational_kinematics(ball, &pb, 0);
+    update_ball_ape_transform(ball, &pb, 0);
+    check_ball_teeter(ball->ape);
+    if ((ball->flags & 4) && !lbl_00009310()) {
+        v = mathutil_vec_len(&ball->vel);
+        if (v < *(f32 *)(pool + 0x48))
+            u_play_sound_0(0x17);
+        else if (v < *(f32 *)(pool + 0x4c))
+            u_play_sound_0(0x18);
+        else
+            u_play_sound_0(0x1a);
+    }
+    if (cameraInfo[modeCtrl.currPlayer].subState == 7) {
+        ball->unk148 = 0;
+        *(s32 *)(st + 0) = 0;
+        *(s32 *)(st + 0x14) = 0;
+        *(s32 *)(st + 0x18) = 0;
+        st[8] = 9;
+    }
+    ang = __fabs(mathutil_atan(
+        mathutil_sqrt(mathutil_sum_of_sq_3(ball->unk114.x, *(f32 *)(pool + 0x30),
+                                           ball->unk114.z)) / ball->unk114.y));
+    window_set_cursor_pos(1, 1);
+    if (*(s32 *)(st + 0x10) > 0x3000)
+        *(s32 *)(st + 0x10) = 0x3000;
+    if (*(s32 *)(st + 0x10) < -0x1000)
+        *(s32 *)(st + 0x10) = -0x1000;
+    if (*(u32 *)(st + 0x18) > 0x3c && ball->unk80 > 0x3c && ang < 0x1000 &&
+        mathutil_vec_len(&ball->vel) < *(f64 *)(pool + 0x50) &&
+        (*(u32 *)&pb & 1)) {
+        t = *(f64 *)(pool + 0x58) * ball->accel;
+        sq = mathutil_sum_of_sq_2(ball->vel.x, ball->vel.z);
+        if (sq < t * t) {
+            ball->vel.x = *(f32 *)(pool + 0x30);
+            ball->vel.y = *(f32 *)(pool + 0x30);
+            ball->vel.z = *(f32 *)(pool + 0x30);
+            ball->unk148 = 0;
+            *(s32 *)(st + 0x14) = 0;
+            *(s32 *)(st + 0x18) = 0;
+            *(s32 *)(st + 0) = 0;
+            st[8] = 9;
+        } else {
+            sq = mathutil_sqrt(sq);
+            sq = (sq - t) / sq;
+            ball->vel.x = ball->vel.x * sq;
+            ball->vel.z = ball->vel.z * sq;
+        }
+    }
+    if (st[8] == modeCtrl.currPlayer) {
+        if (*(f32 *)(st + 4) <= *(f64 *)(pool + 0x60))
+            *(s32 *)(st + 0) = *(s32 *)(st + 0) + 1;
+        else
+            *(s32 *)(st + 0) = 0;
+        *(f32 *)(st + 4) = mathutil_vec_len(&ball->vel);
+        if (*(u32 *)(st + 0) > 0x3c) {
+            ball->vel.x = *(f32 *)(pool + 0x30);
+            ball->vel.y = *(f32 *)(pool + 0x30);
+            ball->vel.z = *(f32 *)(pool + 0x30);
+            ball->unk148 = 0;
+            *(s32 *)(st + 0) = 0;
+            *(s32 *)(st + 0x14) = 0;
+            *(s32 *)(st + 0x18) = 0;
+            st[8] = 9;
+        }
+        if (lbl_00009310()) {
+            ball->pos.x = ball->prevPos.x;
+            ball->pos.z = ball->prevPos.z;
+            ball->vel.x = *(f32 *)(pool + 0x30);
+            ball->vel.z = *(f32 *)(pool + 0x30);
+        }
+    } else {
+        st[8] = modeCtrl.currPlayer;
+        *(s32 *)(st + 0) = 0;
+    }
+    ball->unk80 = ball->unk80 + 1;
 }
 #pragma force_active reset

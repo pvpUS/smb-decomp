@@ -395,21 +395,39 @@ void lbl_0001A554(void);
 void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
+static void lbl_00012A48(void);
+static void lbl_000133A0(void);
+static void lbl_000130AC(void);
 #pragma force_active on
 asm void lbl_000122C8(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_000122C8.s"
 }
+static asm void lbl_00012A48(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00012A48.s"
+}
 asm void lbl_00012E00(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_00012E00.s"
 }
+static asm void lbl_000130AC(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_000130AC.s"
+}
 asm void lbl_000131C4(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_000131C4.s"
+}
+static asm void lbl_000133A0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_000133A0.s"
 }
 asm void lbl_000135DC(void)
 {

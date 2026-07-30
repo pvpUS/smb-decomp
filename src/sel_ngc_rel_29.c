@@ -173,7 +173,7 @@ void lbl_0000A840(void);
 void lbl_0000A870(void);
 void lbl_0000A950(void);
 void lbl_0000AFB0(struct Sprite *sprite);
-void lbl_0000B0FC(void);
+void lbl_0000B0FC(s8 *alive, struct Sprite *sprite);
 void lbl_0000B1C0(void);
 void lbl_0000B920(void);
 void lbl_0000BEE8(void);
@@ -448,5 +448,35 @@ void lbl_0000AFB0(struct Sprite *sprite)
     set_text_mul_color(0xFFFF00);
     set_text_pos(sprite->left, sprite->top);
     sprite_puts(sprite->text);
+}
+#pragma force_active reset
+
+#pragma force_active on
+// sprite mainFunc: ease towards the selected/unselected slot for this tag.
+void lbl_0000B0FC(s8 *alive, struct Sprite *sprite)
+{
+    f32 *tbl = (f32 *)lbl_00012730;
+    f64 *k = (f64 *)lbl_00011CB0;
+    int i = sprite->tag - 23;
+
+    switch (sprite->userVar)
+    {
+    case 0:
+        sprite->x = sprite->x + k[11] * (tbl[i * 4 + 12] - sprite->x);
+        sprite->y = sprite->y + k[11] * (tbl[i * 4 + 13] - sprite->y);
+        break;
+    default:
+        sprite->x = sprite->x + k[11] * (tbl[i * 4 + 10] - sprite->x);
+        sprite->y = sprite->y + k[11] * (tbl[i * 4 + 11] - sprite->y);
+        break;
+    }
+}
+#pragma force_active reset
+
+#pragma force_active on
+asm void lbl_0000B1C0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/sel_ngc_rel/lbl_0000B1C0.s"
 }
 #pragma force_active reset

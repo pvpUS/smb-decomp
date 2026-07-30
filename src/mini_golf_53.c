@@ -180,7 +180,7 @@ void lbl_00009478(void);
 void lbl_00009488(void);
 void lbl_00009538(void);
 void lbl_000095C4(void);
-void lbl_000097D8(void);
+u8 lbl_000097D8(void);
 void lbl_00009800(void);
 void lbl_0000982C(void);
 void lbl_00009880(void);
@@ -216,9 +216,9 @@ void lbl_000106B8(void);
 void lbl_00010808(void);
 void lbl_000109CC(void);
 void lbl_00010E68(void);
-void lbl_00010E74(void);
-void lbl_00011254(void);
-void lbl_000115F8(void);
+void lbl_00010E74(s32 idx, u8 mode, f32 x, f32 y);
+void lbl_00011254(s32 idx, u8 mode, f32 x, f32 y);
+void lbl_000115F8(s32 idx, u8 mode, f32 x, f32 y);
 void lbl_0001199C(void);
 void lbl_00011A6C(void);
 void lbl_00011DAC(void);
@@ -257,19 +257,212 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-asm void lbl_00010E74(void)
+void lbl_00010E74(s32 idx, u8 mode, f32 x, f32 y)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_00010E74.s"
+    u8 *tbl = (u8 *)lbl_00026E28;
+    u8 *pool = (u8 *)lbl_00026550;
+    NLsprarg *sp;
+    u8 *p;
+    s32 n;
+    s32 i;
+    s32 j;
+    s32 a;
+
+    if (idx < 0 || idx >= 4)
+        return;
+    p = tbl + idx * 8;
+    p = p + 0x3950;
+    i = (globalAnimTimer >> 3) % (*(u16 *)(p + 4) * 2 - 2);
+    n = *(u16 *)(p + 4);
+    if (i >= n)
+        i = n * 2 - 2 - i;
+    j = ((globalAnimTimer >> 3) - 1) % (*(u16 *)(p + 4) * 2 - 2);
+    n = *(u16 *)(p + 4);
+    if (j >= n)
+        j = n * 2 - 2 - j;
+    sp = (NLsprarg *)(tbl + 0x3860);
+    sp->sprno = (*(u16 **)p)[i];
+    if (mode == 0) {
+        sp->x = *(f64 *)(pool + 0xd0) + x;
+        sp->y = *(f64 *)(pool + 0xd8) + y;
+        sp->zm_x = *(f32 *)(pool + 0xe0);
+        sp->zm_y = *(f32 *)(pool + 0xe4);
+        if (lbl_000097D8()) {
+            sp->ang = *(f32 *)(pool + 0xe8) *
+                      mathutil_sin(globalAnimTimer * 0x190 + 0x4000);
+        } else
+        sp->ang = 0;
+    } else if (mode == 1) {
+        sp->x = *(f64 *)(pool + 0xf0) + x;
+        sp->y = *(f64 *)(pool + 0xf8) + y;
+        sp->zm_x = *(f32 *)(pool + 0x100);
+        sp->zm_y = *(f32 *)(pool + 0x104);
+        if (mathutil_vec_len(&ballInfo[modeCtrl.currPlayer].vel) > *(f64 *)(pool + 0x108)) {
+            sp->ang = sp->ang + 0x2000;
+        } else if (mathutil_vec_len(&ballInfo[modeCtrl.currPlayer].vel) > *(f64 *)(pool + 0x110)) {
+            sp->ang = sp->ang + 0x1000;
+        } else if (mathutil_vec_len(&ballInfo[modeCtrl.currPlayer].vel) > *(f64 *)(pool + 0x118)) {
+            sp->ang = sp->ang + 0x800;
+        } else if (mathutil_vec_len(&ballInfo[modeCtrl.currPlayer].vel) > *(f64 *)(pool + 0x120)) {
+            sp->ang = sp->ang + 0x400;
+        } else if (mathutil_vec_len(&ballInfo[modeCtrl.currPlayer].vel) > *(f64 *)(pool + 0x128)) {
+            sp->ang = sp->ang + 0x200;
+        } else {
+            a = sp->ang;
+            if (a <= 0x100 || 0xff00 <= a) {
+                sp->ang = 0;
+            } else if (a > 0x8000) {
+                sp->ang = a + 0x100;
+            } else if (a <= 0x8000) {
+                sp->ang = a - 0x100;
+            }
+        }
+        if (sp->ang > 0x10000)
+            sp->ang = sp->ang - 0x10000;
+    }
+    sp->z = *(f32 *)(pool + 0x130);
+    sp->trnsl = *(f32 *)(pool + 0x134);
+    nlSprPut(sp);
+    sp = (NLsprarg *)(tbl + 0x3860);
+    sp->sprno = (*(u16 **)p)[j];
+    sp->z = *(f32 *)(pool + 0x138);
+    sp->trnsl = *(f64 *)(pool + 0x140) - (globalAnimTimer & 7) * *(f64 *)(pool + 0x148);
+    nlSprPut(sp);
 }
-asm void lbl_00011254(void)
+void lbl_00011254(s32 idx, u8 mode, f32 x, f32 y)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_00011254.s"
+    u8 *tbl = (u8 *)lbl_00026E28;
+    u8 *pool = (u8 *)lbl_00026550;
+    NLsprarg *sp;
+    u8 *p;
+    s32 n;
+    s32 i;
+    s32 j;
+    s32 a;
+
+    if (idx < 0 || idx >= 4)
+        return;
+    p = tbl + idx * 8;
+    p = p + 0x3970;
+    i = (globalAnimTimer >> 3) % (*(u16 *)(p + 4) * 2 - 2);
+    n = *(u16 *)(p + 4);
+    if (i >= n)
+        i = n * 2 - 2 - i;
+    j = ((globalAnimTimer >> 3) - 1) % (*(u16 *)(p + 4) * 2 - 2);
+    n = *(u16 *)(p + 4);
+    if (j >= n)
+        j = n * 2 - 2 - j;
+    sp = (NLsprarg *)(tbl + 0x38b0);
+    sp->sprno = (*(u16 **)p)[i];
+    if (mode == 0) {
+        sp->x = *(f64 *)(pool + 0xd0) + x;
+        sp->y = *(f64 *)(pool + 0xd8) + y;
+        sp->zm_x = *(f32 *)(pool + 0xe0);
+        sp->zm_y = *(f32 *)(pool + 0xe4);
+        sp->ang = 0;
+    } else if (mode == 1) {
+        sp->x = *(f64 *)(pool + 0xf0) + x;
+        sp->y = *(f64 *)(pool + 0xf8) + y;
+        sp->zm_x = *(f32 *)(pool + 0x100);
+        sp->zm_y = *(f32 *)(pool + 0x104);
+        if (mathutil_vec_len(&ballInfo[modeCtrl.currPlayer].vel) > *(f64 *)(pool + 0x108)) {
+            sp->ang = sp->ang + 0x2000;
+        } else if (mathutil_vec_len(&ballInfo[modeCtrl.currPlayer].vel) > *(f64 *)(pool + 0x110)) {
+            sp->ang = sp->ang + 0x1000;
+        } else if (mathutil_vec_len(&ballInfo[modeCtrl.currPlayer].vel) > *(f64 *)(pool + 0x118)) {
+            sp->ang = sp->ang + 0x800;
+        } else if (mathutil_vec_len(&ballInfo[modeCtrl.currPlayer].vel) > *(f64 *)(pool + 0x120)) {
+            sp->ang = sp->ang + 0x400;
+        } else if (mathutil_vec_len(&ballInfo[modeCtrl.currPlayer].vel) > *(f64 *)(pool + 0x128)) {
+            sp->ang = sp->ang + 0x200;
+        } else {
+            a = sp->ang;
+            if (a <= 0x100 || 0xff00 <= a) {
+                sp->ang = 0;
+            } else if (a > 0x8000) {
+                sp->ang = a + 0x100;
+            } else if (a <= 0x8000) {
+                sp->ang = a - 0x100;
+            }
+        }
+        if (sp->ang > 0x10000)
+            sp->ang = sp->ang - 0x10000;
+    }
+    sp->z = *(f32 *)(pool + 0x130);
+    sp->trnsl = *(f32 *)(pool + 0x134);
+    nlSprPut(sp);
+    sp = (NLsprarg *)(tbl + 0x38b0);
+    sp->sprno = (*(u16 **)p)[j];
+    sp->z = *(f32 *)(pool + 0x138);
+    sp->trnsl = *(f64 *)(pool + 0x140) - (globalAnimTimer & 7) * *(f64 *)(pool + 0x148);
+    nlSprPut(sp);
 }
-asm void lbl_000115F8(void)
+void lbl_000115F8(s32 idx, u8 mode, f32 x, f32 y)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_000115F8.s"
+    u8 *tbl = (u8 *)lbl_00026E28;
+    u8 *pool = (u8 *)lbl_00026550;
+    NLsprarg *sp;
+    u8 *p;
+    s32 n;
+    s32 i;
+    s32 j;
+    s32 a;
+
+    if (idx < 0 || idx >= 4)
+        return;
+    p = tbl + idx * 8;
+    p = p + 0x3990;
+    i = (globalAnimTimer >> 3) % (*(u16 *)(p + 4) * 2 - 2);
+    n = *(u16 *)(p + 4);
+    if (i >= n)
+        i = n * 2 - 2 - i;
+    j = ((globalAnimTimer >> 3) - 1) % (*(u16 *)(p + 4) * 2 - 2);
+    n = *(u16 *)(p + 4);
+    if (j >= n)
+        j = n * 2 - 2 - j;
+    sp = (NLsprarg *)(tbl + 0x3900);
+    sp->sprno = (*(u16 **)p)[i];
+    if (mode == 0) {
+        sp->x = *(f64 *)(pool + 0xd0) + x;
+        sp->y = *(f64 *)(pool + 0xd8) + y;
+        sp->zm_x = *(f32 *)(pool + 0xe0);
+        sp->zm_y = *(f32 *)(pool + 0xe4);
+        sp->ang = 0;
+    } else if (mode == 1) {
+        sp->x = *(f64 *)(pool + 0xf0) + x;
+        sp->y = *(f64 *)(pool + 0xf8) + y;
+        sp->zm_x = *(f32 *)(pool + 0x100);
+        sp->zm_y = *(f32 *)(pool + 0x104);
+        if (mathutil_vec_len(&ballInfo[modeCtrl.currPlayer].vel) > *(f64 *)(pool + 0x108)) {
+            sp->ang = sp->ang + 0x2000;
+        } else if (mathutil_vec_len(&ballInfo[modeCtrl.currPlayer].vel) > *(f64 *)(pool + 0x110)) {
+            sp->ang = sp->ang + 0x1000;
+        } else if (mathutil_vec_len(&ballInfo[modeCtrl.currPlayer].vel) > *(f64 *)(pool + 0x118)) {
+            sp->ang = sp->ang + 0x800;
+        } else if (mathutil_vec_len(&ballInfo[modeCtrl.currPlayer].vel) > *(f64 *)(pool + 0x120)) {
+            sp->ang = sp->ang + 0x400;
+        } else if (mathutil_vec_len(&ballInfo[modeCtrl.currPlayer].vel) > *(f64 *)(pool + 0x128)) {
+            sp->ang = sp->ang + 0x200;
+        } else {
+            a = sp->ang;
+            if (a <= 0x100 || 0xff00 <= a) {
+                sp->ang = 0;
+            } else if (a > 0x8000) {
+                sp->ang = a + 0x100;
+            } else if (a <= 0x8000) {
+                sp->ang = a - 0x100;
+            }
+        }
+        if (sp->ang > 0x10000)
+            sp->ang = sp->ang - 0x10000;
+    }
+    sp->z = *(f32 *)(pool + 0x130);
+    sp->trnsl = *(f32 *)(pool + 0x134);
+    nlSprPut(sp);
+    sp = (NLsprarg *)(tbl + 0x3900);
+    sp->sprno = (*(u16 **)p)[j];
+    sp->z = *(f32 *)(pool + 0x138);
+    sp->trnsl = *(f64 *)(pool + 0x140) - (globalAnimTimer & 7) * *(f64 *)(pool + 0x148);
+    nlSprPut(sp);
 }
 #pragma force_active reset

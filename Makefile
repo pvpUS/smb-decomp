@@ -429,7 +429,6 @@ SOURCES := \
 	src/sel_ngc_rel_28.c \
 	src/sel_ngc_rel_29.c \
 	asm/sel_ngc_rel_d1.s \
-	src/sel_ngc_rel_31.c \
 	src/sel_ngc_rel_32.c \
 	src/sel_ngc_rel_32i.c \
 	src/sel_ngc_rel_32z.c \
@@ -447,7 +446,6 @@ SOURCES := \
 	src/sel_ngc_rel_44.c \
 	src/sel_ngc_rel_45.c \
 	src/sel_ngc_rel_46.c \
-	asm/sel_ngc_rel_d1b.s \
 	src/sel_ngc_rel_47.c \
 	src/sel_ngc_rel_48.c \
 	src/sel_ngc_rel_49.c \
@@ -627,9 +625,28 @@ SOURCES := \
 	src/mini_race_113.c \
 	src/mini_race_114.c \
 	src/mini_race_115.c \
+	src/mini_race_115b.c \
+	src/mini_race_115c.c \
+	src/mini_race_115d.c \
+	src/mini_race_115e.c \
+	src/mini_race_115f.c \
+	src/mini_race_115g.c \
+	src/mini_race_115h.c \
+	src/mini_race_115i.c \
+	src/mini_race_115j.c \
+	src/mini_race_115k.c \
 	src/mini_race_116.c \
 	src/mini_race_117.c \
 	src/mini_race_117b.c \
+	src/mini_race_117bb.c \
+	src/mini_race_117bc.c \
+	src/mini_race_117bd.c \
+	src/mini_race_117be.c \
+	src/mini_race_117bf.c \
+	src/mini_race_117bg.c \
+	src/mini_race_117bgb.c \
+	src/mini_race_117bh.c \
+	src/mini_race_117bi.c \
 	asm/mini_race_d1.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
@@ -785,7 +802,14 @@ SOURCES := \
 	src/mini_fight_17.c \
 	src/mini_fight_18.c \
 	src/mini_fight_18b.c \
+	src/mini_fight_18bb.c \
+	src/mini_fight_18bc.c \
+	src/mini_fight_18bcb.c \
+	src/mini_fight_18bcc.c \
+	src/mini_fight_18bd.c \
 	src/mini_fight_18c.c \
+	src/mini_fight_18cb.c \
+	src/mini_fight_18cc.c \
 	src/mini_fight_18d.c \
 	src/mini_fight_18e.c \
 	src/mini_fight_18f.c \
@@ -830,6 +854,10 @@ SOURCES := \
 	src/mini_fight_55.c \
 	src/mini_fight_56.c \
 	src/mini_fight_57.c \
+	src/mini_fight_57b.c \
+	src/mini_fight_57c.c \
+	src/mini_fight_57d.c \
+	src/mini_fight_57e.c \
 	src/mini_fight_58.c \
 	src/mini_fight_59.c \
 	src/mini_fight_59b.c \
@@ -903,9 +931,39 @@ SOURCES := \
 	src/mini_pilot_9.c \
 	asm/mini_pilot_d1.s \
 	src/mini_pilot_10.c \
+	src/mini_pilot_10b.c \
+	src/mini_pilot_10c.c \
+	src/mini_pilot_10d.c \
+	src/mini_pilot_10e.c \
+	src/mini_pilot_10f.c \
+	src/mini_pilot_10g.c \
+	src/mini_pilot_10h.c \
+	src/mini_pilot_10i.c \
+	src/mini_pilot_10j.c \
+	src/mini_pilot_10k.c \
 	src/mini_pilot_11.c \
 	src/mini_pilot_12.c \
 	src/mini_pilot_12b.c \
+	src/mini_pilot_12bb.c \
+	src/mini_pilot_12bc.c \
+	src/mini_pilot_12bd.c \
+	src/mini_pilot_12be.c \
+	src/mini_pilot_12bf.c \
+	src/mini_pilot_12bg.c \
+	src/mini_pilot_12bh.c \
+	src/mini_pilot_12bi.c \
+	src/mini_pilot_12bj.c \
+	src/mini_pilot_12bk.c \
+	src/mini_pilot_12bl.c \
+	src/mini_pilot_12bm.c \
+	src/mini_pilot_12bn.c \
+	src/mini_pilot_12bo.c \
+	src/mini_pilot_12bp.c \
+	src/mini_pilot_12bq.c \
+	src/mini_pilot_12br.c \
+	src/mini_pilot_12bs.c \
+	src/mini_pilot_12bt.c \
+	src/mini_pilot_12bu.c \
 	src/mini_pilot_13.c \
 	src/mini_pilot_14.c \
 	src/mini_pilot_15.c \
@@ -930,6 +988,13 @@ SOURCES := \
 	src/mini_pilot_28.c \
 	src/mini_pilot_29.c \
 	src/mini_pilot_30.c \
+	src/mini_pilot_30b.c \
+	src/mini_pilot_30c.c \
+	src/mini_pilot_30d.c \
+	src/mini_pilot_30e.c \
+	src/mini_pilot_30f.c \
+	src/mini_pilot_30g.c \
+	src/mini_pilot_30h.c \
 	src/mini_pilot_31.c \
 	asm/mini_pilot_d2.s \
 	src/mini_pilot_32.c \
@@ -1018,6 +1083,7 @@ SOURCES := \
 	src/mini_golf_44.c \
 	src/mini_golf_45.c \
 	src/mini_golf_46.c \
+	asm/mini_golf_d1.s \
 	src/mini_golf_47.c \
 	src/mini_golf_48.c \
 	src/mini_golf_49.c \
@@ -1025,6 +1091,7 @@ SOURCES := \
 	src/mini_golf_51.c \
 	src/mini_golf_52.c \
 	src/mini_golf_53.c \
+	asm/mini_golf_d2.s \
 	src/mini_golf_54.c \
 	src/mini_golf_55.c \
 	src/mini_golf_56.c \
@@ -1048,7 +1115,7 @@ SOURCES := \
 	src/mini_golf_74.c \
 	src/mini_golf_75.c \
 	src/mini_golf_76.c \
-	asm/mini_golf_d1.s
+	asm/mini_golf_d3.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
 mkbe.rel_mini_golf.plf: $(O_FILES)
@@ -1095,6 +1162,8 @@ SOURCES := \
 	src/mini_billiards_31.c \
 	src/mini_billiards_32.c \
 	src/mini_billiards_33.c \
+	src/mini_billiards_33b.c \
+	src/mini_billiards_33c.c \
 	src/mini_billiards_34.c \
 	asm/mini_billiards_d2.s \
 	src/mini_billiards_35.c \
@@ -1144,6 +1213,7 @@ SOURCES := \
 	src/test_mode_6.c \
 	src/test_mode_7.c \
 	src/test_mode_8.c \
+	src/test_mode_8b.c \
 	src/test_mode_9.c \
 	src/test_mode_10.c \
 	src/test_mode_11.c \
@@ -1161,8 +1231,10 @@ SOURCES := \
 	src/test_mode_23.c \
 	src/test_mode_24.c \
 	src/test_mode_25.c \
+	src/test_mode_25b.c \
 	src/test_mode_26.c \
 	src/test_mode_27.c \
+	src/test_mode_27b.c \
 	src/test_mode_28.c \
 	src/test_mode_29.c \
 	src/test_mode_30.c \
@@ -1170,6 +1242,7 @@ SOURCES := \
 	src/test_mode_32.c \
 	src/test_mode_33.c \
 	src/test_mode_34.c \
+	src/test_mode_34b.c \
 	src/test_mode_35.c \
 	src/test_mode_36.c \
 	src/test_mode_37.c \
@@ -1183,6 +1256,7 @@ SOURCES := \
 	src/test_mode_45.c \
 	src/test_mode_46.c \
 	src/test_mode_47.c \
+	src/test_mode_47b.c \
 	src/test_mode_48.c \
 	src/test_mode_49.c \
 	src/test_mode_50.c \
@@ -1246,11 +1320,13 @@ SOURCES := \
 	src/test_mode_108.c \
 	src/test_mode_109.c \
 	src/test_mode_110.c \
+	src/test_mode_110b.c \
 	src/test_mode_111.c \
 	src/test_mode_112.c \
 	src/test_mode_113.c \
 	src/test_mode_114.c \
 	src/test_mode_115.c \
+	src/test_mode_115b.c \
 	src/test_mode_116.c \
 	src/test_mode_117.c \
 	src/test_mode_118.c \
@@ -1304,11 +1380,6 @@ SOURCES := \
 	src/option_28.c \
 	src/option_29.c \
 	src/option_30.c \
-	src/option_31.c \
-	src/option_32.c \
-	src/option_33.c \
-	src/option_34.c \
-	src/option_35.c \
 	src/option_36.c \
 	src/option_36b.c \
 	src/option_36c.c \

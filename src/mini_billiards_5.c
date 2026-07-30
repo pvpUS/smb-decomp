@@ -44,6 +44,32 @@
 #include "nl2ngc.h"
 #include "string.h"
 
+struct BilliardsRec
+{
+    /* +0 */
+    u32 unk0_0 : 11;
+    u32 pad0_11 : 6;
+    s32 unk0_17 : 12;
+    u32 unk0_29 : 1;
+    u32 pad0_30 : 2;
+    /* +4 */
+    s32 unk4_0 : 11;
+    u32 unk4_11 : 4;
+    u32 pad4_15 : 17;
+    /* +8 */
+    u32 unk8_0 : 4;
+    s32 unk8_4 : 7;
+    s32 unk8_11 : 7;
+    s32 unk8_18 : 7;
+    u32 pad8_25 : 7;
+};
+
+struct BilliardsPair
+{
+    struct BilliardsRec a;
+    struct BilliardsRec b;
+};
+
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_billiards.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0001C2B8[];
@@ -127,7 +153,7 @@ extern u8 lbl_10000062[];
 extern u8 lbl_10000064[];
 extern u8 lbl_100000A4[];
 extern u8 lbl_10000A64[];
-extern u8 lbl_10000A70[];
+extern struct BilliardsRec lbl_10000A70[][2];
 extern u8 lbl_10009710[];
 extern u8 lbl_10009878[];
 extern u8 lbl_10009C88[];
@@ -205,7 +231,7 @@ void lbl_00010FD0(void);
 void lbl_000111B4(void);
 void lbl_000115F4(void);
 void lbl_00016D24(void);
-void lbl_00016D9C(void);
+void lbl_00016D9C(int, int);
 void lbl_0001723C(void);
 void lbl_00017408(void);
 void lbl_00017A00(void);
@@ -226,10 +252,34 @@ void lbl_0001A0B0(void);
 void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
-#pragma force_active on
-asm void lbl_00000614(void)
+void lbl_00000614(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00000614.s"
+    int i;
+
+    for (i = 0; i < 1500; i++)
+    {
+        lbl_10000A70[i][0].unk0_0 = 0;
+        lbl_10000A70[i][0].unk8_4 = 0;
+        lbl_10000A70[i][0].unk8_11 = 0;
+        lbl_10000A70[i][0].unk8_18 = 0;
+        lbl_10000A70[i][0].unk0_29 = 0;
+        lbl_10000A70[i][0].unk4_11 = 15;
+        lbl_10000A70[i][0].unk0_17 = 0;
+        lbl_10000A70[i][0].unk8_0 = 15;
+        lbl_10000A70[i][0].unk4_0 = 0;
+        lbl_10000A70[i][1].unk0_0 = 0;
+        lbl_10000A70[i][1].unk8_4 = 0;
+        lbl_10000A70[i][1].unk8_11 = 0;
+        lbl_10000A70[i][1].unk8_18 = 0;
+        lbl_10000A70[i][1].unk0_29 = 0;
+        lbl_10000A70[i][1].unk4_11 = 15;
+        lbl_10000A70[i][1].unk0_17 = 0;
+        lbl_10000A70[i][1].unk8_0 = 15;
+        lbl_10000A70[i][1].unk4_0 = 0;
+    }
+    for (i = 0; i < 10; i++)
+    {
+        lbl_00016D9C(i, 0);
+    }
+    *(s16 *)lbl_10000000 = 0;
 }
-#pragma force_active reset

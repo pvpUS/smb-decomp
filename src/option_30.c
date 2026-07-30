@@ -116,11 +116,12 @@ void lbl_00003B90(void);
 void lbl_00003F10(void);
 s8 *lbl_00003F6C(int);
 void lbl_00003FF0(s8 *, struct Sprite *);
-void lbl_00004204(void);
-void lbl_00004260(void);
-void lbl_000042BC(void);
+void lbl_00004204(int arg0);
+void lbl_00004260(int arg0);
+void lbl_000042BC(NLsprarg *sp, f32 w, f32 h);
 void lbl_000047D0(void);
-void lbl_00004858(void);
+//@SUB void lbl_00004858(void);|void lbl_00004858(s8 *, struct Sprite *);
+void lbl_00004858(s8 *, struct Sprite *);
 void lbl_00004EB4(void);
 void lbl_00005020(void);
 void lbl_00005340(void);
@@ -201,5 +202,164 @@ void lbl_00003FF0(s8 *arg0, struct Sprite *sprite)
         }
         *(f32 *)(p + 8) *= c[1];
     }
+}
+void lbl_00004204(int arg0)
+{
+    u8 *p = (u8 *)lbl_00003F6C(arg0);
+
+    if (p != NULL)
+    {
+        p[0] = 1;
+        if (*(f32 *)(p + 4) > *(f64 *)lbl_0000C388)
+        {
+            *(f32 *)(p + 8) = *(f32 *)(p + 4);
+            *(f32 *)(p + 4) = *(f32 *)lbl_0000C370;
+            p[1] = 0;
+        }
+    }
+}
+void lbl_00004260(int arg0)
+{
+    u8 *p = (u8 *)lbl_00003F6C(arg0);
+
+    if (p != NULL)
+    {
+        p[0] = 2;
+        if (*(f32 *)(p + 4) < *(f64 *)lbl_0000C388)
+        {
+            *(f32 *)(p + 8) = *(f32 *)(p + 4);
+            *(f32 *)(p + 4) = *(f32 *)lbl_0000C370;
+            p[1] = 0;
+        }
+    }
+}
+void lbl_000042BC(NLsprarg *sp, f32 w, f32 h)
+{
+    f64 *c = (f64 *)lbl_0000C370;
+    NLsprarg p;
+    f64 g, hv, i, k, hy, hx, mh, j, l, mw;
+
+    mw = w * sp->zm_x;
+    mh = h * sp->zm_y;
+
+    p = *sp;
+    p.u0 = g = *(c + 7) / w;
+    p.v0 = hv = *(c + 7) / h;
+    p.u1 = i = *(c + 8) - g;
+    p.v1 = j = *(c + 8) - hv;
+    p.zm_x = k = (mw - *(c + 9)) / w;
+    p.zm_y = l = (mh - *(c + 9)) / h;
+    nlSprPut(&p);
+
+    p = *sp;
+    hy = *(c + 11) * mh;
+    p.y = *(c + 10) + (sp->y - hy);
+    p.u0 = g;
+    p.v0 = *(f32 *)c;
+    p.u1 = i;
+    p.v1 = hv;
+    p.zm_x = k;
+    p.zm_y = hv;
+    nlSprPut(&p);
+
+    p = *sp;
+    p.y = (sp->y + hy) - *(c + 10);
+    p.u0 = g;
+    p.v0 = j;
+    p.u1 = i;
+    p.v1 = *(f32 *)(c + 12);
+    p.zm_x = k;
+    p.zm_y = hv;
+    nlSprPut(&p);
+
+    p = *sp;
+    hx = *(c + 11) * mw;
+    p.x = *(c + 10) + (sp->x - hx);
+    p.u0 = *(f32 *)c;
+    p.v0 = hv;
+    p.u1 = g;
+    p.v1 = j;
+    p.zm_x = g;
+    p.zm_y = l;
+    nlSprPut(&p);
+
+    p = *sp;
+    p.x = (sp->x + hx) - *(c + 10);
+    p.u0 = i;
+    p.v0 = hv;
+    p.u1 = *(f32 *)(c + 12);
+    p.v1 = j;
+    p.zm_x = g;
+    p.zm_y = l;
+    nlSprPut(&p);
+
+    p = *sp;
+    p.x = *(c + 10) + (sp->x - hx);
+    p.y = *(c + 10) + (sp->y - hy);
+    p.u0 = *(f32 *)c;
+    p.v0 = *(f32 *)c;
+    p.u1 = g;
+    p.v1 = hv;
+    p.zm_x = g;
+    p.zm_y = hv;
+    nlSprPut(&p);
+
+    p = *sp;
+    p.x = (sp->x + hx) - *(c + 10);
+    p.y = *(c + 10) + (sp->y - hy);
+    p.u0 = i;
+    p.v0 = *(f32 *)c;
+    p.u1 = *(f32 *)(c + 12);
+    p.v1 = hv;
+    p.zm_x = g;
+    p.zm_y = hv;
+    nlSprPut(&p);
+
+    p = *sp;
+    p.x = *(c + 10) + (sp->x - hx);
+    p.y = (sp->y + hy) - *(c + 10);
+    p.u0 = *(f32 *)c;
+    p.v0 = j;
+    p.u1 = g;
+    p.v1 = *(f32 *)(c + 12);
+    p.zm_x = g;
+    p.zm_y = hv;
+    nlSprPut(&p);
+
+    p = *sp;
+    p.x = (sp->x + hx) - *(c + 10);
+    p.y = (sp->y + hy) - *(c + 10);
+    p.u0 = i;
+    p.v0 = j;
+    p.u1 = *(f32 *)(c + 12);
+    p.v1 = *(f32 *)(c + 12);
+    p.zm_x = g;
+    p.zm_y = hv;
+    nlSprPut(&p);
+}
+void lbl_000047D0(void)
+{
+    u8 *p = lbl_0000C370;
+    struct Sprite *sprite = create_sprite();
+
+    if (sprite != NULL)
+    {
+        sprite->type = SPRITE_TYPE_BITMAP;
+        sprite->bmpId = 0x404;
+        sprite->x = *(f32 *)(p + 0x64);
+        sprite->y = *(f32 *)(p + 0x68);
+        sprite->depth = *(f32 *)(p + 0x6C);
+        sprite->textAlign = 4;
+        sprite->flags |= 0x40000;
+        sprintf(sprite->text, (char *)lbl_0000CA30);
+    }
+}
+void lbl_00004858(s8 *arg0, struct Sprite *sprite)
+{
+    f64 *c = (f64 *)lbl_0000C370;
+    s8 *w = *(s8 **)&sprite->filler12[0x2C - 0x12];
+
+    lbl_00003FF0(arg0, sprite);
+    *(f32 *)(lbl_10000000 + 0x48) = *(f32 *)(lbl_10000000 + 0x48) + c[11] * ((c[14] + (c[15] + c[16] * (f64)*(s32 *)(w + 0x14))) - *(f32 *)(lbl_10000000 + 0x48));
 }
 #pragma force_active reset

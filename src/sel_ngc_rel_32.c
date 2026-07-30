@@ -209,11 +209,6 @@ void lbl_00011824(void);
 void lbl_000118E4(void);
 
 #pragma force_active on
-asm void lbl_0000B1C0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_0000B1C0.s"
-}
 asm void lbl_0000B920(void)
 {
     nofralloc

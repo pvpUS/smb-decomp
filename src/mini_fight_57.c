@@ -183,7 +183,7 @@ extern void mathutil_mtxA_tf_vec_xyz();
 extern void mathutil_mtxA_to_mtx();
 extern void mathutil_mtxA_to_quat();
 extern void mathutil_mtxA_translate_xyz();
-extern void mathutil_sin();
+extern float mathutil_sin(int);
 extern void mathutil_tan();
 extern void mathutil_vec_normalize_len();
 extern void mathutil_vec_set_len();
@@ -354,9 +354,9 @@ void lbl_0000FEC8(void);
 void lbl_0000FF30(void);
 void lbl_0000FF34(void);
 void lbl_0000FFC4(void);
-void lbl_00010018(void);
-void lbl_000107B4(void);
-void lbl_00010ADC(void);
+void lbl_00010018(struct Ball *);
+void lbl_000107B4(struct Ball *);
+void lbl_00010ADC(struct Ball *);
 void lbl_00010B98(void);
 void lbl_0001106C(void);
 void lbl_00011270(void);
@@ -398,15 +398,22 @@ void lbl_0001A554(void);
 void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
+void lbl_00010870(struct Ball *);
+void lbl_0001090C(void);
+void lbl_00010A64(struct Ball *);
+void lbl_00010030(void);
+void lbl_000101C8(void);
+void lbl_00010434(void);
 #pragma force_active on
-asm void lbl_00010018(void)
+struct PhysicsBall
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00010018.s"
-}
-asm void lbl_000107B4(void)
+    u8 filler0[0x5C];
+};
+
+void lbl_00010018(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000107B4.s"
+    ball->flags &= ~0x400000;
+    *(s16 *)&ball->filler14C[0] = 0;
 }
+
 #pragma force_active reset

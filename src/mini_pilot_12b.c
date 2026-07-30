@@ -231,6 +231,33 @@ void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
+void lbl_000023BC(void);
+void lbl_00002408(void);
+void lbl_000024D0(void);
+void lbl_0000253C(void);
+void lbl_000026BC(void);
+void lbl_00002890(void);
+void lbl_00002A2C(void);
+void lbl_00002AE8(void);
+void lbl_00002C18(void);
+void lbl_00002D24(void);
+void lbl_00002E04(void);
+void lbl_00002E94(void);
+void lbl_00002EB4(void);
+void lbl_00002FF4(void);
+void lbl_00003298(void);
+void lbl_00003374(void);
+void lbl_000035B8(void);
+void lbl_00003860(void);
+void lbl_000038D4(void);
+void lbl_00003AD0(void);
+// UNVERIFIED: 6-byte per-player record at lbl_80285A68 (a DOL global);
+// three s16 counters indexed by the difficulty/floor byte.
+struct PilotPlayRec
+{
+    s16 s[3];
+};
+
 #pragma force_active on
 asm void lbl_000022D8(void)
 {

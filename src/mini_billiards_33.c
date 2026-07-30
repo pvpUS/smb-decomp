@@ -195,7 +195,7 @@ void lbl_00009EC4(void);
 void lbl_00009F0C(void);
 void lbl_00009F3C(void);
 void lbl_0000A054(void);
-static void lbl_0000C10C(void);
+void lbl_0000C10C(void);
 void lbl_0000C85C(void);
 void lbl_0000D0A4(void);
 void lbl_0000D330(void);
@@ -232,14 +232,5 @@ asm void lbl_0000A054(void)
     nofralloc
 #include "../asm/nonmatchings/mini_billiards/lbl_0000A054.s"
 }
-static asm void lbl_0000C10C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_0000C10C.s"
-}
-asm void lbl_0000C85C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_0000C85C.s"
-}
+
 #pragma force_active reset

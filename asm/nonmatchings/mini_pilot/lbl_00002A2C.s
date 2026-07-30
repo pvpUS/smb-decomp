@@ -1,0 +1,48 @@
+/* 00002A2C 7C0802A6 */ mflr r0
+/* 00002A30 3C600000 */ lis r3, lbl_802F1FD0@ha
+/* 00002A34 90010004 */ stw r0, 4(r1)
+/* 00002A38 38830000 */ addi r4, r3, lbl_802F1FD0@l
+/* 00002A3C 3C600000 */ lis r3, currentBall@ha
+/* 00002A40 9421FFF8 */ stwu r1, -8(r1)
+/* 00002A44 3CA00000 */ lis r5, lbl_0000BE80@ha
+/* 00002A48 80040000 */ lwz r0, 0(r4)
+/* 00002A4C 80C30000 */ lwz r6, currentBall@l(r3)
+/* 00002A50 3C600000 */ lis r3, lbl_802F1FDC@ha
+/* 00002A54 60000020 */ ori r0, r0, 0x20
+/* 00002A58 90040000 */ stw r0, 0(r4)
+/* 00002A5C 38850000 */ addi r4, r5, lbl_0000BE80@l
+/* 00002A60 C8040198 */ lfd f0, 0x198(r4)
+/* 00002A64 C4230000 */ lfsu f1, lbl_802F1FDC@l(r3)
+/* 00002A68 FC010040 */ fcmpo cr0, f1, f0
+/* 00002A6C 4C411382 */ cror 2, 1, 2
+/* 00002A70 4082000C */ bne lbl_00002A7C
+/* 00002A74 C00401A0 */ lfs f0, 0x1a0(r4)
+/* 00002A78 D0030000 */ stfs f0, 0(r3)
+lbl_00002A7C:
+/* 00002A7C C00401A4 */ lfs f0, 0x1a4(r4)
+/* 00002A80 386000EF */ li r3, 0xef
+/* 00002A84 D0060070 */ stfs f0, 0x70(r6)
+/* 00002A88 4BFFD6C5 */ bl SoundOffID
+/* 00002A8C 3C600000 */ lis r3, lbl_1000001E@ha
+/* 00002A90 38830000 */ addi r4, r3, lbl_1000001E@l
+/* 00002A94 38000000 */ li r0, 0
+/* 00002A98 3C600000 */ lis r3, lbl_802F1FF0@ha
+/* 00002A9C B0040000 */ sth r0, 0(r4)
+/* 00002AA0 38830000 */ addi r4, r3, lbl_802F1FF0@l
+/* 00002AA4 90040000 */ stw r0, 0(r4)
+/* 00002AA8 3C600000 */ lis r3, lbl_802F1FF6@ha
+/* 00002AAC 38A30000 */ addi r5, r3, lbl_802F1FF6@l
+/* 00002AB0 38000010 */ li r0, 0x10
+/* 00002AB4 B0050000 */ sth r0, 0(r5)
+/* 00002AB8 3C600000 */ lis r3, lbl_0000C748@ha
+/* 00002ABC 3C800000 */ lis r4, lbl_802F1FF4@ha
+/* 00002AC0 3800FFFF */ li r0, -1
+/* 00002AC4 B0040000 */ sth r0, lbl_802F1FF4@l(r4)
+/* 00002AC8 38630000 */ addi r3, r3, lbl_0000C748@l
+/* 00002ACC 81830040 */ lwz r12, 0x40(r3)
+/* 00002AD0 7D8803A6 */ mtlr r12
+/* 00002AD4 4E800021 */ blrl 
+/* 00002AD8 8001000C */ lwz r0, 0xc(r1)
+/* 00002ADC 38210008 */ addi r1, r1, 8
+/* 00002AE0 7C0803A6 */ mtlr r0
+/* 00002AE4 4E800020 */ blr 

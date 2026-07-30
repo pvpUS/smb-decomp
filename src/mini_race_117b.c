@@ -31,6 +31,7 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "avdisp.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_race.s) or imported.  Declared so mwcc accepts `@ha/@l`.
@@ -83,7 +84,7 @@ extern u8 lbl_00013F60[];
 extern u8 lbl_00013FF0[];
 extern u8 lbl_00014054[];
 extern u8 lbl_00014058[];
-extern u8 lbl_00014060[];
+extern struct EffectFuncs lbl_00014060[];
 extern u8 lbl_00014090[];
 extern u8 lbl_0001409C[];
 extern u8 lbl_000140AC[];
@@ -145,7 +146,7 @@ extern u8 lbl_00015ECC[];
 extern u8 lbl_00015EEC[];
 extern u8 lbl_00015F0C[];
 extern u8 lbl_00015F2C[];
-extern u8 lbl_00015F50[];
+extern s16 lbl_00015F50[];
 extern u8 lbl_10000000[];
 extern u8 lbl_10000028[];
 extern u8 lbl_10000038[];
@@ -184,8 +185,6 @@ extern void func_800246F4();
 extern void mot_ape_set_quat_from_vec();
 extern void avdisp_get_eff_vertices();
 extern void item_create();
-extern void avdisp_draw_model_unculled_sort_translucent();
-extern void avdisp_draw_model_culled_sort_translucent();
 extern void gxutil_load_pos_nrm_matrix();
 extern void mathutil_incr_mtx_stack();
 extern void thread_create();
@@ -197,18 +196,13 @@ extern void func_800AB6F8();
 extern void stcoli_sub33();
 extern void avdisp_get_eff_vtxinfo();
 extern void lens_flare_draw();
-extern void avdisp_set_bound_sphere_scale();
-extern void avdisp_set_post_mult_color();
 extern void bitmap_init_tev();
-extern void avdisp_draw_model_unculled_sort_none();
 extern void ape_skel_anim_main();
 extern void set_ape_model_lod();
 extern void func_800AB444();
 extern void func_8006AD3C();
 extern void ord_tbl_draw_nodes();
-extern void avdisp_set_alpha();
 extern void ape_destroy();
-extern void avdisp_set_z_mode();
 extern void func_800AB2A0();
 extern void func_8006AAEC();
 extern void draw_test_camera_target();
@@ -374,11 +368,31 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
+void lbl_00012E00(void);
+void lbl_00012ED0(struct Effect *);
+void lbl_00012F34(void);
+void lbl_00013120(struct Effect *);
+void lbl_00013124(void);
+void lbl_000131FC(struct Effect *);
+void lbl_00013268(struct Effect *);
+void lbl_00013318(struct Effect *);
+void lbl_0001331C(struct Effect *);
+void lbl_00013328(void);
+void lbl_0001356C(void);
+void lbl_00013670(struct Effect *);
 #pragma force_active on
-asm void lbl_00012D50(void)
+void lbl_00012D50(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00012D50.s"
+    struct EffectFuncs a;
+    struct EffectFuncs b;
+    struct EffectFuncs c;
+
+    a = lbl_00014060[0];
+    effect_replace_type_funcs(0x26, &a);
+    b = lbl_00014060[1];
+    effect_replace_type_funcs(0x29, &b);
+    c = lbl_00014060[2];
+    effect_replace_type_funcs(0x2C, &c);
 }
 
 #pragma force_active reset

@@ -297,8 +297,8 @@ void lbl_00007444(void);
 void lbl_000074DC(void);
 void lbl_00007640(void);
 void lbl_00007AD4(void);
-void lbl_00007F7C(void);
-void lbl_000080D4(void);
+void lbl_00007F7C(u8 *);
+void lbl_000080D4(u8 *);
 void lbl_0000A690(void);
 void lbl_0000A974(void);
 void lbl_0000AAD0(void);
@@ -398,11 +398,19 @@ void lbl_0001A554(void);
 void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
+static void lbl_00007F48(u8 *);
 #pragma force_active on
 asm void lbl_00007AD4(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_00007AD4.s"
+}
+static void lbl_00007F48(u8 *p)
+{
+    if (*(s16 *)(p + 0xa) < 2)
+        lbl_00007F7C(p);
+    else
+        lbl_000080D4(p);
 }
 
 #pragma force_active reset

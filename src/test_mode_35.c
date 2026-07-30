@@ -157,6 +157,7 @@ extern void avdisp_get_matrices();
 extern void draw_test_camera_target();
 extern void effect_draw();
 extern void free_model();
+extern void OSFreeToHeap();
 extern void func_80036000();
 extern void func_80086D20();
 extern void func_8008B9DC();
@@ -278,9 +279,15 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_0000502C(void)
+void lbl_0000502C(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000502C.s"
+    OSHeapHandle old;
+    u8 *w = lbl_10000000;
+
+    old = OSSetCurrentHeap(stageHeap);
+    free_model(*(void **)(w + 0x160));
+    free_tpl(*(struct TPL **)(w + 0x15C));
+    OSFreeToHeap(__OSCurrHeap, *(void **)(w + 0x16C));
+    OSSetCurrentHeap(old);
 }
 #pragma force_active reset

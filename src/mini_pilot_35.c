@@ -207,7 +207,7 @@ void lbl_00008134(void);
 void lbl_000082C0(void);
 void lbl_00008568(void);
 void lbl_000085B4(void);
-void lbl_0000893C(void);
+void lbl_0000893C(struct Sprite *);
 void lbl_000089F8(void);
 void lbl_00008C40(void);
 void lbl_000090A0(void);
@@ -233,9 +233,20 @@ void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-asm void lbl_0000893C(void)
+void lbl_0000893C(struct Sprite *sprite)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_0000893C.s"
+    u8 *k = (u8 *)lbl_0000C360;
+    f32 x = sprite->x;
+    f32 y = sprite->y;
+
+    f32 len;
+
+    x += *(f64 *)(k + 0xa0);
+    y += *(f64 *)(k + 0xa8);
+    reset_text_draw_settings();
+    set_text_font(0x58);
+    set_text_pos(x, y);
+    len = mathutil_vec_len((Vec *)lbl_10000068);
+    sprite_printf((char *)lbl_0000D324, (s32)(*(f64 *)(k + 0xb0) * len));
 }
 #pragma force_active reset

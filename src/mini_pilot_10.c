@@ -174,7 +174,7 @@ void lbl_000007B8(void);
 void lbl_000008AC(void);
 void lbl_00000A30(void);
 void lbl_00000BFC(void);
-static void lbl_00000DC8(void);
+void lbl_00000DC8(void);
 void lbl_0000215C(void);
 void lbl_000021B4(void);
 void lbl_000022D8(void);
@@ -232,20 +232,19 @@ void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
+void lbl_0000101C(void);
+void lbl_000011CC(void);
+void lbl_000015D8(void);
+void lbl_0000178C(void);
+void lbl_00001B08(void);
+void lbl_00001BB4(void);
+void lbl_00001CE4(void);
+void lbl_00001DE0(void);
 #pragma force_active on
 asm void lbl_00000A30(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_pilot/lbl_00000A30.s"
 }
-asm void lbl_00000BFC(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00000BFC.s"
-}
-static asm void lbl_00000DC8(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00000DC8.s"
-}
+
 #pragma force_active reset

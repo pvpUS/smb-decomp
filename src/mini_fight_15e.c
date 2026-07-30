@@ -398,11 +398,173 @@ void lbl_0001A554(void);
 void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
+static void lbl_000082E8(void);
+static void lbl_00008928(void);
+static void lbl_000089D8(void);
+static void lbl_000089DC(void);
+static void lbl_00008C3C(void);
+static void lbl_00008DD0(void);
+static void lbl_00008E60(void);
+static void lbl_00008E64(void);
+static void lbl_00008F80(void);
+static void lbl_000094F0(void);
+static void lbl_000095EC(void);
+static void lbl_000095F0(void);
+static void lbl_000096E0(void);
+static void lbl_00009A68(void);
+static void lbl_00009B94(void);
+static void lbl_00009B98(void);
+static void lbl_00009B9C(void);
+static void lbl_00009BA0(void);
+static void lbl_00009CA0(void);
+static void lbl_00009CA4(void);
+static void lbl_00009D48(void);
+static void lbl_00009E88(void);
+static void lbl_00009F64(void);
+static void lbl_00009F68(void);
+static void lbl_0000A094(void);
+static void lbl_0000A184(void);
+static void lbl_0000A320(void);
+static void lbl_0000A324(void);
+static void lbl_0000A4DC(void);
+static void lbl_0000A5D0(void);
 #pragma force_active on
 asm void lbl_000080D4(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_000080D4.s"
+}
+static asm void lbl_000082E8(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_000082E8.s"
+}
+static asm void lbl_00008928(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00008928.s"
+}
+static void lbl_000089D8(void)
+{
+}
+static asm void lbl_000089DC(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_000089DC.s"
+}
+static asm void lbl_00008C3C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00008C3C.s"
+}
+static asm void lbl_00008DD0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00008DD0.s"
+}
+static void lbl_00008E60(void)
+{
+}
+static asm void lbl_00008E64(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00008E64.s"
+}
+static asm void lbl_00008F80(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00008F80.s"
+}
+static asm void lbl_000094F0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_000094F0.s"
+}
+static void lbl_000095EC(void)
+{
+}
+static asm void lbl_000095F0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_000095F0.s"
+}
+static asm void lbl_000096E0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_000096E0.s"
+}
+static asm void lbl_00009A68(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00009A68.s"
+}
+static void lbl_00009B94(void)
+{
+}
+static void lbl_00009B98(void)
+{
+}
+static void lbl_00009B9C(void)
+{
+}
+static asm void lbl_00009BA0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00009BA0.s"
+}
+static void lbl_00009CA0(void)
+{
+}
+static asm void lbl_00009CA4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00009CA4.s"
+}
+static asm void lbl_00009D48(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00009D48.s"
+}
+static asm void lbl_00009E88(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00009E88.s"
+}
+static void lbl_00009F64(void)
+{
+}
+static asm void lbl_00009F68(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00009F68.s"
+}
+static asm void lbl_0000A094(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_0000A094.s"
+}
+static asm void lbl_0000A184(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_0000A184.s"
+}
+static void lbl_0000A320(void)
+{
+}
+static asm void lbl_0000A324(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_0000A324.s"
+}
+static asm void lbl_0000A4DC(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_0000A4DC.s"
+}
+static asm void lbl_0000A5D0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_0000A5D0.s"
 }
 
 #pragma force_active reset

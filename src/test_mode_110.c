@@ -266,7 +266,7 @@ void lbl_0000D9FC(void);
 void lbl_0000DB2C(void);
 void lbl_0000DC60(void);
 void lbl_0000DDA4(void);
-static void lbl_0000DF28(void);
+void lbl_0000DF28(void);
 void lbl_0000E2E8(void);
 void lbl_0000E3E8(void);
 void lbl_0000E628(void);
@@ -279,7 +279,7 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-static asm void lbl_0000DF28(void)
+asm void lbl_0000DF28(void)
 {
     nofralloc
 #include "../asm/nonmatchings/test_mode/lbl_0000DF28.s"

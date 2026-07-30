@@ -83,7 +83,7 @@ extern u8 lbl_0000C7EC[];
 extern u8 lbl_0000C88C[];
 extern u8 lbl_0000CB0C[];
 extern u8 lbl_0000CBCC[];
-extern u8 lbl_0000CCF8[];
+extern void (*lbl_0000CCF8[])(struct Camera *, struct Ball *);
 extern u8 lbl_0000D1C8[];
 extern u8 lbl_0000D218[];
 extern u8 lbl_0000D2E8[];
@@ -200,7 +200,7 @@ void lbl_00006B94(void);
 void lbl_00006BF4(void);
 void lbl_00006CCC(void);
 void lbl_00006D14(void);
-void lbl_00006DFC(void);
+void lbl_00006DFC(struct Camera *, struct Ball *);
 void lbl_00007EF8(void);
 void lbl_00008134(void);
 void lbl_000082C0(void);
@@ -231,10 +231,17 @@ void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
+void lbl_00006E3C(void);
+void lbl_00006F94(void);
+void lbl_00007444(void);
+void lbl_00007A20(void);
+void lbl_00007DF4(void);
+void lbl_00007ECC(void);
+void lbl_00007ED0(void);
 #pragma force_active on
-asm void lbl_00006DFC(void)
+void lbl_00006DFC(struct Camera *camera, struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00006DFC.s"
+    lbl_0000CCF8[camera->subState](camera, ball);
 }
+
 #pragma force_active reset
