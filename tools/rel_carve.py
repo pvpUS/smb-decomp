@@ -335,14 +335,26 @@ def main():
     lines = pristine(mod, a.ref)
     pre, secs, order = split_sections(lines)
 
-    # drop any previously written segments and normalise SOURCES
-    for p in glob.glob(os.path.join(REPO, 'asm', '%s_d*.s' % mod)):
-        os.remove(p)
+    # RUN 10: this used to delete the existing segment files HERE, before any
+    # argument validation.  So a carve that was going to be REFUSED (a bad
+    # label, a mismatched --into, the long-run guard below) still silently
+    # UN-CARVED a landed, golden carve on its way out -- the tree looked clean
+    # apart from three deleted asm/<mod>_dN.s files, and the next build was
+    # non-golden for a reason unrelated to anything the agent had edited.
+    # mini_golf and sel_ngc both carry landed carves, so this was live.
+    # The deletion now happens in commit_segments(), after every check passes.
+    stale_segments = glob.glob(os.path.join(REPO, 'asm', '%s_d*.s' % mod))
+
+    def commit_segments():
+        for p in stale_segments:
+            os.remove(p)
+
     _, _, _, _, items = sources_block(mod)
     items = [i for i in items if not re.match(r'asm/%s_d\d+\.s$' % mod, i)]
     items = [i for i in items if i != 'asm/%s.s' % mod] + ['asm/%s.s' % mod]
 
     if a.undo:
+        commit_segments()                     # --undo genuinely means drop them
         open(os.path.join(REPO, 'asm', '%s.s' % mod), 'w', newline='\n').write(
             '\n'.join(lines))
         write_sources(mod, items)
@@ -365,6 +377,26 @@ def main():
             sys.exit('%s is not a .rodata label of %s' % (lbl, mod))
         i = by_label[lbl]
         want = int(nb) if nb else None
+        # RUN 9 (mini_bowling): `--hole LABEL` means ALL BYTES OF THAT LABEL'S
+        # RUN, not "the 8-byte constant at that label".  Carving a long-run
+        # label without `:8` deleted real data and EXITED 0 -- the module still
+        # built, and the loss only showed up as a non-golden hash with nothing
+        # to point at.  A magic double is 8 bytes; anything longer is either a
+        # whole pool (say so with --hole-range) or a mistake.
+        run = ents[i]['bytes']
+        if want is None and run > 8:
+            sys.exit(
+                '%s covers %d bytes, and a bare --hole carves ALL of them.\n'
+                '  That silently deletes real data and still exits 0 (run 9, '
+                'mini_bowling).\n'
+                '  If you want the magic double, say --hole %s:8.\n'
+                '  If you really mean the whole %d-byte run, say --hole %s:%d, '
+                'or use\n  --hole-range FIRST:LAST for a complete TU pool.'
+                % (lbl, run, lbl, run, lbl, run))
+        if want is not None and want > run:
+            sys.exit('--hole %s:%d asks for more bytes than the label\'s run '
+                     '(%d) -- that would eat the NEXT label\'s data.'
+                     % (lbl, want, run))
         owner = fu.get(lbl)
         expect = defining_file(mod, owner) if owner else None
         dest = dest.replace('\\', '/')
@@ -474,6 +506,8 @@ def main():
     out += src[pos:]
     out.append(paths[-1])                   # final segment carries .data/.bss
 
+    # Every check has passed; only now is it safe to drop the previous carve.
+    commit_segments()
     written = write_segments(mod, pre, secs, order, segments, keep)
     assert written == paths, (written, paths)
     write_sources(mod, out)

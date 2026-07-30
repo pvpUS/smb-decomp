@@ -180,7 +180,7 @@ def build(tree, target, tmp, watch_file, stem=None):
 
 def score(tree, stem, target, label):
     """Diff count for one function, or FAILED if rel_fdiff gave no verdict."""
-    env = dict(os.environ, FDIFF_MODULE=stem)
+    env = dict(os.environ, FDIFF_MODULE=stem, FDIFF_REPO=tree)
     plf = plf_of(target)
     r = subprocess.run([sys.executable, os.path.join(REPO, 'tools', 'rel_fdiff.py'),
                         plf, label],
@@ -192,6 +192,105 @@ def score(tree, stem, target, label):
     if m:
         return int(m.group(1)), out
     return FAILED, out + '\n(no MATCH/DIFF verdict -- treat as no result)'
+
+
+# --------------------------------------------------------------------------
+# ALIGNED scoring.  Run 8 found four separate ways that ranking a sweep on the
+# RAW count hands you the wrong winner; run 9 found that FIVE agents had each
+# written their own aligned sweeper to work around it (asweep.py, asw9.py,
+# pasweep.py, h.py, ...).  This is that, in the tool.
+#
+#   mini_fight lbl_0000EA10  the MATCHING variant scored raw 116 against a
+#                            non-match at 63 -- ranked 53 places worse, and
+#                            thrown away.  Re-ranking recovered 121 insn.
+#   mini_golf  lbl_000240C0  winning variant raw 319, aligned 0.
+#   test_mode  lbl_0000F7BC  best variant raw 75, bottom of every sweep.
+#
+# A raw count compares word i against word i, so ONE inserted instruction
+# shifts the whole tail and a 3-instruction miss reads as 197.
+#
+# But do NOT read the aligned number as proof of proximity either (run 9,
+# mini_golf lbl_0000FBC8): three structurally WRONG variants scored 4 while the
+# variant whose instructions match exactly scored 9.  Rank on aligned, then
+# READ THE TOP FEW with tools/rel_regions.py.
+# --------------------------------------------------------------------------
+_RF = None
+
+
+def _fdiff_module(tree, stem):
+    """rel_fdiff exec'd in-process, bound to `tree`'s asm and this stem."""
+    global _RF
+    os.environ['FDIFF_MODULE'] = stem
+    os.environ['FDIFF_REPO'] = tree
+    path = os.path.join(REPO, 'tools', 'rel_fdiff.py')
+    src = open(path).read().replace('\nmain()', '')
+    rf = type(sys)('rf')
+    rf.__dict__['__file__'] = path
+    exec(compile(src, 'rel_fdiff', 'exec'), rf.__dict__)
+    _RF = rf
+    return rf
+
+
+def nz_at(w, i, n):
+    """Mask only the branch displacements the LINKER relocates.
+
+    Must stay identical to rel_ascore.nz_at and rel_regions.nz_at.  The old
+    rule masked every b/bc/bl, which made a control variant that only changed a
+    branch target -- or which function is called -- score identical to
+    baseline.  Four agents' controls failed that way in run 9, and each read
+    the result as "mwcc canonicalises this axis".  An intra-function branch is
+    PC-relative and self-consistent, so keep it and compare it.
+    """
+    op = w >> 26
+    if op == 16:
+        d = w & 0x0000FFFC
+        if d & 0x8000:
+            d -= 0x10000
+    elif op == 18:
+        d = w & 0x03FFFFFC
+        if d & 0x02000000:
+            d -= 0x04000000
+    else:
+        return w
+    if w & 2:
+        return w & 0xFC000003
+    tgt = i + d // 4
+    if 0 <= tgt < n and not (w & 1):
+        return w
+    return w & 0xFC000003
+
+
+def ascore(tree, stem, target, label):
+    """(aligned, raw, regions, span) for one function; FAILED on no result."""
+    import difflib
+    rf = _RF or _fdiff_module(tree, stem)
+    plf = os.path.join(tree, plf_of(target))
+    try:
+        text = rf.load_text(plf)
+        addrs = rf.load_map(os.path.splitext(plf)[0] + '.map')
+        rows = rf.load_asm(label)
+    except (OSError, SystemExit, ValueError) as e:
+        return FAILED, FAILED, 0, '(%s)' % e
+    if label not in addrs:
+        return FAILED, FAILED, 0, '(not in map)'
+    n = len(rows)
+    base = addrs[label]
+    exp = [r[1] for r in rows]
+    got = [int.from_bytes(text[base + 4 * i:base + 4 * i + 4], 'big')
+           for i in range(n)]
+    e = [nz_at(x, i, n) for i, x in enumerate(exp)]
+    g = [nz_at(x, i, n) for i, x in enumerate(got)]
+    raw = sum(1 for x, y in zip(e, g) if x != y)
+    sm = difflib.SequenceMatcher(None, e, g, autojunk=False)
+    ops = [o for o in sm.get_opcodes() if o[0] != 'equal']
+    tot = sum(max(i2 - i1, j2 - j1) for _, i1, i2, j1, j2 in ops)
+    if ops:
+        lo = min(o[1] for o in ops)
+        hi = max(o[2] for o in ops)
+        span = 'span %d-%d of %d' % (lo, hi, n)
+    else:
+        span = ''
+    return tot, raw, len(ops), span
 
 
 OBJDUMP = 'C:/devkitPro/devkitPPC/bin/powerpc-eabi-objdump.exe'
@@ -304,7 +403,17 @@ def main():
             return 2
         n, out = score(tree, stem, target, args.label)
         print(out.strip())
-        print('\n%s: %s' % (args.label, 'MATCH' if n == 0 else '%d diffs' % n))
+        al, raw, regs, span = ascore(tree, stem, target, args.label)
+        if al is not FAILED and al != FAILED:
+            print('\n%s: RAW %d   ALIGNED %d   (%d edit region%s)  %s'
+                  % (args.label, raw, al, regs, '' if regs == 1 else 's', span))
+            if al:
+                print('Read the regions before grinding: '
+                      'python tools/rel_regions.py %s %s %s'
+                      % (args.module, plf_of(target), args.label))
+        else:
+            print('\n%s: %s' % (args.label,
+                                'MATCH' if n == 0 else '%d diffs (raw)' % n))
         return 0 if n == 0 else 1
 
     variants = sorted(f for f in os.listdir(args.sweep) if f.endswith('.c'))
@@ -316,16 +425,22 @@ def main():
     try:
         for v in variants:
             shutil.copy2(os.path.join(args.sweep, v), target_c)
+            raw, regs, span = FAILED, 0, ''
             try:
                 assert_c_definition(target_c, stem, args.label)
                 build(tree, target, tmp, args.file)
-                n, _ = score(tree, stem, target, args.label)
+                # RANK ON ALIGNED, not raw (see ascore above).  The raw number
+                # is still printed so old reports remain comparable, but it is
+                # never what sorts the table.
+                n, raw, regs, span = ascore(tree, stem, target, args.label)
             except BuildError as e:
                 n = FAILED
                 print('  %-40s BUILD FAILED: %s' % (v, str(e).split('\n')[0]))
-            results.append((n, v))
+            results.append((n, v, raw, regs, span))
             if n != FAILED:
-                print('  %-40s %s' % (v, 'MATCH' if n == 0 else '%d' % n))
+                print('  %-40s %-5s  (raw %d, %d region%s) %s'
+                      % (v, 'MATCH' if n == 0 else n, raw, regs,
+                         '' if regs == 1 else 's', span))
     finally:
         # Trap 4.  shutil.move of a copy2 backup restores the ORIGINAL mtime,
         # which is older than the last variant's .o, so make skips the recompile
@@ -342,16 +457,22 @@ def main():
         except FileNotFoundError:
             pass
 
-    print('\n=== ranked ===')
-    for n, v in sorted(results):
-        print('  %-6s %s' % ('MATCH' if n == 0 else (n if n != FAILED else 'FAIL'), v))
+    print('\n=== ranked (ALIGNED) ===')
+    for n, v, raw, regs, span in sorted(results):
+        print('  %-6s %-40s raw %-5s %s'
+              % ('MATCH' if n == 0 else (n if n != FAILED else 'FAIL'), v,
+                 raw if raw != FAILED else '-', span))
+    print('An aligned score is not proof of proximity -- run 9 had three '
+          'structurally WRONG\nvariants at 4 and the exactly-right one at 9. '
+          'Read the top few:\n  python tools/rel_regions.py %s %s %s'
+          % (args.module, plf_of(target), args.label))
 
     # An all-identical column USED to exit 2 as trap 1's signature. It is a false
     # alarm: build() already refuses to score a file it cannot see `Compiling` for,
     # so trap 1 is closed by construction, and canonical variant sets legitimately
     # score alike -- in run 6 this fired 3-6 times per agent, including on a set
     # where all 12 permutations MATCHed. Advisory only now; gate on --gate.
-    real = [n for n, _ in results if n != FAILED]
+    real = [r[0] for r in results if r[0] != FAILED]
     if len(real) > 1 and len(set(real)) == 1 and real[0] != 0:
         print('\n(note: every variant scored %d. Usually means mwcc canonicalises '
               'these spellings. To prove the builds are real, add a deliberately '
@@ -372,7 +493,7 @@ def main():
               "     cp '%s' '%s' && rm -f '%s.o'\n"
               '   or re-run with --install-best.' % (args.file, win, dst, dst))
 
-    if not any(n == 0 for n, _ in results):
+    if not any(r[0] == 0 for r in results):
         return 1
     print('\na MATCH here is NOT a match. Confirm with: '
           'python tools/rel_sweep.py %s --gate' % args.module)

@@ -132,6 +132,31 @@ def extern_u8(text):
     return set(re.findall(r'^extern u8 ([A-Za-z0-9_]+)\[\];', text, re.M))
 
 
+def included_insn(module):
+    """{label: instruction count} over the rows some src/*.c actually #includes.
+
+    This is the module's ASM-side contribution to .text, and it is the quantity
+    run 9 watched vanish.  Rows that are already pure C are excluded on purpose:
+    the total over ALL .s files is invariant under a re-split (a merged row just
+    makes its predecessor's .s longer), so only the INCLUDED subset can detect
+    a boundary that was lost.
+    """
+    out = {}
+    inc = re.compile(r'#include "\.\./asm/nonmatchings/%s/([A-Za-z0-9_]+)\.s"'
+                     % re.escape(module))
+    labels = set()
+    for f in src_files(module):
+        labels.update(inc.findall(open(f, errors='ignore').read()))
+    for lbl in labels:
+        p = os.path.join(REPO, 'asm', 'nonmatchings', module, lbl + '.s')
+        if os.path.exists(p):
+            out[lbl] = len(re.findall(r'/\* [0-9A-F]{8} [0-9A-F]{8} \*/',
+                                      open(p, errors='replace').read()))
+        else:
+            out[lbl] = None                   # included but the .s is GONE
+    return out
+
+
 def run_split(module, extern_fns, extern_data, singletons, ranges,
               extra_starts=()):
     cmd = [sys.executable, os.path.join(REPO, 'tools', 'rel_split.py'), module]
@@ -178,6 +203,7 @@ def main():
     files = src_files(mod)
     if not files:
         sys.exit('no src/%s*.c found' % mod)
+    before_insn = included_insn(mod)
     head = open(files[0], errors='ignore').read()
     extern_fns = re.findall(r'^extern void ([A-Za-z0-9_]+)\(\);', head, re.M)
     committed_data = re.findall(r'^extern u8 ([A-Za-z0-9_]+)\[\];', head, re.M)  # ordered
@@ -194,6 +220,25 @@ def main():
     asm_inc = '#include "../asm/nonmatchings/%s/' % mod
     singletons, ranges, saved, saved_fwd = [], [], {}, {}
     saved_ext, saved_extra, saved_inc, pure_labels = {}, {}, {}, set()
+    # RUN 9, test_mode: rel_rematch SILENTLY DELETED 48 INSTRUCTIONS.
+    #
+    # `extra` below was reconstructed from pure-C files only, so a label that is
+    # STILL ASM inside a group file was not passed to rel_split as a function
+    # start.  rel_split could not auto-detect the boundary, so those
+    # instructions merged into the PRECEDING row -- and when that predecessor
+    # was already pure C, its .s is not #included by anything, so the code
+    # simply vanished from .text.  The build was clean, warning-free and
+    # non-golden, and the only symptom was the hash.
+    #
+    # The fix is to derive the starts from the group files' own asm-include set
+    # as well.  Every label some .c actually #includes is, by definition, a
+    # boundary that must survive the re-split.
+    asm_included = set()
+    for f in files:
+        for m in re.finditer(re.escape(asm_inc) + r'([A-Za-z0-9_]+)\.s"',
+                             open(f, errors='ignore').read()):
+            asm_included.add(m.group(1))
+
     for f in files:
         txt = open(f, errors='ignore').read()
         if asm_inc in txt:
@@ -256,7 +301,8 @@ def main():
     # function comes back measured as a 716-instruction one with 700 diffs.
     # On option (47 auto-detected starts vs 71 real) that made per-function
     # feedback meaningless.  Keep the caller's starts.
-    extra = sorted(pure_labels | set(args.add) | set(args.extra_start))
+    extra = sorted(pure_labels | asm_included | set(args.add)
+                   | set(args.extra_start))
 
     # PROBE: split with no extern-data / no isolates to learn the auto data
     # externs; the committed extras are the imports that need --extern-data.
@@ -379,12 +425,49 @@ def main():
     L[s:e + 1] = ['SOURCES := \\'] + ['\t%s \\' % p for p in rel] + ['\tasm/%s.s' % mod]
     open(mk, 'w', newline='\n').write('\n'.join(L))
 
+    # HARD FAIL if the re-split changed how much asm .text is actually built.
+    # This is the run-9 test_mode defect (48 instructions deleted by a clean,
+    # warning-free, exit-0 run whose only symptom was a non-golden hash).  The
+    # --add labels are expected to appear as NEW stubs, so they are excluded.
+    after_insn = included_insn(mod)
+    added = set(args.add)
+    lost, changed = [], []
+    for lbl, n in before_insn.items():
+        if lbl in added:
+            continue
+        m = after_insn.get(lbl)
+        if m is None:
+            lost.append((lbl, n))
+        elif n is not None and m != n:
+            changed.append((lbl, n, m))
+    bt = sum(n for l, n in before_insn.items() if n and l not in added)
+    at = sum(n for l, n in after_insn.items() if n and l not in added)
+    if lost or changed or bt != at:
+        print('\n*** REL_REMATCH ABORTED THE RESULT: the re-split changed the '
+              'built asm ***', file=sys.stderr)
+        for lbl, n in lost:
+            print('  LOST      %s (%s insn) is #included but its .s no longer '
+                  'exists -- it merged into the preceding row, and if that row '
+                  'is already pure C those instructions are GONE from .text.'
+                  % (lbl, n), file=sys.stderr)
+        for lbl, n, m in changed:
+            print('  RESIZED   %s  %d insn -> %d insn' % (lbl, n, m),
+                  file=sys.stderr)
+        print('  TOTAL     %d insn -> %d insn  (delta %+d)' % (bt, at, at - bt),
+              file=sys.stderr)
+        print('\nThe tree HAS ALREADY BEEN REWRITTEN. Restore it from a snapshot'
+              ' (NOT\n`git checkout src/` -- HEAD may predate your re-splits), '
+              'then re-run passing\nevery still-asm row label via '
+              '--extra-start-file.\n', file=sys.stderr)
+        return 1
+
     print('re-applied %d pure-C files; %d src files total; added: %s'
           % (applied, len(files), ', '.join(args.add) or '(none)'))
+    print('instruction-count check: %d asm insn included, unchanged.' % at)
     if args.add:
         print('the --add functions are now asm-include stubs in their own files '
               '-- convert to C, rebuild, and check the golden sha1.')
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main() or 0)

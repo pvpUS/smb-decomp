@@ -14,7 +14,13 @@ import struct
 import sys
 import os
 
-REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# FDIFF_REPO exists because load_asm() below resolves asm/nonmatchings from THIS
+# FILE's location, while the .plf argument is resolved from the cwd.  Run the
+# main repo's copy against a warm tree (`rel_sweep --tree`) and you diff that
+# tree's binary against the MAIN repo's asm -- which is silently wrong the
+# moment a warm copy has re-split .s files.  Callers that cross trees set this.
+REPO = os.environ.get('FDIFF_REPO') or os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__)))
 MOD = os.environ.get('FDIFF_MODULE', 'mini_race')
 
 
