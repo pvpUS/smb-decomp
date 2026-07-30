@@ -207,7 +207,7 @@ entry mathutil_rsqrt
 #endif
 
 #ifdef __MWERKS__
-asm float func_8000716C(double a)
+asm float func_8000716C(float *out, float x)
 {
     nofralloc
 

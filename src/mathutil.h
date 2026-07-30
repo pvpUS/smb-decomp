@@ -45,7 +45,17 @@ struct MathutilData
 #define LC_CACHE_BASE 0xE0000000
 
 void mathutil_init(void);
-float func_8000716C(double a);
+/* r3 is an OUT-POINTER, not a return slot: the body in mathutil.c ends
+ * `stfs f0, 0(r3)` while the value arrives in f1.  The old one-parameter
+ * `float func_8000716C(double)` made every call site unwritable -- a
+ * function-pointer cast around it emits `bctrl` where the original has `bl`.
+ * Found independently by mini_billiards and by a mini_bowling worker in run 11,
+ * both of which had to `#define` this declaration away inside their own .c to
+ * get a match; fixing it moved one function from raw 222 to raw 83.
+ * Argument ORDER is not fixed by the ABI -- the pointer goes to r3 and the
+ * float to f1 either way -- so this is the spelling with a golden build behind
+ * it (mini_billiards_33b.c / _33c.c call it as `func_8000716C(&len, t)`).  */
+float func_8000716C(float *out, float x);
 float mathutil_sqrt(double n);
 float mathutil_rsqrt(double n);
 float mathutil_sin(int angle);
