@@ -113,8 +113,16 @@ def scan(tree, mod, detail=False):
 
     # Where is each label DEFINED?  (Data blobs define data labels; we only care
     # about the ones defined in the split rows.)
+    # RUN 10 (mini_race): **the row's own label has no `lbl_X:` line in its own
+    # .s** -- it names the enclosing `asm void` block in the owning .c instead.
+    # So a splitter that walks only `^lbl_...:` silently DROPS the row's own
+    # body; that cost mini_race 717 insn across 6 bodies before it was caught.
+    # The counts here were always right (`n = 1 + entries` accounts for it), but
+    # `defined_in` was incomplete, so a cross-file reference TO a row label did
+    # not register. Seed it from the filename, which is the row label.
     defined_in = {}
     for f in rows:
+        defined_in.setdefault(os.path.basename(f)[:-2], f)
         for lbl in DEFN.findall(text[f]):
             defined_in.setdefault(lbl, f)
 
