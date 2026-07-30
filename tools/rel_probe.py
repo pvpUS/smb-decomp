@@ -24,6 +24,13 @@ option's scratch copy used `-i src -i include -I- -i libraries`, which is NOT
 the module's include line; if a probe ever disagrees with a real build, check
 this first.
 
+**Give your probe the module's FULL include preamble, not just `global.h`.**
+With only `global.h` every probe dies with `illegal function definition` pointing
+at your own code, which reads exactly like a syntax error in the probe rather
+than a missing header (mini_bowling, run 10, lost a sweep to this). Copy the
+`#include` block from any `src/<stem>*.c` — those are what rel_split generated
+for this module.
+
 usage:
   python tools/rel_probe.py <module> probe.c [probe2.c ...]
   python tools/rel_probe.py <module> --frame probe.c [...]   # one-line summary
