@@ -284,6 +284,25 @@ def ascore(tree, stem, target, label):
     sm = difflib.SequenceMatcher(None, e, g, autojunk=False)
     ops = [o for o in sm.get_opcodes() if o[0] != 'equal']
     tot = sum(max(i2 - i1, j2 - j1) for _, i1, i2, j1, j2 in ops)
+    # RUN 10 (mini_fight): difflib latches onto an off-diagonal matching block
+    # when the words repeat -- as real asm does -- and then pays insert+delete
+    # for everything around it.  A pure register renaming with raw 101 reported
+    # ALIGNED 387, and this sweep ranked the correct variant LAST three times.
+    # When the lengths are equal, the identity alignment costs exactly `raw`, so
+    # the true edit cost can never exceed it.  See rel_ascore.score for the full
+    # note; the two must stay in agreement.
+    if len(e) == len(g) and raw < tot:
+        tot = raw
+        ops, i, n = [], 0, len(e)
+        while i < n:
+            if e[i] != g[i]:
+                j = i
+                while j < n and e[j] != g[j]:
+                    j += 1
+                ops.append(('replace', i, j, i, j))
+                i = j
+            else:
+                i += 1
     if ops:
         lo = min(o[1] for o in ops)
         hi = max(o[2] for o in ops)

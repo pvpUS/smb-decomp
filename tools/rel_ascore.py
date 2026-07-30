@@ -203,9 +203,45 @@ def main():
         return out
 
     def score(e, g):
+        """Aligned edit count, with difflib's spurious-block failure capped.
+
+        RUN 10 (mini_fight).  difflib can latch onto a long matching block OFF
+        the diagonal when the words repeat -- and real PPC asm repeats heavily
+        (`nop`, `mr`, `lwz r0,`, `blr`, the same stw/lwz pairs in every
+        prologue).  It then pays an insert AND a delete for everything around
+        that block instead of a substitution.  On a PURE REGISTER RENAMING --
+        same length, same opcodes, only register fields differing -- this
+        reports MORE than the positional count:
+
+          lbl_00004D14   raw 101, every instruction positionally aligned,
+                         reported ALIGNED 387.
+
+        and `rel_sweep --sweep` ranked the correct variant LAST in three
+        separate sweeps as a result.  That is the run-8 lesson (never rank on
+        raw) firing in reverse, in the tool that replaced it.
+
+        The cap is exact, not a heuristic: when the two sequences are the same
+        length, the identity alignment costs exactly `raw` substitutions, so the
+        true edit cost can NEVER exceed raw.  Take the better of the two
+        alignments and report the regions belonging to whichever won.
+        """
         sm = difflib.SequenceMatcher(None, e, g, autojunk=False)
         ops = [o for o in sm.get_opcodes() if o[0] != 'equal']
         tot = sum(max(i2 - i1, j2 - j1) for _, i1, i2, j1, j2 in ops)
+        if len(e) == len(g):
+            raw = sum(1 for a, b in zip(e, g) if a != b)
+            if raw < tot:
+                pops, i, n = [], 0, len(e)
+                while i < n:
+                    if e[i] != g[i]:
+                        j = i
+                        while j < n and e[j] != g[j]:
+                            j += 1
+                        pops.append(('replace', i, j, i, j))
+                        i = j
+                    else:
+                        i += 1
+                return raw, pops
         return tot, ops
 
     # A label that is still an asm stub is assembled verbatim into the .plf, so

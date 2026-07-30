@@ -148,6 +148,22 @@ def main():
         sm = difflib.SequenceMatcher(None, e, g, autojunk=False)
         ops = [o for o in sm.get_opcodes() if o[0] != 'equal']
         tot = sum(max(i2 - i1, j2 - j1) for _, i1, i2, j1, j2 in ops)
+        # RUN 10 (mini_fight): cap difflib's off-diagonal misalignment, which
+        # inflates a pure register renaming (raw 101 reported as 387).  Must
+        # stay in agreement with rel_ascore.score and rel_sweep.ascore.
+        rawn = sum(1 for x, y in zip(e, g) if x != y)
+        if len(e) == len(g) and rawn < tot:
+            tot = rawn
+            ops, i = [], 0
+            while i < n:
+                if e[i] != g[i]:
+                    j = i
+                    while j < n and e[j] != g[j]:
+                        j += 1
+                    ops.append(('replace', i, j, i, j))
+                    i = j
+                else:
+                    i += 1
         print('==== %s  %d insn  ALIGNED %d  %d region(s)'
               % (lbl, n, tot, len(ops)))
         if lbl in stubbed:
