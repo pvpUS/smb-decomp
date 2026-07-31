@@ -429,20 +429,6 @@ SOURCES := \
 	src/sel_ngc_rel_28.c \
 	src/sel_ngc_rel_29.c \
 	asm/sel_ngc_rel_d1.s \
-	src/sel_ngc_rel_32i.c \
-	src/sel_ngc_rel_32z.c \
-	src/sel_ngc_rel_33.c \
-	src/sel_ngc_rel_34.c \
-	src/sel_ngc_rel_35.c \
-	src/sel_ngc_rel_36.c \
-	src/sel_ngc_rel_37.c \
-	src/sel_ngc_rel_38.c \
-	src/sel_ngc_rel_39.c \
-	src/sel_ngc_rel_40.c \
-	src/sel_ngc_rel_41.c \
-	src/sel_ngc_rel_42.c \
-	src/sel_ngc_rel_43.c \
-	src/sel_ngc_rel_44.c \
 	src/sel_ngc_rel_45.c \
 	src/sel_ngc_rel_46.c \
 	src/sel_ngc_rel_47.c \
@@ -814,20 +800,47 @@ SOURCES := \
 	src/mini_fight_15c.c \
 	src/mini_fight_15d.c \
 	src/mini_fight_15e.c \
+	src/mini_fight_15eb.c \
+	src/mini_fight_15ec.c \
+	src/mini_fight_15ed.c \
+	src/mini_fight_15ee.c \
+	src/mini_fight_15ef.c \
+	src/mini_fight_15eg.c \
+	src/mini_fight_15eh.c \
+	src/mini_fight_15ei.c \
+	src/mini_fight_15ej.c \
+	src/mini_fight_15ek.c \
+	src/mini_fight_15el.c \
+	src/mini_fight_15em.c \
+	src/mini_fight_15en.c \
+	src/mini_fight_15eo.c \
+	src/mini_fight_15ep.c \
+	src/mini_fight_15eq.c \
 	src/mini_fight_15f.c \
 	src/mini_fight_15g.c \
 	src/mini_fight_16.c \
 	src/mini_fight_17.c \
 	src/mini_fight_18.c \
 	src/mini_fight_18b.c \
+	src/mini_fight_18be.c \
+	src/mini_fight_18bf.c \
 	src/mini_fight_18bb.c \
 	src/mini_fight_18bc.c \
+	src/mini_fight_18bcd.c \
+	src/mini_fight_18bce.c \
 	src/mini_fight_18bcb.c \
 	src/mini_fight_18bcc.c \
+	src/mini_fight_18bccb.c \
+	src/mini_fight_18bccc.c \
 	src/mini_fight_18bd.c \
 	src/mini_fight_18c.c \
+	src/mini_fight_18cd.c \
+	src/mini_fight_18ce.c \
+	src/mini_fight_18cf.c \
+	src/mini_fight_18cg.c \
 	src/mini_fight_18cb.c \
 	src/mini_fight_18cc.c \
+	src/mini_fight_18ccb.c \
 	src/mini_fight_18d.c \
 	src/mini_fight_18e.c \
 	src/mini_fight_18f.c \
@@ -873,6 +886,7 @@ SOURCES := \
 	src/mini_fight_56.c \
 	src/mini_fight_57.c \
 	src/mini_fight_57b.c \
+	src/mini_fight_57bb.c \
 	src/mini_fight_57c.c \
 	src/mini_fight_57d.c \
 	src/mini_fight_57e.c \
@@ -888,6 +902,8 @@ SOURCES := \
 	src/mini_fight_64.c \
 	src/mini_fight_65.c \
 	src/mini_fight_66.c \
+	src/mini_fight_66b.c \
+	src/mini_fight_66c.c \
 	src/mini_fight_67.c \
 	src/mini_fight_68.c \
 	src/mini_fight_68i.c \

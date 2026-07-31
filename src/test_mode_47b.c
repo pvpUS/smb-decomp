@@ -279,9 +279,49 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_00007B3C(void)
+struct TestModelWork
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00007B3C.s"
+    /*0x00*/ struct TPL *tpl;
+    /*0x04*/ struct GMA *gma;
+    /*0x08*/ s32 count;
+    /*0x0C*/ s32 sel;
+    /*0x10*/ s32 unk10;
+    /*0x14*/ u32 *unk14;
+    /*0x18*/ u32 *unk18;
+    /*0x1C*/ u32 *unk1C;
+};
+
+void lbl_00007B3C(void)
+{
+    s32 v = (*(struct TestModelWork **)lbl_10000D5C)->sel;
+
+    if (controllerInfo[0].pressed.button & PAD_BUTTON_DOWN)
+    {
+        v++;
+        if (v >= (*(struct TestModelWork **)lbl_10000D5C)->count)
+            v = 0;
+    }
+    if (controllerInfo[0].pressed.button & PAD_BUTTON_UP)
+    {
+        v--;
+        if (v < 0)
+            v = (*(struct TestModelWork **)lbl_10000D5C)->count - 1;
+    }
+    (*(struct TestModelWork **)lbl_10000D5C)->sel = v;
+
+    v = (*(struct TestModelWork **)lbl_10000D5C)->unk10;
+    if (controllerInfo[0].pressed.button & PAD_BUTTON_RIGHT)
+    {
+        v++;
+        if (v > 10)
+            v = 10;
+    }
+    if (controllerInfo[0].pressed.button & PAD_BUTTON_LEFT)
+    {
+        v--;
+        if (v < 0)
+            v = 0;
+    }
+    (*(struct TestModelWork **)lbl_10000D5C)->unk10 = v;
 }
 #pragma force_active reset

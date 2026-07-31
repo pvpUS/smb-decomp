@@ -316,7 +316,7 @@ void lbl_0000C590(void);
 void lbl_0000C5EC(void);
 void lbl_0000C668(void);
 void lbl_0000C76C(void);
-void lbl_0000C7E4(void);
+void lbl_0000C7E4(s16 arg0, f32 x, f32 y);
 void lbl_0000C93C(void);
 void lbl_0000C9B0(void);
 void lbl_0000CA24(void);
@@ -375,9 +375,54 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_0000C7E4(void)
+void lbl_0000C7E4(s16 arg0, f32 x, f32 y)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000C7E4.s"
+    u8 *cfg = lbl_00013C48;
+    struct Sprite *sprite;
+    struct Sprite *sprite2;
+    struct Sprite *child;
+    int tag;
+
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    tag = arg0 + 0x67;
+    sprite->tag = tag;
+    sprite->type = 0;
+    sprite->fontId = 0x48;
+    sprite->x = *(f32 *)(cfg + 0xE4) + x;
+    sprite->y = *(f32 *)(cfg + 0xE4) + y;
+    sprite->depth = *(f32 *)(cfg + 0xD8);
+    sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000C93C;
+    sprite->userVar = arg0;
+    sprintf(sprite->text, (char *)lbl_00015C90);
+
+    sprite2 = create_sprite();
+    if (sprite2 == NULL)
+        return;
+    sprite2->tag = tag;
+    sprite2->type = 1;
+    sprite2->x = x;
+    sprite2->y = y;
+    sprite2->bmpId = 0x717;
+    sprite2->textAlign = 0;
+    sprite2->depth = *(f32 *)(cfg + 0xD0);
+    sprite2->mulB = 0;
+    sprite2->mulG = 0;
+    sprintf(sprite2->text, (char *)lbl_00015C94);
+
+    child = create_child_sprite(sprite2);
+    if (child == NULL)
+        return;
+    child->tag = tag;
+    child->fontId = 0x45;
+    child->textAlign = 0;
+    child->x = *(f32 *)(cfg + 0xE8);
+    child->y = *(f32 *)(cfg + 0x1C);
+    child->depth = *(f32 *)(cfg + 0xD8);
+    child->flags = 0x200000;
+    child->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000CA24;
+    child->userVar = arg0;
 }
+
 #pragma force_active reset

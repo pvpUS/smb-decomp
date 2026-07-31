@@ -421,9 +421,21 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_0000E458(void)
+void lbl_0000E458(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000E458.s"
+    int i;
+    struct FightWork *w = &lbl_10017520;
+    struct FightRec *rec = (struct FightRec *)((u8 *)w + 0x8A8) + w->unk148;
+    s8 *status = g_poolInfo.playerPool.statusList;
+    struct FightSub *s = w->sub;
+
+    for (i = 0; i < g_poolInfo.playerPool.count; i++, s++, status++)
+    {
+        if (*status)
+        {
+            rec->unk0[i] = s->unk10;
+            rec->unk4[i] = s->unk0;
+        }
+    }
 }
 #pragma force_active reset

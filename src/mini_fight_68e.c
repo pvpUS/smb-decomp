@@ -32,6 +32,7 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "stcoli.h"
 #include "../data/common.nlobj.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
@@ -164,7 +165,6 @@ extern u8 worldInfo[];
 
 // Imported functions the code calls that no included header declares.
 extern void ape_face_dir();
-extern void collide_ball_with_stage();
 extern void fade_color_base_default();
 extern void func_8000D5B8();
 extern void func_80047518();
@@ -230,7 +230,6 @@ extern void mathutil_mtxA_normalize_basis();
 extern void mathutil_mtxA_rigid_inv_tf_point();
 extern void mathutil_mtxA_scale_s();
 extern void ord_tbl_draw_nodes();
-extern void raycast_stage_down();
 extern void set_ape_model_lod();
 extern void thread_create();
 extern void unref_func_80039320();
@@ -395,10 +394,40 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_00015198(void)
+void lbl_00015198(struct Item *item, struct PhysicsBall *pb)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00015198.s"
+    f64 *k = (f64 *)lbl_0001C5B0;
+
+    item->flags &= ~2;
+    item->state = 4;
+    item->vel.y = k[13] * item->radius;
+    item->rotVelY <<= 2;
+    item->vel.x += k[14] * pb->vel.x;
+    item->vel.y += k[14] * pb->vel.y;
+    item->vel.z += k[14] * pb->vel.z;
+    if (!(*(u32 *)infoWork & 0x10) || (*(u32 *)infoWork & 0x800))
+    {
+        switch (item->subType)
+        {
+        case 0:
+            unref_func_80039320(currentBall, pb, 0x384);
+            break;
+        case 1:
+            unref_func_8003938C(currentBall, pb, 0x384);
+            break;
+        }
+    }
+    switch (item->subType)
+    {
+    case 0:
+        u_play_sound_0(0x39);
+        u_play_sound_0(0x2820);
+        break;
+    case 1:
+        u_play_sound_0(3);
+        u_play_sound_0(0x283E);
+        break;
+    }
 }
 
 #pragma force_active reset

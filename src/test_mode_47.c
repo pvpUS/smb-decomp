@@ -278,10 +278,102 @@ void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
-#pragma force_active on
-static asm void lbl_00007718(void)
+struct TestPatWork
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00007718.s"
+    /*0x00*/ struct TPL *tpl;
+    /*0x04*/ struct GMA *gma;
+    /*0x08*/ int numGroups;
+    /*0x0C*/ u8 filler0C[0x14 - 0x0C];
+    /*0x14*/ int *first;
+    /*0x18*/ int *last;
+    /*0x1C*/ char **names;
+};
+
+#pragma force_active on
+static void lbl_00007718(void)
+{
+    f32 *k = (f32 *)lbl_0000FE78;
+    u8 *w = lbl_10000000;
+    u8 *d = lbl_000102B0;
+    OSHeapHandle old;
+    char *name;
+    int len;
+    int i;
+    int j;
+    int g;
+    int n;
+
+    old = OSSetCurrentHeap(stageHeap);
+    event_start(15);
+    camera_set_state_all(2);
+    currentCamera->eye.x = k[24];
+    currentCamera->eye.y = k[75];
+    currentCamera->eye.z = k[92];
+    currentCamera->lookAt.x = k[24];
+    currentCamera->lookAt.y = k[24];
+    currentCamera->lookAt.z = k[24];
+    (*(struct TestPatWork **)(w + 0xD5C)) = OSAlloc(sizeof(struct TestPatWork));
+    if ((*(struct TestPatWork **)(w + 0xD5C)) == NULL)
+        OSPanic((char *)(d + 0x134), 5029, (char *)(d + 0x439C));
+    memset((*(struct TestPatWork **)(w + 0xD5C)), 0, sizeof(struct TestPatWork));
+    DVDChangeDir((char *)(d + 0x3010));
+    (*(struct TestPatWork **)(w + 0xD5C))->tpl = load_tpl((char *)(d + 0x43AC));
+    if ((*(struct TestPatWork **)(w + 0xD5C))->tpl != NULL)
+        (*(struct TestPatWork **)(w + 0xD5C))->gma = load_gma((char *)(d + 0x43B8), (*(struct TestPatWork **)(w + 0xD5C))->tpl);
+    DVDChangeDir((char *)(d + 0x35F8));
+    if ((int)(*(struct TestPatWork **)(w + 0xD5C))->gma->numModels > 0)
+    {
+        n = 0;
+        for (i = 0; i < (int)(*(struct TestPatWork **)(w + 0xD5C))->gma->numModels; )
+        {
+            name = (*(struct TestPatWork **)(w + 0xD5C))->gma->modelEntries[i].name;
+            len = strlen(name);
+            while (name[len - 1] >= '0' && name[len - 1] <= '9')
+                len--;
+            for (j = i + 1; j < (int)(*(struct TestPatWork **)(w + 0xD5C))->gma->numModels; j++)
+            {
+                if (strncmp(name, (*(struct TestPatWork **)(w + 0xD5C))->gma->modelEntries[j].name, len) != 0)
+                    break;
+            }
+            i = j;
+            n++;
+        }
+        (*(struct TestPatWork **)(w + 0xD5C))->first = OSAlloc(n * 4);
+        if ((*(struct TestPatWork **)(w + 0xD5C))->first == NULL)
+            OSPanic((char *)(d + 0x134), 5068, (char *)(d + 0x439C));
+        (*(struct TestPatWork **)(w + 0xD5C))->last = OSAlloc(n * 4);
+        if ((*(struct TestPatWork **)(w + 0xD5C))->last == NULL)
+            OSPanic((char *)(d + 0x134), 5070, (char *)(d + 0x439C));
+        (*(struct TestPatWork **)(w + 0xD5C))->names = OSAlloc(n * 4);
+        if ((*(struct TestPatWork **)(w + 0xD5C))->names == NULL)
+            OSPanic((char *)(d + 0x134), 5072, (char *)(d + 0x439C));
+        (*(struct TestPatWork **)(w + 0xD5C))->numGroups = n;
+        i = 0;
+        g = 0;
+        while (i < (int)(*(struct TestPatWork **)(w + 0xD5C))->gma->numModels)
+        {
+            name = (*(struct TestPatWork **)(w + 0xD5C))->gma->modelEntries[i].name;
+            len = strlen(name);
+            while (name[len - 1] >= '0' && name[len - 1] <= '9')
+                len--;
+            (*(struct TestPatWork **)(w + 0xD5C))->first[g] = i;
+            (*(struct TestPatWork **)(w + 0xD5C))->names[g] = OSAlloc(len + 1);
+            if ((*(struct TestPatWork **)(w + 0xD5C))->names[g] == NULL)
+                OSPanic((char *)(d + 0x134), 5084, (char *)(d + 0x439C));
+            strncpy((*(struct TestPatWork **)(w + 0xD5C))->names[g], name, len);
+            (*(struct TestPatWork **)(w + 0xD5C))->names[g][len] = '\0';
+            for (j = i + 1; j < (int)(*(struct TestPatWork **)(w + 0xD5C))->gma->numModels; j++)
+            {
+                if (strncmp(name, (*(struct TestPatWork **)(w + 0xD5C))->gma->modelEntries[j].name, len) != 0)
+                    break;
+            }
+            i = j;
+            (*(struct TestPatWork **)(w + 0xD5C))->last[g] = i;
+            g++;
+        }
+    }
+    OSSetCurrentHeap(old);
+    submodeFinishFunc = lbl_00007BE0;
+    gameSubmodeRequest = 0x7F;
 }
 #pragma force_active reset

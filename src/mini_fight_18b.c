@@ -406,22 +406,38 @@ void lbl_0000B720(void);
 void lbl_0000B8C0(void);
 void lbl_0000BC50(void);
 #pragma force_active on
-asm void lbl_0000AD9C(void)
+void lbl_0000AD9C(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000AD9C.s"
-}
-
-asm void lbl_0000AEEC(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000AEEC.s"
-}
-
-asm void lbl_0000AFCC(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000AFCC.s"
+    u_draw_ball_shadow();
+    background_light_assign();
+    if (eventInfo[EVENT_REND_EFC].state == EV_STATE_RUNNING)
+        rend_efc_draw(4);
+    if (eventInfo[EVENT_STAGE].state == EV_STATE_RUNNING
+     || eventInfo[EVENT_STAGE].state == EV_STATE_SUSPENDED)
+        stage_draw();
+    poly_shadow_draw();
+    if (eventInfo[EVENT_BACKGROUND].state == EV_STATE_RUNNING)
+    {
+        ord_tbl_set_depth_offset(*(f32 *)lbl_0001C25C);
+        background_draw();
+        ord_tbl_set_depth_offset(*(f32 *)lbl_0001C244);
+    }
+    if (eventInfo[EVENT_REND_EFC].state == EV_STATE_RUNNING)
+        rend_efc_draw(16);
+    if (eventInfo[EVENT_ITEM].state == EV_STATE_RUNNING)
+        item_draw();
+    if (eventInfo[EVENT_STOBJ].state == EV_STATE_RUNNING)
+        stobj_draw();
+    if (eventInfo[EVENT_EFFECT].state == EV_STATE_RUNNING)
+        effect_draw();
+    if (eventInfo[EVENT_BALL].state == EV_STATE_RUNNING)
+        ball_draw();
+    func_8009CD5C();
+    ord_tbl_draw_nodes();
+    if (*(u32 *)(backgroundInfo + 8) & 1)
+        lens_flare_draw(0);
+    if (eventInfo[EVENT_REND_EFC].state == EV_STATE_RUNNING)
+        rend_efc_draw(8);
 }
 
 #pragma force_active reset

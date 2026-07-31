@@ -153,8 +153,8 @@ void lbl_00008C78(void);
 void lbl_00008D34(void);
 void lbl_00008F44(void);
 void lbl_0000907C(void);
-void lbl_00009178(void);
-void lbl_000091BC(void);
+u8 lbl_00009178(void);
+u8 lbl_000091BC(void);
 void lbl_000092C4(void);
 void lbl_000092D0(void);
 void lbl_000092E0(void);
@@ -188,7 +188,7 @@ void lbl_00009880(void);
 void lbl_00009968(void);
 void lbl_000099B4(void);
 void lbl_000099E0(void);
-void lbl_00009B68(void);
+f32 lbl_00009B68(Vec *arg);
 void lbl_00009C10(void);
 void lbl_00009C50(void);
 void lbl_0000B280(void);
@@ -258,9 +258,238 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-asm void lbl_00007F34(void)
+void lbl_00007F34(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_00007F34.s"
+    u32 scores[4];
+    u8 ranks[4];
+    u8 order[4];
+    u16 scores2[4];
+    u8 ranks2[4];
+    u8 order2[4];
+    u8 *st = (u8 *)lbl_10000000;
+    u8 *k = (u8 *)lbl_000260F0;
+    u8 *base = (u8 *)lbl_00026AB0;
+    s8 *status;
+    u32 sel;
+    u32 q;
+    int i;
+    int j;
+    int i2;
+    int j2;
+    int bestScore;
+    int rank;
+    int same;
+    int rank2;
+    int same2;
+    s8 best2;
+    u32 tmp;
+    u8 tmp8;
+    u8 tmp8b;
+    u16 tmp16;
+    f32 bestDist;
+
+    status = &g_poolInfo.playerPool.statusList[modeCtrl.currPlayer];
+    if (*status == 2)
+        *status = 4;
+
+    playerInfos[modeCtrl.currPlayer] = infoWork;
+    sel = 0x63;
+    lbl_801F3A8C[modeCtrl.currPlayer] = modeCtrl.courseFlags;
+    bestDist = *(f32 *)k;
+
+    if (lbl_000091BC()) {
+        if ((s32)lbl_802F1BE8.unk0 == 1) {
+            if (modeCtrl.currPlayer == 0)
+                sel = 1;
+            else
+                sel = 0;
+            if (mathutil_sqrt(mathutil_sum_of_sq_3(
+                    ballInfo[sel].pos.x - decodedStageLzPtr->startPos->pos.x,
+                    *(f32 *)k,
+                    ballInfo[sel].pos.z - decodedStageLzPtr->startPos->pos.z)) >
+                *(f64 *)(k + 0x68)) {
+                if ((base + sel * 0x12)[*(s16 *)(st + 0x3a) + 0x48] != 0)
+                    sel = (sel + 1) & 1;
+            }
+        } else if ((s32)lbl_802F1BE8.unk0 == 0) {
+            for (i = 0; i < modeCtrl.playerCount; i++) {
+                scores[i] = 0;
+                order[i] = i;
+                if (*(s16 *)(st + 0x3a) > 0)
+                    scores[i] = (base + i * 0x12)[*(s16 *)(st + 0x3a) + 0x47];
+                else
+                    scores[i] = 0;
+                if (mathutil_sqrt(mathutil_sum_of_sq_3(
+                        ballInfo[i].pos.x - decodedStageLzPtr->startPos->pos.x,
+                        *(f32 *)k,
+                        ballInfo[i].pos.z - decodedStageLzPtr->startPos->pos.z)) >
+                        *(f64 *)(k + 0x68) ||
+                    base[0x40 + i] != 0)
+                    scores[i] += 1000;
+            }
+            j = 0;
+            for (i = 0; i < modeCtrl.playerCount; i++) {
+                if ((base + i * 0x12)[*(s16 *)(st + 0x3a) + 0x48] == 0)
+                    j = 1;
+            }
+            if (j == 0) {
+                for (i = 0; i < modeCtrl.playerCount; i++) {
+                    if (scores[i] < 1000)
+                        scores[i] = (base + i * 0x12)[*(s16 *)(st + 0x3a) + 0x48];
+                }
+            } else {
+                for (i = 0; i < modeCtrl.playerCount; i++) {
+                    if ((base + i * 0x12)[*(s16 *)(st + 0x3a) + 0x48] != 0)
+                        scores[i] += 1000;
+                }
+            }
+            bestScore = 1000;
+            for (i = 0; i < modeCtrl.playerCount; i++) {
+                if (scores[i] < 1000 && scores[i] < bestScore)
+                    bestScore = scores[i];
+            }
+            for (i = 0; i < modeCtrl.playerCount; i++) {
+                if (bestScore == scores[i])
+                    scores[i] = (base + i * 0x12)[*(s16 *)(st + 0x3a) + 0x47];
+                else
+                    scores[i] = 1000;
+            }
+            for (i = 0; i < modeCtrl.playerCount; i++) {
+                for (j = i; j < modeCtrl.playerCount; j++) {
+                    if (scores[i] > scores[j]) {
+                        tmp = scores[i];
+                        scores[i] = scores[j];
+                        scores[j] = tmp;
+                        tmp8 = order[i];
+                        order[i] = order[j];
+                        order[j] = tmp8;
+                    }
+                }
+            }
+            rank = 0;
+            same = 1;
+            for (i = 0; i < modeCtrl.playerCount; i++) {
+                ranks[order[i]] = rank;
+                if (scores[i] != scores[i + 1]) {
+                    rank += same;
+                    same = 1;
+                } else {
+                    same += 1;
+                }
+            }
+            bestScore = 9;
+            for (i = 0; i < modeCtrl.playerCount; i++) {
+                if (ranks[i] == 0 && bestScore > i) {
+                    sel = i;
+                    bestScore = i;
+                }
+            }
+        }
+    } else {
+        for (q = 0; q < modeCtrl.playerCount; q++) {
+            if (mathutil_sqrt(mathutil_sum_of_sq_3(
+                    ballInfo[q].pos.x - decodedStageLzPtr->startPos->pos.x,
+                    *(f32 *)k,
+                    ballInfo[q].pos.z - decodedStageLzPtr->startPos->pos.z)) <
+                *(f64 *)(k + 0x68)) {
+                ballInfo[q].pos.x = decodedStageLzPtr->startPos->pos.x;
+                ballInfo[q].pos.z = decodedStageLzPtr->startPos->pos.z;
+            }
+            if (lbl_00009B68(&ballInfo[q].pos) - bestDist > *(f64 *)(k + 0x68)) {
+                if (base[0x40 + q] == 0) {
+                    bestDist = lbl_00009B68(&ballInfo[q].pos);
+                    sel = q;
+                }
+            }
+        }
+    }
+
+    if (sel == 0x63)
+        sel = 0;
+
+    if (lbl_00009178() == 0 && sel != modeCtrl.currPlayer) {
+        modeCtrl.currPlayer = sel;
+        u_somePlayerId = modeCtrl.currPlayer;
+        lbl_802F1DFC = playerCharacterSelection[u_somePlayerId];
+        u_play_sound_0(0x1e);
+    } else {
+        modeCtrl.currPlayer = sel;
+    }
+
+    infoWork = playerInfos[modeCtrl.currPlayer];
+    modeCtrl.courseFlags = lbl_801F3A8C[modeCtrl.currPlayer];
+
+    if (lbl_00009178()) {
+        for (q = 0; q < modeCtrl.playerCount; q++)
+            base[0x40 + q] = 0;
+        *(s16 *)(st + 0x3a) = *(s16 *)(st + 0x3a) + 1;
+        if ((s32)lbl_802F1BE8.unk0 == 1) {
+            if (*(s16 *)(st + 0x3a) == 0) {
+                modeCtrl.currPlayer = 0;
+            } else {
+                for (i2 = *(s16 *)(st + 0x3a) - 1; i2 >= 0; i2--) {
+                    if (base[i2 + 0x48] > base[i2 + 0x5a]) {
+                        modeCtrl.currPlayer = 1;
+                        break;
+                    } else if (base[i2 + 0x48] < base[i2 + 0x5a]) {
+                        modeCtrl.currPlayer = 0;
+                        break;
+                    } else if (i2 == 0) {
+                        modeCtrl.currPlayer = 0;
+                        break;
+                    }
+                }
+            }
+        } else if ((s32)lbl_802F1BE8.unk0 == 0) {
+            for (i2 = 0; i2 < modeCtrl.playerCount; i2++) {
+                scores2[i2] = 0;
+                order2[i2] = i2;
+                if (*(s16 *)(st + 0x3a) > 0)
+                    scores2[i2] = (base + i2 * 0x12)[*(s16 *)(st + 0x3a) + 0x47];
+                else
+                    scores2[i2] = 0;
+            }
+            for (i2 = 0; i2 < modeCtrl.playerCount; i2++) {
+                for (j2 = i2; j2 < modeCtrl.playerCount; j2++) {
+                    if (scores2[i2] > scores2[j2]) {
+                        tmp16 = scores2[i2];
+                        scores2[i2] = scores2[j2];
+                        scores2[j2] = tmp16;
+                        tmp8b = order2[i2];
+                        order2[i2] = order2[j2];
+                        order2[j2] = tmp8b;
+                    }
+                }
+            }
+            rank2 = 0;
+            same2 = 1;
+            for (i2 = 0; i2 < modeCtrl.playerCount; i2++) {
+                ranks2[order2[i2]] = rank2;
+                if (scores2[i2] != scores2[i2 + 1]) {
+                    rank2 += same2;
+                    same2 = 1;
+                } else {
+                    same2 += 1;
+                }
+            }
+            best2 = 9;
+            for (i2 = 0; i2 < modeCtrl.playerCount; i2++) {
+                if (ranks2[i2] == 0 && best2 > i2) {
+                    modeCtrl.currPlayer = i2;
+                    best2 = i2;
+                }
+            }
+        }
+        *(s16 *)(st + 0x3a) = *(s16 *)(st + 0x3a) - 1;
+        lbl_00008C78();
+        for (q = 0; q < modeCtrl.playerCount; q++) {
+            ballInfo[q].pos = decodedStageLzPtr->startPos->pos;
+            ballInfo[q].prevPos = decodedStageLzPtr->startPos->pos;
+        }
+    }
+
+    for (q = 0; q < modeCtrl.playerCount; q++)
+        g_poolInfo.playerPool.statusList[q] = 4;
+    g_poolInfo.playerPool.statusList[modeCtrl.currPlayer] = 2;
 }
 #pragma force_active reset

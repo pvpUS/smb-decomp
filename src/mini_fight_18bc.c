@@ -406,22 +406,9 @@ void lbl_0000B720(void);
 void lbl_0000B8C0(void);
 void lbl_0000BC50(void);
 #pragma force_active on
-asm void lbl_0000B028(void)
+void lbl_0000B028(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000B028.s"
-}
-
-asm void lbl_0000B03C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000B03C.s"
-}
-
-asm void lbl_0000B3D4(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000B3D4.s"
+    *(s16 *)(lbl_10017664 + 2) = 4;
 }
 
 #pragma force_active reset

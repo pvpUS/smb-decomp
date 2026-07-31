@@ -259,7 +259,7 @@ void lbl_0000C984(void);
 void lbl_0000CB0C(void);
 void lbl_0000CB10(void);
 void lbl_0000CDE0(void);
-void lbl_0000D084(void);
+int lbl_0000D084(void);
 void lbl_0000D3C0(void);
 void lbl_0000D844(void);
 void lbl_0000D9FC(void);
@@ -278,9 +278,134 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_0000D3C0(void)
+static inline void u_hline(char *b, int w, char c)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000D3C0.s"
+    int i;
+
+    for (i = 0; i < w; i++)
+        b[i] = c;
+    b[i] = '\0';
+}
+
+void lbl_0000D3C0(void)
+{
+    u8 *q = lbl_000148E8;
+    u8 *p = lbl_10003BF8;
+    char buf[80];
+    int n;
+    int maxlen;
+    int top;
+    int sel0;
+    int r;
+    int i;
+    int j;
+    int k;
+    int t;
+    int m;
+    int row;
+    char *fmt;
+    int len;
+
+    *(int *)(p + 0xA4) = 0;
+    if (*(int *)(p + 0x8C) == 0)
+        return;
+
+    t = *(int *)(p + 0x58);
+    *(int *)(p + 0x58) = 0;
+    if (t != 0)
+    {
+        *(int *)(p + 0x8C) = 0;
+        *(int *)(p + 0x90) = *(int *)(p + 0x94);
+        *(int *)(p + 0xA4) = 1;
+        return;
+    }
+
+    t = *(int *)(p + 0x54);
+    *(int *)(p + 0x54) = 0;
+    if (t != 0)
+    {
+        *(int *)(p + 0x8C) = 0;
+        return;
+    }
+
+    n = 0;
+    sel0 = *(int *)(p + 0x90);
+    maxlen = 0;
+    while ((*(char ***)(p + 0x98))[n] != NULL)
+    {
+        len = strlen((*(char ***)(p + 0x98))[n]);
+        if (len > maxlen)
+            maxlen = len;
+        n++;
+    }
+
+    r = lbl_0000D084();
+    if (r == 1)
+    {
+        if (--*(int *)(p + 0x90) < 0)
+            *(int *)(p + 0x90) = n - 1;
+    }
+    else if (r == 2)
+    {
+        if (++*(int *)(p + 0x90) >= n)
+            *(int *)(p + 0x90) = 0;
+    }
+
+    if (n > 24)
+    {
+        m = n;
+        if (r == 3)
+        {
+            if ((*(int *)(p + 0x90) -= 10) < 0)
+                *(int *)(p + 0x90) = 0;
+        }
+        else if (r == 4)
+        {
+            if ((*(int *)(p + 0x90) += 10) >= n)
+                *(int *)(p + 0x90) = n - 1;
+        }
+        n = 24;
+        if (*(int *)(p + 0x90) > m - 12)
+            top = m - 24;
+        else if (*(int *)(p + 0x90) < 12)
+            top = 0;
+        else
+            top = *(int *)(p + 0x90) - 12;
+    }
+    else
+    {
+        top = 0;
+    }
+
+    window_set_text_color(2);
+    row = n + 3;
+    window_set_cursor_pos(*(int *)(p + 0x9C), *(int *)(p + 0xA0) + row);
+    u_hline(buf, maxlen + 4, '-');
+    window_printf_2((char *)(q + 0xE30), buf);
+    window_set_cursor_pos(*(int *)(p + 0x9C), *(int *)(p + 0xA0));
+    u_hline(buf, maxlen + 4, '-');
+    window_printf_2((char *)(q + 0xE30), buf);
+    u_hline(buf, maxlen + 4, ' ');
+    for (j = 0; j < n + 2; j++)
+        window_printf_2((char *)(q + 0xE38), buf);
+    window_set_text_color(0);
+    window_set_cursor_pos(*(int *)(p + 0x9C) + 2, *(int *)(p + 0xA0) + 2);
+    for (i = 0; i < n; i++)
+    {
+        k = i + top;
+        if (*(int *)(p + 0x90) == k)
+        {
+            window_set_text_color(1);
+            fmt = (char *)(q + 0xE40);
+        }
+        else
+        {
+            window_set_text_color(0);
+            fmt = (char *)(q + 0xE48);
+        }
+        window_printf_2(fmt, (*(char ***)(p + 0x98))[k]);
+    }
+    window_set_text_color(0);
+    *(int *)(p + 0xA4) = (*(int *)(p + 0x90) != sel0);
 }
 #pragma force_active reset

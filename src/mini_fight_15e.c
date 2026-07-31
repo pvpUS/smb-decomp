@@ -32,6 +32,9 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "mathutil.h"
+#include "avdisp.h"
+#include "polydisp.h"
 #include "../data/common.nlobj.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
@@ -159,76 +162,30 @@ extern u8 infoWork[];
 extern u8 lbl_801EED98[];
 extern u8 lbl_8028C0B0[];
 extern u8 pauseMenuState[];
-extern u8 polyDisp[];
 extern u8 worldInfo[];
 
 // Imported functions the code calls that no included header declares.
 extern void ape_face_dir();
 extern void collide_ball_with_stage();
-extern void fade_color_base_default();
-extern void func_8000D5B8();
 extern void func_80047518();
 extern void func_8006AD3C();
 extern void func_8006B3E8();
 extern void item_create();
 extern void item_replace_type_funcs();
-extern void mathutil_atan2();
-extern void mathutil_mtxA_from_rotate_y();
-extern void mathutil_mtxA_from_translate();
-extern void mathutil_mtxA_pop();
-extern void mathutil_mtxA_rotate_y();
-extern void mathutil_mtxA_tf_point();
-extern void mathutil_mtxA_tf_vec();
-extern void mathutil_mtxA_tf_vec_xyz();
-extern void mathutil_mtxA_to_mtx();
-extern void mathutil_mtxA_to_quat();
-extern void mathutil_mtxA_translate_xyz();
-extern void mathutil_sin();
-extern void mathutil_tan();
-extern void mathutil_vec_normalize_len();
-extern void mathutil_vec_set_len();
 extern void mini_commend_free_data();
 extern void spawn_stobj();
-extern void u_math_unk15();
 extern void ape_skel_anim_main();
-extern void avdisp_draw_model_culled_sort_all();
-extern void avdisp_draw_model_culled_sort_translucent();
-extern void avdisp_set_post_mult_color();
 extern void func_8006A9B8();
 extern void func_8006AAEC();
 extern void func_8009D794();
 extern void func_8009D8A4();
 extern void lens_flare_draw();
-extern void mathutil_mtxA_from_identity();
-extern void mathutil_mtxA_from_quat();
-extern void mathutil_mtxA_from_rotate_x();
-extern void mathutil_mtxA_push();
-extern void mathutil_mtxA_rigid_inv_tf_vec();
-extern void mathutil_mtxA_rotate_x();
-extern void mathutil_mtxA_rotate_z();
-extern void mathutil_mtxA_to_euler();
-extern void mathutil_mtxA_translate();
-extern void mathutil_sqrt();
-extern void mathutil_vec_to_euler();
-extern void mathutil_vec_to_euler_xy();
 extern void new_ape_stat_motion();
 extern void u_load_minigame_graphics();
 extern void unref_func_8003938C();
 extern void vibration_control();
 extern void GXSetNumTevStages_cached();
-extern void avdisp_draw_model_unculled_sort_all();
-extern void avdisp_draw_model_unculled_sort_translucent();
-extern void avdisp_set_bound_sphere_scale();
-extern void avdisp_set_post_add_color();
-extern void avdisp_set_z_mode();
 extern void func_8009DB40();
-extern void mathutil_atan();
-extern void mathutil_mtxA_from_mtx();
-extern void mathutil_mtxA_from_mtxB_translate();
-extern void mathutil_mtxA_mult_left();
-extern void mathutil_mtxA_normalize_basis();
-extern void mathutil_mtxA_rigid_inv_tf_point();
-extern void mathutil_mtxA_scale_s();
 extern void ord_tbl_draw_nodes();
 extern void raycast_stage_down();
 extern void set_ape_model_lod();
@@ -237,35 +194,19 @@ extern void unref_func_80039320();
 extern void unref_func_800393F8();
 extern void GXSetTevAlphaOp_cached();
 extern void ape_destroy();
-extern void avdisp_draw_model_unculled_sort_none();
-extern void mathutil_mtxA_from_mtxB();
-extern void mathutil_mtxA_from_translate_xyz();
-extern void mathutil_mtxA_rigid_inv_tf_tl();
-extern void mathutil_mtxA_sq_from_identity();
-extern void mathutil_mtxA_tf_point_xyz();
-extern void mathutil_mtxA_translate_neg();
-extern void mathutil_vec_dot_normalized_safe();
 extern void rend_efc_mirror_enable();
 extern void stobj_draw();
 extern void u_ball_init_1();
 extern void GXSetTevAlphaIn_cached();
-extern void avdisp_set_alpha();
 extern void background_draw();
 extern void light_init();
-extern void mathutil_mtxA_from_mtxB_translate_xyz();
 extern void set_bg_ambient();
-extern void u_avdisp_set_some_func_1();
 extern void GXSetTevColorOp_cached();
 extern void alloc_pool_light();
-extern void avdisp_draw_model_culled_sort_none();
 extern void func_8009CD5C();
-extern void mathutil_mtxA_scale_xyz();
 extern void ord_tbl_set_depth_offset();
 extern void GXSetTevColorIn_cached();
-extern void draw_monkey();
 extern void func_8009C5E4();
-extern void mathutil_mtxA_sq_from_mtx();
-extern void mathutil_mtxA_to_euler_yxz();
 extern void rend_efc_draw();
 extern void GXSetTevKAlphaSel_cached();
 extern void background_light_assign();
@@ -298,7 +239,7 @@ void lbl_000074DC(void);
 void lbl_00007640(void);
 void lbl_00007AD4(void);
 void lbl_00007F7C(void);
-void lbl_000080D4(void);
+void lbl_000080D4(struct Effect *);
 void lbl_0000A690(void);
 void lbl_0000A974(void);
 void lbl_0000AAD0(void);
@@ -398,186 +339,88 @@ void lbl_0001A554(void);
 void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
-static void lbl_000082E8(void);
-static void lbl_00008928(void);
-static void lbl_000089D8(void);
-static void lbl_000089DC(void);
-static void lbl_00008C3C(void);
-static void lbl_00008DD0(void);
-static void lbl_00008E60(void);
-static void lbl_00008E64(void);
-static void lbl_00008F80(void);
-static void lbl_000094F0(void);
-static void lbl_000095EC(void);
-static void lbl_000095F0(void);
-static void lbl_000096E0(void);
-static void lbl_00009A68(void);
-static void lbl_00009B94(void);
-static void lbl_00009B98(void);
-static void lbl_00009B9C(void);
-static void lbl_00009BA0(void);
-static void lbl_00009CA0(void);
-static void lbl_00009CA4(void);
-static void lbl_00009D48(void);
-static void lbl_00009E88(void);
-static void lbl_00009F64(void);
-static void lbl_00009F68(void);
-static void lbl_0000A094(void);
-static void lbl_0000A184(void);
-static void lbl_0000A320(void);
-static void lbl_0000A324(void);
-static void lbl_0000A4DC(void);
-static void lbl_0000A5D0(void);
-static void lbl_00008238(void);
-static void lbl_0000823C(void);
-static void lbl_0000A68C(void);
+void lbl_000082E8(void);
+void lbl_00008928(void);
+void lbl_000089D8(void);
+void lbl_000089DC(void);
+void lbl_00008C3C(void);
+void lbl_00008DD0(void);
+void lbl_00008E60(void);
+void lbl_00008E64(void);
+void lbl_00008F80(void);
+void lbl_000094F0(void);
+void lbl_000095EC(void);
+void lbl_000095F0(void);
+void lbl_000096E0(void);
+void lbl_00009A68(void);
+void lbl_00009B94(void);
+void lbl_00009B98(void);
+void lbl_00009B9C(void);
+void lbl_00009BA0(void);
+void lbl_00009CA0(void);
+void lbl_00009CA4(void);
+void lbl_00009D48(void);
+void lbl_00009E88(void);
+void lbl_00009F64(void);
+void lbl_00009F68(void);
+void lbl_0000A094(void);
+void lbl_0000A184(void);
+void lbl_0000A320(void);
+void lbl_0000A324(void);
+void lbl_0000A4DC(void);
+void lbl_0000A5D0(void);
+void lbl_00008238(void);
+void lbl_0000823C(void);
+void lbl_0000A68C(void);
 #pragma force_active on
-asm void lbl_000080D4(void)
+void lbl_000080D4(struct Effect *effect)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000080D4.s"
+    u8 *k = lbl_0001C108;
+    int i;
+    struct GMAModel *m;
+    int a;
+    int rx;
+    int rz;
+    int ry;
+    f32 s;
+    f32 z;
+
+    mathutil_mtxA_from_mtxB_translate(&effect->pos);
+    mathutil_mtxA_rotate_y(effect->rotY);
+    mathutil_mtxA_rotate_x(effect->rotX);
+    mathutil_mtxA_rotate_z(effect->rotZ);
+    m = effect->model;
+    ry = effect->unkA2 + effect->rotY * 4;
+    rx = effect->unkA0 + effect->rotX;
+    rz = effect->unkA4 + effect->rotZ;
+    z = effect->unk88.x;
+    for (i = 12, a = 0; i > 0; i--, a += 0x1555)
+    {
+        mathutil_mtxA_push();
+        mathutil_mtxA_rotate_y(a);
+        mathutil_mtxA_translate_xyz(*(f32 *)k, *(f32 *)k, z);
+        if (i & 1)
+            s = *(f32 *)(k + 0x68) * effect->colorFactor;
+        else
+            s = *(f32 *)(k + 0x6C) * effect->colorFactor;
+        mathutil_mtxA_scale_s(s);
+        if (!test_scaled_sphere_in_frustum(&m->boundSphereCenter,
+                                           m->boundSphereRadius, s))
+        {
+            mathutil_mtxA_pop();
+            continue;
+        }
+        mathutil_mtxA_rotate_y((a << 2) + ry);
+        mathutil_mtxA_rotate_x(rx);
+        mathutil_mtxA_rotate_z(a + rz);
+        avdisp_set_bound_sphere_scale(s);
+        GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+        GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
+        avdisp_draw_model_unculled_sort_translucent(m);
+        mathutil_mtxA_pop();
+    }
 }
 static void lbl_00008238(void)
-{
-}
-static asm void lbl_0000823C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000823C.s"
-}
-static asm void lbl_000082E8(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000082E8.s"
-}
-static asm void lbl_00008928(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00008928.s"
-}
-static void lbl_000089D8(void)
-{
-}
-static asm void lbl_000089DC(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000089DC.s"
-}
-static asm void lbl_00008C3C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00008C3C.s"
-}
-static asm void lbl_00008DD0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00008DD0.s"
-}
-static void lbl_00008E60(void)
-{
-}
-static asm void lbl_00008E64(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00008E64.s"
-}
-static asm void lbl_00008F80(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00008F80.s"
-}
-static asm void lbl_000094F0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000094F0.s"
-}
-static void lbl_000095EC(void)
-{
-}
-static asm void lbl_000095F0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000095F0.s"
-}
-static asm void lbl_000096E0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000096E0.s"
-}
-static asm void lbl_00009A68(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00009A68.s"
-}
-static void lbl_00009B94(void)
-{
-}
-static void lbl_00009B98(void)
-{
-}
-static void lbl_00009B9C(void)
-{
-}
-static asm void lbl_00009BA0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00009BA0.s"
-}
-static void lbl_00009CA0(void)
-{
-}
-static asm void lbl_00009CA4(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00009CA4.s"
-}
-static asm void lbl_00009D48(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00009D48.s"
-}
-static asm void lbl_00009E88(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00009E88.s"
-}
-static void lbl_00009F64(void)
-{
-}
-static asm void lbl_00009F68(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00009F68.s"
-}
-static asm void lbl_0000A094(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000A094.s"
-}
-static asm void lbl_0000A184(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000A184.s"
-}
-static void lbl_0000A320(void)
-{
-}
-static asm void lbl_0000A324(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000A324.s"
-}
-static asm void lbl_0000A4DC(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000A4DC.s"
-}
-static asm void lbl_0000A5D0(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000A5D0.s"
-}
-static void lbl_0000A68C(void)
 {
 }
 

@@ -409,28 +409,4 @@ asm void lbl_0000BC94(void)
 #include "../asm/nonmatchings/mini_fight/lbl_0000BC94.s"
 }
 
-asm void lbl_0000C06C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000C06C.s"
-}
-
-asm void lbl_0000C22C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000C22C.s"
-}
-
-asm void lbl_0000C2C8(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000C2C8.s"
-}
-
-asm void lbl_0000C5FC(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000C5FC.s"
-}
-
 #pragma force_active reset

@@ -278,9 +278,43 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_00000934(void)
+void lbl_00000934(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00000934.s"
+    u8 *w = lbl_10000000;
+    u8 *k = lbl_000102B0;
+    int top;
+    s32 d;
+    int base;
+    int i;
+    int y;
+
+    window_set_cursor_pos(1, 1);
+    window_printf_2((char *)(k + 0x270));
+    d = *(int *)(w + 4) - 10;
+    if (d < 0)
+        top = 0;
+    else if (d > 14)
+        top = 14;
+    else
+        top = *(int *)(w + 4) - 10;
+    base = 3 - top;
+
+    for (i = 0; i < *(int *)lbl_802F0980; i++)
+    {
+        y = base + i + i / 4;
+        window_set_cursor_pos(12, y);
+        if (i == *(int *)(w + 4))
+            window_set_text_color(2);
+        window_printf_2((char *)(k + 0x418), ((char **)dipSwitchNames)[i],
+                        (dipSwitches & (1 << i)) ? (char *)(k + 0x410)
+                                                 : (char *)(k + 0x414));
+        if (i == *(int *)(w + 4))
+            window_set_text_color(0);
+    }
+    y = base + *(int *)(w + 4) + *(int *)(w + 4) / 4;
+    window_set_cursor_pos(10, y);
+    window_set_text_color(1);
+    u_debug_print((char *)(k + 0x400));
+    window_set_text_color(0);
 }
 #pragma force_active reset

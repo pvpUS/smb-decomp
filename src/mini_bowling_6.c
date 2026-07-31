@@ -209,10 +209,10 @@ void lbl_0000A878(void);
 void lbl_0000AAAC(void);
 void lbl_0000AB98(void);
 void lbl_0000AC60(void);
-void lbl_0000AD8C(void);
+s16 lbl_0000AD8C(u8 *);
 void lbl_0000AF18(void);
 void lbl_0000AFEC(void);
-void lbl_0000B0AC(void);
+void lbl_0000B0AC(f32);
 void lbl_0000B1BC(void);
 void lbl_0000B344(void);
 void lbl_0000B460(void);
@@ -229,7 +229,7 @@ void lbl_0000D598(void);
 void lbl_0000D650(void);
 void lbl_0000D7F8(void);
 void lbl_0000D8CC(void);
-void lbl_0000D90C(void);
+void lbl_0000D90C(int, int);
 void lbl_0000DA0C(void);
 void lbl_0000DAF4(void);
 void lbl_0000DD4C(void);
@@ -245,9 +245,42 @@ void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
 #pragma force_active on
-asm void lbl_00001908(void)
+void lbl_00001908(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00001908.s"
+    u8 *w = lbl_10000000;
+    u8 *tbl = lbl_0000F020;
+    if (*(s8 *)((w + modeCtrl.currPlayer * 0x4c) + 0x13) == 1 ||
+        (*(s8 *)((w + modeCtrl.currPlayer * 0x4c) + 0x13) == 2 && (s8)*(u8 *)((w + modeCtrl.currPlayer * 0x4c) + 0x12) == 10))
+        stageInfo.unk0 = 0;
+    else
+        stageInfo.unk0 = 0x1770;
+
+    lbl_0000B0AC(*(f32 *)(tbl + 0x1c24));
+    *(s16 *)(w + 0x13c) = lbl_0000AD8C(w + 0x13e);
+    lbl_0000AC60();
+    if (*(u16 *)(w + 0x13c) == 0) {
+        lbl_00004D10();
+        *(s16 *)(w + 0x13c) = lbl_0000AD8C(w + 0x13e);
+    }
+    *(s8 *)(w + 0x13f) = 0;
+    *(s8 *)(w + 0x140) = 0;
+    *(f32 *)(w + 0x168) = *(f32 *)(tbl + 0x1c98);
+    *(f32 *)(w + 0x16c) = *(f32 *)(tbl + 0x1c98);
+    *(f32 *)(w + 0x170) = *(f32 *)(tbl + 0x1c98);
+    *(s16 *)(w + 0x174) = 0;
+    BALL_FOREACH(
+        ball->state = 0x19;
+        currentBall->unk148 = 0;
+    )
+    if (modeCtrl.playerCount >= 2)
+        lbl_0000D90C(0x3c, modeCtrl.currPlayer + 1);
+    else
+        lbl_0000D90C(0x3c, 0);
+    *(f32 *)(w + 0x160) = *(f32 *)(tbl + 0x1c98);
+    *(f32 *)(w + 0x164) = *(f32 *)(tbl + 0x1dfc);
+    *(s32 *)w = 0x3c;
+    *(s32 *)lbl_00014F20 = 2;
+    *(s32 *)lbl_00014F24 = 0x4023;
+    CAMERA_FOREACH_2(camera->subState = 2;)
 }
 #pragma force_active reset

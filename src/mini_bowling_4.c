@@ -132,7 +132,7 @@ extern void u_set_minigame_callbacks_2();
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);
-void lbl_0000020C(void);
+void lbl_0000020C(int arg0);
 void lbl_00000718(void);
 void lbl_000009EC(void);
 void lbl_00000F98(void);
@@ -245,10 +245,117 @@ void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
 #pragma force_active on
-asm void lbl_0000020C(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000020C.s"
-}
+struct BowlPlayer {
+    u8 filler0[0x4c];
+};
 
+void lbl_0000020C(int arg0)
+{
+    u8 *w = lbl_10000000;
+    u8 *k = lbl_0000F020;
+    u8 *q = lbl_00014F20;
+    u8 *p;
+    s32 i;
+    s32 j;
+    f32 a;
+    f32 b;
+
+    event_finish_all();
+    free_all_bitmap_groups_except_com();
+    func_800249D4();
+    SoundGroupLoad(0xa);
+    func_80044920();
+    load_stage(0xb3);
+    u_load_minigame_graphics(4);
+    call_bitmap_load_group(6);
+    submodeFinishFunc = lbl_00001888;
+    event_start(1);
+    event_start(2);
+    event_start(3);
+    event_start(4);
+    event_start(9);
+    event_start(0xf);
+    event_start(0x10);
+    event_start(0x12);
+    event_start(0xd);
+    event_start(0x13);
+    event_start(0x14);
+    event_start(0xb);
+    light_init(0xb3);
+    rend_efc_mirror_enable();
+    stageInfo.unk1C |= 1;
+    stageInfo.unk0 = 0;
+    u_init_player_data_1();
+    BALL_FOREACH(ball->state = 1;)
+    WORLD_FOREACH(world->state = 1;)
+    for (i = 0; i < 4; i++)
+    {
+        if (g_poolInfo.playerPool.statusList[i] != 0)
+            apeThreadNo[i] = thread_create((ThreadCallback)lbl_000066C4,
+                                           ballInfo[i].ape, THREAD_GROUP_5);
+    }
+    camera_set_state_all(0x3d);
+    CAMERA_FOREACH_2(camera->subState = 0; camera->unk26 = 9;)
+    for (i = 0; i < 4; i++)
+    {
+        a = *(f32 *)(k + 0x1c98);
+        b = *(f32 *)(k + 0x1c9c);
+        setup_camera_viewport(i, a, a, b, b);
+    }
+    info_init_first();
+    for (i = 0; i < 4; i++)
+    {
+        p = (u8 *)&((struct BowlPlayer *)(w + 0xc))[i];
+        *(s32 *)(p + 0) = 0;
+        *(s16 *)(p + 4) = 0;
+        p[6] = 1;
+        p[7] = 1;
+        p[8] = 0;
+        p[9] = 0;
+        *(s16 *)(p + 0xa) = 0;
+        for (j = 1; j < 11; j++)
+            *(s16 *)(p + 0xa + j * 2) = -1;
+        for (j = 0; j < 0x15; j++)
+        {
+            ((u8 *)p)[0x20 + j] = 0;
+            ((u8 *)p)[0x35 + j] = 0;
+        }
+    }
+    *(s16 *)(w + 0x13c) = 0;
+    w[0x13e] = 0;
+    q[8] = 1;
+    *(s16 *)(w + 4) = 0;
+    w[6] = 0;
+    w[7] = 0;
+    w[8] = 0xb;
+    *(s32 *)(w + 0x144) = 0;
+    start_screen_fade(0x100, 0, 0x1e);
+    *(s32 *)(q + 0xc) = -1;
+    u_play_music(0x36, 0);
+    lbl_0000A808();
+    if ((s32)lbl_802F1BF0 == 0)
+    {
+        *(s32 *)q = 1;
+        *(s32 *)(q + 4) = 0x21;
+        *(s32 *)w = 0x2710;
+    }
+    else
+    {
+        *(s32 *)q = 0x800;
+        *(s32 *)(q + 4) = 0x8001;
+        *(s32 *)w = 0x2710;
+    }
+    lbl_00007964(0, ballInfo);
+    lbl_0000B460(0);
+    lbl_00007964(1, ballInfo);
+    lbl_0000B460(1);
+    w[0x13f] = 0;
+    w[0x140] = 0;
+    lbl_000097B4();
+    *(s8 *)(w + 0x148) = -1;
+    *(s8 *)(w + 0x149) = -1;
+    *(s8 *)(w + 0x14a) = -1;
+    *(s8 *)(w + 0x14b) = -1;
+    w[0x14c] = 0;
+}
 #pragma force_active reset

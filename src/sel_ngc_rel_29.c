@@ -118,7 +118,6 @@ extern void floor_to_stage_id();
 extern void func_8009F4C4();
 extern void func_80067310();
 extern void is_floor_visited();
-extern void is_load_queue_not_empty();
 extern void is_minigame_unlocked();
 extern void item_draw();
 extern void lens_flare_draw();
@@ -172,25 +171,15 @@ void lbl_0000A7D4(void);
 void lbl_0000A840(void);
 void lbl_0000A870(void);
 void lbl_0000A950(void);
-void lbl_0000AFB0(struct Sprite *sprite);
-void lbl_0000B0FC(s8 *alive, struct Sprite *sprite);
 void lbl_0000B1C0(void);
 void lbl_0000B920(void);
 void lbl_0000BEE8(void);
 void lbl_0000C970(void);
-void lbl_0000D39C(void);
-void lbl_0000D5A8(void);
-void lbl_0000D7C0(void);
-void lbl_0000D82C(void);
-void lbl_0000DCA4(void);
-void lbl_0000DDF4(void);
-void lbl_0000DEC8(void);
-void lbl_0000E068(void);
-void lbl_0000E368(void);
-void lbl_0000E43C(void);
-void lbl_0000E4BC(void);
-void lbl_0000E540(void);
-void lbl_0000E620(void);
+void lbl_0000D82C(struct Sprite *sprite);
+void lbl_0000DCA4(s8 *alive, struct Sprite *sprite);
+void lbl_0000DEC8(s8 *alive, struct Sprite *sprite);
+void lbl_0000E068(struct Sprite *sprite);
+void lbl_0000E368(s8 *alive, struct Sprite *sprite);
 void lbl_0000E778(void);
 void lbl_0000EBD4(void);
 void lbl_0000ECB0(void);
@@ -206,6 +195,29 @@ void lbl_00011688(void);
 void lbl_00011728(void);
 void lbl_00011824(void);
 void lbl_000118E4(void);
+
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+void lbl_0000AFB0(struct Sprite *sprite);
+void lbl_0000B0FC(s8 *alive, struct Sprite *sprite);
+static void lbl_0000C518(void);
+void lbl_0000D39C(s8 *alive, struct Sprite *sprite);
+struct SelNgcSlotPos
+{
+    f32 x;
+    f32 y;
+};
+extern int is_load_queue_not_empty(void);
+void lbl_0000D5A8(struct Sprite *sprite);
+void lbl_0000D7C0(s8 *alive, struct Sprite *sprite);
+void lbl_0000DDF4(struct Sprite *sprite);
+
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+void lbl_0000E43C(s8 *alive, struct Sprite *sprite);
+void lbl_0000E4BC(s8 *alive, struct Sprite *sprite);
+void lbl_0000E540(struct Sprite *sprite);
+void lbl_0000E620(struct Sprite *sprite);
 
 #pragma force_active on
 void lbl_0000A950(void)
@@ -479,24 +491,460 @@ asm void lbl_0000B1C0(void)
     nofralloc
 #include "../asm/nonmatchings/sel_ngc_rel/lbl_0000B1C0.s"
 }
+#pragma peephole on
 asm void lbl_0000B920(void)
 {
     nofralloc
 #include "../asm/nonmatchings/sel_ngc_rel/lbl_0000B920.s"
 }
+#pragma peephole on
 asm void lbl_0000BEE8(void)
 {
     nofralloc
 #include "../asm/nonmatchings/sel_ngc_rel/lbl_0000BEE8.s"
 }
+#pragma peephole on
 static asm void lbl_0000C518(void)
 {
     nofralloc
 #include "../asm/nonmatchings/sel_ngc_rel/lbl_0000C518.s"
 }
+#pragma peephole on
 asm void lbl_0000C970(void)
 {
     nofralloc
 #include "../asm/nonmatchings/sel_ngc_rel/lbl_0000C970.s"
 }
+#pragma peephole on
+void lbl_0000D39C(s8 *alive, struct Sprite *sprite)
+{
+    struct SelNgcSlotPos *tbl = (struct SelNgcSlotPos *)lbl_00012730;
+    u8 *k = lbl_00011CB0;
+
+    sprite->x = sprite->x + *(f64 *)(k + 0x58) * (tbl[sprite->userVar + 13].x - sprite->x);
+    switch (modeCtrl.gameType)
+    {
+    case 2:
+        sprite->scaleY = *(f32 *)(k + 0x2C0);
+        sprite->y = sprite->y + *(f64 *)(k + 0x58) * ((*(f32 *)(k + 0x2C4) + tbl[sprite->userVar + 13].y) - sprite->y);
+        break;
+    default:
+        sprite->scaleY = *(f32 *)(k + 0xC);
+        sprite->y = sprite->y + *(f64 *)(k + 0x58) * (tbl[sprite->userVar + 13].y - sprite->y);
+        break;
+    }
+
+    switch (sprite->userVar)
+    {
+    case 2:
+    case 3:
+        if (sprite->counter > 0)
+            sprite->counter--;
+        break;
+    default:
+        if (sprite->counter < 9)
+            sprite->counter++;
+        break;
+    }
+
+    if (find_sprite_with_tag(0x21)->userVar == 0 && find_sprite_with_tag(0x22)->userVar == 0)
+    {
+        u8 *g = (u8 *)&lbl_801EEDA8;
+
+        *(f32 *)(g + 0xF8) = (sprite->x - *(f64 *)(k + 0x2C8)) + ((f32 *)(k + 0x220))[sprite->counter];
+        *(f32 *)(g + 0xFC) = ((f32 *)(k + 0x248))[sprite->counter];
+        *(f32 *)(g + 0x100) = sprite->scaleX * ((f32 *)(k + 0x270))[sprite->counter];
+        *(f32 *)(g + 0x104) = sprite->scaleY * ((f32 *)(k + 0x298))[sprite->counter];
+        if (sprite->userVar == 3 && sprite->x > *(f32 *)(k + 0x2D0))
+        {
+            sprite->userVar = 0;
+            sprite->counter = 9;
+        }
+    }
+}
+void lbl_0000D5A8(struct Sprite *sprite)
+{
+    u8 *k = (u8 *)lbl_00011CB0;
+    NLsprarg sp;
+
+    sp.u0 = *(f32 *)(k + 8);
+    sp.v0 = *(f32 *)(k + 8);
+    sp.u1 = *(f32 *)(k + 0xC);
+    sp.v1 = *(f32 *)(k + 0xC);
+    sp.trnsl = sprite->opacity;
+    sp.listType = NLSPR_LISTTYPE_AUTO;
+    sp.attr = (sprite->flags & ~0xF) | NLSPR_DISP_CC;
+    sp.base_color = ((s32)(*(f32 *)(k + 0x10) * sprite->opacity) << 24) | 0xFFFFFF;
+    sp.offset_color = 0;
+    sp.sprno = sprite->bmpId;
+    sp.x = sprite->x;
+    sp.y = sprite->y;
+    sp.z = sprite->depth;
+    sp.zm_x = sprite->scaleX;
+    sp.zm_y = sprite->scaleY;
+    sp.ang = sprite->rotation;
+    nlSprPut(&sp);
+
+    if (sprite->counter > 0)
+    {
+        sp.base_color = 0xFFFFFF;
+        sp.offset_color = 0;
+    }
+    else if (is_load_queue_not_empty())
+    {
+        sp.base_color = 0;
+        sp.offset_color = 0;
+    }
+    else if (sprite->counter == 0)
+    {
+        sp.base_color = 0;
+        sp.offset_color = (backgroundInfo.backdropColor.r << 16)
+                        | (backgroundInfo.backdropColor.g << 8)
+                        | backgroundInfo.backdropColor.b;
+    }
+
+    sp.sprno = ((globalAnimTimer >> 2) & 1) ? 0x427 : 0x431;
+    sp.x = sprite->x - *(f64 *)(k + 0x30);
+    sp.y = sprite->y - *(f64 *)(k + 0x2D8);
+    sp.z = sprite->depth - *(f64 *)(k + 0x2E0);
+    sp.zm_x = sprite->scaleX * (sprite->x - *(f32 *)(lbl_00012798 + 0x10) < *(f64 *)(k + 0x2E8)
+                                ? *(f64 *)(k + 0x2F0) : *(f64 *)(k + 0x2F8));
+    sp.zm_y = *(f64 *)(k + 0x300) * sprite->scaleY;
+    sp.ang = (globalAnimTimer & 2) << 14;
+    nlSprPut(&sp);
+}
+// sprite mainFunc: ease the sprite towards the (x,y) slot userVar selects.
+void lbl_0000D7C0(s8 *alive, struct Sprite *sprite)
+{
+    u8 *tbl = lbl_000127B8;
+    u8 *k = lbl_00011D08;
+
+    sprite->x = sprite->x
+              + *(f64 *)k * (*(f32 *)(tbl + sprite->userVar * 8) - sprite->x);
+    sprite->y = sprite->y
+              + *(f64 *)k * (*(f32 *)(tbl + sprite->userVar * 8 + 4) - sprite->y);
+}
+// sprite drawFunc: the panel, then one row per save-file slot -- name, page
+// number, selection pip, and a pulsing cursor on the active row.
+void lbl_0000D82C(struct Sprite *sprite)
+{
+    u8 *tbl = lbl_00012730;
+    u8 *k = lbl_00011CB0;
+    NLsprarg sp;
+    f32 hy;
+    f32 bx;
+    f32 by;
+    f32 x;
+    f64 ty;
+    int pulse;
+    int i;
+
+    sp.u0 = *(f32 *)(k + 8);
+    sp.v0 = *(f32 *)(k + 8);
+    sp.u1 = *(f32 *)(k + 0xC);
+    sp.v1 = *(f32 *)(k + 0xC);
+    sp.trnsl = sprite->opacity;
+    sp.listType = NLSPR_LISTTYPE_AUTO;
+    sp.attr = (sprite->flags & ~0xF) | NLSPR_DISP_CC;
+    sp.base_color = ((s32)(*(f32 *)(k + 0x10) * sprite->opacity) << 24) | 0xFFFFFF;
+    sp.offset_color = 0;
+    sp.sprno = sprite->bmpId;
+    sp.x = sprite->x;
+    sp.y = sprite->y;
+    sp.z = sprite->depth;
+    sp.zm_x = sprite->scaleX;
+    sp.zm_y = sprite->scaleY;
+    sp.ang = sprite->rotation;
+    nlSprPut(&sp);
+
+    reset_text_draw_settings();
+
+    bx = sprite->x - *(f32 *)(k + 0x308);
+    by = sprite->y - *(f32 *)(k + 0x30C);
+    pulse = *(f64 *)(k + 0x310) * __fabs(mathutil_sin(globalAnimTimer << 9));
+    hy = *(f32 *)(k + 0x1F8) + by;
+
+    for (i = 0; i < 5; i++)
+    {
+        *(u8 **)lbl_802F1FB4 = lbl_8027CE24 + i * 8;
+        x = bx + i * 39;
+        sp.base_color = ((s32)(*(f32 *)(k + 0x10) * sprite->opacity) << 24) | 0xFFFFFF;
+        set_text_font(0x37);
+        set_text_mul_color((*(s16 *)(*(u8 **)lbl_802F1FB4 + 2) == 3
+                            || i >= *(s32 *)lbl_802F1FB0) ? 0 : 0xFFFFFF);
+        set_text_pos(x - *(f32 *)(k + 0x78), *(f32 *)(k + 0x318) + by);
+        if (*(u32 *)(*(u8 **)lbl_802F1FB4 + 4) & 0x10)
+            sprite_puts((char *)(tbl + 0x4134));
+        else
+            sprite_printf((char *)(tbl + 0x3CEC),
+                          *(s16 *)(*(u8 **)lbl_802F1FB4 + 2) + 4);
+
+        if (i >= *(s32 *)lbl_802F1FAC)
+        {
+            sp.sprno = 0x428;
+            sp.x = x;
+            sp.y = by;
+            sp.z = sprite->depth - *(f64 *)(k + 0x190);
+            sp.zm_x = *(f64 *)(k + 0x320) * sprite->scaleX;
+            sp.zm_y = *(f64 *)(k + 0x328) * sprite->scaleY;
+            sp.ang = (globalAnimTimer & 2) << 14;
+            sp.base_color = (i >= *(s32 *)lbl_802F1FB0) ? 0 : 0xFFFFFF;
+            nlSprPut(&sp);
+        }
+
+        if (i < *(s32 *)lbl_802F1FB0 && *(s16 *)(*(u8 **)lbl_802F1FB4 + 2) != 3)
+        {
+            func_80071B1C(sprite->depth - *(f64 *)(k + 0x190));
+            set_text_mul_color(0xFFFF00);
+            if ((*(u32 *)(*(u8 **)lbl_802F1FB4 + 4) & 8)
+             && !(*(u32 *)(*(u8 **)lbl_802F1FB4 + 4) & 0x10))
+            {
+                set_text_font(0x34);
+                set_text_pos(*(f32 *)(k + 0x70) + x, ty = (*(f32 *)(k + 0x78) + by) - *(f64 *)k);
+                sprite_printf((char *)(tbl + 0x3D54), *(s16 *)*(u8 **)lbl_802F1FB4);
+                set_text_pos(x - *(f32 *)(k + 0x188), ty);
+                sprite_puts((char *)(tbl + 0x4138));
+            }
+            else
+            {
+                set_text_font(0x35);
+                set_text_pos(x, (*(f32 *)(k + 0x78) + by) - *(f64 *)k);
+                sprite_printf((char *)(tbl + 0x3D54), *(s16 *)*(u8 **)lbl_802F1FB4);
+            }
+
+            if (sprite->userVar != 0 && sprite->userVar != 1
+             && i == *(s32 *)lbl_802F1FAC)
+            {
+                sp.base_color = (((s32)(*(f32 *)(k + 0x10) * sprite->opacity) << 24)
+                                 | 0xFF00FF) | pulse * 256;
+                sp.sprno = 0x432;
+                sp.x = *(f32 *)(k + 0xC) + x;
+                sp.y = hy;
+                sp.z = sprite->depth - *(f64 *)(k + 0x330);
+                sp.zm_x = *(f32 *)(k + 0xC);
+                sp.zm_y = *(f32 *)(k + 0xC);
+                sp.ang = 0;
+                nlSprPut(&sp);
+            }
+        }
+    }
+}
+#pragma peephole on
+// sprite mainFunc: ease towards the (x,y) slot userVar selects, then drive the
+// shared preview transform while both neighbour sprites are idle.
+void lbl_0000DCA4(s8 *alive, struct Sprite *sprite)
+{
+    u8 *k = lbl_00011CB0;
+
+    sprite->x = sprite->x + *(f64 *)(k + 0x58) * (((struct SelNgcSlotPos *)lbl_000127D8)[sprite->userVar].x - sprite->x);
+    sprite->y = sprite->y + *(f64 *)(k + 0x58) * (((struct SelNgcSlotPos *)lbl_000127D8)[sprite->userVar].y - sprite->y);
+
+    if (find_sprite_with_tag(0x1B)->userVar == 0 && find_sprite_with_tag(0x22)->userVar == 0)
+    {
+        *(f32 *)((u8 *)&lbl_801EEDA8 + 0xF8) = *(f32 *)(k + 0x338) + sprite->x;
+        *(f32 *)((u8 *)&lbl_801EEDA8 + 0xFC) = *(f32 *)(k + 0x33C);
+        *(f32 *)((u8 *)&lbl_801EEDA8 + 0x100) = sprite->userVar == 0 ? 0 : 0xC8;
+        *(f32 *)((u8 *)&lbl_801EEDA8 + 0x104) = *(f32 *)(k + 0x340);
+        if (sprite->userVar == 3 && sprite->x > *(f32 *)(k + 0x344))
+            sprite->userVar = 0;
+    }
+}
+// sprite drawFunc: plain centred bitmap blit, colour scaled by opacity.
+void lbl_0000DDF4(struct Sprite *sprite)
+{
+    u8 *tbl = lbl_00011CB0;
+    NLsprarg sp;
+
+    sp.u0 = *(f32 *)(tbl + 8);
+    sp.v0 = *(f32 *)(tbl + 8);
+    sp.u1 = *(f32 *)(tbl + 0xC);
+    sp.v1 = *(f32 *)(tbl + 0xC);
+    sp.trnsl = sprite->opacity;
+    sp.listType = NLSPR_LISTTYPE_AUTO;
+    sp.attr = (sprite->flags & ~0xF) | NLSPR_DISP_CC;
+    sp.base_color = ((s32)(*(f32 *)(tbl + 0x10) * sprite->opacity) << 24) | 0xFFFFFF;
+    sp.offset_color = 0;
+    sp.sprno = sprite->bmpId;
+    sp.x = sprite->x;
+    sp.y = sprite->y;
+    sp.z = sprite->depth;
+    sp.zm_x = sprite->scaleX;
+    sp.zm_y = sprite->scaleY;
+    sp.ang = sprite->rotation;
+    nlSprPut(&sp);
+}
+// sprite mainFunc: same easing as lbl_0000DCA4 for the other slot table.
+void lbl_0000DEC8(s8 *alive, struct Sprite *sprite)
+{
+    u8 *k = lbl_00011CB0;
+
+    sprite->x = sprite->x + *(f64 *)(k + 0x58) * (((struct SelNgcSlotPos *)lbl_000127F8)[sprite->userVar].x - sprite->x);
+    sprite->y = sprite->y + *(f64 *)(k + 0x58) * (((struct SelNgcSlotPos *)lbl_000127F8)[sprite->userVar].y - sprite->y);
+
+    if (find_sprite_with_tag(0x1B)->userVar == 0 && find_sprite_with_tag(0x21)->userVar == 0)
+    {
+        *(f32 *)((u8 *)&lbl_801EEDA8 + 0xF8) =
+            (sprite->x - *(f32 *)(k + 0x348)) + *(s8 *)(lbl_801EED98 + 0xA) * 0xB2;
+        *(f32 *)((u8 *)&lbl_801EEDA8 + 0xFC) = *(f32 *)(k + 0x34C);
+        *(f32 *)((u8 *)&lbl_801EEDA8 + 0x100) =
+            (sprite->userVar == 0 || sprite->userVar == 1) ? 0 : 0xAC;
+        *(f32 *)((u8 *)&lbl_801EEDA8 + 0x104) = *(f32 *)(k + 0x350);
+        if (sprite->userVar == 3 && sprite->x < *(f32 *)(k + 0x354))
+            sprite->userVar = 0;
+    }
+}
+// sprite drawFunc: the panel, then one pip per slot, then a pulsing highlight
+// on the slot the save-data cursor is sitting on.
+void lbl_0000E068(struct Sprite *sprite)
+{
+    u8 *k = lbl_00011CB0;
+    s8 *g = (s8 *)lbl_801EED98;
+    NLsprarg sp;
+    int pulse;
+    int i;
+
+    pulse = *(f64 *)(k + 0x310) * __fabs(mathutil_sin(globalAnimTimer << 9));
+
+    sp.u0 = *(f32 *)(k + 8);
+    sp.v0 = *(f32 *)(k + 8);
+    sp.u1 = *(f32 *)(k + 0xC);
+    sp.v1 = *(f32 *)(k + 0xC);
+    sp.trnsl = sprite->opacity;
+    sp.listType = NLSPR_LISTTYPE_AUTO;
+    sp.attr = (sprite->flags & ~0xF) | NLSPR_DISP_CC;
+    sp.base_color = ((s32)(*(f32 *)(k + 0x10) * sprite->opacity) << 24) | 0xFFFFFF;
+    sp.offset_color = 0;
+    sp.sprno = sprite->bmpId;
+    sp.x = sprite->x;
+    sp.y = sprite->y;
+    sp.z = sprite->depth;
+    sp.zm_x = sprite->scaleX;
+    sp.zm_y = sprite->scaleY;
+    sp.ang = sprite->rotation;
+    nlSprPut(&sp);
+
+    for (i = 0; i < 3; i++)
+    {
+        sp.sprno = 0x428;
+        sp.x = (*(f32 *)(k + 0x358) + sprite->x) + i * 66;
+        sp.y = *(f32 *)(k + 0x208) + sprite->y;
+        sp.z = sprite->depth - *(f64 *)(k + 0x360);
+        sp.zm_x = *(f64 *)(k + 0x368) * sprite->scaleX;
+        sp.zm_y = *(f64 *)(k + 0x370) * sprite->scaleY;
+        sp.ang = (globalAnimTimer & 2) << 14;
+        sp.base_color = (g[4] == 1 && i > 0) ? 0 : 0xFFFFFF;
+        nlSprPut(&sp);
+
+        if (sprite->userVar != 0 && sprite->userVar != 1
+         && g[9] == i
+         && !(g[4] == 1 && i > 0))
+        {
+            sp.sprno = 0x432;
+            sp.x = *(f32 *)(k + 0x188) + ((*(f32 *)(k + 0x358) + sprite->x) + i * 66);
+            sp.y = *(f32 *)(k + 0x188) + (*(f32 *)(k + 0x208) + sprite->y);
+            sp.z = sprite->depth - *(f64 *)(k + 0x2E0);
+            sp.zm_x = *(f64 *)(k + 0x378) * sprite->scaleX;
+            sp.zm_y = (f64)sprite->scaleY;
+            sp.ang = 0;
+            sp.base_color = (((s32)(*(f32 *)(k + 0x10) * sprite->opacity) << 24) | 0xFF00FF) | (pulse & 0xFF) * 256;
+            nlSprPut(&sp);
+        }
+    }
+}
+// sprite mainFunc: track the tag-0x1B sprite, offset by a mode-dependent gap.
+void lbl_0000E368(s8 *alive, struct Sprite *sprite)
+{
+    struct Sprite *s = find_sprite_with_tag(0x1B);
+
+    if (s != NULL)
+    {
+        sprite->userVar = (s->userVar == 2 && *(s32 *)u_isCompetitionModeCourse == 0) ? 1 : 0;
+        sprite->x = *(f32 *)lbl_00011D44 + s->x;
+        sprite->y = s->y + (modeCtrl.gameType == 1 ? 0x2C : 0x42);
+    }
+}
+// sprite mainFunc: park this sprite at a fixed offset from sprite tag 0x21.
+void lbl_0000E43C(s8 *alive, struct Sprite *sprite)
+{
+    struct Sprite *anchor = find_sprite_with_tag(0x21);
+
+    if (anchor != NULL)
+    {
+        sprite->userVar = (*(s32 *)&lbl_801EEDA8 == 0x1F) ? 1 : 0;
+        sprite->x = *(f32 *)lbl_00012030 + anchor->x;
+        sprite->y = *(f32 *)lbl_00012034 + anchor->y;
+    }
+}
+// sprite mainFunc: park this sprite at a fixed offset from sprite tag 0x22.
+void lbl_0000E4BC(s8 *alive, struct Sprite *sprite)
+{
+    struct Sprite *anchor = find_sprite_with_tag(0x22);
+
+    if (anchor != NULL)
+    {
+        sprite->userVar = (*(s32 *)&lbl_801EEDA8 == 0x24) ? 1 : 0;
+        sprite->x = anchor->x - *(f32 *)lbl_00012038;
+        sprite->y = *(f32 *)lbl_0001203C + anchor->y;
+    }
+}
+// sprite drawFunc: drop-shadowed caption drawn twice (black then white).
+void lbl_0000E540(struct Sprite *sprite)
+{
+    u8 *tbl = lbl_00011CB0;
+
+    if (sprite->userVar == 0)
+        return;
+
+    reset_text_draw_settings();
+    func_80071B50(0x220000);
+    set_text_font(sprite->fontId);
+    set_text_scale(*(f32 *)(tbl + 0x40), *(f32 *)(tbl + 0x40));
+    func_80071B1C(*(f64 *)(tbl + 0x190) + sprite->depth);
+    set_text_pos(*(f32 *)(tbl + 0x70) + (sprite->x - *(f32 *)(tbl + 0x390)),
+                 *(f32 *)(tbl + 0x70) + sprite->y);
+    set_text_mul_color(0x000000);
+    sprite_puts((char *)lbl_00016440);
+    func_80071B1C(sprite->depth);
+    set_text_pos(sprite->x - *(f32 *)(tbl + 0x390), sprite->y);
+    set_text_mul_color(0xFFFFFF);
+    sprite_puts((char *)lbl_00016420);
+}
+// sprite drawFunc: three overlapping bitmaps making up one wide banner.
+void lbl_0000E620(struct Sprite *sprite)
+{
+    f32 *tbl = (f32 *)lbl_00011CB0;
+    NLsprarg sp;
+
+    sp.z = sprite->depth;
+    sp.ang = sprite->rotation;
+    sp.u0 = tbl[2];
+    sp.v0 = tbl[2];
+    sp.u1 = tbl[3];
+    sp.v1 = tbl[3];
+    sp.zm_x = sprite->scaleX;
+    sp.zm_y = sprite->scaleY;
+    sp.trnsl = sprite->opacity;
+    sp.listType = NLSPR_LISTTYPE_AUTO;
+    sp.attr = (sprite->flags & ~0xF) | NLSPR_DISP_CC;
+    sp.base_color = ((s32)(tbl[4] * sprite->opacity) << 24) | 0xFFFFFF;
+    sp.offset_color = 0;
+    sp.sprno = 0x436;
+    sp.x = sprite->x - tbl[0xE5];
+    sp.y = sprite->y - tbl[0xE6];
+    nlSprPut(&sp);
+    sp.sprno = 0x434;
+    sp.x = sprite->x - tbl[0xE7];
+    sp.y = sprite->y - tbl[0xE6];
+    nlSprPut(&sp);
+    sp.sprno = 0x438;
+    sp.x = sprite->x - tbl[0xE8];
+    sp.y = sprite->y - tbl[0xE6];
+    nlSprPut(&sp);
+}
+asm void lbl_0000E778(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/sel_ngc_rel/lbl_0000E778.s"
+}
+#pragma peephole on
 #pragma force_active reset

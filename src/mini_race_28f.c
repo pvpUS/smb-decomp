@@ -266,7 +266,7 @@ void lbl_000044AC(void);
 void lbl_00004634(struct Ball *);
 void lbl_0000480C(struct Ball *);
 void lbl_00004D78(void);
-void lbl_0000528C(void);
+void lbl_0000528C(struct Ball *ball);
 void lbl_000055CC(void);
 void lbl_00005A84(void);
 void lbl_00005CEC(void);
@@ -387,11 +387,43 @@ void lbl_0000568C(void);
 void lbl_00005884(void);
 void lbl_00005998(void);
 void lbl_00005C20(void);
-#pragma force_active on
-asm void lbl_0000528C(void)
+
+// Per-racer state hanging off struct Ball::unk144 inside this module.
+// INVENTED -- offsets read off the asm, names are placeholders.  UNVERIFIED.
+struct RaceSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000528C.s"
+    u8 filler0[0x1C];
+    /*0x1C*/ s16 unk1C;
+    /*0x1E*/ u16 unk1E;
+    u8 filler20[0x1F8 - 0x20];
+    /*0x1F8*/ f32 unk1F8;
+};
+
+#pragma force_active on
+void lbl_0000528C(struct Ball *ball)
+{
+    u8 *cfg = lbl_00013740;
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+
+    ball->prevPos = ball->pos;
+    ball->speed = mathutil_vec_len(&ball->vel);
+    ball->flags &= ~0x20;
+    ball->vel.y = ball->vel.y - ball->accel;
+    ball->vel.x = ball->vel.x * (*(f32 *)(cfg + 0x14C) * st->unk1F8);
+    ball->vel.y = ball->vel.y * (*(f32 *)(cfg + 0x14C) * st->unk1F8);
+    ball->vel.z = ball->vel.z * (*(f32 *)(cfg + 0x14C) * st->unk1F8);
+    if (mathutil_vec_sq_len(&ball->vel) < *(f32 *)(cfg + 0x150))
+        cameraInfo[ball->playerId].subState = 0xB;
+    ball->pos.x = ball->pos.x + ball->vel.x;
+    ball->pos.y = ball->pos.y + ball->vel.y;
+    ball->pos.z = ball->pos.z + ball->vel.z;
+    if (st->unk1C <= 0)
+    {
+        if (st->unk1E == 1 || st->unk1E < *(s16 *)lbl_10000046)
+            ball->unk148 = 0xD;
+        else
+            ball->unk148 = 0x11;
+    }
 }
 
 #pragma force_active reset

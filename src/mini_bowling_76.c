@@ -217,7 +217,7 @@ void lbl_0000B0AC(void);
 void lbl_0000B1BC(void);
 void lbl_0000B344(void);
 void lbl_0000B460(void);
-void lbl_0000B654(void);
+void lbl_0000B654(int);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
 void lbl_0000BDE0(void);
@@ -245,10 +245,17 @@ void lbl_0000E894(void);
 void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
+struct BowlSlot { u32 w[0x61]; };
+struct BowlBank { struct BowlSlot s[10]; };
+
 #pragma force_active on
-asm void lbl_0000B654(void)
+void lbl_0000B654(int slot)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000B654.s"
+    struct BowlSlot *dst = ((struct BowlBank *)lbl_10018510)->s;
+    s32 i;
+    if (slot < 0) return;
+    if (slot > 1) return;
+    for (i = 0; i < 10; i++)
+        dst[i] = ((struct BowlBank *)(lbl_10018510 + 0xf28))[slot].s[i];
 }
 #pragma force_active reset

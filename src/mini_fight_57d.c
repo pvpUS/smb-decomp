@@ -399,7 +399,7 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 void lbl_00010870(struct Ball *);
-void lbl_0001090C(void);
+void lbl_0001090C(struct Ball *);
 void lbl_00010A64(struct Ball *);
 void lbl_00010030(void);
 void lbl_000101C8(void);
@@ -410,10 +410,32 @@ struct PhysicsBall
     u8 filler0[0x5C];
 };
 
-asm void lbl_0001090C(void)
+void lbl_0001090C(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0001090C.s"
+    u8 *p = lbl_10017664 + 8 + ball->playerId * 0x18;
+
+    ball->vel.y += *(f32 *)lbl_0001C3CC;
+    ball->flags &= ~0x10;
+    ball->flags |= 0x4000;
+    if (ball->ape != NULL)
+        ball->ape->flags &= ~0x20;
+    if (*(s16 *)(p + 0x16) != 0)
+    {
+        lbl_802F1DFC = ball->ape->charaId;
+        u_play_sound_0(0x1E);
+    }
+    *(s16 *)(p + 0x16) = 0xF;
+    ball->flags |= 0x4000;
+    ball->flags &= ~0x500;
+    ball->flags |= 0x10000;
+    ball->flags &= ~0x200000;
+    ball->flags &= ~0x180000;
+    *(s16 *)(p + 6) = (s32)(*(f32 *)lbl_0001C3D0 * lbl_802F1E5C);
+    u_play_sound_0(0x129);
+    ball->state = 0x18;
+    ball->unk148 = 0x27;
+    ball->unk80 = 0;
+    ball_func_4(ball);
 }
 
 #pragma force_active reset

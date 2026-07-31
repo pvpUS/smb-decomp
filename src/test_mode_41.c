@@ -277,10 +277,269 @@ void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
-#pragma force_active on
-asm void lbl_000057C0(void)
+struct TestModeItem
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_000057C0.s"
+    /*0x00*/ int cat;
+    /*0x04*/ char *catName;
+    /*0x08*/ char *name;
+};
+
+struct TestModePair
+{
+    /*0x00*/ int unk0;
+    /*0x04*/ int unk4;
+};
+
+struct TestModeStageList
+{
+    /*0x00*/ int unk0;
+    /*0x04*/ int unk4;
+    /*0x08*/ struct TestModePair *unk8;
+};
+
+struct TestModeWork
+{
+    /*0x000*/ u8 filler0[0x190];
+    /*0x190*/ struct TestModeStageList *unk190;
+    /*0x194*/ u8 filler194[0x5A8 - 0x194];
+    /*0x5A8*/ int unk5A8;
+    /*0x5AC*/ int unk5AC;
+    /*0x5B0*/ u8 filler5B0[0xD44 - 0x5B0];
+    /*0xD44*/ s16 mode;
+    /*0xD46*/ s16 unkD46;
+    /*0xD48*/ s16 sel[3];
+    /*0xD4E*/ u8 unkD4E;
+};
+
+#define TM_ITEMS(d) ((struct TestModeItem *)((d) + 0x376C))
+
+// Both helpers must be `static inline`, not plain `static`: under -inline auto
+// mwcc inlines them at every call site AND still emits an out-of-line copy
+// ahead of lbl_000057C0, which shifts the whole .text and breaks the module
+// hash while the per-function diff still reads as a perfect match.
+static inline int tm_count(u8 *d, int cat)
+{
+    int i;
+    int n = 0;
+
+    for (i = 0; i < 236; i++)
+    {
+        if (TM_ITEMS(d)[i].cat == cat)
+            n++;
+    }
+    return n;
+}
+
+static inline char *tm_nth(u8 *d, int cat, int n)
+{
+    int i;
+    int c = 0;
+
+    for (i = 0; i < 236; i++)
+    {
+        if (TM_ITEMS(d)[i].cat == cat)
+            c++;
+        if (n == c)
+            return TM_ITEMS(d)[i].name;
+    }
+    return NULL;
+}
+
+// REPEAT_WITH_R_ACCEL(0, btn) with the repeat word hoisted into `rep`, as in
+// the matched lbl_00000804 in test_mode_7.c: the macro re-reads
+// controllerInfo[0].repeat.button for every button tested, and across the
+// stores through `w` mwcc keeps the ADDRESS live instead of the VALUE.
+//
+// `rep` must be declared `s16`, not `u16`.  Both types produce exactly the
+// same instructions -- the field is a u16 loaded with `lhz` and only ever
+// masked -- but the declared type changes `rep`'s rank in the volatile
+// register allocation.  With `u16` (and equally with `int` or `u32`) the m == 1
+// block hands r3..r7 to the inlined tm_count temporaries and `rep` lands in r8;
+// with `s16` the whole block rotates up one and `rep` takes r3, which is what
+// the original does.  47 instructions, all of them register-number-only.
+// The m == 0 block is insensitive: it matches with either type.
+#define REPEAT_LOCAL(btn) (                                              \
+    ((rep & (btn)) || (analogInputs[0].repeat & (btn)))                  \
+ || (                                                                    \
+        ((controllerInfo[0].held.button & (btn))                         \
+      || (analogInputs[0].held & (btn)))                                 \
+     && (analogInputs[0].held & ANALOG_TRIGGER_RIGHT)                    \
+    ))
+
+#pragma force_active on
+void lbl_000057C0(void)
+{
+    struct TestModeWork *w = (struct TestModeWork *)lbl_10000000;
+    u8 *d = lbl_000102B0;
+    struct TestModeStageList *q;
+    s16 m = w->mode;
+    int i;
+
+    if (m == 0)
+    {
+        s16 rep = controllerInfo[0].repeat.button;
+
+        if (REPEAT_LOCAL(PAD_BUTTON_UP))
+        {
+            w->sel[m]--;
+            if (w->sel[m] < 0)
+                w->sel[m] = 5;
+        }
+        if (REPEAT_LOCAL(PAD_BUTTON_DOWN))
+        {
+            w->sel[m]++;
+            if (w->sel[m] >= 6U)
+                w->sel[m] = 0;
+        }
+    }
+    if (m == 1)
+    {
+        s16 rep = controllerInfo[0].repeat.button;
+
+        if (REPEAT_LOCAL(PAD_BUTTON_UP))
+        {
+            w->sel[m]--;
+            if (w->sel[m] < 0)
+                w->sel[m] = tm_count(d, w->sel[0]) - 1;
+        }
+        if (REPEAT_LOCAL(PAD_BUTTON_DOWN))
+        {
+            w->sel[m]++;
+            if (w->sel[m] >= tm_count(d, w->sel[0]))
+                w->sel[m] = 0;
+        }
+    }
+
+    window_set_cursor_pos(1, 1);
+    window_set_text_color(4);
+    window_printf_2((char *)(d + 0x427C));
+    window_set_text_color(0);
+    if (w->mode < 2)
+    {
+        window_set_cursor_pos(1, 0x22);
+        window_printf_2((char *)(d + 0x428C));
+        window_printf_2((char *)(d + 0x429C));
+        window_printf_2((char *)(d + 0x42AC));
+    }
+    else
+    {
+        window_set_cursor_pos(1, 0x22);
+        window_printf_2((char *)(d + 0x42C4));
+        window_printf_2((char *)(d + 0x42DC));
+    }
+    if (w->unkD4E != 0)
+    {
+        window_set_cursor_pos(0x22, 0x22);
+        window_printf_2((char *)(d + 0x42F0));
+        window_set_text_color(2);
+        window_printf_2((char *)(d + 0x42F8));
+        window_set_text_color(0);
+    }
+    else
+    {
+        window_set_cursor_pos(0x22, 0x22);
+        window_printf_2((char *)(d + 0x4304));
+    }
+    if (w->unk5AC != 0)
+    {
+        window_set_cursor_pos(0x22, 0x23);
+        window_set_text_color(2);
+        window_printf_2((char *)(d + 0x4318));
+        window_set_text_color(0);
+        window_printf_2((char *)(d + 0x432C));
+    }
+    else
+    {
+        window_set_cursor_pos(0x22, 0x24);
+        window_printf_2((char *)(d + 0x4340));
+    }
+
+    if (w->mode >= 0)
+    {
+        for (i = 0; i < 6U; i++)
+        {
+            window_set_cursor_pos(1, (i - w->sel[0] + 6U) % 6U + 3);
+            if (i == w->sel[0])
+            {
+                if (w->mode == 0)
+                    window_set_text_color(2);
+                else
+                    window_set_text_color(0);
+                window_printf_2((char *)(d + 0x4354), ((char **)(d + 0x3690))[i]);
+            }
+            else if (w->mode == 0)
+            {
+                window_printf_2((char *)(d + 0x435C), ((char **)(d + 0x3690))[i]);
+            }
+            window_set_text_color(0);
+        }
+    }
+
+    if (w->mode >= 1)
+    {
+        if (tm_count(d, w->sel[0]) < 20)
+        {
+            s16 *cur = &w->sel[1];
+            int j;
+
+            for (j = 0; j < tm_count(d, w->sel[0]); j++)
+            {
+                window_set_cursor_pos(10,
+                    (j - *cur + tm_count(d, w->sel[0])) % tm_count(d, w->sel[0]) + 3);
+                if (j == *cur)
+                {
+                    if (w->mode == 1)
+                        window_set_text_color(2);
+                    else
+                        window_set_text_color(0);
+                    window_printf_2((char *)(d + 0x4354), tm_nth(d, w->sel[0], j + 1));
+                }
+                else if (w->mode == 1)
+                {
+                    window_printf_2((char *)(d + 0x435C), tm_nth(d, w->sel[0], j + 1));
+                }
+                window_set_text_color(0);
+            }
+        }
+        else
+        {
+            int j;
+            s16 *cur = &w->sel[1];
+
+            for (j = 0; j < tm_count(d, w->sel[0]); j++)
+            {
+                if ((j - *cur + tm_count(d, w->sel[0])) % tm_count(d, w->sel[0]) < 20)
+                {
+                    window_set_cursor_pos(10,
+                        (j - *cur + tm_count(d, w->sel[0])) % tm_count(d, w->sel[0]) + 3);
+                    if (j == *cur)
+                    {
+                        window_set_text_color(2);
+                        window_printf_2((char *)(d + 0x4354), tm_nth(d, w->sel[0], j + 1));
+                    }
+                    else if (w->mode == 1)
+                    {
+                        window_printf_2((char *)(d + 0x435C), tm_nth(d, w->sel[0], j + 1));
+                        window_set_cursor_pos(0xD, 2);
+                        window_printf_2((char *)(d + 0x4364));
+                        window_set_cursor_pos(0xD, 0x17);
+                        window_printf_2((char *)(d + 0x4368));
+                    }
+                    window_set_text_color(0);
+                }
+            }
+        }
+    }
+
+    if (w->mode >= 2)
+    {
+        window_set_cursor_pos(0x13, 3);
+        q = w->unk190;
+        if (q == NULL)
+            window_printf_2((char *)(d + 0x436C));
+        else
+            window_printf_2((char *)(d + 0x4378), w->unk5A8, q->unk0,
+                            q->unk8[w->unk5A8].unk4);
+    }
 }
 #pragma force_active reset

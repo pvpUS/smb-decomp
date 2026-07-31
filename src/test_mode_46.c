@@ -278,9 +278,95 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_000073EC(void)
+void lbl_000073EC(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_000073EC.s"
+    f32 *k = (f32 *)lbl_0000FE78;
+    u8 *w = lbl_10000000;
+    GXLightObj lightObj;
+    GXColor color = *(GXColor *)&k[114];
+    Vec pos;
+    struct GMAModel *m;
+    int i;
+    struct GMAModel *n;
+    struct GMAModel *o;
+    struct GMAModel *p;
+    int pad0;
+
+    if (*(u8 *)(w + 0xD5B) != 0)
+    {
+        m = (*(struct GMA **)(w + 0x190))->modelEntries[*(int *)(w + 0x5A8)].model;
+        mathutil_mtxA_from_mtxB();
+        if (m != NULL)
+            mathutil_mtxA_scale_s(*(f64 *)&k[116] * m->boundSphereRadius);
+        GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+        GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
+        nl2ngc_draw_model_sort_translucent_alt2(((void **)g_commonNlObj)[42]);
+    }
+
+    mathutil_mtxA_from_mtxB();
+    mathutil_mtxA_tf_point_xyz(&pos, k[24], k[99], k[100]);
+    GXInitLightSpot(&lightObj, k[24], GX_SP_OFF);
+    GXInitLightDistAttn(&lightObj, k[101], k[102], GX_DA_OFF);
+    GXInitLightPos(&lightObj, pos.x, pos.y, pos.z);
+    GXInitLightColor(&lightObj, color);
+    GXLoadLightObjImm(&lightObj, GX_LIGHT0);
+
+    mathutil_mtxA_from_mtxB();
+    GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+    GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
+
+    if (*(u8 *)(w + 0xD5A) != 0)
+        lbl_000065F0();
+
+    window_set_cursor_pos(1, 0x23);
+
+    if (*(s16 *)(w + 0xD42) == *(s16 *)(w + 0xD40) &&
+        (*(struct GMA **)(w + 0x190)) != NULL)
+    {
+        mathutil_mtxA_from_mtxB();
+        GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+        GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
+        perf_start_timer(0);
+        if (*(int *)(w + 0x5AC) != 0)
+        {
+            for (i = 0; i < (s32)(*(struct GMA **)(w + 0x190))->numModels; i++)
+            {
+                n = (*(struct GMA **)(w + 0x190))->modelEntries[i].model;
+                if (n != NULL)
+                {
+                    if (n->flags & (GCMF_STITCHING | GCMF_SKIN))
+                        avdisp_get_matrices(n, 0);
+                    avdisp_draw_model_culled_sort_none(n);
+                }
+            }
+        }
+        else
+        {
+            o = (*(struct GMA **)(w + 0x190))->modelEntries[*(int *)(w + 0x5A8)].model;
+            if (o != NULL)
+            {
+                if (o->flags & (GCMF_STITCHING | GCMF_SKIN))
+                    avdisp_get_matrices(o, 0);
+                avdisp_draw_model_culled_sort_none(o);
+                window_set_cursor_pos(0x14, 1);
+                window_printf_2((char *)lbl_00014638, o->boundSphereRadius);
+            }
+        }
+        window_set_cursor_pos(0x28, 1);
+        window_printf_2((char *)lbl_00013920, perf_stop_timer(0));
+        if (*(u8 *)(w + 0xD5B) != 0)
+        {
+            p = (*(struct GMA **)(w + 0x190))->modelEntries[*(int *)(w + 0x5A8)].model;
+            mathutil_mtxA_from_mtxB();
+            avdisp_set_alpha(k[111]);
+            if (p != NULL)
+                mathutil_mtxA_translate(&p->boundSphereCenter);
+            mathutil_mtxA_scale_s(*(f32 *)(w + 0xD50) / *(f64 *)&k[118]);
+            GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+            GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
+            avdisp_draw_model_unculled_sort_none(commonGma->modelEntries[20].model);
+        }
+        *(s16 *)(w + 0x188) += 0x200;
+    }
 }
 #pragma force_active reset

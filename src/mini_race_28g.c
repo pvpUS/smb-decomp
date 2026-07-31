@@ -267,17 +267,17 @@ void lbl_00004634(struct Ball *);
 void lbl_0000480C(struct Ball *);
 void lbl_00004D78(void);
 void lbl_0000528C(void);
-void lbl_000055CC(void);
+void lbl_000055CC(struct Ball *);
 void lbl_00005A84(void);
 void lbl_00005CEC(void);
 void lbl_00005DDC(void);
 void lbl_00005FC4(void);
 void lbl_0000612C(void);
-void lbl_000061D0(void);
+void lbl_000061D0(struct Ball *);
 void lbl_00006248(void);
 void lbl_000062F8(void);
 void lbl_000065A0(void);
-void lbl_000068E8(void);
+void lbl_000068E8(struct Ball *);
 void lbl_000069D0(void);
 void lbl_00006CF0(void);
 void lbl_00006FF4(void);
@@ -382,16 +382,54 @@ void lbl_00012D50(void);
 void lbl_00004910(void);
 void lbl_00004BB0(void);
 void lbl_000050F0(void);
-void lbl_00005428(void);
+void lbl_00005428(struct Ball *ball, int a1, int a2);
 void lbl_0000568C(void);
 void lbl_00005884(void);
 void lbl_00005998(void);
 void lbl_00005C20(void);
-#pragma force_active on
-asm void lbl_00005428(void)
+
+// Per-racer state hanging off struct Ball::unk144 inside this module.
+// INVENTED -- offsets read off the asm, names are placeholders.  UNVERIFIED.
+struct RaceSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00005428.s"
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+    u8 filler18[0x1C - 0x18];
+    /*0x1C*/ s16 unk1C;
+    u8 filler1E[0x26E - 0x1E];
+    /*0x26E*/ s16 unk26E;
+};
+
+#pragma force_active on
+void lbl_00005428(struct Ball *ball, int a1, int a2)
+{
+    Vec v;
+    Quaternion q1;
+    Quaternion q2;
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+    u8 *cfg = lbl_00013740;
+    u8 *dead;  /* UNVERIFIED: dead pointer local; the original reserves the slot */
+
+    ball->flags |= 0x240;
+    ball->speed = ball->unkC4 = *(f32 *)(cfg + 8);
+    v = *(Vec *)(cfg + 0x154);
+    ball->unkB8 = *(Vec *)&v;
+    q1 = *(Quaternion *)(cfg + 0x160);
+    ball->unkA8 = *(Quaternion *)&q1;
+    ball->unk98 = ball->unkA8;
+    q2 = *(Quaternion *)(cfg + 0x170);
+    ball->ape->unk60 = *(Quaternion *)&q2;
+    st->unk14 &= ~0x8000;
+    if (st->unk14 & 4)
+        lbl_000061D0(ball);
+    if (st->unk14 & 0x10)
+        lbl_000068E8(ball);
+    st->unk26E = 0;
+    ball->unk148 = 0xE;
+    if (!(st->unk14 & 0x20))
+        cameraInfo[ball->playerId].state = 0xE;
+    st->unk1C = 0x78;
+    lbl_000055CC(ball);
 }
 
 #pragma force_active reset

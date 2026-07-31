@@ -92,7 +92,7 @@ extern u8 lbl_000140F8[];
 extern u8 lbl_00014108[];
 extern u8 lbl_00015768[];
 extern u8 lbl_00015918[];
-extern u8 lbl_00015934[];
+extern s16 lbl_00015934[];
 extern u8 lbl_0001593C[];
 extern u8 lbl_00015954[];
 extern u8 lbl_000159D8[];
@@ -153,7 +153,7 @@ extern u8 lbl_1000003C[];
 extern u8 lbl_10000040[];
 extern u8 lbl_10000042[];
 extern u8 lbl_10000046[];
-extern u8 lbl_10000048[];
+extern s16 lbl_10000048[];
 extern u8 lbl_10000054[];
 extern u8 lbl_10000064[];
 extern u8 lbl_10001068[];
@@ -266,18 +266,18 @@ void lbl_000044AC(void);
 void lbl_00004634(struct Ball *);
 void lbl_0000480C(struct Ball *);
 void lbl_00004D78(void);
-void lbl_0000528C(void);
+void lbl_0000528C(struct Ball *);
 void lbl_000055CC(void);
 void lbl_00005A84(void);
 void lbl_00005CEC(void);
 void lbl_00005DDC(void);
 void lbl_00005FC4(void);
 void lbl_0000612C(void);
-void lbl_000061D0(void);
+void lbl_000061D0(struct Ball *);
 void lbl_00006248(void);
 void lbl_000062F8(void);
 void lbl_000065A0(void);
-void lbl_000068E8(void);
+void lbl_000068E8(struct Ball *);
 void lbl_000069D0(void);
 void lbl_00006CF0(void);
 void lbl_00006FF4(void);
@@ -344,7 +344,7 @@ void lbl_0000DE5C(void);
 void lbl_0000DF6C(void);
 void lbl_0000E11C(void);
 void lbl_0000E1CC(void);
-void lbl_0000E520(void);
+void lbl_0000E520(int);
 void lbl_0000E7AC(void);
 void lbl_0000E7C4(void);
 void lbl_0000E900(void);
@@ -381,17 +381,72 @@ void lbl_00012D50(void);
 
 void lbl_00004910(void);
 void lbl_00004BB0(void);
-void lbl_000050F0(void);
+void lbl_000050F0(struct Ball *ball, int a1);
 void lbl_00005428(void);
 void lbl_0000568C(void);
 void lbl_00005884(void);
 void lbl_00005998(void);
 void lbl_00005C20(void);
-#pragma force_active on
-asm void lbl_000050F0(void)
+
+// Per-racer state hanging off struct Ball::unk144 inside this module.
+// INVENTED -- offsets read off the asm, names are placeholders.  UNVERIFIED.
+struct RaceSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000050F0.s"
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+    u8 filler18[0x1C - 0x18];
+    /*0x1C*/ s16 unk1C;
+    /*0x1E*/ u16 unk1E;
+};
+
+// INVENTED -- the 8-byte s16 table at lbl_00013884, copied to the stack.
+struct RaceSndTbl
+{
+    s16 v[4];
+};
+
+#pragma force_active on
+void lbl_000050F0(struct Ball *ball, int a1)
+{
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+    u8 *dead;  /* UNVERIFIED: dead pointer local; the original reserves the slot */
+    struct RaceSndTbl tbl;
+
+    st->unk14 &= ~0x8000;
+    if (st->unk14 & 4)
+        lbl_000061D0(ball);
+    if (st->unk14 & 0x10)
+        lbl_000068E8(ball);
+    lbl_10000048[ball->playerId] += lbl_00015934[st->unk1E - 1];
+    lbl_0000E520(ball->playerId);
+    if (!(st->unk14 & 0x20))
+        u_play_sound_0(0x16E);
+    if (st->unk1E != 1 && st->unk1E >= *(s16 *)lbl_10000046)
+    {
+        u_play_sound_0(0x292C);
+    }
+    else
+    {
+        tbl = *(struct RaceSndTbl *)lbl_00013884;
+        u_play_sound_0(tbl.v[st->unk1E - 1] | 0x2800);
+    }
+    if (!(st->unk14 & 0x20))
+    {
+        u_play_music(0, 10);
+        if (st->unk1E != 1 && st->unk1E >= *(s16 *)lbl_10000046)
+        {
+            *(s16 *)lbl_10000042 = 0xB4;
+            func_8002BFCC(0x164, 0x165);
+        }
+        else
+        {
+            *(s16 *)lbl_10000042 = 0x14A;
+            func_8002BFCC(0x166, 0x167);
+        }
+    }
+    st->unk1C = 0x78;
+    ball->unk148 = 0xC;
+    lbl_0000528C(ball);
 }
 
 #pragma force_active reset

@@ -354,7 +354,7 @@ void lbl_0000FCC4(void);
 void lbl_0000FD48(void);
 void lbl_0000FDD8(void);
 void lbl_0000FE90(void);
-void lbl_0000FEF8(void);
+void lbl_0000FEF8(s16 arg0);
 void lbl_000100B4(void);
 void lbl_00010130(void);
 void lbl_00010218(void);
@@ -376,9 +376,68 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_0000FEF8(void)
+void lbl_0000FEF8(s16 arg0)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000FEF8.s"
+    u8 *str = lbl_00015C08;
+    u8 *cfg = lbl_00013C48;
+    u8 *st = (u8 *)ballInfo[arg0].unk144;
+    struct Sprite *sprite;
+    int tag;
+
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    tag = arg0 + 0x67;
+    sprite->tag = tag;
+    sprite->type = 0;
+    sprite->fontId = 0x45;
+    sprite->x = *(f32 *)(cfg + 0x0);
+    sprite->y = *(f32 *)(cfg + 0x290);
+    sprite->depth = *(f32 *)(cfg + 0xD8);
+    sprite->textAlign = 4;
+    sprintf(sprite->text, (char *)(str + 0x16C));
+
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    sprite->tag = tag;
+    sprite->type = 0;
+    sprite->fontId = 0x45;
+    sprite->x = *(f32 *)(cfg + 0x0);
+    sprite->y = *(f32 *)(cfg + 0x220);
+    sprite->depth = *(f32 *)(cfg + 0xD8);
+    sprite->textAlign = 4;
+    sprintf(sprite->text, (char *)(str + 0xB0), st[0x1C8], st[0x1C9], st[0x1CA]);
+
+    if (*(s32 *)lbl_10001068 < 0)
+        return;
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    sprite->tag = tag;
+    sprite->type = 0;
+    sprite->fontId = 9;
+    sprite->x = *(f32 *)(cfg + 0x0);
+    sprite->y = *(f32 *)(cfg + 0x50);
+    sprite->depth = *(f32 *)(cfg + 0xD8);
+    sprite->scaleX = *(f32 *)(cfg + 0x294);
+    sprite->scaleY = *(f32 *)(cfg + 0x180);
+    sprite->mulR = 0xFF;
+    sprite->mulG = 0x80;
+    sprite->mulB = 0x20;
+    sprite->textAlign = 4;
+    sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_000100B4;
+    sprite->counter = 0x14;
+    if (*(s32 *)lbl_10001068 == 0)
+    {
+        sprintf(sprite->text, (char *)(str + 0x1B8));
+        u_play_sound_0(0x1E3);
+    }
+    else
+    {
+        sprintf(sprite->text, (char *)(str + 0x1CC));
+        u_play_sound_0(0x1E5);
+    }
 }
+
 #pragma force_active reset

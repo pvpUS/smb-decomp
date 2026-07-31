@@ -32,6 +32,7 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "thread.h"
 #include "../data/common.nlobj.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
@@ -232,7 +233,6 @@ extern void mathutil_mtxA_scale_s();
 extern void ord_tbl_draw_nodes();
 extern void raycast_stage_down();
 extern void set_ape_model_lod();
-extern void thread_create();
 extern void unref_func_80039320();
 extern void unref_func_800393F8();
 extern void GXSetTevAlphaOp_cached();
@@ -358,7 +358,7 @@ void lbl_00010018(struct Ball *);
 void lbl_000107B4(struct Ball *);
 void lbl_00010ADC(struct Ball *);
 void lbl_00010B98(void);
-void lbl_0001106C(void);
+void lbl_0001106C(struct Ape *ape, int arg);
 void lbl_00011270(void);
 void lbl_00011684(void);
 void lbl_000117CC(void);
@@ -414,18 +414,6 @@ asm void lbl_00010030(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_00010030.s"
-}
-
-asm void lbl_000101C8(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000101C8.s"
-}
-
-asm void lbl_00010434(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00010434.s"
 }
 
 #pragma force_active reset

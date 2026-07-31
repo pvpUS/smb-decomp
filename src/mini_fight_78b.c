@@ -397,10 +397,43 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_000170F8(void)
+void lbl_000170F8(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000170F8.s"
+    u8 *d = lbl_10018920;
+    u8 *k = lbl_0001C628;
+    f32 *sc;
+    f32 *w;
+    f32 sum;
+    f32 dif;
+    int i;
+    Vec pad;
+    f32 *p;
+
+    reset_text_draw_settings();
+    set_text_font(9);
+    p = (f32 *)(d + 0x2F8);
+    for (i = 0; i < 4; i++, p += 3)
+    {
+        if (p[0] > *(f32 *)(k + 0x78))
+        {
+            sum = p[0] + p[1];
+            dif = p[0] - p[1];
+            set_text_pos(*(f32 *)(k + 0xD4) - *(f32 *)(k + 0xF4) * sum,
+                         *(f32 *)(k + 0xD8) - *(f32 *)(k + 0xF8) * dif);
+            set_text_scale(*(f32 *)(k + 0xFC) * sum, *(f32 *)(k + 0xFC) * dif);
+            sprite_putc(i + 0x30);
+        }
+    }
+    reset_text_draw_settings();
+    set_text_font(9);
+    if (*(sc = (f32 *)(d + 0x32C)) > *(f32 *)(k + 0x78))
+    {
+        w = (f32 *)(d + 0x328);
+        set_text_pos(*(f32 *)(k + 0xD4) - *(f32 *)(k + 0x100) * *w,
+                     *(f32 *)(k + 0xD8) - *(f32 *)(k + 0xC8) * *sc);
+        set_text_scale(*w, *sc);
+        sprite_puts((char *)lbl_0001D9CC);
+    }
 }
 
 #pragma force_active reset

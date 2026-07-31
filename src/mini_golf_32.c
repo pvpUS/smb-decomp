@@ -155,9 +155,9 @@ void lbl_00008F44(void);
 void lbl_0000907C(void);
 void lbl_00009178(void);
 void lbl_000091BC(void);
-void lbl_000092C4(void);
-void lbl_000092D0(void);
-void lbl_000092E0(void);
+f32 lbl_000092C4(void);
+f32 lbl_000092D0(void);
+f32 lbl_000092E0(void);
 void lbl_000092F0(void);
 void lbl_00009300(void);
 void lbl_00009310(void);
@@ -171,7 +171,7 @@ void lbl_000093B4(void);
 void lbl_000093C4(void);
 void lbl_000093D4(void);
 void lbl_000093F0(void);
-void lbl_00009404(void);
+u8 lbl_00009404(void);
 void lbl_00009414(void);
 void lbl_00009424(void);
 void lbl_00009438(void);
@@ -195,7 +195,7 @@ void lbl_0000B280(void);
 void lbl_0000B36C(void);
 void lbl_0000B754(void);
 void lbl_0000B8A8(void);
-void lbl_0000BDEC(void);
+void lbl_0000BDEC(struct Camera *, struct Ball *);
 void lbl_0000C128(void);
 void lbl_0000C230(void);
 void lbl_0000C33C(void);
@@ -258,9 +258,67 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-asm void lbl_0000BDEC(void)
+void lbl_0000BDEC(struct Camera *camera, struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_0000BDEC.s"
+    u8 *p = (u8 *)lbl_00026378;
+    u8 *w = (u8 *)lbl_10000130;
+    Vec sp10;
+    f32 t;
+    f32 d;
+    f64 v;
+
+    camera->unk26 = 0;
+    v = ball->pos.x + lbl_000092C4();
+    camera->lookAt.x = v * *(f64 *)(p + 0x10);
+    v = ball->pos.y + (*(f64 *)(p + 0x40) + lbl_000092D0());
+    camera->lookAt.y = v * *(f64 *)(p + 0x10);
+    v = ball->pos.z + lbl_000092E0();
+    camera->lookAt.z = v * *(f64 *)(p + 0x10);
+
+    d = mathutil_sqrt(mathutil_sum_of_sq_3(camera->lookAt.x - ball->pos.x,
+                                           camera->lookAt.y - ball->pos.y,
+                                           camera->lookAt.z - ball->pos.z));
+    t = d / mathutil_tan(0x1555);
+    if (t < *(f64 *)(p + 0x48))
+        t = *(f32 *)(p + 0x50);
+
+    if (camera->subState == 0x10)
+    {
+        sp10.x = lbl_000092C4() - ball->pos.x;
+        sp10.y = *(f32 *)(p + 0x18);
+        sp10.z = lbl_000092E0() - ball->pos.z;
+        mathutil_vec_normalize_len(&sp10);
+        mathutil_mtxA_from_identity();
+        if (lbl_00009404() == 0xF)
+            mathutil_mtxA_rotate_y(0x6000);
+        else
+            mathutil_mtxA_rotate_y(0x2000);
+        mathutil_mtxA_tf_vec(&sp10, &sp10);
+        if (decodedStageLzPtr->unk88 != NULL)
+        {
+            camera->eye.x = lbl_000092C4() + t * (sp10.x / mathutil_vec_len(&sp10));
+            camera->eye.y = *(f64 *)(p + 0x58) + lbl_000092D0();
+            camera->eye.z = lbl_000092E0() + t * (sp10.z / mathutil_vec_len(&sp10));
+        }
+        *(Vec *)(w + 0x10) = sp10;
+    }
+    else
+    {
+        camera->eye.x = lbl_000092C4() +
+                        t * (*(f32 *)(w + 0x10) / mathutil_vec_len((Vec *)(w + 0x10)));
+        camera->eye.y = *(f64 *)(p + 0x58) + lbl_000092D0();
+        camera->eye.z = lbl_000092E0() +
+                        t * (*(f32 *)(w + 0x18) / mathutil_vec_len((Vec *)(w + 0x10)));
+    }
+
+    camera->rotX = mathutil_atan2(
+        camera->lookAt.y - camera->eye.y,
+        mathutil_sqrt(mathutil_sum_of_sq_2(camera->lookAt.x - camera->eye.x,
+                                           camera->lookAt.z - camera->eye.z)));
+    camera->rotY = mathutil_atan2(camera->lookAt.x - camera->eye.x,
+                                  camera->lookAt.z - camera->eye.z) -
+                   0x8000;
+    camera->unk10C = 0;
+    camera->subState = 0x11;
 }
 #pragma force_active reset

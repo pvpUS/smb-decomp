@@ -268,7 +268,7 @@ void lbl_0000480C(struct Ball *);
 void lbl_00004D78(void);
 void lbl_0000528C(void);
 void lbl_000055CC(void);
-void lbl_00005A84(void);
+void lbl_00005A84(struct Ball *ball);
 void lbl_00005CEC(void);
 void lbl_00005DDC(void);
 void lbl_00005FC4(void);
@@ -282,7 +282,7 @@ void lbl_000069D0(void);
 void lbl_00006CF0(void);
 void lbl_00006FF4(void);
 void lbl_000070FC(void);
-void lbl_00007688(void);
+int lbl_00007688(struct Ball *ball);
 void lbl_00007710(struct Ball *);
 void lbl_00007800(void);
 void lbl_00007900(void);
@@ -387,11 +387,62 @@ void lbl_0000568C(void);
 void lbl_00005884(void);
 void lbl_00005998(void);
 void lbl_00005C20(void);
-#pragma force_active on
-asm void lbl_00005A84(void)
+
+// Per-racer state hanging off struct Ball::unk144 inside this module.
+// INVENTED -- offsets read off the asm, names are placeholders.  UNVERIFIED.
+struct RaceSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00005A84.s"
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+    u8 filler18[0x1C - 0x18];
+    /*0x1C*/ s16 unk1C;
+    u8 filler1E[0x1CE - 0x1E];
+    /*0x1CE*/ s16 unk1CE;
+    u8 filler1D0[0x1D4 - 0x1D0];
+    /*0x1D4*/ f32 unk1D4;
+    /*0x1D8*/ f32 unk1D8;
+    /*0x1DC*/ f32 unk1DC;
+    /*0x1E0*/ f32 unk1E0;
+    u8 filler1E4[0x1E8 - 0x1E4];
+    /*0x1E8*/ f32 unk1E8;
+    /*0x1EC*/ f32 unk1EC;
+    /*0x1F0*/ f32 unk1F0;
+    /*0x1F4*/ f32 unk1F4;
+    /*0x1F8*/ f32 unk1F8;
+};
+
+#pragma force_active on
+void lbl_00005A84(struct Ball *ball)
+{
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+    u8 *cfg = lbl_00013740;
+
+    ball->prevPos = ball->pos;
+    ball->speed = mathutil_vec_len(&ball->vel);
+    ball->flags &= ~0x20;
+    ball->vel.y = ball->vel.y - ball->accel;
+    if (st->unk1CE > 5)
+    {
+        ball->vel.x = ball->vel.x * (*(f32 *)(cfg + 0x14C) * st->unk1F8);
+        ball->vel.y = ball->vel.y * (*(f32 *)(cfg + 0x14C) * st->unk1F8);
+        ball->vel.z = ball->vel.z * (*(f32 *)(cfg + 0x14C) * st->unk1F8);
+    }
+    ball->pos.x = ball->pos.x + ball->vel.x;
+    ball->pos.y = ball->pos.y + ball->vel.y;
+    ball->pos.z = ball->pos.z + ball->vel.z;
+    if (lbl_00007688(ball) != 0)
+    {
+        u_play_sound_0(0x1D);
+        u_play_sound_0(0x15);
+        st->unk1E8 = st->unk1D4;
+        st->unk1EC = st->unk1D8;
+        st->unk1F0 = st->unk1DC;
+        st->unk1F4 = st->unk1E0;
+        ball->unk148 = 0x13;
+        if (!(st->unk14 & 0x20))
+            cameraInfo[ball->playerId].subState = 7;
+        st->unk1C = 0x3C;
+    }
 }
 
 #pragma force_active reset

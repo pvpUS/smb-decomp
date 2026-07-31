@@ -384,14 +384,45 @@ void lbl_00004BB0(void);
 void lbl_000050F0(void);
 void lbl_00005428(void);
 void lbl_0000568C(void);
-void lbl_00005884(void);
+void lbl_00005884(struct Ball *ball);
 void lbl_00005998(void);
 void lbl_00005C20(void);
-#pragma force_active on
-asm void lbl_00005884(void)
+
+// Per-racer state hanging off struct Ball::unk144 inside this module.
+// INVENTED -- offsets read off the asm, names are placeholders.  UNVERIFIED.
+struct RaceSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00005884.s"
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+    u8 filler18[0x1E - 0x18];
+    /*0x1E*/ u16 unk1E;
+};
+
+// INVENTED -- the 8-byte s16 table at lbl_000138E0, copied to the stack.
+struct RaceSndTbl
+{
+    s16 v[4];
+};
+
+#pragma force_active on
+void lbl_00005884(struct Ball *ball)
+{
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+    struct RaceSndTbl tbl;
+
+    tbl = *(struct RaceSndTbl *)lbl_000138E0;
+    if (!(st->unk14 & 0x20))
+    {
+        if (globalAnimTimer % (ball->playerId * 0x19 + 0x78) == 0)
+            u_play_sound_0(tbl.v[st->unk1E - 1] | 0x2800);
+    }
+    ball->prevPos = ball->pos;
+    ball->speed = mathutil_vec_len(&ball->vel);
+    ball->flags &= ~0x20;
+    ball->vel.y = ball->vel.y - ball->accel;
+    ball->pos.x = ball->pos.x + ball->vel.x;
+    ball->pos.y = ball->pos.y + ball->vel.y;
+    ball->pos.z = ball->pos.z + ball->vel.z;
 }
 
 #pragma force_active reset
