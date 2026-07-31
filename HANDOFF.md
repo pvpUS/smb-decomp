@@ -333,16 +333,33 @@ vs `s32 *`, 8 `flg` rank slots (option).
   scheduling barrier AT EACH INLINED CALL SITE.** §3 is right that it does not
   trigger the TU-wide deopt and **wrong that it is free.** (mini_bowling w2)
 
-### UNRESOLVED — needs the orchestrator, not a module
+### RESOLVED BY THE ORCHESTRATOR — `func_8000716C`'s argument order stands
 
-**`src/mathutil.h`'s `func_8000716C` argument order is disputed.** `8f68f36`
-fixed the out-pointer (r3) and its comment claims a golden build behind the
-chosen order; **mini_bowling's w3 measures value-first at 18 and pointer-first at
-20.** Agents cannot edit headers, so this needs settling directly — and
-mini_billiards' call sites would need updating with it. Its sibling bug is still
-open: **`u_math_unk9_smth_w_quats(..., register float c)` forces an `frsp` the
-original lacks** (probe, all four spellings); workaround in
-`src/mini_billiards_33b.c`.
+mini_bowling's w3 measured value-first at **18** and the committed pointer-first
+at **20** and flagged the header as wrong. **Do not change it.** Settled:
+
+- **The committed spelling is proven.** `float func_8000716C(float *out, float
+  x)` is what run 12's clean build used, and that build produced **all 12 correct
+  hashes.** Its three golden call sites are `mini_billiards_33b.c:323`, `:413`
+  and `_33c.c:373`, all `func_8000716C(&ptr, value)`, plus the `asm` definition at
+  `mathutil.c:210`. Flipping the header means editing all four.
+- **Neither order is more correct at the ABI.** PPC EABI runs GPR and FPR
+  argument sequences independently, so the pointer lands in `r3` and the float in
+  `f1` either way — *the header comment already says this.* **The declared order
+  therefore changes only the ORDER THE TWO ARGUMENT EXPRESSIONS ARE EVALUATED**,
+  since mwcc evaluates call arguments left-to-right (run-11 idiom 5).
+- **So w3's 2-diff delta is a per-call-site scheduling axis, not a header bug**,
+  and it is reachable **without** touching the header — compute the operand you
+  want first into a temp, or into the argument list, at that call site. *(This
+  last step is reasoning from the ABI plus the committed comment, not a
+  measurement; w3 had no match either way — 18 and 20 are both misses.)*
+
+**A module that wants the other evaluation order should sweep the call site, not
+report the header.**
+
+Its sibling bug is still open: **`u_math_unk9_smth_w_quats(..., register float
+c)` forces an `frsp` the original lacks** (probe, all four spellings); workaround
+in `src/mini_billiards_33b.c`.
 
 ### NEXT RUN — ranked
 
