@@ -402,6 +402,31 @@ in `src/mini_billiards_33b.c`.
     reassignment** (`0xBEE0` +479, `0xC3C0` +380, `0xC2F0` +232). Only **733 of
     its 5,116 a-BLOCKED insn sit behind an uncarved magic.**
 
+### RUN-13 PREP IS DONE — recorded here on purpose, not left in `/c/tmp`
+
+- **`C:/tmp/smbm/warm_reset_run13.sh` written and RUN.** All nine warm copies
+  file-synced from the main tree at `2836d09`, and **all nine gate GOLDEN from
+  DELETED objects, `fail=0`.** Re-verified afterwards with the `.o`-excluded
+  comparison: **`src/`, `asm/`, `tools/` and `Makefile` all 0 differences in
+  every module, no stale `TOOLS_UPDATED.md`.**
+- The script now **deletes the `.o`/`.dep` files that come across inside `src/`
+  and `asm/`** from the main tree's own build. Run 12's script did the same but
+  the reason was undocumented; a stale all-asm `.rel` hashes GOLDEN, which is the
+  oldest fictional-match mode here.
+- **`C:/tmp/smbm/RUN13_BRIEF.md` written — hand it to every module agent.** It
+  **leads with `#pragma peephole on`**, not with the census, because that is the
+  cheapest instruction in the project and it re-scores every inherited residual.
+  It also carries: b-POOL is a lower bound; `rel_bctr` is a candidate list not a
+  count; the region-count tell; the `int`/`s32` axis; the corrected §3; the
+  20-agent cap and the worktree-clone hazard; and CRLF explicitly retired.
+- **`C:/tmp/smbm/RUN12_RESULTS.md`** holds all nine per-module reports.
+- **Not harvested and worth taking early in run 13:** sel_ngc's
+  `rel_merge_tu.patch` (head union + prototype reconciliation — it reproduced
+  automatically every fix run 11 made by hand), mini_bowling's `pcmp.py` and its
+  `findfold`/`findrank`/`findconv.py` pattern cross-reference, and test_mode's
+  `restore_asm.py`. **`rel_merge_back` does not carry `tools/`, so every one of
+  these must be harvested deliberately or it is lost at the next reset.**
+
 ---
 
 ## 0.17.5 — RUN-12 PREP (recorded retroactively)
