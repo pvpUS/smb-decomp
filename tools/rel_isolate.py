@@ -74,9 +74,22 @@ def split_file(rel, only):
         groups.append(cur)
 
     base = rel[:-2]
+    # Pick suffixes that are actually FREE.  Taking SUF[k-1] unconditionally
+    # overwrites an existing letter-suffixed sibling in an already-split tree --
+    # mini_fight's w4 lost 18bb.c/18bc.c to it in run 12.  This is the FOURTH
+    # tool in this project to ship invent-a-filename-and-clobber (after
+    # isolate.py in run 9, rel_rematch, and both agents' rel_purify in run 10),
+    # and every one of them exited 0 with a clean, non-golden build.
+    free = [s for s in SUF
+            if not os.path.exists(os.path.join(TREE, '%s%s.c' % (base, s)))]
+    if len(free) < len(groups) - 1:
+        sys.exit('  %s: need %d free suffixes for %s*, only %d available -- '
+                 'refusing to overwrite an existing sibling'
+                 % (rel, len(groups) - 1, base, len(free)))
+
     outs = []
     for k, g in enumerate(groups):
-        name = rel if k == 0 else '%s%s.c' % (base, SUF[k - 1])
+        name = rel if k == 0 else '%s%s.c' % (base, free[k - 1])
         blk = list(prefix) if k == 0 else []
         for lbl, b in g:
             blk += [re.sub(r'^static asm void', 'asm void', b[0])] + b[1:]

@@ -49,6 +49,8 @@ import re
 import subprocess
 import sys
 
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 OBJDUMP = 'C:/devkitPro/devkitPPC/bin/powerpc-eabi-objdump.exe'
 
 MODULES = ('mini_bowling', 'mini_race', 'mini_fight', 'mini_pilot', 'mini_golf',
@@ -140,7 +142,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('module', choices=sorted(MODULES))
     ap.add_argument('files', nargs='+')
-    ap.add_argument('--tree', help='defaults to C:/tmp/smbm/<module>')
+    ap.add_argument('--tree', help='defaults to the tree containing THIS tools/ dir')
     ap.add_argument('--tmp', help='defaults to C:/tmp/tmp_<module>')
     ap.add_argument('--frame', action='store_true',
                     help='one summary line per function instead of the '
@@ -151,9 +153,14 @@ def main():
     ap.add_argument('--func', help='only this symbol')
     a = ap.parse_args()
 
-    tree = a.tree or 'C:/tmp/smbm/%s' % a.module
+    # Same fix as rel_sweep: resolve from THIS FILE so a worker worktree probes
+    # itself, not its parent.  (mini_bowling, run 12.)
+    tree = a.tree or REPO
     tmp = a.tmp or 'C:/tmp/tmp_%s' % a.module
-    obj = os.path.join(tmp, 'rel_probe.o')
+    # ...and give the object a UNIQUE name.  It used to be a fixed
+    # '<tmp>/rel_probe.o', so two agents probing one module raced on one file
+    # and could each score the other's compile -- a fictional-match mode.
+    obj = os.path.join(tmp, 'rel_probe_%d.o' % os.getpid())
 
     rc = 0
     for cfile in a.files:

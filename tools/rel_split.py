@@ -73,6 +73,32 @@ import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# A bare `extern void f();` is fine for a call whose result is discarded, but it
+# is WRONG for anything returning a value: mwcc then rejects the real use with
+# "cannot convert 'void' to 'double'".  59 of 61 mini_billiards files carry
+# `extern void sqrt();` for exactly this reason, and that is why one of its
+# stored drafts has never compiled in any run.  (mini_billiards, run 12.)
+# Existing files keep whatever they were split with -- this only affects new
+# splits, so no already-golden object changes.
+KNOWN_PROTOS = {
+    'sqrt':  'extern double sqrt(double);',
+    'sqrtf': 'extern float sqrtf(float);',
+    'fabs':  'extern double fabs(double);',
+    'sin':   'extern double sin(double);',
+    'cos':   'extern double cos(double);',
+    'tan':   'extern double tan(double);',
+    'atan':  'extern double atan(double);',
+    'atan2': 'extern double atan2(double, double);',
+    'pow':   'extern double pow(double, double);',
+    'exp':   'extern double exp(double);',
+    'log':   'extern double log(double);',
+    'floor': 'extern double floor(double);',
+    'ceil':  'extern double ceil(double);',
+    'rand':  'extern int rand(void);',
+    'abs':   'extern int abs(int);',
+    'strlen': 'extern unsigned long strlen(const char *);',
+}
+
 LABEL_DEF_RE = re.compile(r'^(_prolog|_epilog|_unresolved|lbl_[0-9A-Fa-f]+):\s*$')
 GLOBAL_RE = re.compile(r'^\.global\s+(\S+)\s*$')
 SECTION_RE = re.compile(r'^\.section\s+(\S+)')
@@ -716,7 +742,7 @@ def write_src_files(module, src_path, funcs, includes, data_externs,
         if extern_fns:
             out.append('// Imported functions the code calls that no included header declares.')
             for fn in extern_fns:
-                out.append('extern void %s();' % fn)
+                out.append(KNOWN_PROTOS.get(fn, 'extern void %s();' % fn))
             out.append('')
         out.append('// Forward declarations so mwcc accepts `<fn>@ha/@l` and cross-function')
         out.append('// branches before each function is defined below.')

@@ -57,6 +57,19 @@ import subprocess
 import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Windows hands us a cp1252 stdout, so a single non-ASCII character in a variant
+# FILENAME raised UnicodeEncodeError out of the progress print and killed a whole
+# sweep mid-run (test_mode, run 12).  The sweep's restore is inside a try/finally
+# and does run on a normal exception -- the report that it does not is wrong --
+# but a sweep that dies at variant 3 of 700 has still thrown the run away, and if
+# the process is KILLED (harness timeout) the finally never runs and a converted
+# body is left in src/.  Cheapest correct fix: never raise from a print.
+try:
+    sys.stdout.reconfigure(errors='replace')
+    sys.stderr.reconfigure(errors='replace')
+except (AttributeError, ValueError):
+    pass
 BASH = 'C:/msys64/usr/bin/bash.exe'
 
 # warm dir -> (src/asm stem, build target); see rel_merge_back.MODULES
@@ -392,7 +405,7 @@ def main():
     ap.add_argument('module', choices=sorted(MODULES))
     ap.add_argument('--file', help='the .c under test, repo-relative')
     ap.add_argument('--label', help='function to score')
-    ap.add_argument('--tree', help='defaults to C:/tmp/smbm/<module>')
+    ap.add_argument('--tree', help='defaults to the tree containing THIS tools/ dir')
     ap.add_argument('--tmp', help='defaults to C:/tmp/tmp_<module>')
     ap.add_argument('--sweep', help='directory of candidate bodies to try')
     ap.add_argument('--install-best', action='store_true',
@@ -404,7 +417,13 @@ def main():
     args = ap.parse_args()
 
     stem, target = MODULES[args.module]
-    tree = args.tree or 'C:/tmp/smbm/%s' % args.module
+    # Resolve from THIS FILE, not from a hard-coded warm-copy path: every tree
+    # (main, warm copy, worker worktree) carries its own tools/, so a worker
+    # running `python tools/rel_sweep.py <mod>` gets its OWN tree.  The old
+    # default was 'C:/tmp/smbm/<module>' regardless of cwd, which made a worker
+    # silently build, install variants into, and --gate its PARENT's tree.
+    # Reported independently by mini_pilot, mini_fight w1 and w2 in run 12.
+    tree = args.tree or REPO
     tmp = args.tmp or 'C:/tmp/tmp_%s' % args.module
 
     if args.gate:

@@ -87,12 +87,18 @@ def analyse(tree, mod):
             if not body:
                 continue
             ops = {x[2] for x in body}
-            txt = '\n'.join(x[3] for x in body)
             addr = body[0][0]
             name = body[0][4] or ('lbl_%08X' % addr)
             if 'bctr' in ops:
                 cat, key = 'd-JUMPTBL', 'bctr'
-            elif re.search(r'\blis\s+r\d+,\s*0x4330', txt):
+            # The magic-double test used to join x[3] (the ARGS field) and then
+            # search it for r'\blis\s+r\d+,...' -- but the OPCODE lives in x[2],
+            # so the pattern could never match and a-BLOCKED was DEAD CODE.  It
+            # made the tool report two a-BLOCKED mini_fight functions (lbl_13D50
+            # 160, lbl_1415C 145) as REACHABLE, which is exactly the amount by
+            # which its 23/2,054 over-reported the hand count of 21/1,749.
+            # (mini_fight, run 12, with the fix.)
+            elif any(x[2] == 'lis' and '0x4330' in x[3] for x in body):
                 cat, key = 'a-BLOCKED', 'blocked'
             else:
                 cat, key = 'REACHABLE', 'reach'
