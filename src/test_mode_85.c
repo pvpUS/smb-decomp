@@ -278,9 +278,23 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_0000B57C(void)
+void lbl_0000B57C(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000B57C.s"
+    u8 *s = lbl_000148A8;
+    u8 *p = lbl_00010118;
+
+    window_set_cursor_pos(8, 8);
+    window_printf_2((char *)s);
+    window_printf_2((char *)(s + 0xC), *(int *)(lbl_10000F70 + 8));
+    window_printf_2((char *)(lbl_000148A8 + 0x1C), *(float *)(lbl_10000F70 + 0xC));
+    lbl_0000BE98();
+    change_current_camera(0);
+    lbl_0000B6B0();
+    default_camera_env();
+    GXSetBlendMode_cached(GX_BM_NONE, GX_BL_ONE, GX_BL_ZERO, GX_LO_CLEAR);
+    GXSetZMode_cached(GX_TRUE, GX_LESS, GX_TRUE);
+    GXSetFog_cached(GX_FOG_NONE, *(float *)(p + 0x14), *(float *)(p + 4),
+                    *(float *)(p + 0x18), *(float *)(p + 0x1C),
+                    *(GXColor *)(p + 0x10));
 }
 #pragma force_active reset

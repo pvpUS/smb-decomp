@@ -429,14 +429,6 @@ SOURCES := \
 	src/sel_ngc_rel_28.c \
 	src/sel_ngc_rel_29.c \
 	asm/sel_ngc_rel_d1.s \
-	src/sel_ngc_rel_45.c \
-	src/sel_ngc_rel_46.c \
-	src/sel_ngc_rel_47.c \
-	src/sel_ngc_rel_48.c \
-	src/sel_ngc_rel_49.c \
-	src/sel_ngc_rel_50.c \
-	src/sel_ngc_rel_50x2.c \
-	src/sel_ngc_rel_51.c \
 	src/sel_ngc_rel_52.c \
 	src/sel_ngc_rel_53.c \
 	src/sel_ngc_rel_54.c \
@@ -1119,12 +1111,14 @@ SOURCES := \
 	src/mini_golf_39.c \
 	src/mini_golf_40.c \
 	src/mini_golf_41.c \
+	asm/mini_golf_pool_tail.s \
+	asm/mini_golf_d1.s \
 	src/mini_golf_42.c \
 	src/mini_golf_43.c \
 	src/mini_golf_44.c \
 	src/mini_golf_45.c \
 	src/mini_golf_46.c \
-	asm/mini_golf_d1.s \
+	asm/mini_golf_d2.s \
 	src/mini_golf_47.c \
 	src/mini_golf_48.c \
 	src/mini_golf_49.c \
@@ -1132,7 +1126,7 @@ SOURCES := \
 	src/mini_golf_51.c \
 	src/mini_golf_52.c \
 	src/mini_golf_53.c \
-	asm/mini_golf_d2.s \
+	asm/mini_golf_d3.s \
 	src/mini_golf_54.c \
 	src/mini_golf_55.c \
 	src/mini_golf_56.c \
@@ -1156,7 +1150,7 @@ SOURCES := \
 	src/mini_golf_74.c \
 	src/mini_golf_75.c \
 	src/mini_golf_76.c \
-	asm/mini_golf_d3.s
+	asm/mini_golf_d4.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
 mkbe.rel_mini_golf.plf: $(O_FILES)
@@ -1207,7 +1201,6 @@ SOURCES := \
 	src/mini_billiards_33c.c \
 	src/mini_billiards_34.c \
 	asm/mini_billiards_d2.s \
-	src/mini_billiards_35.c \
 	src/mini_billiards_36.c \
 	src/mini_billiards_37.c \
 	src/mini_billiards_37b.c \
@@ -1226,9 +1219,6 @@ SOURCES := \
 	src/mini_billiards_48.c \
 	src/mini_billiards_49.c \
 	src/mini_billiards_50.c \
-	src/mini_billiards_51.c \
-	src/mini_billiards_52.c \
-	src/mini_billiards_55.c \
 	asm/mini_billiards_d3.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
@@ -1422,36 +1412,6 @@ SOURCES := \
 	src/option_28.c \
 	src/option_29.c \
 	src/option_30.c \
-	src/option_36.c \
-	src/option_36b.c \
-	src/option_36c.c \
-	src/option_36d.c \
-	src/option_37.c \
-	src/option_38.c \
-	src/option_39.c \
-	src/option_40.c \
-	src/option_41.c \
-	src/option_42.c \
-	src/option_43.c \
-	src/option_44.c \
-	src/option_45.c \
-	src/option_46.c \
-	src/option_47.c \
-	src/option_48.c \
-	src/option_48b.c \
-	src/option_48c.c \
-	src/option_49.c \
-	src/option_50.c \
-	src/option_51.c \
-	src/option_52.c \
-	src/option_53.c \
-	src/option_54.c \
-	src/option_55.c \
-	src/option_56.c \
-	src/option_57.c \
-	src/option_58.c \
-	src/option_59.c \
-	src/option_60.c \
 	asm/option_d1.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)

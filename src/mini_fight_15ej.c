@@ -437,6 +437,7 @@ asm void lbl_00009A68(void)
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_00009A68.s"
 }
+#pragma peephole on
 static void lbl_00009B94(void)
 {
 }

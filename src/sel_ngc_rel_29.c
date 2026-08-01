@@ -181,13 +181,11 @@ void lbl_0000DEC8(s8 *alive, struct Sprite *sprite);
 void lbl_0000E068(struct Sprite *sprite);
 void lbl_0000E368(s8 *alive, struct Sprite *sprite);
 void lbl_0000E778(void);
-void lbl_0000EBD4(void);
 void lbl_0000ECB0(void);
 void lbl_0000F788(void);
 void lbl_0000FE0C(void);
-void lbl_0000FF7C(void);
-void lbl_000101BC(void);
-void lbl_00010214(void);
+void lbl_0000FF7C(s8 *alive, struct Sprite *sprite);
+void lbl_00010214(struct Sprite *sprite);
 void lbl_00010438(void);
 void lbl_00011330(void);
 void lbl_00011424(void);
@@ -218,6 +216,14 @@ void lbl_0000E43C(s8 *alive, struct Sprite *sprite);
 void lbl_0000E4BC(s8 *alive, struct Sprite *sprite);
 void lbl_0000E540(struct Sprite *sprite);
 void lbl_0000E620(struct Sprite *sprite);
+
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+void lbl_0000EBD4(int index);
+
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+void lbl_000101BC(s8 *alive, struct Sprite *sprite);
 
 #pragma force_active on
 void lbl_0000A950(void)
@@ -945,6 +951,177 @@ asm void lbl_0000E778(void)
 {
     nofralloc
 #include "../asm/nonmatchings/sel_ngc_rel/lbl_0000E778.s"
+}
+#pragma peephole on
+// build one of the numbered selection sprites.
+void lbl_0000EBD4(int index)
+{
+    u8 *tbl = lbl_00012730;
+    u8 *k = lbl_00011CB0;
+    struct Sprite *sprite;
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        u8 *pos = tbl + index * 8;
+
+        sprite->tag = index + 0x32;
+        sprite->type = 1;
+        sprite->x = *(f32 *)(pos + 0x432C);
+        sprite->y = *(f32 *)(pos + 0x4330);
+        sprite->depth = *(f32 *)(k + 0x3B4);
+        sprite->textAlign = 0;
+        sprite->scaleX = *(f32 *)(k + 8);
+        sprite->scaleY = *(f32 *)(k + 8);
+        sprite->opacity = *(f32 *)(k + 8);
+        sprite->userVar = 6;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000ECB0;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000F788;
+        sprite->bmpId = index;
+        sprintf(sprite->text, (char *)(tbl + 0x43FC), index);
+    }
+}
+asm void lbl_0000ECB0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/sel_ngc_rel/lbl_0000ECB0.s"
+}
+#pragma peephole on
+asm void lbl_0000F788(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/sel_ngc_rel/lbl_0000F788.s"
+}
+#pragma peephole on
+// build the mode banner sprite, then the four numbered course-slot sprites.
+void lbl_0000FE0C(void)
+{
+    u8 *tbl = lbl_00012730;
+    u8 *k = lbl_00011CB0;
+    int i;
+    struct Sprite *sprite;
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->tag = 0x1D;
+        sprite->type = 1;
+        sprite->x = *(f32 *)(k + 0x14);
+        sprite->y = *(f32 *)(k + 0x410);
+        sprite->depth = *(f32 *)(k + 0x3B4);
+        sprite->textAlign = 4;
+        sprite->opacity = *(f32 *)(k + 8);
+        sprite->userVar = 0;
+        sprite->counter = 0xF;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000FF7C;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_00010438;
+        strcpy(sprite->text, (char *)(tbl + 0x4900));
+        lbl_00010214(sprite);
+    }
+
+    for (i = 0; i < 4; i++)
+    {
+        sprite = create_sprite();
+        if (sprite != NULL)
+        {
+            sprite->type = 1;
+            sprite->bmpId = ((s32 *)(tbl + 0x48F0))[i];
+            sprite->x = i * 0xA0 + 0x50;
+            sprite->y = *(f32 *)(k + 0x74);
+            sprite->depth = *(f32 *)(k + 0x390);
+            sprite->textAlign = 4;
+            sprite->flags |= 0x40000;
+            sprite->opacity = *(f32 *)(k + 8);
+            sprite->userVar = 0;
+            sprite->counter = 0xF;
+            sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_000101BC;
+            sprintf(sprite->text, (char *)(tbl + 0x490C), i);
+        }
+    }
+}
+// sprite mainFunc: fade the banner in, settling the four course-slot bars
+// towards their rest height; then fade out and kill the sprite.
+void lbl_0000FF7C(s8 *alive, struct Sprite *sprite)
+{
+    u8 *k = lbl_00011CB0;
+    int i;
+
+    if (sprite->counter > 0)
+        sprite->counter--;
+
+    switch (sprite->userVar)
+    {
+    case 0:
+        sprite->opacity = *(f32 *)(k + 0xC) - sprite->counter / *(f32 *)(k + 0xA8);
+        for (i = 0; i < 4; i++)
+        {
+            f32 *g = (f32 *)(lbl_100009D8 + i * 0x10);
+            f64 v = *(f64 *)(k + 0x30) - *(f64 *)(k + 0x418) * __fabs(g[0] - g[1]);
+
+            g[2] = v < *(f64 *)(k + 0x98)
+                 ? *(f64 *)(k + 0x98)
+                 : (v > *(f64 *)(k + 0x30) ? *(f64 *)(k + 0x30) : v);
+            g[1] = g[0];
+        }
+        break;
+    case 1:
+        sprite->counter = 0xF;
+        sprite->userVar = 2;
+    case 2:
+        sprite->opacity = sprite->counter / *(f32 *)(k + 0xA8);
+        if (sprite->counter == 0)
+            *alive = 0;
+        break;
+    }
+}
+#pragma peephole on
+// sprite mainFunc: track the opacity of sprite tag 0x1D, and kill this sprite
+// once that one is gone.
+void lbl_000101BC(s8 *alive, struct Sprite *sprite)
+{
+    struct Sprite *other = find_sprite_with_tag(0x1D);
+
+    if (other == NULL)
+        *alive = 0;
+    else
+        sprite->opacity = other->opacity;
+}
+asm void lbl_00010214(struct Sprite *sprite)
+{
+    nofralloc
+#include "../asm/nonmatchings/sel_ngc_rel/lbl_00010214.s"
+}
+#pragma peephole on
+asm void lbl_00010438(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/sel_ngc_rel/lbl_00010438.s"
+}
+#pragma peephole on
+// build the three mode-select bitmaps down the right-hand column.
+void lbl_00011330(void)
+{
+    u8 *tbl = lbl_00011CB0;
+    struct Sprite *sprite;
+    int i;
+
+    for (i = 0; i < 3; i++)
+    {
+        sprite = create_sprite();
+        if (sprite != NULL)
+        {
+            sprite->tag = i + 5;
+            sprite->type = 1;
+            sprite->bmpId = ((u32 *)(tbl + 0x440))[i];
+            sprite->x = *((f32 **)lbl_00017460)[i];
+            sprite->y = *(f32 *)(tbl + 0x494);
+            sprite->depth = *(f64 *)tbl + *(f64 *)(tbl + 0x190) * i;
+            sprite->textAlign = 4;
+            sprite->userVar = 1;
+            sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_00011424;
+            sprintf(sprite->text, (char *)lbl_0001746C, i);
+        }
+    }
 }
 #pragma peephole on
 #pragma force_active reset

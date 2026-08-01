@@ -54,8 +54,8 @@ lbl_0000F888:
 /* 0000F8B0 80030000 */ lwz r0, globalAnimTimer@l(r3)
 /* 0000F8B4 5403502A */ slwi r3, r0, 0xa
 /* 0000F8B8 4BFF0919 */ bl mathutil_sin
-/* 0000F8BC 3C600000 */ lis r3, lbl_000264C8@ha
-/* 0000F8C0 C8030000 */ lfd f0, lbl_000264C8@l(r3)
+/* 0000F8BC 3C600000 */ lis r3, (lbl_000264A8+0x20)@ha
+/* 0000F8C0 C8030000 */ lfd f0, (lbl_000264A8+0x20)@l(r3)
 /* 0000F8C4 FFE00072 */ fmul f31, f0, f1
 /* 0000F8C8 4BFF9A09 */ bl lbl_000092D0
 /* 0000F8CC 3C600000 */ lis r3, lbl_000264E0@ha

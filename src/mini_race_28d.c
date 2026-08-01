@@ -29,6 +29,7 @@
 #include "sound.h"
 #include "sprite.h"
 #include "stage.h"
+#include "stcoli.h"
 #include "variables.h"
 #include "window.h"
 
@@ -178,7 +179,6 @@ extern u8 backgroundInfo[];
 extern void item_replace_type_funcs();
 extern void u_load_minigame_graphics();
 extern void u_ball_init_1();
-extern void raycast_stage_down();
 extern void vibration_control();
 extern void func_800246F4();
 extern void mot_ape_set_quat_from_vec();
@@ -254,18 +254,18 @@ void lbl_00002FA4(void);
 void lbl_00003094(void);
 void lbl_000030DC(void);
 void lbl_00003120(void);
-void lbl_000031C0(void);
+void lbl_000031C0(struct DecodedStageLzPtr_child5 *, Vec *, f32);
 void lbl_00003238(void);
 void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
-void lbl_000040C0(void);
+void lbl_000040C0(struct Ball *);
 void lbl_00004284(void);
 void lbl_000044AC(void);
 void lbl_00004634(struct Ball *);
 void lbl_0000480C(struct Ball *);
-void lbl_00004D78(void);
+void lbl_00004D78(struct Ball *);
 void lbl_0000528C(void);
 void lbl_000055CC(void);
 void lbl_00005A84(void);
@@ -278,11 +278,11 @@ void lbl_00006248(void);
 void lbl_000062F8(void);
 void lbl_000065A0(void);
 void lbl_000068E8(void);
-void lbl_000069D0(void);
+void lbl_000069D0(struct Ball *, Vec *);
 void lbl_00006CF0(void);
-void lbl_00006FF4(void);
+Vec *lbl_00006FF4(struct Ball *);
 void lbl_000070FC(void);
-void lbl_00007688(void);
+int lbl_00007688(struct Ball *);
 void lbl_00007710(struct Ball *);
 void lbl_00007800(void);
 void lbl_00007900(void);
@@ -387,11 +387,113 @@ void lbl_0000568C(void);
 void lbl_00005884(void);
 void lbl_00005998(void);
 void lbl_00005C20(void);
-#pragma force_active on
-asm void lbl_00004D78(void)
+// INVENTED -- offsets read off the asm, names are placeholders.  UNVERIFIED.
+struct RaceSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00004D78.s"
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+    u8 filler18[0x1C - 0x18];
+    /*0x1C*/ s16 unk1C;
+    u8 filler1E[0x1D4 - 0x1E];
+    /*0x1D4*/ f32 unk1D4;
+    /*0x1D8*/ f32 unk1D8;
+    /*0x1DC*/ f32 unk1DC;
+    /*0x1E0*/ f32 unk1E0;
+    u8 filler1E4[0x1E8 - 0x1E4];
+    /*0x1E8*/ f32 unk1E8;
+    /*0x1EC*/ f32 unk1EC;
+    /*0x1F0*/ f32 unk1F0;
+    /*0x1F4*/ f32 unk1F4;
+};
+
+#pragma force_active on
+void lbl_00004D78(struct Ball *ball)
+{
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+    u8 *cfg = lbl_00013740;
+    Vec *q;
+    Vec *pe;
+    f32 dot;
+    struct RaycastHit hit;
+    Vec d;
+    Vec c;
+    Vec b;
+    Vec a;
+    Vec e;
+
+    if (st->unk1C == 0)
+    {
+        ball->flags &= ~0x10;
+        st->unk14 &= ~0x10000;
+        ball->unk148 = 1;
+        lbl_000040C0(ball);
+    }
+    else
+    {
+        ball->prevPos = ball->pos;
+        ball->speed = mathutil_vec_len(&ball->vel);
+        ball->flags &= ~0x20;
+        if (globalAnimTimer & 4)
+            ball->flags &= ~0x10;
+        else
+            ball->flags |= 0x10;
+        if (ball->unk120 & 1)
+        {
+            d = *(Vec *)(cfg + 0x120);
+            lbl_000031C0(decodedStageLzPtr->unk78, &b, st->unk1D4);
+            lbl_000031C0(decodedStageLzPtr->unk78, &a,
+                         *(f32 *)(cfg + 0x20) + st->unk1D4);
+            c.x = a.x - b.x;
+            c.y = a.y - b.y;
+            c.z = a.z - b.z;
+            mathutil_vec_set_len(&c, &c, *(f32 *)(cfg + 0x138));
+            if (!(st->unk14 & 0x20))
+            {
+                q = lbl_00006FF4(ball);
+                c.x = c.x + q->x;
+                c.y = c.y + q->y;
+                c.z = c.z + q->z;
+            }
+            lbl_000069D0(ball, &c);
+            raycast_stage_down(&ball->pos, &hit, NULL);
+            d.x = hit.normal.x - d.x;
+            d.y = hit.normal.y - d.y;
+            d.z = hit.normal.z - d.z;
+            dot = mathutil_vec_dot_prod(&d, &ball->vel);
+            if (dot > *(f32 *)(cfg + 0x13C))
+            {
+                dot = -dot;
+                d.x = d.x * (*(f32 *)(cfg + 0x140) * dot);
+                d.y = d.y * (*(f32 *)(cfg + 0x140) * dot);
+                d.z = d.z * (*(f32 *)(cfg + 0x140) * dot);
+                ball->vel.x = ball->vel.x + d.x;
+                ball->vel.y = ball->vel.y + d.y;
+                ball->vel.z = ball->vel.z + d.z;
+            }
+        }
+        else
+        {
+            e = *(Vec *)(cfg + 0x12C);
+            pe = &e;
+            lbl_000069D0(ball, pe);
+        }
+        ball->pos.x = ball->pos.x + ball->vel.x;
+        ball->pos.y = ball->pos.y + ball->vel.y;
+        ball->pos.z = ball->pos.z + ball->vel.z;
+        if (lbl_00007688(ball) != 0)
+        {
+            st->unk1E8 = st->unk1D4;
+            st->unk1EC = st->unk1D8;
+            st->unk1F0 = st->unk1DC;
+            st->unk1F4 = st->unk1E0;
+            ball->unk148 = 4;
+            st->unk1C = 0x3C;
+        }
+        else if (st->unk14 & 2)
+        {
+            ball->unk148 = 0xB;
+        }
+    }
 }
 
 #pragma force_active reset

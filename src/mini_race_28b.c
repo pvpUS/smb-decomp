@@ -29,6 +29,7 @@
 #include "sound.h"
 #include "sprite.h"
 #include "stage.h"
+#include "stcoli.h"
 #include "variables.h"
 #include "window.h"
 
@@ -178,7 +179,6 @@ extern u8 backgroundInfo[];
 extern void item_replace_type_funcs();
 extern void u_load_minigame_graphics();
 extern void u_ball_init_1();
-extern void raycast_stage_down();
 extern void vibration_control();
 extern void func_800246F4();
 extern void mot_ape_set_quat_from_vec();
@@ -254,14 +254,14 @@ void lbl_00002FA4(void);
 void lbl_00003094(void);
 void lbl_000030DC(void);
 void lbl_00003120(void);
-void lbl_000031C0(void);
+void lbl_000031C0(struct DecodedStageLzPtr_child5 *, Vec *, f32);
 void lbl_00003238(void);
 void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
 void lbl_000040C0(void);
-void lbl_00004284(void);
+void lbl_00004284(struct Ball *);
 void lbl_000044AC(void);
 void lbl_00004634(struct Ball *);
 void lbl_0000480C(struct Ball *);
@@ -273,12 +273,12 @@ void lbl_00005CEC(void);
 void lbl_00005DDC(void);
 void lbl_00005FC4(void);
 void lbl_0000612C(void);
-void lbl_000061D0(void);
+void lbl_000061D0(struct Ball *);
 void lbl_00006248(void);
 void lbl_000062F8(void);
 void lbl_000065A0(void);
-void lbl_000068E8(void);
-void lbl_000069D0(void);
+void lbl_000068E8(struct Ball *);
+void lbl_000069D0(struct Ball *, Vec *);
 void lbl_00006CF0(void);
 void lbl_00006FF4(void);
 void lbl_000070FC(void);
@@ -379,7 +379,7 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
-void lbl_00004910(void);
+void lbl_00004910(struct Ball *);
 void lbl_00004BB0(void);
 void lbl_000050F0(void);
 void lbl_00005428(void);
@@ -387,11 +387,96 @@ void lbl_0000568C(void);
 void lbl_00005884(void);
 void lbl_00005998(void);
 void lbl_00005C20(void);
-#pragma force_active on
-asm void lbl_00004910(void)
+// INVENTED -- offsets read off the asm, names are placeholders.  UNVERIFIED.
+struct RaceSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00004910.s"
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+    u8 filler18[0x1C - 0x18];
+    /*0x1C*/ s16 unk1C;
+    u8 filler1E[0x1D4 - 0x1E];
+    /*0x1D4*/ f32 unk1D4;
+    u8 filler1D8[0x23C - 0x1D8];
+    /*0x23C*/ Vec unk23C;
+    u8 filler248[0x26E - 0x248];
+    /*0x26E*/ s16 unk26E;
+};
+
+// INVENTED -- the 8-byte {start,length} pairs at *(ent + 0x28).  UNVERIFIED.
+struct RaceSpan
+{
+    /*0x00*/ f32 a;
+    /*0x04*/ f32 b;
+};
+
+#pragma force_active on
+void lbl_00004910(struct Ball *ball)
+{
+    u8 *cfg = lbl_00013740;
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+    u8 *ent = lbl_00015768 + *(u16 *)lbl_10000028 * 0x48;
+    struct DecodedStageLzPtr_child5 *path;
+    struct RaceSpan *p;
+    f32 t;
+    struct RaycastHit hit;
+    Vec t1;
+    Vec t2;
+    Vec v;
+    Vec *pv;
+
+    if (st->unk1C == 0)
+    {
+        path = decodedStageLzPtr->unk78;
+        ball->flags &= ~1;
+        st->unk14 &= ~0x20000;
+        if (st->unk14 & 4)
+            lbl_000061D0(ball);
+        if (st->unk14 & 0x10)
+            lbl_000068E8(ball);
+        st->unk26E = 0;
+        t = st->unk1D4;
+        for (p = *(struct RaceSpan **)(ent + 0x28);
+             p->a > *(f32 *)(cfg + 8); p++)
+        {
+            if (p->a <= t && t <= p->a + p->b)
+            {
+                t = p->a + p->b;
+                break;
+            }
+        }
+        st->unk1D4 = t;
+        lbl_000031C0(path, &ball->pos, t);
+        ball->pos.y = ball->pos.y + *(f32 *)(cfg + 0x9C) * ball->currRadius;
+        if ((u32)raycast_stage_down(&ball->pos, &hit, NULL) == 0)
+        {
+            ball->pos.y = ball->pos.y + *(f32 *)(cfg + 0x68);
+            raycast_stage_down(&ball->pos, &hit, NULL);
+        }
+        ball->pos.y = hit.pos.y + *(f32 *)(cfg + 0x9C) * ball->currRadius;
+        t1 = *(volatile Vec *)(cfg + 0xD8);
+        ball->vel = t1;
+        ball->unk80 = 0;
+        ball->unk60 = 0;
+        ball->unk62 = 0;
+        ball->unk64 = 0;
+        t2 = *(volatile Vec *)(cfg + 0xE4);
+        st->unk23C = t2;
+        ball->unk148 = 2;
+        st->unk1C = 0x78;
+        lbl_00004284(ball);
+    }
+    else
+    {
+        ball->prevPos = ball->pos;
+        ball->speed = mathutil_vec_len(&ball->vel);
+        pv = &v;
+        ball->flags &= ~0x20;
+        *pv = *(Vec *)(cfg + 0xF0);
+        lbl_000069D0(ball, pv);
+        ball->pos.x = ball->pos.x + ball->vel.x;
+        ball->pos.y = ball->pos.y + ball->vel.y;
+        ball->pos.z = ball->pos.z + ball->vel.z;
+    }
 }
 
 #pragma force_active reset

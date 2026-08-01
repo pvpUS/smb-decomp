@@ -154,7 +154,15 @@ extern u8 lbl_10000040[];
 extern u8 lbl_10000042[];
 extern u8 lbl_10000046[];
 extern u8 lbl_10000048[];
-extern u8 lbl_10000054[];
+// INVENTED -- per-racer state hanging off struct Ball::unk144.  UNVERIFIED.
+struct RaceSub
+{
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+    u8 filler18[0x1E - 0x18];
+    /*0x1E*/ u16 unk1E;
+};
+extern struct RaceSub *lbl_10000054[];
 extern u8 lbl_10000064[];
 extern u8 lbl_10001068[];
 extern u8 lbl_1000106C[];
@@ -352,13 +360,13 @@ void lbl_0000EC20(void);
 void lbl_0000F084(void);
 void lbl_0000F118(void);
 void lbl_0000F174(void);
-void lbl_0000F3D4(void);
+void lbl_0000F3D4(int);
 void lbl_0000FC8C(void);
 void lbl_0000FCC4(void);
 void lbl_0000FD48(void);
 void lbl_0000FDD8(void);
 void lbl_0000FE90(void);
-void lbl_0000FEF8(void);
+void lbl_0000FEF8(s16);
 void lbl_000100B4(void);
 void lbl_00010130(void);
 void lbl_00010218(void);
@@ -383,15 +391,54 @@ void lbl_00004910(void);
 void lbl_00004BB0(void);
 void lbl_000050F0(void);
 void lbl_00005428(void);
-void lbl_0000568C(void);
+void lbl_0000568C(struct Ball *, int, int, int);
 void lbl_00005884(void);
 void lbl_00005998(void);
 void lbl_00005C20(void);
 #pragma force_active on
-asm void lbl_0000568C(void)
+void lbl_0000568C(struct Ball *ball, int a1, int a2, int a3)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000568C.s"
+    u8 *cfg = lbl_00013740;
+    u8 *ent = lbl_00015768 + *(u16 *)lbl_10000028 * 0x48;
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+    s16 i;
+    Vec v;
+    Quaternion q;
+
+    if (*(struct RaceSub ***)(ent + 0x30) == NULL)
+        return;
+    if (st->unk1E >= 4)
+        return;
+    if (!(st->unk14 & 0x20))
+    {
+        destroy_sprite_with_tag(ball->playerId + 0x67);
+        if (*(u16 *)(lbl_10000028 + 2) & 0x10)
+            lbl_0000FEF8(ball->playerId);
+        else
+            lbl_0000F3D4(ball->playerId);
+    }
+    for (i = 0; i < 4; i++)
+    {
+        if (lbl_10000054[i] == NULL)
+            return;
+        if (st == lbl_10000054[i])
+        {
+            ball->pos = (*(Vec **)(ent + 0x30))[i];
+            break;
+        }
+    }
+    ball->pos.y = ball->pos.y + *(f32 *)(cfg + 0x19C);
+    ball->prevPos = ball->pos;
+    v = *(volatile Vec *)(cfg + 0x180);
+    ball->vel = v;
+    q = *(volatile Quaternion *)(cfg + 0x18C);
+    ball->ape->unk60 = q;
+    if (!(st->unk14 & 0x20))
+    {
+        cameraInfo[ball->playerId].state = 0x3C;
+        cameraInfo[ball->playerId].subState = 8;
+    }
+    ball->unk148 = 0x10;
 }
 
 #pragma force_active reset

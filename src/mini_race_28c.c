@@ -254,7 +254,7 @@ void lbl_00002FA4(void);
 void lbl_00003094(void);
 void lbl_000030DC(void);
 void lbl_00003120(void);
-void lbl_000031C0(void);
+void lbl_000031C0(struct DecodedStageLzPtr_child5 *, Vec *, f32);
 void lbl_00003238(void);
 void lbl_0000326C(void);
 void lbl_00003398(void);
@@ -265,7 +265,7 @@ void lbl_00004284(void);
 void lbl_000044AC(void);
 void lbl_00004634(struct Ball *);
 void lbl_0000480C(struct Ball *);
-void lbl_00004D78(void);
+void lbl_00004D78(struct Ball *);
 void lbl_0000528C(void);
 void lbl_000055CC(void);
 void lbl_00005A84(void);
@@ -380,18 +380,55 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 void lbl_00004910(void);
-void lbl_00004BB0(void);
+void lbl_00004BB0(struct Ball *, int, int, int);
 void lbl_000050F0(void);
 void lbl_00005428(void);
 void lbl_0000568C(void);
 void lbl_00005884(void);
 void lbl_00005998(void);
 void lbl_00005C20(void);
-#pragma force_active on
-asm void lbl_00004BB0(void)
+// Per-racer state hanging off struct Ball::unk144 inside this module.
+// INVENTED -- offsets read off the asm, names are placeholders.  UNVERIFIED.
+struct RaceSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00004BB0.s"
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+    u8 filler18[0x1D4 - 0x18];
+    /*0x1D4*/ f32 unk1D4;
+};
+
+#pragma force_active on
+void lbl_00004BB0(struct Ball *ball, int a1, int a2, int a3)
+{
+    u8 *cfg = lbl_00013740;
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+    Vec a;
+    Vec b;
+    Vec v;
+    Quaternion q;
+
+    ball->speed = ball->unkC4 = *(f32 *)(cfg + 8);
+    v = *(volatile Vec *)(cfg + 0xFC);
+    ball->unkB8 = v;
+    q = *(volatile Quaternion *)(cfg + 0x108);
+    ball->unkA8 = q;
+    ball->unk98 = ball->unkA8;
+    mathutil_mtxA_to_quat(&ball->unkA8);
+    ball->ape->flags &= 0x20000;
+    lbl_00007710(ball);
+    if (!(st->unk14 & 0x20))
+    {
+        lbl_000031C0(decodedStageLzPtr->unk78, &a, st->unk1D4);
+        lbl_000031C0(decodedStageLzPtr->unk78, &b,
+                     *(f64 *)(cfg + 0x118) + st->unk1D4);
+        a.x = b.x - a.x;
+        a.y = b.y - a.y;
+        a.z = b.z - a.z;
+        cameraInfo[ball->playerId].rotY = mathutil_atan2(a.x, a.z) - 0x8000;
+    }
+    st->unk14 |= 0x10000;
+    ball->unk148 = 0xA;
+    lbl_00004D78(ball);
 }
 
 #pragma force_active reset

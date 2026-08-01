@@ -226,6 +226,10 @@ void lbl_0001A0B0(void);
 void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+static void lbl_0000E3A4(void);
+
 #pragma force_active on
 s32 lbl_0000D0A4(void)
 {
@@ -280,5 +284,25 @@ s32 lbl_0000D0A4(void)
         return 1;
     }
     return 0;
+}
+asm void lbl_0000D330(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_0000D330.s"
+}
+asm void lbl_0000D7E8(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_0000D7E8.s"
+}
+static asm void lbl_0000E3A4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_0000E3A4.s"
+}
+asm void lbl_0000E8D0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_0000E8D0.s"
 }
 #pragma force_active reset

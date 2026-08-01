@@ -1,4 +1,28 @@
 /*
+ * NOT MATCHED -- 9 in 4, span 20-190 of 304  (rel_sweep RAW 9 / ALIGNED 9)
+ *
+ * Everything is byte-exact except two residuals:
+ *
+ *  (1) 7 diffs: FP temp NUMBERING in the pos.y expression.  The instruction
+ *      sequence, operand order and schedule are identical; only the register
+ *      names differ.  exp: f1=pool[0x28], f2=pool[0x20], f3=startPos->pos.y.
+ *      We get f3/f1/f2 because mwcc gives a CSE'd pointer-load the HIGHEST
+ *      temp, and a source-level float LITERAL the lowest.  PROVEN with a
+ *      build: replacing *(f64 *)(p + 0x28) with the literal 24.0 reproduces
+ *      exp's exact f1/f2/f3 assignment.  pool+0x20 is the double 0.5 and
+ *      pool+0x28 is the double 24.0, so this TU really does own that
+ *      .rodata -- lbl_0000F290 is MIS-CLASSIFIED as b-POOL and needs a
+ *      .rodata carve (Vec{0,0,0} @+0x00, Quaternion{0,0,0,1} @+0x0C,
+ *      double 0.5 @+0x20, double 24.0 @+0x28, float 0.0f @+0x30).
+ *
+ *  (2) 2 diffs: the loop guard.  exp `li r6,0 / cmpw r6,r3 / bge`, we emit
+ *      `li r6,0 / cmpwi r3,0 / ble` -- mwcc constant-folds i==0 into the
+ *      guard and the original did not.  15 loop spellings swept, none move
+ *      it; it is NOT fixed by the literals either.
+ *
+ * The object is .text only, 0x4c0 bytes, ZERO .rodata.
+ */
+/*
  * mini_golf.c -- REL module: isolated function lbl_0000F290.
  * This file holds exactly one function so it can be converted from the
  * asm-include below to matching C WITHOUT any asm sibling in the
@@ -158,15 +182,15 @@ void lbl_000091BC(void);
 void lbl_000092C4(void);
 void lbl_000092D0(void);
 void lbl_000092E0(void);
-void lbl_000092F0(void);
+s16 lbl_000092F0(void);
 void lbl_00009300(void);
 void lbl_00009310(void);
-void lbl_00009320(void);
-void lbl_00009340(void);
+void lbl_00009320(Vec *);
+void lbl_00009340(Vec *);
 void lbl_00009360(void);
-void lbl_00009384(void);
+void lbl_00009384(s16 *);
 void lbl_00009394(void);
-void lbl_000093A4(void);
+void lbl_000093A4(s16 *);
 void lbl_000093B4(void);
 void lbl_000093C4(void);
 void lbl_000093D4(void);
@@ -205,7 +229,7 @@ void lbl_0000E998(void);
 void lbl_0000E99C(void);
 void lbl_0000F11C(void);
 void lbl_0000F194(void);
-void lbl_0000F290(void);
+void lbl_0000F290(struct Ball *ball);
 void lbl_0000F750(void);
 void lbl_0000F7E8(void);
 void lbl_0000FA18(void);
@@ -258,9 +282,45 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-asm void lbl_0000F290(void)
+void lbl_0000F290(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_0000F290.s"
+    Vec sp34;
+    s32 i;
+
+    if (*(s16 *)lbl_00026DF0 != lbl_000092F0())
+    {
+        for (i = 0; i < modeCtrl.playerCount; i++)
+        {
+            ballInfo[i].pos = decodedStageLzPtr->startPos->pos;
+            ballInfo[i].prevPos = decodedStageLzPtr->startPos->pos;
+        }
+        *(s16 *)lbl_00026DF0 = lbl_000092F0();
+    }
+    ball->pos.x = decodedStageLzPtr->startPos->pos.x;
+    ball->pos.y = decodedStageLzPtr->startPos->pos.y +
+                  0.5 * (24.0 * (24.0 * ball->accel));
+    ball->pos.z = decodedStageLzPtr->startPos->pos.z;
+    ball->prevPos = ball->pos;
+    mathutil_mtxA_from_translate(&ball->pos);
+    mathutil_mtxA_to_mtx(ball->unk30);
+    ball->speed = ball->unkC4 = 0.0f;
+    ball->unkB8 = (Vec){0.0f, 0.0f, 0.0f};
+    ball->ape->flags &= ~0x4000;
+    ball->unkA8 = (Quaternion){0.0f, 0.0f, 0.0f, 1.0f};
+    ball->unk98 = ball->unkA8;
+    ball->unk92 = decodedStageLzPtr->startPos->yrot;
+    sp34.x = -mathutil_sin(ball->unk92);
+    sp34.y = 0.0f;
+    sp34.z = -mathutil_cos(ball->unk92);
+    mot_ape_set_quat_from_vec(ball->ape, &sp34);
+    lbl_00009340(&ball->prevPos);
+    lbl_00009320(&ball->pos);
+    lbl_000093A4(&ball->unk92);
+    lbl_00009384(&ball->unk92);
+    ball->colorId = modeCtrl.currPlayer;
+    *(s32 *)lbl_10000170 = 0;
+    *(u8 *)lbl_10000178 = 9;
+    ball->state = 0x1A;
+    ball->unk148 = 4;
 }
 #pragma force_active reset

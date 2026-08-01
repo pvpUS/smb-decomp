@@ -405,6 +405,7 @@ asm void lbl_00007AD4(void)
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_00007AD4.s"
 }
+#pragma peephole on
 static void lbl_00007F48(u8 *p)
 {
     if (*(s16 *)(p + 0xa) < 2)

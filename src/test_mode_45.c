@@ -202,7 +202,7 @@ void lbl_00003D94(void);
 void lbl_000040B4(void);
 void lbl_0000502C(void);
 void lbl_00005384(void);
-void lbl_000055E8(void);
+void lbl_000055E8(u8 *);
 void lbl_000056BC(void);
 void lbl_000057C0(void);
 void lbl_000065F0(void);
@@ -279,9 +279,192 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-static asm void lbl_00006B98(void)
+
+struct TestStageEntry
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00006B98.s"
+    /*0x00*/ s32 group;
+    /*0x04*/ u8 name[8];
+};
+
+#define U_CAM(scale)                                                          \
+    currentCamera->lookAt = mm->boundSphereCenter;                            \
+    currentCamera->eye = currentCamera->lookAt;                               \
+    currentCamera->eye.y += k[30] * (scale);                                  \
+    currentCamera->eye.z += k[46] + k[92] * (scale);
+
+#define U_PICK()                                                              \
+    f = *(u8 *)(w + 0xD4E);                                                   \
+    if (f == 0 || *(f64 *)&k[50] == *(f32 *)(w + 0xD50))                      \
+        *(f32 *)(w + 0xD50) = mm->boundSphereRadius;                          \
+    if (f != 0)                                                               \
+    {                                                                         \
+        U_CAM(*(f32 *)(w + 0xD50))                                            \
+    }                                                                         \
+    else                                                                      \
+    {                                                                         \
+        U_CAM(mm->boundSphereRadius)                                          \
+    }
+
+static inline int u_find_entry(struct TestStageEntry *t, int key, int nth)
+{
+    int i;
+    int cnt = 0;
+
+    for (i = 0; i < 236; i++)
+    {
+        if (t[i].group == key)
+            cnt++;
+        if (nth + 1 == cnt)
+            return i;
+    }
+    return -1;
+}
+
+static void lbl_00006B98(void)
+{
+    f32 *k = (f32 *)lbl_0000FE78;
+    u8 *w = lbl_10000000;
+    int reload = 0;
+    u16 pressed;
+    u16 held;
+    s16 d;
+    s16 dc;
+    struct GMA *gma;
+    struct GMAModel *mm;
+    u8 f;
+    OSHeapHandle prevHeap;
+    int pad0;
+    int pad1;
+    int pad2;
+    int z;
+
+    if (!(debugFlags & 0xA))
+    {
+        lbl_000057C0();
+        pressed = controllerInfo[0].pressed.button;
+        if (pressed & PAD_BUTTON_Y)
+        {
+            *(u8 *)(w + 0xD5A) ^= 1;
+            *(u8 *)(w + 0xD5B) ^= 1;
+        }
+        if (pressed & PAD_TRIGGER_Z)
+            *(u8 *)(w + 0xD4E) ^= 1;
+        held = controllerInfo[0].held.button;
+        if (((held & PAD_BUTTON_X) && (pressed & PAD_BUTTON_A)) ||
+            ((held & PAD_BUTTON_A) && (pressed & PAD_BUTTON_X)))
+        {
+            *(int *)(w + 0x5AC) ^= 1;
+        }
+        else if (pressed & PAD_BUTTON_A)
+        {
+            if (*(s16 *)(w + 0xD44) < 2)
+                *(s16 *)(w + 0xD44) += 1;
+        }
+        else if (pressed & PAD_BUTTON_B)
+        {
+            d = *(s16 *)(w + 0xD44);
+            if (d > 0)
+            {
+                ((s16 *)(w + 0xD48))[d] = 0;
+                *(s16 *)(w + 0xD44) -= 1;
+            }
+        }
+
+        dc = *(s16 *)(w + 0xD44);
+        if (dc == 2 && (pressed & PAD_BUTTON_A))
+        {
+            if (*(s16 *)(w + 0xD40) !=
+                u_find_entry((struct TestStageEntry *)lbl_00013A1C,
+                             *(s16 *)(w + 0xD48), *(s16 *)(w + 0xD4A)))
+            {
+                *(s16 *)(w + 0xD40) =
+                    u_find_entry((struct TestStageEntry *)lbl_00013A1C,
+                                 *(s16 *)(w + 0xD48), *(s16 *)(w + 0xD4A));
+                reload = 1;
+            }
+        }
+
+        if (*(int *)(w + 0x5AC) == 0 && *(struct GMA **)(w + 0x190) != NULL)
+        {
+            gma = *(struct GMA **)(w + 0x190);
+            if (((pressed & PAD_BUTTON_LEFT) ||
+                 (controllerInfo[0].repeat.button & PAD_BUTTON_LEFT) ||
+                 ((held & PAD_BUTTON_LEFT) && (held & PAD_TRIGGER_R))) &&
+                dc >= 2)
+            {
+                *(int *)(w + 0x5A8) -= 1;
+                while (1)
+                {
+                    if (*(int *)(w + 0x5A8) < 0)
+                        *(int *)(w + 0x5A8) = gma->numModels - 1;
+                    mm = gma->modelEntries[*(int *)(w + 0x5A8)].model;
+                    if (mm != NULL)
+                        break;
+                    *(int *)(w + 0x5A8) -= 1;
+                }
+                U_PICK()
+            }
+            else if (((pressed & PAD_BUTTON_RIGHT) ||
+                      (controllerInfo[0].repeat.button & PAD_BUTTON_RIGHT) ||
+                      ((held & PAD_BUTTON_RIGHT) && (held & PAD_TRIGGER_R))) &&
+                     dc >= 2)
+            {
+                *(int *)(w + 0x5A8) += 1;
+                while (1)
+                {
+                    if (*(int *)(w + 0x5A8) >= (s32)gma->numModels)
+                        *(int *)(w + 0x5A8) = z = 0;
+                    mm = gma->modelEntries[*(int *)(w + 0x5A8)].model;
+                    if (mm != NULL)
+                        break;
+                    *(int *)(w + 0x5A8) += 1;
+                }
+                U_PICK()
+            }
+        }
+
+        if (reload != 0)
+        {
+            prevHeap = OSSetCurrentHeap(stageHeap);
+            if (*(struct TPL **)(w + 0x18C) != NULL ||
+                *(struct GMA **)(w + 0x190) != NULL)
+            {
+                VISetNextFrameBuffer(gfxBufferInfo->currFrameBuf);
+                VIWaitForRetrace();
+            }
+            if (*(struct TPL **)(w + 0x18C) != NULL)
+            {
+                free_tpl(*(struct TPL **)(w + 0x18C));
+                *(struct TPL **)(w + 0x18C) = NULL;
+            }
+            if (*(struct GMA **)(w + 0x190) != NULL)
+            {
+                free_gma(*(struct GMA **)(w + 0x190));
+                *(struct GMA **)(w + 0x190) = NULL;
+            }
+            OSSetCurrentHeap(prevHeap);
+            if (*(s16 *)(w + 0xD42) != *(s16 *)(w + 0xD40))
+            {
+                lbl_000055E8(
+                    ((struct TestStageEntry *)lbl_00013A1C)[*(s16 *)(w + 0xD40)].name);
+                *(s16 *)(w + 0xD42) = *(s16 *)(w + 0xD40);
+            }
+            *(int *)(w + 0x5A8) = 0;
+            if ((gma = *(struct GMA **)(w + 0x190)) != NULL)
+            {
+                while (1)
+                {
+                    if (*(int *)(w + 0x5A8) >= (s32)gma->numModels)
+                        *(int *)(w + 0x5A8) = 0;
+                    mm = gma->modelEntries[*(int *)(w + 0x5A8)].model;
+                    if (mm != NULL)
+                        break;
+                    *(int *)(w + 0x5A8) += 1;
+                }
+                U_PICK()
+            }
+            *(int *)(w + 0x5A8) = 0;
+        }
+    }
 }
 #pragma force_active reset

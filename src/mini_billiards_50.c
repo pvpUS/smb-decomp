@@ -231,4 +231,72 @@ asm void lbl_0001968C(void)
     nofralloc
 #include "../asm/nonmatchings/mini_billiards/lbl_0001968C.s"
 }
+#pragma peephole on
+void lbl_00019F5C(void)
+{
+    if (*(s8 *)lbl_1000000B == 0xc) {
+        lbl_0001A074();
+        return;
+    }
+    switch (*(s8 *)lbl_1000000A) {
+    case 0xc: lbl_00019FD4(); break;
+    case 8:   lbl_0001A0B0(); break;
+    case 0xe: lbl_0001A18C(); break;
+    }
+}
+void lbl_00019FD4(void)
+{
+    u32 src = (u32)lbl_00020C40;
+    u32 dst = (u32)lbl_1000B418;
+
+    *(f32 *)(dst + 4) =
+        *(f32 *)(src + 0x68) *
+            (*(f32 *)(src + 0x6c) * ((f32)rand() / *(f32 *)(src + 0xc))) -
+        ((f32 *)src)[27];
+    *(f32 *)(dst + 0) = *(f32 *)(src + 0x18);
+    *(s16 *)(dst + 0xc) = 0;
+    *(f32 *)(dst + 8) = *(f32 *)(src + 0x34);
+    *(u8 *)(dst + 0xe) = 1;
+}
+
+void lbl_0001A074(void)
+{
+    u8 *src = lbl_00020C40;
+    u8 *dst = lbl_1000B418;
+    *(f32 *)(dst + 4) = *(f32 *)(src + 0x18);
+    *(f32 *)(dst + 0) = *(f32 *)(src + 0x18);
+    *(s16 *)(dst + 0xc) = 0;
+    *(f32 *)(dst + 8) = *(f32 *)(src + 0x34);
+    *(u8 *)(dst + 0xe) = 1;
+}
+
+void lbl_0001A0B0(void)
+{
+    u8 *src = lbl_00020C40;
+    u8 *dst = lbl_1000B418;
+    f32 d;
+
+    *(f32 *)(dst + 0) = *(f32 *)(src + 0x18);
+    *(f32 *)(dst + 4) = *(f32 *)(src + 0x18);
+    d = *(f32 *)(src + 0x70) *
+            (*(f32 *)(src + 0x74) * (f32)(0xf - *(s8 *)(dst + 0x20))) -
+        *(f32 *)(src + 0x70) *
+            (*(f32 *)(src + 0x78) * (f32)(0xf - *(s8 *)(dst + 0x20)));
+    if (rand() & 1)
+        d = -d;
+    *(f32 *)(dst + 8) = *(f32 *)(src + 0x7c) + d;
+    *(u8 *)(dst + 0xe) = 0;
+}
+asm void lbl_0001A18C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_0001A18C.s"
+}
+#pragma peephole on
+asm void lbl_0001B880(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_0001B880.s"
+}
+#pragma peephole on
 #pragma force_active reset

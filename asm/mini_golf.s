@@ -20,9 +20,6 @@
 .global lbl_00026390
 .global lbl_000263B0
 .global lbl_000264A8
-.global lbl_000264C8
-.global lbl_000264E0
-.global lbl_00026510
 # exported so the split-out .text (now in the .c) can link against these:
 # offset: 0x00000000	length: 0x00000000	flags: 0
 # offset: 0x000000C8	length: 0x0002601C	flags: 1
@@ -315,35 +312,3 @@ lbl_000263B0:
     .4byte 0x47000000
     .4byte 0x43E10000
 lbl_000264A8:
-    # 0x264A8
-    .4byte 0x00000000
-    .4byte 0x00000000
-    .4byte 0x00000000
-    .4byte 0x00000000
-    .4byte 0x00000000
-    .4byte 0x00000000
-    .4byte 0x3F800000
-    .4byte 0x00000000
-lbl_000264C8:
-    # 0x264C8
-    .4byte 0x3FE00000
-    .4byte 0x00000000
-    .4byte 0x40380000
-    .4byte 0x00000000
-    .4byte 0x00000000
-    .4byte 0xB22BCC77
-lbl_000264E0:
-    # 0x264E0
-    .4byte 0x40000000
-    .4byte 0x00000000
-    .4byte 0xB3D6BF95
-    .4byte 0x3F800000
-    .4byte 0x3DCCCCCD
-    .4byte 0x3E99999A
-    .4byte 0x3FB99999
-    .4byte 0x9999999A
-    .4byte 0x3FC63A1A
-    .4byte 0x7C9CCD6F
-    .4byte 0x3F747AE1
-    .4byte 0x47AE147B
-lbl_00026510:

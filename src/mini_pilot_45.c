@@ -49,6 +49,15 @@
 #include "world.h"
 #include "stdlib.h"
 
+// UNVERIFIED/INVENTED: an 8-byte block of four s16 bitmap IDs, one per player,
+// copied from the module's .rodata pool into a stack local.  Only the size and
+// element type are attested (by the block copy and the `lha` walk); the name is
+// this decompilation's invention.
+struct PilotIdPair
+{
+    s16 v[4];
+};
+
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_pilot.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000BE80[];
@@ -222,7 +231,7 @@ void lbl_00009F4C(void);
 void lbl_00009FB0(void);
 void lbl_0000A098(void);
 void lbl_0000A69C(void);
-void lbl_0000A754(void);
+void lbl_0000A754(struct Sprite *sprite);
 void lbl_0000AD6C(void);
 void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
@@ -232,9 +241,180 @@ void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
 #pragma force_active on
-asm void lbl_0000A754(void)
+void lbl_0000A754(struct Sprite *sprite)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_0000A754.s"
+    NLsprarg params;
+    s16 ids[4];
+    char *s = (char *)lbl_0000D218;
+    u8 *k = (u8 *)lbl_0000C360;
+    f32 x;
+    f32 y;
+    int i;
+    int step;
+    u32 anim;
+
+    *(struct PilotIdPair *)ids = *(struct PilotIdPair *)(k + 0x2CC);
+
+    for (i = 0; i < 4; i++)
+    {
+        if (((s32 *)lbl_10000098)[i] < ((s32 *)lbl_10000044)[i])
+        {
+            step = ((s32 *)lbl_10000044)[i] / ((s16 *)lbl_100000A8)[i];
+            if (step + ((s32 *)lbl_10000098)[i] > ((s32 *)lbl_10000044)[i])
+                step = ((s32 *)lbl_10000044)[i] - ((s32 *)lbl_10000098)[i];
+            else if (step < 1)
+                step = 1;
+            ((s32 *)lbl_10000098)[i] += step;
+            if (((s16 *)lbl_100000A8)[i] > 0)
+                ((s16 *)lbl_100000A8)[i]--;
+        }
+        else
+            ((s16 *)lbl_100000A8)[i] = 0;
+    }
+
+    params.zm_x = *(f32 *)(k + 0x54);
+    params.zm_y = *(f32 *)(k + 0x54);
+    params.u0 = params.v0 = *(f32 *)(k + 0x98);
+    params.u1 = params.v1 = *(f32 *)(k + 0x54);
+    params.ang = 0;
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = 5;
+    params.trnsl = *(f32 *)(k + 0x54);
+    params.base_color = 0x00FFFFFF;
+    params.offset_color = 0;
+    params.zm_x = *(f32 *)(k + 0x2D4);
+    params.zm_y = *(f32 *)(k + 0x2D8);
+    params.sprno = 0xB31;
+    params.x = *(f32 *)(k + 0x98);
+    params.y = *(f32 *)(k + 0x2DC);
+    params.z = *(f32 *)(k + 0x8);
+    nlSprPut(&params);
+
+    params.zm_x = *(f32 *)(k + 0x54);
+    params.zm_y = *(f32 *)(k + 0x54);
+    params.sprno = 0xB32;
+    params.x = *(f32 *)(k + 0x2E0);
+    params.y = *(f32 *)(k + 0x2E4);
+    params.z = *(f32 *)(k + 0x9C);
+    nlSprPut(&params);
+
+    params.sprno = 0xB33;
+    params.x = *(f32 *)(k + 0x2E8);
+    params.y = *(f32 *)(k + 0x2EC);
+    params.z = *(f32 *)(k + 0x9C);
+    nlSprPut(&params);
+
+    reset_text_draw_settings();
+    set_text_font(0x59);
+    switch (*(s16 *)lbl_10000064)
+    {
+    case 5:
+        set_text_pos(*(f32 *)(k + 0x2F0), *(f32 *)(k + 0x2EC));
+        sprite_puts(s + 0x174);
+        set_text_pos(*(f32 *)(k + 0x2F4), *(f32 *)(k + 0x2EC));
+        sprite_puts(s + 0x178);
+        break;
+    case 10:
+        set_text_pos(*(f32 *)(k + 0x2F8), *(f32 *)(k + 0x2EC));
+        sprite_puts(s + 0x174);
+        set_text_pos(*(f32 *)(k + 0x2FC), *(f32 *)(k + 0x2EC));
+        sprite_puts(s + 0x17C);
+        break;
+    case 15:
+        set_text_pos(*(f32 *)(k + 0x2F8), *(f32 *)(k + 0x2EC));
+        sprite_puts(s + 0x174);
+        set_text_pos(*(f32 *)(k + 0x2FC), *(f32 *)(k + 0x2EC));
+        sprite_puts(s + 0x180);
+        break;
+    }
+
+    if (modeCtrl.playerCount <= 1)
+        x = *(f32 *)(k + 0x68);
+    else
+        x = *(f32 *)(k + 0x2D4);
+    if (modeCtrl.playerCount <= 2)
+        y = *(f32 *)(k + 0x300);
+    else
+        y = *(f32 *)(k + 0x304);
+
+    anim = (globalAnimTimer >> 3) % 6;
+    for (i = 0; i < 4; i++)
+    {
+        switch (i)
+        {
+        case 1:
+        case 3:
+            x += *(f32 *)(k + 0x260);
+            break;
+        case 2:
+            x -= *(f32 *)(k + 0x260);
+            y += *(f32 *)(k + 0x308);
+            break;
+        }
+        if (g_poolInfo.playerPool.statusList[i] != 0)
+        {
+            params.zm_x = *(f32 *)(k + 0x54);
+            params.zm_y = *(f32 *)(k + 0x54);
+            params.u0 = params.v0 = *(f32 *)(k + 0x98);
+            params.u1 = params.v1 = *(f32 *)(k + 0x54);
+            params.ang = 0;
+            params.listType = NLSPR_LISTTYPE_AUTO;
+            params.attr = 5;
+            params.trnsl = *(f32 *)(k + 0x54);
+            params.base_color = 0x00FFFFFF;
+            params.offset_color = 0;
+            params.sprno = ids[i];
+            params.x = x;
+            params.y = y;
+            params.z = *(f32 *)(k + 0x8);
+            nlSprPut(&params);
+
+            params.sprno = 0xB1A;
+            params.x = *(f32 *)(k + 0x308) + x;
+            params.y = y;
+            params.z = *(f32 *)(k + 0x8);
+            nlSprPut(&params);
+
+            params.zm_x = *(f32 *)(k + 0x18);
+            params.zm_y = *(f32 *)(k + 0x1C);
+            params.ang = *(f32 *)(k + 0x30C) * mathutil_cos(globalAnimTimer * 0x190);
+            params.attr = 0xA;
+            params.sprno = ((s32 *)smileFaceTable)[anim + playerCharacterSelection[i] * 6];
+            params.x = *(f32 *)(k + 0x310) + x;
+            params.y = *(f32 *)(k + 0x314) + y;
+            params.z = *(f32 *)(k + 0x9C);
+            nlSprPut(&params);
+
+            reset_text_draw_settings();
+            func_80071B1C(*(f32 *)(k + 0x9C));
+            set_text_font(0x52);
+            set_text_pos(*(f32 *)(k + 0x318) + x, *(f32 *)(k + 0x31C) + y);
+            sprite_printf(s + 0x108, i);
+
+            params.zm_x = *(f32 *)(k + 0x54);
+            params.zm_y = *(f32 *)(k + 0x54);
+            params.u0 = params.v0 = *(f32 *)(k + 0x98);
+            params.u1 = params.v1 = *(f32 *)(k + 0x54);
+            params.ang = 0;
+            params.listType = NLSPR_LISTTYPE_AUTO;
+            params.attr = 5;
+            params.trnsl = *(f32 *)(k + 0x54);
+            params.base_color = 0x00FFFFFF;
+            params.offset_color = 0;
+            params.base_color = 0;
+            params.offset_color = 0x5C3B1B;
+            params.sprno = 0xB09;
+            params.x = *(f32 *)(k + 0x320) + x;
+            params.y = *(f32 *)(k + 0x324) + y;
+            params.z = *(f32 *)(k + 0x9C);
+            nlSprPut(&params);
+
+            set_text_font(0x53);
+            set_text_mul_color(0xFF000000);
+            set_text_add_color(params.offset_color);
+            set_text_pos(*(f64 *)(k + 0x240) + x, *(f64 *)(k + 0x328) + y);
+            sprite_printf(s + 0x110, ((s32 *)lbl_10000098)[i]);
+        }
+    }
 }
 #pragma force_active reset
