@@ -119,8 +119,15 @@ def merge(module, dry):
         return False
 
     warm_c = sorted(glob.glob(os.path.join(src_root, 'src', '%s*.c' % stem)))
+    # Any asm/<stem>_*.s, not just _d*.  rel_carve names its segments _d1.._dN,
+    # but a carve whose hole does not land on a label boundary needs a hand-written
+    # tail object with its own name -- run 13's mini_golf shipped
+    # asm/mini_golf_pool_tail.s.  A _d*-only glob drops such a file silently here
+    # while replace_sources() still writes it into SOURCES, so the merged tree
+    # fails with "No rule to make target".  Loud rather than a fictional match,
+    # but still a merge that cannot complete.
     warm_asm = sorted(glob.glob(os.path.join(src_root, 'asm', '%s.s' % stem)) +
-                      glob.glob(os.path.join(src_root, 'asm', '%s_d*.s' % stem)))
+                      glob.glob(os.path.join(src_root, 'asm', '%s_*.s' % stem)))
     items = sources_block(open(os.path.join(src_root, 'Makefile'),
                                newline='').read().replace('\r\n', '\n'), module)
     print('  %d C files, %d asm data file(s), %d SOURCES entries'
@@ -135,7 +142,7 @@ def merge(module, dry):
     # stale C and stale data segments first, so renumbered splits leave nothing
     for p in glob.glob(os.path.join(REPO, 'src', '%s_*.c' % stem)):
         os.remove(p)
-    for p in glob.glob(os.path.join(REPO, 'asm', '%s_d*.s' % stem)):
+    for p in glob.glob(os.path.join(REPO, 'asm', '%s_*.s' % stem)):
         os.remove(p)
     # copy2 preserves the WARM file's mtime, which is routinely older than the
     # .o sitting in this tree from a previous merge or build.  make then skips
