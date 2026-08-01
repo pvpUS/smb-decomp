@@ -428,12 +428,25 @@ in `src/mini_billiards_33b.c`.
   count; the region-count tell; the `int`/`s32` axis; the corrected §3; the
   20-agent cap and the worktree-clone hazard; and CRLF explicitly retired.
 - **`C:/tmp/smbm/RUN12_RESULTS.md`** holds all nine per-module reports.
-- **Not harvested and worth taking early in run 13:** sel_ngc's
-  `rel_merge_tu.patch` (head union + prototype reconciliation — it reproduced
-  automatically every fix run 11 made by hand), mini_bowling's `pcmp.py` and its
-  `findfold`/`findrank`/`findconv.py` pattern cross-reference, and test_mode's
-  `restore_asm.py`. **`rel_merge_back` does not carry `tools/`, so every one of
-  these must be harvested deliberately or it is lost at the next reset.**
+- **RUN 13 IS ONE AGENT PER MODULE AND NO WORKERS.** The brief now forbids
+  spawning subagents outright (§11), with run 12's evidence: the 20-agent cap
+  starved four modules and cost mini_fight three targets outright; worker trees
+  diverge from their parent (w4's clone would have silently lost 10 insn); and
+  run 11 lost a 651-insn MATCH to a stranded worktree. **Agents are told to
+  narrow scope rather than parallelise, and to report what they did not reach.**
+- **Two tools promoted and pushed** (`bdf447c`): `rel_peephole.py` (from
+  sel_ngc's `addpeep.py`, plus a read-only `--list-mixed`) and the
+  `rel_merge_tu.py` fix — the latter unblocks three modules and is a
+  prerequisite for run 13's biggest single item. **`rel_merge_tu`'s `--tree` had
+  the same defaults-to-another-tree defect** as `rel_sweep`/`rel_probe`; fixed.
+- **Still unharvested** (they survive in `_scratch_*`, which the reset does not
+  touch, but are not in git): mini_bowling's `pcmp.py` and
+  `findfold`/`findrank`/`findconv.py` pattern cross-reference, test_mode's
+  `restore_asm.py`. **`rel_merge_back` does not carry `tools/`**, so anything an
+  agent builds must be harvested deliberately.
+- **All nine warm copies re-synced with the promoted tools; `tooldiffs=0`
+  everywhere.** `src/`/`asm/` untouched since the gated reset, so no rebuild was
+  needed.
 
 ---
 
