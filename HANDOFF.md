@@ -363,9 +363,17 @@ in `src/mini_billiards_33b.c`.
 
 ### NEXT RUN — ranked
 
-1. **Apply `#pragma peephole on` project-wide and re-score every mixed-TU
-   residual.** It is one line, it is confirmed by four modules, and it makes
-   merges safe. **Do this before any other work in every module.**
+1. **The pragma is a MERGE ENABLER, not a project-wide sweep — measured after the
+   run.** `tools/rel_peephole.py --list-mixed` (promoted in run-13 prep) and
+   `rel_structcheck`'s NOTE list **agree exactly: only 3 of 9 modules contain a
+   mixed TU, 4 files total** — mini_fight `15c`/`15ej`, mini_race `115i`, sel_ngc
+   `_29` (already pragma'd in run 12). **The other six have none.** The project
+   spent several runs isolating to eliminate mixed TUs and it worked, so there is
+   almost nothing to apply the pragma *to* in place.
+   **Its value is that merging creates a mixed TU, and that was merging's whole
+   cost.** Run 11 measured 3 of 4 absorbed functions broken, 318 insn at risk;
+   sel_ngc's entire +719 was that same merge re-run with one line added.
+   **Read every "too risky to merge" verdict in this file as now cheap.**
 2. **mini_billiards' two merges — `_55`→`_52` (2,120 insn) and `_35`→`_34`
    (1,082) — need no carve at all** and the pragma removes their only risk.
    **3,202 instructions, and the module has converted nothing for two runs.**
