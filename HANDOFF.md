@@ -4,6 +4,47 @@
 
 ---
 
+## STANDING RULES — apply to EVERY run. Not superseded by any `§0.x` section.
+
+Run sections below are newest-first and each gets superseded by the next. **This
+section does not.** A rule here holds until it is changed *here*.
+
+### ONE AGENT PER MODULE. NO WORKERS. EVERY RUN.
+
+A run is **exactly nine agents, one per REL module.** A module agent must **not**
+spawn subagents, workers, or helper agents of any kind. Its module is its own
+work, done directly in its own warm copy.
+
+This is permanent, not a run-13 experiment. The evidence:
+
+- **The concurrency cap is 20 project-wide.** With nine module agents live only
+  11 workers can exist at any moment, first-come — so worker plans are plans
+  around a resource that may not be there. In run 12 **mini_pilot lost both
+  spawns, mini_race all four, mini_golf two, and mini_fight lost w3 three
+  times — and w3's three targets (`6F44` 316, `6A40` 321, `1199C` 484) went
+  untouched purely because of that, not because they were hard.**
+- **Worker worktrees diverge from their parent, and the merge is the hazard.**
+  mini_fight's w4 was cloned *before* the parent converted two functions;
+  copying its files wholesale would have **silently lost 10 instructions.** It
+  survived only because that parent thought to check.
+- **Run 11 lost a 651-instruction MATCH** — the largest single conversion of that
+  run — to a worktree whose parent closed before it did.
+- **Tools defaulted `--tree` to the parent's tree**, so workers following the
+  brief literally built and gated someone else's tree. Four separate tools have
+  carried that defect. The whole class only exists because of workers.
+
+**If you want a worker, narrow scope instead.** Report what you did not reach —
+run 12's most valuable outputs were measurements and corrections, not
+conversions, and three modules that converted nothing changed the project's model
+of what is blocked.
+
+**Orchestrator:** launch the nine module agents and nothing else. Do the merge,
+gate, clean build, commit and handoff yourself. **Every run brief you write must
+restate this section** — the brief is regenerated per run and an agent only ever
+reads the brief, so a rule that lives only here will not reach it.
+
+---
+
 ## 0.18 — RUN 12 DONE (2026-07-31): +6,845 insn, 24.56% -> 28.16%. START HERE.
 
 Nine parallel agents, one per module. Six gained, **three converted nothing** —
@@ -428,12 +469,9 @@ in `src/mini_billiards_33b.c`.
   count; the region-count tell; the `int`/`s32` axis; the corrected §3; the
   20-agent cap and the worktree-clone hazard; and CRLF explicitly retired.
 - **`C:/tmp/smbm/RUN12_RESULTS.md`** holds all nine per-module reports.
-- **RUN 13 IS ONE AGENT PER MODULE AND NO WORKERS.** The brief now forbids
-  spawning subagents outright (§11), with run 12's evidence: the 20-agent cap
-  starved four modules and cost mini_fight three targets outright; worker trees
-  diverge from their parent (w4's clone would have silently lost 10 insn); and
-  run 11 lost a 651-insn MATCH to a stranded worktree. **Agents are told to
-  narrow scope rather than parallelise, and to report what they did not reach.**
+- **ONE AGENT PER MODULE, NO WORKERS — now a STANDING RULE**, promoted to the
+  top-of-file section that run sections do not supersede, and restated in the
+  brief's §11. It applies to every run from here, not just run 13.
 - **Two tools promoted and pushed** (`bdf447c`): `rel_peephole.py` (from
   sel_ngc's `addpeep.py`, plus a read-only `--list-mixed`) and the
   `rel_merge_tu.py` fix — the latter unblocks three modules and is a
@@ -3645,13 +3683,40 @@ These DOL stubs use the pattern `#ifdef NONMATCHING <C attempt> #else asm void F
 - Per-module knobs it exposes: `--include`, `--extern-fn`, `--extern-data`, `--extra-start`, plus (this session) **`--isolate <lbl>`** and `--chunk-size N` for multi-file output. Undeclared imports/data are found mechanically from the build's `undefined label` / `illegal use of label` errors.
 - **Validated:** mini_bowling rebuilds to the golden `29ded64...` (byte-neutral) as a single file, as 6 uniform chunks, and as `--isolate`/`--isolate-range` splits up to the current 7-file layout with **6 functions matched as C**; `sha1sum -c` confirms nothing else broke.
 
-**THE DEOPT FINDING — CORRECTED (this is the single most important REL gotcha):** the earlier "one giant TU exceeds a size threshold" explanation was WRONG. The real rule: **mwcc's inline assembler disables the instruction scheduler + peephole optimizer for every C function that shares a translation unit with ANY `asm` block.** It is the presence of inline asm, not the amount. Verified directly this session with the exact build flags:
+> ### ⚠ THE DEOPT MODEL BELOW IS WRONG — corrected in run 12, see §0.18
+>
+> **It is POSITIONAL, and it is ONLY the peephole optimizer.** Confirmed by four
+> modules independently, each with a golden build:
+>
+> | arrangement | result |
+> |---|---|
+> | C function alone (pure TU) | reference |
+> | `asm` block **then** the C function | **DIFFERS** |
+> | C function **then** the `asm` block | **BYTE-IDENTICAL** |
+> | `asm`, **`#pragma peephole on`**, then the C function | **BYTE-IDENTICAL** |
+>
+> The scheduler is **not involved at all** — `#pragma scheduling on`,
+> `optimization_level` and `global_optimizer` change nothing. The inline
+> assembler disables the **peephole** for the **remainder of the TU only**, which
+> is why a C function placed *before* the asm block was never affected.
+>
+> **So "the fix" below — isolating into pure-C files — is usually unnecessary.**
+> `tools/rel_peephole.py` inserts the pragma and `--list-mixed <module>` reports
+> where it applies. Measured after run 12: **only 3 of 9 modules contain a mixed
+> TU at all (4 files), because the project already isolated them away.** The
+> pragma's real value is that **merging creates a mixed TU, and that was
+> merging's whole cost.**
+>
+> Keep reading below for the `rel_split`/`--isolate` mechanics, which are still
+> accurate — just not the reason you think.
+
+**THE DEOPT FINDING — SUPERSEDED, kept for the probe detail (read the box above first):** the earlier "one giant TU exceeds a size threshold" explanation was WRONG, and so is this replacement. The claim at the time: **mwcc's inline assembler disables the instruction scheduler + peephole optimizer for every C function that shares a translation unit with ANY `asm` block** — presence, not amount. Verified at the time with the exact build flags:
 - `lbl_00007778` compiled **alone** (with or without `#pragma force_active`) → `extsb.` (record-form compare) + `blr` early-returns = **byte-exact match**.
 - The **same** C + a **single** `static asm` sibling in the TU → `extsb`+`cmpwi` + `b <epilogue>` = **no match**.
 - The same C in a 4-function chunk and in a 20-function chunk produced the **identical** (wrong) bytes — so chunk *size* is irrelevant.
 `lbl_000086E4` matched earlier inside the big TU only because it is optimizer-insensitive (linear code, nothing to schedule).
 
-**THE FIX — pure-C files via `--isolate` (PROVEN end-to-end):** put each to-be-converted function in its **own `.c` file with no asm-include siblings**. `python tools/rel_split.py mini_bowling <args> --isolate lbl_00007778` emits 3 files — `src/mini_bowling.c` (39 asm funcs before), `src/mini_bowling_2.c` (the lone `lbl_00007778`), `src/mini_bowling_3.c` (77 asm funcs after). Convert `_2.c`'s single body to C, list all three (then `asm/mini_bowling.s`) in `SOURCES` in order → **`mkbe.rel_mini_bowling.rel` = `29ded64...` golden.** Notes:
+**THE FIX — pure-C files via `--isolate` (works, but see the box above: `#pragma peephole on` achieves the same thing in place and should be tried FIRST):** put each to-be-converted function in its **own `.c` file with no asm-include siblings**. `python tools/rel_split.py mini_bowling <args> --isolate lbl_00007778` emits 3 files — `src/mini_bowling.c` (39 asm funcs before), `src/mini_bowling_2.c` (the lone `lbl_00007778`), `src/mini_bowling_3.c` (77 asm funcs after). Convert `_2.c`'s single body to C, list all three (then `asm/mini_bowling.s`) in `SOURCES` in order → **`mkbe.rel_mini_bowling.rel` = `29ded64...` golden.** Notes:
 - Asm-include functions can ALL stay grouped in as few files as you like — they carry no C to optimize, so grouping is byte-identical (`--chunk-size` is cosmetic; default 0 = as few files as possible).
 - `.text` order is preserved because each `.c` is a contiguous offset range and `SOURCES` lists them in order (linker groups each object's `.text` as one block). You cannot interleave functions between objects arbitrarily.
 - Cross-file references are auto-promoted to global symbols by `compute_globals` (REL24 `bl` / `@ha/@l` across files; conditional REL14 branches never cross a function boundary, so this is safe).
