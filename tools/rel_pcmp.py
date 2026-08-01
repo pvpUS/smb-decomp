@@ -19,7 +19,112 @@ import sys
 
 TREE = os.getcwd()
 
-MNEMONIC_FIX = {}
+# ------------------------------------------------------------ canonicalisation
+#
+# The two sides come from DIFFERENT disassemblers: the expected side is the
+# project's asm/nonmatchings/*.s, the got side is powerpc-eabi-objdump.  They
+# disagree about extended mnemonics, and every disagreement used to be scored
+# as a real diff.  Run 14 measured what that cost:
+#
+#   * mini_billiards: `or. rA,rS,rS` vs `mr. rA,rS` alone -- 112 occurrences
+#     project-wide, inflating EVERY module's near-miss scores.
+#   * mini_race: on lbl_000021C8, 10 of the 16 reported diffs were phantom and
+#     the variant was a byte-exact MATCH.  It only found out by taking the top
+#     candidates to `rel_sweep --sweep`.
+#
+# Every rule below rewrites BOTH sides to the same base form, and each is
+# EXACT: same encoding <-> same canonical text.  Nothing here collapses two
+# distinct encodings into one, which is the only way a canonicaliser can
+# manufacture a false MATCH.
+CR_BIT = {'lt': 0, 'gt': 1, 'eq': 2, 'so': 3, 'un': 3}
+_CR_LOGICAL = ('crand', 'cror', 'crxor', 'crnand', 'crnor', 'creqv',
+               'crandc', 'crorc')
+_SPR = {'lr': 8, 'ctr': 9, 'xer': 1}
+
+
+def _crbit(tok):
+    """'eq' -> '2', '4*cr1+eq' -> '6', '6' -> '6'."""
+    t = tok.strip()
+    m = re.fullmatch(r'4\*cr([0-7])\+(lt|gt|eq|so|un)', t)
+    if m:
+        return str(int(m.group(1)) * 4 + CR_BIT[m.group(2)])
+    if t in CR_BIT:
+        return str(CR_BIT[t])
+    return t
+
+
+def _i(tok):
+    """int value of an operand token, or None if it is not a plain integer."""
+    t = tok.strip()
+    try:
+        return int(t, 16) if t.lower().startswith(('0x', '-0x')) else int(t)
+    except ValueError:
+        return None
+
+
+def canon(mn, ops):
+    """Rewrite one instruction to its base-mnemonic form. Returns 'mn ops'."""
+    rec = mn.endswith('.')
+    base = mn[:-1] if rec else mn
+    dot = '.' if rec else ''
+    a = [x.strip() for x in ops.split(',')] if ops else []
+
+    def out(m, *parts):
+        return '%s%s %s' % (m, dot, ','.join(str(p) for p in parts))
+
+    # --- condition-register bits: symbolic names and the alias forms
+    if base in _CR_LOGICAL and a:
+        return out(base, *[_crbit(x) for x in a])
+    if base in ('crclr', 'crset') and len(a) == 1:
+        b = _crbit(a[0])
+        return out('crxor' if base == 'crclr' else 'creqv', b, b, b)
+    if base in ('crmove', 'crnot') and len(a) == 2:
+        d, s = _crbit(a[0]), _crbit(a[1])
+        return out('cror' if base == 'crmove' else 'crnor', d, s, s)
+
+    # --- the rlwinm family.  mwcc emits these constantly and the two
+    # disassemblers pick different spellings of the same rotate.
+    if len(a) >= 3:
+        n, b = _i(a[2]), (_i(a[3]) if len(a) > 3 else None)
+        if n is not None:
+            if base == 'slwi':
+                return out('rlwinm', a[0], a[1], n, 0, 31 - n)
+            if base == 'srwi':
+                return out('rlwinm', a[0], a[1], (32 - n) % 32, n, 31)
+            if base == 'clrlwi':
+                return out('rlwinm', a[0], a[1], 0, n, 31)
+            if base == 'clrrwi':
+                return out('rlwinm', a[0], a[1], 0, 0, 31 - n)
+            if base == 'rotlwi':
+                return out('rlwinm', a[0], a[1], n, 0, 31)
+            if base == 'extlwi' and b is not None:
+                return out('rlwinm', a[0], a[1], b, 0, n - 1)
+            if base == 'extrwi' and b is not None:
+                return out('rlwinm', a[0], a[1], (b + n) % 32, 32 - n, 31)
+
+    # --- simple two-operand aliases
+    if base == 'mr' and len(a) == 2:
+        return out('or', a[0], a[1], a[1])
+    if base == 'not' and len(a) == 2:
+        return out('nor', a[0], a[1], a[1])
+    if base == 'nop' and not a:
+        return out('ori', 'r0', 'r0', 0)
+    if base == 'li' and len(a) == 2:
+        return out('addi', a[0], 'r0', a[1])
+    if base == 'lis' and len(a) == 2:
+        return out('addis', a[0], 'r0', a[1])
+    if base in ('subi', 'subis', 'subic') and len(a) == 3:
+        v = _i(a[2])
+        if v is not None:
+            return out({'subi': 'addi', 'subis': 'addis',
+                        'subic': 'addic'}[base], a[0], a[1], -v)
+
+    # --- special-purpose register moves
+    m = re.fullmatch(r'm([tf])(lr|ctr|xer)', base)
+    if m and len(a) == 1:
+        return out('m%sspr' % m.group(1), _SPR[m.group(2)], a[0])
+
+    return '%s %s' % (mn, ops)
 
 
 def norm_operands(mn, ops):
@@ -41,6 +146,17 @@ def parse_s(path):
         ops = m.group(3).strip()
         # mask relocations -- ANY symbol, not just lbl_XXXXXXXX.  The object
         # side is unlinked so every @ha/@l operand disassembles as 0.
+        #
+        # The PARENTHESISED symbol+addend form has to go first: run 13's
+        # mini_golf established that `(lbl_X+0xNN)@ha/@l` is accepted by mwcc's
+        # inline assembler and is byte-identical, so the asm here really does
+        # contain it -- and the bare-symbol regex below cannot match it (the
+        # paren and the `+` are not in its character class).  It fell through
+        # unmasked, the `lbl_` -> L rule turned it into `(L+0x34)@ha`, and it
+        # was scored against the object side's plain 0 as a real diff.  That is
+        # the relocation noise mini_golf reported inflating PCMP_REGBLIND.
+        ops = re.sub(r'\([A-Za-z_$.][\w$.]*\s*[-+]\s*(?:0x[0-9A-Fa-f]+|\d+)\)'
+                     r'@(ha|l|sda2?1?)', '0', ops)
         ops = re.sub(r'[A-Za-z_$.][\w$.]*@(ha|l|sda2?1?)', '0', ops)
         ops = re.sub(r'\blbl_[0-9A-Fa-f]{8}\b', 'L', ops)
         if mn.startswith('b'):
@@ -50,6 +166,7 @@ def parse_s(path):
                          'L', ops)
         if mn.startswith('b'):
             ops = re.sub(r'\bL\b', 'L', ops)
+        mn, _, ops = canon(mn, ops).partition(' ')
         out.append('%s %s' % (mn, norm_operands(mn, ops)))
     return out
 
@@ -75,6 +192,7 @@ def parse_obj(text, fn):
             # includes bdnz: the .s side masks its target too, so masking here
             # as well is required or every bdnz reads as a diff.
             ops = re.sub(r'\b[0-9a-f]+\b(?!\()', 'L', ops)
+        mn, _, ops = canon(mn, ops).partition(' ')
         ops = ops.replace(' ', '')
         out.append('%s %s' % (mn, ops))
     return out
@@ -90,11 +208,35 @@ _GPR = re.compile(r'\br(?:0|[3-9]|1[0-2])\b')
 _FPR = re.compile(r'\bf(?:[0-9]|1[0-3])\b')
 
 
+# A 16-bit immediate field has ONE encoding but two spellings: the .s side
+# writes 0xffff where objdump writes -1.  Fold both to the signed reading.
+#
+# test_mode found this as `rel_pcmp scores +1 region on any function containing
+# addis rX,rX,-1`, and also found the trap in fixing it: sign-extending only
+# the hex spelling INVENTS diffs, because objdump prints some immediates as
+# bare decimals already.  So this runs inside to_words(), which both sides go
+# through, and it is idempotent -- -1 stays -1.
+#
+# Safe because it is a bijection on a single field: within one mnemonic, 65535
+# and -1 ARE the same encoding, so nothing distinct is collapsed.  The lookaround
+# keeps it off register numbers (the 12 in r12 is not preceded by a boundary).
+_INT = re.compile(r'(?<![\w.])(-?\d+)(?![\w.])')
+
+
+def _signed16(s):
+    def f(m):
+        v = int(m.group(1))
+        return str(v - 0x10000 if 0x8000 <= v <= 0xFFFF else v)
+    return _INT.sub(f, s)
+
+
 def to_words(seq):
     """Convert decimal operands to hex-agnostic canonical ints."""
     res = []
     for s in seq:
-        s = re.sub(r'0x([0-9a-fA-F]+)', lambda m: str(int(m.group(1), 16)), s)
+        s = re.sub(r'(-?)0x([0-9a-fA-F]+)',
+                   lambda m: str(int(m.group(1) + str(int(m.group(2), 16)))), s)
+        s = _signed16(s)
         if 'g' in BLIND:
             s = _GPR.sub('rV', s)
         if 'f' in BLIND:
@@ -121,12 +263,21 @@ def score(exp, got):
     return n, regions, lo, hi
 
 
-def module():
-    """PCMP_MODULE, else the warm-copy directory name (C:/tmp/smbm/<MOD>).
+# sel_ngc is the module whose two names differ: rel_probe.py accepts the MODULE
+# name `sel_ngc` (its argparse choices), while asm/nonmatchings/ is keyed by the
+# ASM STEM `sel_ngc_rel`.  The old module() returned one string for both jobs
+# and handed the stem to rel_probe, which rejected it -- so in run 14 every
+# rel_pcmp probe in sel_ngc reported a silent FAIL and the module scored its
+# whole run without the tool.  Keep the two names apart.
+STEM = {'sel_ngc': 'sel_ngc_rel'}
 
-    asm/nonmatchings/ holds EVERY module in this repo, so it cannot be used to
-    infer which one we are working on.  Note the asm stem for sel_ngc is
-    `sel_ngc_rel` while the tree is `sel_ngc`.
+
+def probe_module():
+    """The MODULE name, i.e. what rel_probe.py's `choices` will accept.
+
+    PCMP_MODULE overrides; otherwise infer from the warm-copy directory name
+    (C:/tmp/smbm/<MOD>).  asm/nonmatchings/ holds EVERY module in this repo, so
+    its contents cannot say which one we are working on -- only confirm a guess.
     """
     m = os.environ.get('PCMP_MODULE')
     if m:
@@ -134,19 +285,29 @@ def module():
     d = os.path.join(TREE, 'asm', 'nonmatchings')
     subs = [x for x in os.listdir(d) if os.path.isdir(os.path.join(d, x))]
     base = os.path.basename(os.path.abspath(TREE))
-    for cand in (base, base + '_rel'):
-        if cand in subs:
-            return cand
+    if base in subs or STEM.get(base) in subs:
+        return base
     raise SystemExit('set PCMP_MODULE: tree %r matches none of %r'
                      % (base, subs))
+
+
+def asm_stem(mod=None):
+    """The asm/nonmatchings/<stem>/ and src/<stem>*.c prefix for a module."""
+    mod = mod or probe_module()
+    return STEM.get(mod, mod)
+
+
+def module():
+    """Deprecated alias -- returns the ASM STEM. Prefer asm_stem()/probe_module()."""
+    return asm_stem()
 
 
 def main():
     label = sys.argv[1]
     d = sys.argv[2]
     fn = sys.argv[3] if len(sys.argv) > 3 else 'pf'
-    mod = module()
-    spath = os.path.join(TREE, 'asm', 'nonmatchings', mod, label + '.s')
+    mod = probe_module()
+    spath = os.path.join(TREE, 'asm', 'nonmatchings', asm_stem(mod), label + '.s')
     exp = parse_s(spath)
     rows = []
     for f in sorted(glob.glob(os.path.join(d, '*.c'))):
