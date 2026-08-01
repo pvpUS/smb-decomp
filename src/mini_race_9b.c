@@ -242,7 +242,7 @@ void lbl_000007EC(void);
 void lbl_00000838(void);
 void lbl_000008B4(void);
 void lbl_00002018(void);
-void lbl_000020A4(void);
+f32 lbl_000020A4(void);
 void lbl_000021C8(void);
 void lbl_000024A0(void);
 void lbl_000025E4(void);
@@ -373,8 +373,7 @@ void lbl_0001157C(void);
 void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
-
-void lbl_00000A68(void);
+void lbl_00000A68(int p1, int p2);
 void lbl_00000EAC(void);
 void lbl_00000FB4(void);
 void lbl_00001040(void);
@@ -389,10 +388,152 @@ void lbl_00001ED0(void);
 void lbl_00001F94(void);
 void lbl_00001FDC(void);
 #pragma force_active on
-asm void lbl_00000A68(void)
+// INVENTED -- 16-byte sub-block at lbl_10000000 + 0x28.  UNVERIFIED.
+struct RaceModeSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00000A68.s"
+    /*0x00*/ u16 unk0;
+    /*0x02*/ u16 unk2;
+    /*0x04*/ u16 unk4;
+    /*0x06*/ u16 unk6;
+    /*0x08*/ f32 unk8;
+    /*0x0C*/ f32 unkC;
+};
+
+// INVENTED -- the 8-byte block at lbl_10000000 + 0x18 / + 0x20.
+struct RacePair8
+{
+    s32 a;
+    s32 b;
+};
+
+// INVENTED -- 8-byte {count, float *} viewport records at
+// lbl_00014108 + 0x1F4 and + 0x2E4.  UNVERIFIED.
+struct RaceView
+{
+    /*0x00*/ s32 count;
+    /*0x04*/ f32 *rect;
+};
+
+// INVENTED -- 0x48-byte per-course record at lbl_00014108 + 0x1660.
+struct RaceCourse
+{
+    /*0x00*/ s16 unk0;
+    u8 filler2[0x34 - 2];
+    /*0x34*/ s16 unk34;
+    u8 filler36[0x48 - 0x36];
+};
+
+// INVENTED -- 4-byte {course, u16} pairs at lbl_00014108 + 0x1810.
+struct RacePick
+{
+    /*0x00*/ u16 unk0;
+    /*0x02*/ u16 unk2;
+};
+
+// INVENTED -- 16-byte slot array at lbl_10000000 + 0x64, 0x100 of them.
+struct RaceItemSlot
+{
+    /*0x00*/ s32 unk0;
+    /*0x04*/ s32 unk4;
+    /*0x08*/ s16 unk8;
+    /*0x0A*/ s16 unkA;
+    /*0x0C*/ s16 unkC;
+    u8 fillerE[0x10 - 0xE];
+};
+
+void lbl_00000A68(int p1, int p2)
+{
+    u8 *w = lbl_10000000;
+    u8 *tbl = lbl_00014108;
+    struct RaceModeSub *s = (struct RaceModeSub *)(w + 0x28);
+    struct RaceCourse *ci;
+    u32 *sf;
+    u8 *wp;
+    s8 *st;
+    int k;
+    struct RaceView *vw;
+    f32 *vp;
+    long i;
+    int j;
+
+    if (*(u16 *)(w + 0x2A) & 8)
+    {
+        s->unk0 = ((struct RacePick *)(tbl + 0x1810))[s->unk6].unk0;
+        s->unk4 = ((struct RacePick *)(tbl + 0x1810))[s->unk6].unk2;
+    }
+    ci = &((struct RaceCourse *)(tbl + 0x1660))[s->unk0];
+    load_stage(ci->unk0);
+    if (s->unk2 & 8)
+    {
+        *(s16 *)(w + 0x50) = (s16)((struct RacePick *)(tbl + 0x1814))[s->unk6].unk0;
+        if (*(s16 *)(w + 0x50) >= 0)
+            preload_stage_files(
+                ((struct RaceCourse *)(tbl + 0x1660))[*(s16 *)(w + 0x50)].unk0);
+    }
+    s->unk8 = lbl_000020A4();
+    s->unkC = *(f64 *)lbl_000136D0 * (*(f64 *)lbl_000136D8 / s->unk8);
+    *(s32 *)(w + 0x54) = 0;
+    *(s32 *)(w + 0x58) = 0;
+    *(s32 *)(w + 0x5C) = 0;
+    *(s32 *)(w + 0x60) = 0;
+    *(s16 *)(w + 0x40) = 0x258;
+    for (i = 0; i < 0x100; i++)
+    {
+        ((struct RaceItemSlot *)(w + 0x64))[i].unk0 = 0;
+        ((struct RaceItemSlot *)(w + 0x64))[i].unk4 = 0;
+        ((struct RaceItemSlot *)(w + 0x64))[i].unk8 = -1;
+        ((struct RaceItemSlot *)(w + 0x64))[i].unkA = -1;
+        ((struct RaceItemSlot *)(w + 0x64))[i].unkC = 0;
+    }
+    *(s16 *)(w + 0x42) = -1;
+    *(s16 *)(w + 0x1064) = 0;
+    *(s32 *)(w + 0x1068) = -1;
+    sf = &stageInfo.unkC;
+    *sf &= ~1;
+    *sf &= ~2;
+    *sf &= ~4;
+    event_start(1);
+    event_start(2);
+    event_start(3);
+    event_start(4);
+    event_start(5);
+    event_start(7);
+    event_start(0xF);
+    event_start(0x10);
+    event_start(0x12);
+    event_start(0xD);
+    event_start(0x13);
+    event_start(0xB);
+    BALL_FOREACH(ball->state = 0x16; ball->unk148 = 0;)
+    wp = worldInfo;
+    st = g_poolInfo.playerPool.statusList;
+    for (j = 0; j < g_poolInfo.playerPool.count; j++, wp += 0x40, st++)
+    {
+        if (*st == 2)
+            *(u8 *)(wp + 8) = 1;
+    }
+    camera_set_state_all(0x3C);
+    *(void (**)(void))lbl_802F1F10 = lbl_00003474;
+    *(s32 *)(w + 0x106C) = ci->unk34;
+    *(u8 *)(w + 0x1B) = ballInfo->ape->charaId;
+    *(u8 *)(w + 0x1F) = 0;
+    *(u8 *)(w + 0x1C) = 0x63;
+    *(u8 *)(w + 0x1D) = 0x3B;
+    *(u8 *)(w + 0x1E) = 0x63;
+    *(struct RacePair8 *)(w + 0x20) = *(struct RacePair8 *)(w + 0x18);
+    if (modeCtrl.unk30 == 3)
+        vw = &((struct RaceView *)(tbl + 0x2E4))[modeCtrl.splitscreenMode];
+    else
+        vw = &((struct RaceView *)(tbl + 0x1F4))[modeCtrl.unk30 - 1];
+    vp = vw->rect;
+    for (k = 0; k < vw->count; k++, vp += 4)
+        setup_camera_viewport(k, vp[0], vp[1], vp[2], vp[3]);
+    lbl_0000BB0C();
+    u_play_music(0x2C, 0);
+    start_screen_fade(0x100, 0, 0x1E);
+    *(s16 *)(w + 0x44) = *(s16 *)(w + 0x38);
+    *(s16 *)(w + 0x38) = 2;
+    *(s32 *)w = 0;
 }
 
 #pragma force_active reset

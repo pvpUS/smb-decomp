@@ -379,7 +379,6 @@ void lbl_00017230(void);
 void lbl_0001745C(void);
 void lbl_000175B8(void);
 void lbl_000177C8(void);
-void lbl_00017DC0(void);
 void lbl_00017EE4(void);
 void lbl_0001824C(void);
 void lbl_00019340(void);
@@ -398,21 +397,72 @@ void lbl_0001BA8C(void);
 
 static void lbl_00017950(void);
 static void lbl_00017BA0(void);
+
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+void lbl_00017DC0(int arg);
+
 #pragma force_active on
 asm void lbl_000177C8(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_000177C8.s"
 }
+#pragma peephole on
 static asm void lbl_00017950(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_00017950.s"
 }
+#pragma peephole on
 static asm void lbl_00017BA0(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_00017BA0.s"
 }
+#pragma peephole on
 
+void lbl_00017DC0(int arg)
+{
+    char buf[64];
+    int unused;
+    struct Sprite *sp;
+    u8 *k = lbl_0001C628;
+    int id;
+    int i;
+    char *s;
+    f32 x;
+
+    strcpy(buf, (char *)lbl_0001DC14);
+    x = *(f32 *)(k + 0xd4)
+      - *(f32 *)(k + 0x140) * (*(f32 *)(k + 0x74) * (f32)(strlen(buf) - 1));
+    id = arg;
+    s = buf;
+    i = 0;
+    while (*s != 0)
+    {
+        if (*s != ' ')
+        {
+            sp = create_sprite();
+            if (sp != NULL)
+            {
+                sp->x = x;
+                sp->y = *(f32 *)(k + 0x144);
+                sp->fontId = 9;
+                sp->textAlign = 4;
+                sp->scaleX = *(f32 *)(k + 0x78);
+                sp->scaleY = *(f32 *)(k + 0x78);
+                sp->userVar = i;
+                sp->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_00017EE4;
+                sp->counter = id;
+                sp->text[0] = *s;
+                sp->text[1] = 0;
+            }
+        }
+        x += *(f32 *)(k + 0x140);
+        id += 4;
+        i++;
+        s++;
+    }
+}
 #pragma force_active reset

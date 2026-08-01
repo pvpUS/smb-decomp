@@ -147,13 +147,13 @@ extern u8 lbl_80285A58[];
 extern u8 lbl_80285A68[];
 extern u8 lbl_80285A80[];
 extern u8 lbl_802F1F10[];
-extern u8 lbl_802F1FD0[];
+extern u32 lbl_802F1FD0;
 extern u8 lbl_802F1FD8[];
 extern u8 lbl_802F1FDC[];
 extern u8 lbl_802F1FE0[];
 extern u8 lbl_802F1FE4[];
-extern u8 lbl_802F1FEC[];
-extern u8 lbl_802F1FF4[];
+extern s16 lbl_802F1FEC;
+extern s16 lbl_802F1FF4;
 
 // Imported functions the code calls that no included header declares.
 extern void ball_8003BBF4();
@@ -250,6 +250,18 @@ void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+s32 lbl_00000DC8(struct PilotTgt *tgt, Vec *pos);
+void lbl_0000101C(void);
+void lbl_000011CC(void);
+void lbl_000015D8(void);
+void lbl_0000178C(void);
+void lbl_00001B08(void);
+void lbl_00001BB4(void);
+void lbl_00001CE4(void);
+void lbl_00001DE0(void);
+
 #pragma force_active on
 void lbl_000008AC(void)
 {
@@ -280,4 +292,172 @@ void lbl_000008AC(void)
         }
     }
 }
+asm void lbl_00000A30(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_00000A30.s"
+}
+
+asm void lbl_00000BFC(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_00000BFC.s"
+}
+
+struct PilotTgt
+{
+    /*0x00*/ Vec pos;
+    /*0x0C*/ f32 unkC;
+    /*0x10*/ f32 unk10;
+    /*0x14*/ s8 unk14;
+    /*0x15*/ u8 pad15[3];
+};
+struct PilotIdTbl3 { s16 v[3]; };
+struct PilotIdTbl6 { s16 v[6]; };
+
+#pragma peephole on
+s32 lbl_00000DC8(struct PilotTgt *tgt, Vec *pos)
+{
+    u8 *k = (u8 *)lbl_0000BE80;
+    u8 *tgtTbl = (u8 *)lbl_0000C740;
+    // The original reserves an 8-byte frame slot at 0x54..0x5B that it never
+    // reads or writes (frame is 0x60 with only r31 saved; the live locals stop
+    // at 0x54).  Its name/type are unrecoverable -- without it the whole local
+    // block, and hence every stack offset below, moves.
+
+    if (tgt == (struct PilotTgt *)(tgtTbl + 0x4B0))
+    {
+        f32 dist = mathutil_unk(tgt->pos.x, tgt->pos.z, pos->x, pos->z);
+
+        if (dist < *(f64 *)(k + 0xD8))
+            return 4;
+        if (dist < *(f64 *)(k + 0xE0))
+            return 3;
+        return 2;
+    }
+    if (tgt == (struct PilotTgt *)(tgtTbl + 0x528))
+    {
+        Vec delta;
+        struct PilotIdTbl3 ids = *(struct PilotIdTbl3 *)(k + 0xB8);
+
+        delta.x = pos->x - tgt->pos.x;
+        delta.y = pos->y - tgt->pos.y;
+        delta.z = pos->z - tgt->pos.z;
+        return ids.v[(u16)mathutil_atan2(-delta.x, -delta.z) / (0x10000 / 3)];
+    }
+    if (tgt == (struct PilotTgt *)(tgtTbl + 0x540))
+    {
+        Vec delta;
+        struct PilotIdTbl6 ids = *(struct PilotIdTbl6 *)(k + 0xC0);
+
+        delta.x = pos->x - tgt->pos.x;
+        delta.y = pos->y - tgt->pos.y;
+        delta.z = pos->z - tgt->pos.z;
+        return ids.v[(u16)mathutil_atan2(-delta.x, -delta.z) / (0x10000 / 6)];
+    }
+    if (tgt == (struct PilotTgt *)(tgtTbl + 0x558))
+    {
+        Vec delta;
+        struct PilotIdTbl6 ids = *(struct PilotIdTbl6 *)(k + 0xCC);
+
+        delta.x = pos->x - tgt->pos.x;
+        delta.y = pos->y - tgt->pos.y;
+        delta.z = pos->z - tgt->pos.z;
+        return ids.v[(u16)mathutil_atan2(-delta.z, delta.x) / (0x10000 / 6)];
+    }
+    return tgt->unk14;
+}
+
+#pragma peephole on
+void lbl_0000101C(void)
+{
+    u8 *w = (u8 *)lbl_10000000;
+    s32 p = modeCtrl.currPlayer;
+    s32 pad[6];
+
+    *(s32 *)(w + p * 4 + 0x44) += ((s32 *)lbl_80285A58)[p];
+    ((s32 *)lbl_80285A58)[p] = 0;
+    lbl_802F1FEC = 0;
+    {
+    s16 *a = (s16 *)&lbl_80285A80[p * 12];
+    s16 *b = (s16 *)&lbl_80285A68[p * 6];
+    a[0] = 0;
+    a[1] = 0;
+    a[2] = 0;
+    a[3] = 0;
+    a[4] = 0;
+    a[5] = 0;
+    b[0] = 0;
+    b[1] = 0;
+    b[2] = 0;
+    }
+    SoundOffID(0xef);
+    SoundOffID(0xf9);
+    SoundOffID(0xf3);
+    u_play_music(100, 8);
+    u_init_player_data_2();
+    if (modeCtrl.currPlayer == 0)
+    {
+        if (*(s16 *)(w + 0x66) >= *(s16 *)(w + 0x64))
+        {
+            event_finish_all();
+            lbl_802F1FF6 = 0x17;
+            lbl_802F1FF4 = -1;
+            ((void (**)(void))lbl_0000C748)[23]();
+            return;
+        }
+        if (++*(s16 *)(w + 0x40) >= 3)
+            *(s16 *)(w + 0x40) = 0;
+        *(s16 *)(w + 0x66) += 1;
+    }
+    lbl_00000698();
+    if (lbl_802F1FF4 != -1)
+    {
+        lbl_802F1FF6 = lbl_802F1FF4;
+        lbl_802F1FF4 = -1;
+    }
+    ((void (**)(void))lbl_0000C748)[lbl_802F1FF6]();
+}
+
+asm void lbl_000011CC(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_000011CC.s"
+}
+
+#pragma peephole on
+void lbl_00001538(void)
+{
+    struct Ball *ball = currentBall;
+
+    if (lbl_802F1FF0++ == 0)
+    {
+        ball->state = BALL_STATE_23;
+        ball->unk148 = 0;
+        ball->flags &= ~BALL_FLAG_INVISIBLE;
+        ball->ape->flags &= ~APE_FLAG_INVISIBLE;
+        ball->flags |= BALL_FLAG_14;
+        return;
+    }
+    if (lbl_802F1FF0 >= 0x78)
+    {
+        if (lbl_802F1FD0 & (1 << 4))
+            lbl_802F1FF4 = 3;
+        else
+            lbl_802F1FF4 = 9;
+    }
+}
+
+asm void lbl_000015D8(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_000015D8.s"
+}
+
+asm void lbl_0000178C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_0000178C.s"
+}
+
 #pragma force_active reset

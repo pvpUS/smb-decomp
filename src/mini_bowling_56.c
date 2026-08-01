@@ -200,11 +200,9 @@ void lbl_000096B4(void);
 void lbl_000097B4(void);
 void lbl_00009AA8(void);
 void lbl_00009D18(void);
-void lbl_00009F60(void);
-void lbl_0000A138(void);
+void lbl_00009F60(int idx);
 void lbl_0000A23C(void);
-void lbl_0000A610(void);
-void lbl_0000A778(void);
+void lbl_0000A778(int sndId, f32 *pos, int vol, int pitch);
 void lbl_0000A808(void);
 void lbl_0000A878(void);
 void lbl_0000AAAC(void);
@@ -245,10 +243,166 @@ void lbl_0000E894(void);
 void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+int lbl_0000A138(void);
+struct BowlSpark
+{
+    Vec pos;    // 0x00
+    s16 timer;  // 0x0C
+    s8 kind;    // 0x0E
+    u8 pad;     // 0x0F
+};
+void lbl_0000A610(int kind, Vec *pos);
+
 #pragma force_active on
 asm void lbl_000097B4(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_bowling/lbl_000097B4.s"
+}
+asm void lbl_00009AA8(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_bowling/lbl_00009AA8.s"
+}
+asm void lbl_00009D18(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_bowling/lbl_00009D18.s"
+}
+// lbl_00009F60 (0x9F60): spawn one "spark" of the given kind in the first free
+// slot of the four-slot bank, then fire its one-shot sound with a randomised
+// volume and pitch.  Kinds 0..3 take a fixed offset from the parameter table;
+// kinds 4..6 take a randomised one.
+#pragma peephole on
+void lbl_00009F60(int idx)
+{
+    u8 *t = lbl_00011490;
+    struct BowlSpark *p;
+    int i;
+    int vol;
+    int pitch;
+
+    if (idx > -1 && idx < 7)
+    {
+        p = (struct BowlSpark *)lbl_10012140;
+        for (i = 0; i < 4; i++, p++)
+        {
+            if (p->timer > 0)
+                continue;
+            p->timer = 120;
+            p->kind = (s8)idx;
+            switch (idx)
+            {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+                p->pos.x = *(f32 *)(t + 0x3300);
+                p->pos.y = *(f32 *)(t + 0x3304);
+                p->pos.z = *(f32 *)(t + 0x3308);
+                goto tail;
+            case 4:
+            case 5:
+            case 6:
+                goto rnd;
+            }
+        rnd:
+            p->pos.x = *(f64 *)(t + 0x3310)
+                     + *(f64 *)(t + 0x3318) * (rand() / *(f32 *)(t + 0x3320));
+            if (rand() & 1)
+                p->pos.x = -p->pos.x;
+            if (lbl_0000A138())
+                p->pos.y = *(f64 *)(t + 0x3328)
+                         + *(f64 *)(t + 0x3310) * (rand() / *(f32 *)(t + 0x3320));
+            else
+                p->pos.y = *(f64 *)(t + 0x3330)
+                         + *(f64 *)(t + 0x3338) * (rand() / *(f32 *)(t + 0x3320));
+            p->pos.z = *(f32 *)(t + 0x3308);
+        tail:
+            vol = (rand() & 0xf) - 50;
+            pitch = (rand() & 0x1fff) + 0x1000;
+            lbl_0000A778(0xab, (f32 *)p, vol, pitch);
+            return;
+        }
+    }
+}
+// lbl_0000A138 (0xA138): is any of the four spark slots (in either bank) alive
+// and of a "blocking" kind?
+#pragma peephole on
+int lbl_0000A138(void)
+{
+    struct BowlSpark *b;
+    struct BowlSpark *a;
+    int ret;
+    int i;
+
+    a = (struct BowlSpark *)lbl_10012140;
+    b = (struct BowlSpark *)lbl_10012180;
+    ret = 0;
+
+    for (i = 0; i < 4; i++, a++, b++)
+    {
+        if (a->timer > 0)
+        {
+            switch (a->kind)
+            {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+                ret = 1;
+                break;
+            }
+        }
+        if (b->timer > 0)
+        {
+            switch (b->kind)
+            {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+                ret = 1;
+                break;
+            }
+        }
+        if (ret != 0)
+            return ret;
+    }
+    return ret;
+}
+asm void lbl_0000A23C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_bowling/lbl_0000A23C.s"
+}
+#pragma peephole on
+void lbl_0000A610(int kind, Vec *pos)
+{
+    u8 *work = lbl_100004E0;
+    u8 *t = lbl_00011490;
+    u8 *p;
+    int i;
+    if (*(s32 *)(work + 0x11ce0) >= 0xa28)
+        return;
+
+    for (p = lbl_100004E0,  i = 0; i < 0xa28; i++) {
+        if (*(s16 *)(p + 0x18) <= 0) {
+            *(s16 *)(p + 0x18) = 30;
+            *(Vec *)p = *pos;
+            *(f32 *)(p + 0xc) =
+                *(f64 *)(t + 0x32e0) - *(f64 *)(t + 0x3360) * (rand() / *(f32 *)(t + 0x3320));
+            *(f32 *)(p + 0x10) =
+                *(f64 *)(t + 0x32e0) - *(f64 *)(t + 0x3360) * (rand() / *(f32 *)(t + 0x3320));
+            *(f32 *)(p + 0x14) =
+                *(f64 *)(t + 0x32e0) - *(f64 *)(t + 0x3360) * (rand() / *(f32 *)(t + 0x3320));
+            *(s8 *)(p + 0x1a) = (s8)kind;
+            *(s32 *)(work + 0x11ce0) += 1;
+            return;
+        }
+        p += 0x1c;
+    }
 }
 #pragma force_active reset

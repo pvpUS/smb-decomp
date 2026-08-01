@@ -243,9 +243,9 @@ void lbl_00000838(void);
 void lbl_000008B4(void);
 void lbl_00002018(void);
 void lbl_000020A4(void);
-void lbl_000021C8(void);
-void lbl_000024A0(void);
-void lbl_000025E4(void);
+void lbl_000021C8(struct Ball *);
+void lbl_000024A0(struct Ball *, struct DecodedStageLzPtr_child5 *, f32 *);
+void lbl_000025E4(struct Ball *, struct DecodedStageLzPtr_child5 *, f32 *);
 void lbl_00002968(void);
 void lbl_00002B54(void);
 void lbl_00002BBC(void);
@@ -254,7 +254,7 @@ void lbl_00002FA4(void);
 void lbl_00003094(void);
 void lbl_000030DC(void);
 void lbl_00003120(void);
-void lbl_000031C0(void);
+void lbl_000031C0(struct DecodedStageLzPtr_child5 *, Vec *, f32);
 void lbl_00003238(void);
 void lbl_0000326C(void);
 void lbl_00003398(void);
@@ -375,10 +375,95 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_000021C8(void)
+// INVENTED -- 16-byte sub-block at lbl_10000000 + 0x28.  UNVERIFIED.
+struct RaceModeSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000021C8.s"
+    /*0x00*/ u16 unk0;
+    /*0x02*/ u16 unk2;
+    /*0x04*/ u16 unk4;
+    /*0x06*/ s16 unk6;
+    /*0x08*/ f32 unk8;
+    /*0x0C*/ f32 unkC;
+};
+
+// INVENTED -- per-racer slot at lbl_10000000 + 0x1070, stride 0x29C.
+struct RaceRacer
+{
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+    u8 filler18[0x22 - 0x18];
+    /*0x22*/ s16 unk22;
+    u8 filler24[0x1E8 - 0x24];
+    /*0x1E8*/ f32 unk1E8;
+    /*0x1EC*/ f32 unk1EC;
+    /*0x1F0*/ f32 unk1F0;
+    /*0x1F4*/ f32 unk1F4;
+    u8 filler1F8[0x248 - 0x1F8];
+    /*0x248*/ s16 unk248;
+    u8 filler24A[0x24C - 0x24A];
+    /*0x24C*/ f32 unk24C;
+    /*0x250*/ f32 unk250;
+    /*0x254*/ Vec unk254;
+    u8 filler260[0x29C - 0x260];
+};
+
+void lbl_000021C8(struct Ball *ball)
+{
+    u8 *w = lbl_10000000;
+    u8 *cfg = lbl_00013680;
+    struct RaceModeSub *s = (struct RaceModeSub *)(w + 0x28);
+    u8 *ent = lbl_00015768 + s->unk0 * 0x48;
+    struct RaceRacer *p = &((struct RaceRacer *)(w + 0x1070))[ball->playerId];
+    struct DecodedStageLzPtr_child5 *path;
+    f32 *pa;
+    f32 *pb;
+    f32 d;
+    f32 lim;
+    Vec v;
+
+    if (p->unk22 < 0x32 && p->unk22 < *(u16 *)(w + 0x2C))
+    {
+        path = decodedStageLzPtr->unk78;
+        p->unk1EC = p->unk1E8;
+        lbl_000025E4(ball, path, &p->unk1E8);
+        lbl_000031C0(path, &v, p->unk1E8);
+        if (mathutil_vec_sq_distance(&v, &ball->pos) >
+            *(f32 *)(ent + 8) * *(f32 *)(ent + 8))
+            lbl_000024A0(ball, path, &p->unk1E8);
+        p->unk1F4 = p->unk1F0;
+        pa = &p->unk1EC;
+        pb = &p->unk1E8;
+        d = *(f64 *)(cfg + 0x80) * s->unkC;
+        p->unk1F0 = p->unk1F0 + (p->unk1E8 - p->unk1EC);
+        if (*(f32 *)(cfg + 0x40) - d <= p->unk1EC &&
+            p->unk1EC <= *(f32 *)(cfg + 0x40) &&
+            *(f32 *)(cfg + 0x20) <= *pb && *pb <= d)
+        {
+            p->unk1F0 = p->unk1F0 + *(f32 *)(cfg + 0x40);
+        }
+        else if (*(f32 *)(cfg + 0x20) <= *pa && *pa <= d &&
+                 *(f32 *)(cfg + 0x40) - d <= *pb &&
+                 *pb <= *(f32 *)(cfg + 0x40))
+        {
+            p->unk1F0 = p->unk1F0 - *(f32 *)(cfg + 0x40);
+        }
+        if (p->unk14 & 0x20)
+        {
+            path = (struct DecodedStageLzPtr_child5 *)
+                &decodedStageLzPtr->unk78->unk1C[p->unk248];
+            if (s->unk0 == 4 && *(f32 *)(cfg + 0x88) <= p->unk24C &&
+                p->unk24C <= *(f64 *)(cfg + 0x90))
+                lim = *(f32 *)(cfg + 0x98);
+            else
+                lim = *(f32 *)(ent + 8) * *(f32 *)(ent + 8);
+            p->unk250 = p->unk24C;
+            lbl_000025E4(ball, path, &p->unk24C);
+            lbl_000031C0(path, &v, p->unk24C);
+            if (mathutil_vec_sq_distance(&v, &ball->pos) > lim)
+                lbl_000024A0(ball, path, &p->unk24C);
+            lbl_000031C0(path, &p->unk254, p->unk24C);
+        }
+    }
 }
 
 #pragma force_active reset

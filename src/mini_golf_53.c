@@ -152,7 +152,6 @@ void lbl_00008C78(void);
 void lbl_00008D34(void);
 void lbl_00008F44(void);
 void lbl_0000907C(void);
-void lbl_00009178(void);
 void lbl_000091BC(void);
 void lbl_000092C4(void);
 void lbl_000092D0(void);
@@ -170,18 +169,14 @@ void lbl_000093B4(void);
 void lbl_000093C4(void);
 void lbl_000093D4(void);
 void lbl_000093F0(void);
-void lbl_00009404(void);
 void lbl_00009414(void);
 void lbl_00009424(void);
-void lbl_00009438(void);
-void lbl_00009448(void);
 void lbl_00009458(void);
 void lbl_00009478(void);
 void lbl_00009488(void);
 void lbl_00009538(void);
 void lbl_000095C4(void);
 u8 lbl_000097D8(void);
-void lbl_00009800(void);
 void lbl_0000982C(void);
 void lbl_00009880(void);
 void lbl_00009968(void);
@@ -255,6 +250,14 @@ void lbl_00025BD0(void);
 void lbl_00025EA8(void);
 void lbl_0002609C(void);
 void lbl_000260C0(void);
+
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+u8 lbl_00009178(void);
+int lbl_00009404(void);
+int lbl_00009438(void);
+void lbl_00009448(int a);
+u8 lbl_00009800(void);
 
 #pragma force_active on
 void lbl_00010E74(s32 idx, u8 mode, f32 x, f32 y)
@@ -464,5 +467,63 @@ void lbl_000115F8(s32 idx, u8 mode, f32 x, f32 y)
     sp->z = *(f32 *)(pool + 0x138);
     sp->trnsl = *(f64 *)(pool + 0x140) - (globalAnimTimer & 7) * *(f64 *)(pool + 0x148);
     nlSprPut(sp);
+}
+void lbl_0001199C(void)
+{
+    u8 *st = (u8 *)lbl_100001C8;
+    int sel = -1;
+
+    switch (*(s16 *)(st + 0x3c)) {
+    case 1:
+        if (*(u32 *)(st + 8) == 0) {
+            *(u32 *)(st + 8) = globalAnimTimer;
+        }
+
+        if ((s8)lbl_00009438() != -1) {
+            sel = lbl_00009404();
+            lbl_00009448(lbl_00009438());
+        }
+
+        lbl_00022524();
+        lbl_0001B5B8();
+        if ((s8)sel != -1) {
+            lbl_00009448(sel);
+        }
+
+        if (lbl_00009178() == 0) {
+            return;
+        }
+        if (lbl_00009800() == 0) {
+            return;
+        }
+        if (modeCtrl.playerCount == 1) {
+            return;
+        }
+        lbl_00012EEC();
+        break;
+    default:
+        *(s32 *)(st + 8) = 0;
+        break;
+    }
+}
+asm void lbl_00011A6C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_golf/lbl_00011A6C.s"
+}
+asm void lbl_00011DAC(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_golf/lbl_00011DAC.s"
+}
+asm void lbl_00011FEC(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_golf/lbl_00011FEC.s"
+}
+asm void lbl_000123B4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_golf/lbl_000123B4.s"
 }
 #pragma force_active reset

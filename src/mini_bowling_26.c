@@ -30,7 +30,6 @@
 #include "polydisp.h"
 #include "pool.h"
 #include "rend_efc.h"
-#include "sound.h"
 #include "sprite.h"
 #include "stage.h"
 #include "thread.h"
@@ -47,6 +46,9 @@
 #include "shadow.h"
 #include "vibration.h"
 
+extern void SoundIcsReq(u32 arg0, int arg1, int arg2);
+void u_play_sound_0(int arg0);
+void u_play_music(u32 arg0, s8 arg1);
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_bowling.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000F020[];
@@ -163,12 +165,10 @@ void lbl_000051E0(void);
 void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
-void lbl_000066C4(struct Ape *, int);
-void lbl_000068C4(struct Ape *, float);
-void lbl_00006E64(void);
+void lbl_000066C4(struct Ape *ape, int status);
+void lbl_000068C4(struct Ape *ape, float speed);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
-void lbl_00007650(void);
 void lbl_000076D0(void);
 void lbl_00007740(void);
 void lbl_00007778(void);
@@ -245,6 +245,11 @@ void lbl_0000E894(void);
 void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+void lbl_00006E64(u32 color, char *str, float x, float y);
+void lbl_00007650(s32 a, s32 b, s32 c);
+
 #pragma force_active on
 void lbl_000066C4(struct Ape *ape, int status)
 {
@@ -300,5 +305,73 @@ void lbl_000066C4(struct Ape *ape, int status)
     ape_face_dir(ape, &ball->lookPoint);
     ball->unk100 = 0;
     ball->lookPointPrio = *(f32 *)(cfg + 0x1c98);
+}
+asm void lbl_000068C4(struct Ape *ape, float speed)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_bowling/lbl_000068C4.s"
+}
+#pragma peephole on
+void lbl_00006E64(u32 color, char *str, float x, float y)
+{
+    f32 *tbl = (f32 *)lbl_0000F020;
+
+    func_80071B1C(tbl[0x85a]);
+    set_text_pos(tbl[0x840] + x, tbl[0x840] + y);
+    set_text_mul_color(0);
+    sprite_puts(str);
+    func_80071B1C(tbl[0x73f]);
+    set_text_pos(x, y);
+    set_text_mul_color(color);
+    sprite_puts(str);
+}
+asm void lbl_00006F0C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_bowling/lbl_00006F0C.s"
+}
+#pragma peephole on
+void lbl_00007518(void)
+{
+    u8 *tbl = lbl_0000F020;
+    f32 speed;
+    f64 t;
+    f64 v;
+    int vol;
+
+    speed = *(f64 *)(tbl + 0x2200) * mathutil_vec_len(&currentBall->vel);
+    if ((currentBall->flags & 1) && speed > *(f64 *)(tbl + 0x1d28))
+    {
+        if ((globalAnimTimer & 7) == 0)
+        {
+            t = *(f64 *)(tbl + 0x2208) * (speed - *(f64 *)(tbl + 0x1d28));
+            if (t < *(f64 *)(tbl + 0x2210))
+                v = t;
+            else
+                v = *(f64 *)(tbl + 0x2210);
+            vol = v;
+            t = *(f64 *)(tbl + 0x2218) * (speed - *(f64 *)(tbl + 0x1d28));
+            if (t < *(f64 *)(tbl + 0x2220))
+                v = t;
+            else
+                v = *(f64 *)(tbl + 0x2220);
+            SoundIcsReq(currentBall->playerId, vol, *(f64 *)(tbl + 0x2228) * v);
+        }
+    }
+    else
+    {
+        SoundIcsReq(currentBall->playerId, 0, 0);
+    }
+}
+#pragma peephole on
+void lbl_00007650(s32 a, s32 b, s32 c)
+{
+    u8 *g = lbl_10000000;
+
+    *(s32 *)(g + 0x154) = a;
+    *(s32 *)(g + 0x158) = b;
+    *(s16 *)(g + 0x15c) = c;
+    *(s16 *)(g + 0x15e) = c - *(f64 *)lbl_00011250;
+    u_play_music(0, 8);
 }
 #pragma force_active reset

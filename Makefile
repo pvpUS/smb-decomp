@@ -676,11 +676,6 @@ SOURCES := \
 	src/mini_bowling_25b.c \
 	src/mini_bowling_25c.c \
 	src/mini_bowling_26.c \
-	src/mini_bowling_27.c \
-	src/mini_bowling_28.c \
-	src/mini_bowling_29.c \
-	src/mini_bowling_30.c \
-	src/mini_bowling_31.c \
 	asm/mini_bowling_d1.s \
 	src/mini_bowling_32.c \
 	src/mini_bowling_33.c \
@@ -696,26 +691,8 @@ SOURCES := \
 	src/mini_bowling_41.c \
 	src/mini_bowling_42.c \
 	asm/mini_bowling_d3.s \
-	src/mini_bowling_43.c \
-	src/mini_bowling_44.c \
-	src/mini_bowling_45.c \
-	src/mini_bowling_46.c \
-	src/mini_bowling_47.c \
-	src/mini_bowling_48.c \
-	src/mini_bowling_49.c \
-	src/mini_bowling_50.c \
-	src/mini_bowling_51.c \
-	src/mini_bowling_52.c \
-	src/mini_bowling_53.c \
-	src/mini_bowling_54.c \
 	src/mini_bowling_55.c \
 	src/mini_bowling_56.c \
-	src/mini_bowling_57.c \
-	src/mini_bowling_58.c \
-	src/mini_bowling_59.c \
-	src/mini_bowling_60.c \
-	src/mini_bowling_61.c \
-	src/mini_bowling_62.c \
 	asm/mini_bowling_d4.s \
 	src/mini_bowling_63.c \
 	src/mini_bowling_64.c \
@@ -865,12 +842,6 @@ SOURCES := \
 	src/mini_fight_45.c \
 	src/mini_fight_46.c \
 	asm/mini_fight_d1.s \
-	src/mini_fight_47.c \
-	src/mini_fight_48.c \
-	src/mini_fight_49.c \
-	src/mini_fight_49b.c \
-	src/mini_fight_50.c \
-	src/mini_fight_51.c \
 	src/mini_fight_52.c \
 	src/mini_fight_53.c \
 	src/mini_fight_54.c \
@@ -906,23 +877,8 @@ SOURCES := \
 	src/mini_fight_68d.c \
 	src/mini_fight_68b.c \
 	src/mini_fight_68c.c \
-	src/mini_fight_69.c \
-	src/mini_fight_70.c \
-	src/mini_fight_71.c \
 	asm/mini_fight_d2.s \
-	src/mini_fight_72.c \
-	src/mini_fight_73.c \
-	src/mini_fight_74.c \
-	src/mini_fight_75.c \
-	src/mini_fight_76.c \
-	src/mini_fight_77.c \
-	src/mini_fight_78.c \
-	src/mini_fight_78b.c \
-	src/mini_fight_78c.c \
-	src/mini_fight_78d.c \
-	src/mini_fight_78e.c \
 	src/mini_fight_78f.c \
-	src/mini_fight_79.c \
 	src/mini_fight_80.c \
 	src/mini_fight_81.c \
 	src/mini_fight_82.c \
@@ -962,14 +918,6 @@ SOURCES := \
 	src/mini_pilot_8b.c \
 	src/mini_pilot_9.c \
 	asm/mini_pilot_d1.s \
-	src/mini_pilot_10.c \
-	src/mini_pilot_10b.c \
-	src/mini_pilot_10c.c \
-	src/mini_pilot_10d.c \
-	src/mini_pilot_10e.c \
-	src/mini_pilot_10eb.c \
-	src/mini_pilot_10f.c \
-	src/mini_pilot_10g.c \
 	src/mini_pilot_10h.c \
 	src/mini_pilot_10i.c \
 	src/mini_pilot_10j.c \
@@ -1023,33 +971,9 @@ SOURCES := \
 	src/mini_pilot_30.c \
 	src/mini_pilot_30b.c \
 	src/mini_pilot_30c.c \
-	src/mini_pilot_30d.c \
-	src/mini_pilot_30e.c \
-	src/mini_pilot_30f.c \
-	src/mini_pilot_30g.c \
-	src/mini_pilot_30h.c \
-	src/mini_pilot_31.c \
 	asm/mini_pilot_d2.s \
 	src/mini_pilot_32.c \
 	src/mini_pilot_32b.c \
-	src/mini_pilot_33.c \
-	src/mini_pilot_34.c \
-	src/mini_pilot_35.c \
-	src/mini_pilot_36.c \
-	src/mini_pilot_36b.c \
-	src/mini_pilot_36c.c \
-	src/mini_pilot_36d.c \
-	src/mini_pilot_36e.c \
-	src/mini_pilot_37.c \
-	src/mini_pilot_38.c \
-	src/mini_pilot_39.c \
-	src/mini_pilot_40.c \
-	src/mini_pilot_41.c \
-	src/mini_pilot_41b.c \
-	src/mini_pilot_42.c \
-	src/mini_pilot_43.c \
-	src/mini_pilot_43b.c \
-	src/mini_pilot_44.c \
 	src/mini_pilot_45.c \
 	src/mini_pilot_46.c \
 	src/mini_pilot_47.c \
@@ -1111,12 +1035,7 @@ SOURCES := \
 	src/mini_golf_39.c \
 	src/mini_golf_40.c \
 	src/mini_golf_41.c \
-	asm/mini_golf_pool_tail.s \
 	asm/mini_golf_d1.s \
-	src/mini_golf_42.c \
-	src/mini_golf_43.c \
-	src/mini_golf_44.c \
-	src/mini_golf_45.c \
 	src/mini_golf_46.c \
 	asm/mini_golf_d2.s \
 	src/mini_golf_47.c \
@@ -1127,8 +1046,6 @@ SOURCES := \
 	src/mini_golf_52.c \
 	src/mini_golf_53.c \
 	asm/mini_golf_d3.s \
-	src/mini_golf_54.c \
-	src/mini_golf_55.c \
 	src/mini_golf_56.c \
 	src/mini_golf_57.c \
 	src/mini_golf_58.c \
@@ -1167,28 +1084,7 @@ SOURCES := \
 	src/mini_billiards_5.c \
 	src/mini_billiards_6.c \
 	src/mini_billiards_7.c \
-	src/mini_billiards_8.c \
-	src/mini_billiards_9.c \
-	src/mini_billiards_10.c \
-	src/mini_billiards_11.c \
-	src/mini_billiards_12.c \
-	src/mini_billiards_13.c \
-	src/mini_billiards_14.c \
-	src/mini_billiards_15.c \
 	asm/mini_billiards_d1.s \
-	src/mini_billiards_16.c \
-	src/mini_billiards_17.c \
-	src/mini_billiards_18.c \
-	src/mini_billiards_19.c \
-	src/mini_billiards_20i.c \
-	src/mini_billiards_20zi.c \
-	src/mini_billiards_20zz.c \
-	src/mini_billiards_20zzi.c \
-	src/mini_billiards_21.c \
-	src/mini_billiards_22.c \
-	src/mini_billiards_23.c \
-	src/mini_billiards_24.c \
-	src/mini_billiards_25.c \
 	src/mini_billiards_26.c \
 	src/mini_billiards_27.c \
 	src/mini_billiards_28.c \
@@ -1237,6 +1133,7 @@ ALL_RELS += mkbe.rel_sample.rel
 
 # mkbe.test_mode.rel sources
 SOURCES := \
+	asm/test_mode.s \
 	src/test_mode.c \
 	src/test_mode_2.c \
 	src/test_mode_3.c \
@@ -1312,6 +1209,7 @@ SOURCES := \
 	src/test_mode_68.c \
 	src/test_mode_69.c \
 	src/test_mode_70.c \
+	asm/test_mode_d1.s \
 	src/test_mode_71.c \
 	src/test_mode_72.c \
 	src/test_mode_73.c \
@@ -1328,6 +1226,7 @@ SOURCES := \
 	src/test_mode_84.c \
 	src/test_mode_85.c \
 	src/test_mode_86.c \
+	asm/test_mode_d2.s \
 	src/test_mode_87.c \
 	src/test_mode_88.c \
 	src/test_mode_89.c \
@@ -1339,10 +1238,8 @@ SOURCES := \
 	src/test_mode_95.c \
 	src/test_mode_96.c \
 	src/test_mode_97.c \
-	src/test_mode_98.c \
+	asm/test_mode_d3.s \
 	src/test_mode_99.c \
-	src/test_mode_100.c \
-	src/test_mode_101.c \
 	src/test_mode_102.c \
 	src/test_mode_103.c \
 	src/test_mode_104.c \
@@ -1366,7 +1263,7 @@ SOURCES := \
 	src/test_mode_120.c \
 	src/test_mode_121.c \
 	src/test_mode_122.c \
-	asm/test_mode.s
+	asm/test_mode_d4.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
 mkbe.test_mode.plf: $(O_FILES)

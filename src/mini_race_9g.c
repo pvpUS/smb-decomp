@@ -223,7 +223,7 @@ extern void func_8009C5E4();
 extern void func_8009CD5C();
 extern void func_8009D794();
 extern void func_8009DB40();
-extern void func_800AC5E0();
+int func_800AC5E0(int, void *);
 extern void mini_commend_free_data();
 extern void ord_tbl_set_depth_offset();
 extern void rend_efc_draw();
@@ -241,22 +241,22 @@ void lbl_0000056C(void);
 void lbl_000007EC(void);
 void lbl_00000838(void);
 void lbl_000008B4(void);
-void lbl_00002018(void);
+void lbl_00002018(struct Ball *);
 void lbl_000020A4(void);
-void lbl_000021C8(void);
+void lbl_000021C8(struct Ball *);
 void lbl_000024A0(void);
 void lbl_000025E4(void);
-void lbl_00002968(void);
-void lbl_00002B54(void);
+void lbl_00002968(struct Ball *);
+void lbl_00002B54(struct Ball *);
 void lbl_00002BBC(void);
 void lbl_00002E04(void);
-void lbl_00002FA4(void);
+int lbl_00002FA4(void);
 void lbl_00003094(void);
 void lbl_000030DC(void);
 void lbl_00003120(void);
 void lbl_000031C0(void);
 void lbl_00003238(void);
-void lbl_0000326C(void);
+void lbl_0000326C(void *, void *);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
@@ -343,7 +343,7 @@ void lbl_0000E520(void);
 void lbl_0000E7AC(void);
 void lbl_0000E7C4(void);
 void lbl_0000E900(void);
-void lbl_0000EC20(void);
+void lbl_0000EC20(int);
 void lbl_0000F084(void);
 void lbl_0000F118(void);
 void lbl_0000F174(void);
@@ -389,10 +389,211 @@ void lbl_00001ED0(void);
 void lbl_00001F94(void);
 void lbl_00001FDC(void);
 #pragma force_active on
-asm void lbl_0000118C(void)
+// INVENTED -- 16-byte sub-block at lbl_10000000 + 0x28.  UNVERIFIED.
+struct RaceModeSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000118C.s"
+    /*0x00*/ u16 unk0;
+    /*0x02*/ u16 unk2;
+    u8 filler4[0x10 - 4];
+};
+
+// INVENTED -- 8-byte {lap, time} score pair.  UNVERIFIED.
+struct RaceScore
+{
+    /*0x00*/ s32 a;
+    /*0x04*/ f32 b;
+};
+
+// INVENTED -- per-racer state hanging off struct Ball::unk144.  UNVERIFIED.
+struct RaceSub
+{
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+    /*0x18*/ u32 unk18;
+    u8 filler1C[0x22 - 0x1C];
+    /*0x22*/ s16 unk22;
+    /*0x24*/ s16 unk24;
+    u8 filler26[0x28 - 0x26];
+    /*0x28*/ struct RaceScore unk28[4];
+    u8 filler48[0x1B8 - 0x48];
+    /*0x1B8*/ struct RaceScore unk1B8;
+    /*0x1C0*/ s32 unk1C0;
+    u8 filler1C4[0x1D2 - 0x1C4];
+    /*0x1D2*/ s16 unk1D2;
+    /*0x1D4*/ f32 unk1D4;
+    /*0x1D8*/ f32 unk1D8;
+    u8 filler1DC[0x1FC - 0x1DC];
+    /*0x1FC*/ Vec unk1FC[4];
+    /*0x22C*/ f32 unk22C[4];
+};
+
+void lbl_0000118C(void)
+{
+    u8 *w = lbl_10000000;
+    struct RaceModeSub *s = (struct RaceModeSub *)(w + 0x28);
+    struct Ball *ball;
+    struct Ball *b2;
+    struct RaceSub *st;
+    struct RaceSub *st2;
+    struct RaceScore *e;
+    struct RaceScore *bst;
+    s16 i;
+    s16 j;
+    int f1;
+    int f2;
+    int f3;
+    int f4;
+    int f5;
+    int f6;
+    Vec v;
+
+    f1 = 0;
+    f2 = 0;
+    f3 = 0;
+    f4 = 0;
+    f5 = 0;
+    f6 = 0;
+    if (debugFlags & 0xA)
+        return;
+    if (!(s->unk2 & 0x20) && *(s32 *)w == 0 && *(s32 *)(w + 0x106C) > 0)
+        *(s32 *)(w + 0x106C) = *(s32 *)(w + 0x106C) - 1;
+    ball = ballInfo;
+    for (i = 0; i < 4; i++, ball++)
+    {
+        if ((s8)ball->unk0 != 2)
+            continue;
+        st = (struct RaceSub *)ball->unk144;
+        if (st->unk14 & 0x40)
+            continue;
+        lbl_00002018(ball);
+        if (!(st->unk14 & 2))
+        {
+            if (st->unk14 & 0x20000)
+            {
+                st->unk28[st->unk22].a = st->unk28[st->unk22].a + 1;
+                st->unk1C0 = st->unk1C0 + 1;
+            }
+            else
+            {
+                lbl_000021C8(ball);
+                lbl_00002968(ball);
+                lbl_00002B54(ball);
+                if (st->unk1D4 < st->unk1D8)
+                    st->unk14 |= 1;
+                else
+                    st->unk14 &= ~1;
+                if (mathutil_vec_len(&ball->vel) < *(f32 *)lbl_000136E0)
+                    st->unk14 = (st->unk14 & ~1) | (st->unk18 & 1);
+                if (st->unk14 & 0x2000000)
+                {
+                    e = &st->unk28[st->unk24];
+                    bst = &st->unk1B8;
+                    if (e->a < st->unk1B8.a ||
+                        (e->a == st->unk1B8.a && e->b < bst->b))
+                        *bst = *e;
+                }
+            }
+        }
+        if (st->unk14 & 0x2000000)
+        {
+            st->unk14 &= ~0x2000000;
+            if (!(st->unk14 & 0x20) && !(st->unk14 & 2))
+            {
+                if (*(s32 *)w != 0)
+                {
+                    if (modeCtrl.unk30 != 1)
+                        lbl_0000EC20(ball->playerId);
+                }
+                else
+                {
+                    lbl_0000EC20(ball->playerId);
+                    if (modeCtrl.unk30 == 1)
+                        lbl_00003120();
+                }
+            }
+            if ((st->unk14 & 2) && !(st->unk14 & 0x20) && (s->unk2 & 0x10))
+            {
+                lbl_0000326C(&st->unk1C0, w + 0x1C);
+                lbl_0000326C(&st->unk1B8, w + 0x24);
+                *(s32 *)(w + 0x1068) = func_800AC5E0(s->unk0, w + 0x18);
+            }
+        }
+        if (st->unk14 & 1)
+        {
+            if (st->unk1D2 <= 0x7FFE)
+                st->unk1D2 = st->unk1D2 + 1;
+        }
+        else
+        {
+            st->unk1D2 = 0;
+        }
+        if (st->unk14 & 0x100)
+            f1 = 1;
+        else if (st->unk14 & 0x200)
+            f2 = 1;
+        if (st->unk14 & 0x400)
+            f3 = 1;
+        else if (st->unk14 & 0x800)
+            f4 = 1;
+        if (st->unk14 & 0x1000)
+            f5 = 1;
+        else if (st->unk14 & 0x2000)
+            f6 = 1;
+        ape_face_dir(ball->ape, &ball->vel);
+    }
+    lbl_00002BBC();
+    lbl_00011128();
+    ball = ballInfo;
+    for (i = 0; i < 4; i++, ball++)
+    {
+        if ((s8)ball->unk0 != 2)
+            continue;
+        st = (struct RaceSub *)ball->unk144;
+        if (st->unk14 & 0x40)
+            continue;
+        j = i + 1;
+        b2 = ball + 1;
+        for (; j < 4; j++, b2++)
+        {
+            if ((s8)b2->unk0 != 2)
+                continue;
+            st2 = (struct RaceSub *)b2->unk144;
+            if (st2->unk14 & 0x40)
+                continue;
+            v.x = b2->pos.x - ball->pos.x;
+            v.y = b2->pos.y - ball->pos.y;
+            v.z = b2->pos.z - ball->pos.z;
+            st->unk22C[j] = st2->unk22C[i] = mathutil_vec_normalize_len(&v);
+            st->unk1FC[j] = v;
+            v.x = -v.x;
+            v.y = -v.y;
+            v.z = -v.z;
+            st2->unk1FC[i] = v;
+        }
+    }
+    if (f1 && !f2)
+        stageInfo.unkC = stageInfo.unkC ^ 1;
+    if (f3 && !f4)
+        stageInfo.unkC = stageInfo.unkC ^ 2;
+    if (f5 && !f6)
+        stageInfo.unkC = stageInfo.unkC ^ 4;
+    if (*(s32 *)w == 0)
+    {
+        if (lbl_00002FA4() != 0 || *(s32 *)(w + 0x106C) == 0)
+        {
+            *(s32 *)w = 1;
+            if (*(s32 *)(w + 0x106C) == 0)
+                *(s32 *)(w + 0x3C) = 0x1E;
+            else
+                *(s32 *)(w + 0x3C) = 0x12C;
+        }
+    }
+    if (*(s32 *)w != 0 && *(s32 *)(w + 0x3C) <= 0)
+    {
+        *(s16 *)(w + 0x44) = *(s16 *)(w + 0x38);
+        *(s16 *)(w + 0x38) = 7;
+        *(s32 *)w = 0;
+    }
 }
 
 #pragma force_active reset

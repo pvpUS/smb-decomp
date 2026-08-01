@@ -139,13 +139,11 @@ extern u8 lbl_10000118[];
 extern u8 lbl_10017518[];
 extern u8 lbl_10017520[];
 extern u8 lbl_10017578[];
-extern u8 lbl_10017664[];
 extern u8 lbl_10017DC8[];
 extern u8 lbl_10017E98[];
 extern u8 lbl_100188E0[];
 extern u8 lbl_100188E8[];
 extern u8 lbl_10018900[];
-extern u8 lbl_10018920[];
 extern u8 lbl_10018C6C[];
 extern u8 lbl_10018CFC[];
 extern u8 lbl_10018D00[];
@@ -155,7 +153,6 @@ extern u8 lbl_10019040[];
 extern u8 backgroundInfo[];
 extern u8 g_bgLightInfo[];
 extern u8 g_stobjInfo[];
-extern u8 infoWork[];
 extern u8 lbl_801EED98[];
 extern u8 lbl_8028C0B0[];
 extern u8 pauseMenuState[];
@@ -364,13 +361,7 @@ void lbl_00013C1C(void);
 void lbl_00013C6C(void);
 void lbl_00015300(void);
 void lbl_000154B0(void);
-void lbl_0001582C(void);
-void lbl_000158AC(void);
-void lbl_00015998(void);
-void lbl_00015A40(void);
-void lbl_00015B98(void);
-void lbl_00015C4C(void);
-void lbl_00015C8C(void);
+void lbl_00015C8C(int a, u8 *p);
 void lbl_00015E00(void);
 void lbl_00016414(void);
 void lbl_000165B4(void);
@@ -394,11 +385,373 @@ void lbl_0001A554(void);
 void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+struct FightInfoWork
+{
+    u32 flags;       // 0x0
+    s16 timerCurr;   // 0x4
+    s16 timerMax;    // 0x6
+};
+extern struct FightInfoWork infoWork;
+void lbl_0001582C(s8 *unused, struct Sprite *sp);
+
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+void lbl_000158AC(s8 *unused, struct Sprite *sp);
+
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+void lbl_00015998(int a, u8 *p);
+struct FightRail
+{
+    /*0x00*/ f32 unk0;
+    /*0x04*/ f32 unk4;
+    /*0x08*/ f32 unk8;
+    /*0x0C*/ u8 padC[0x20 - 0x0C];
+};  /* 0x20 */
+void lbl_00015A40(int idx, f32 a, f32 b);
+struct FightSub
+{
+    s32 unk0;      // 0x00
+    s16 unk4;      // 0x04
+    u8 unk6[0xA];  // 0x06
+    s16 unk10;     // 0x10
+    u16 unk12;     // 0x12
+    u8 unk14[4];   // 0x14
+};                 // 0x18
+struct FightGroup
+{
+    u8 unk0[8];              // 0x000
+    struct FightSub sub[8];  // 0x008
+    u8 unkC8[0x684];         // 0x0C8
+    s32 unk74C;              // 0x74C
+};
+extern struct FightGroup lbl_10017664;
+struct FightEnt
+{
+    u8 unk0[4];      // 0x00
+    f32 unk4;        // 0x04
+    f32 unk8;        // 0x08
+    f32 unkC;        // 0x0C
+    u8 unk10[0xAC];  // 0x10
+};                   // 0xBC
+struct FightHud
+{
+    struct FightEnt ent[4];  // 0x000
+    s16 unk2F0;      // 0x2F0
+    u8 unk2F2[2];    // 0x2F2
+    s16 unk2F4;      // 0x2F4
+    u8 unk2F6[2];    // 0x2F6
+    Vec unk2F8[4];   // 0x2F8
+    Vec unk328;      // 0x328
+    f32 unk334;      // 0x334
+    f32 unk338;      // 0x338
+    u8 unk33C[4];    // 0x33C
+    Vec unk340;      // 0x340
+};
+extern struct FightHud lbl_10018920;
+void lbl_00015B98(s8 *unused, struct Sprite *sp);
+void lbl_00015C4C(int a, u8 *p);
+void lbl_00016C08(void);
+void lbl_00016CC8(void);
+void lbl_000170F8(void);
+void lbl_0001745C(void);
+void lbl_000175B8(void);
+
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+struct FightCell
+{
+    u32 w[9];
+};
+
 #pragma force_active on
 asm void lbl_000154B0(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_000154B0.s"
 }
+#pragma peephole on
+
+void lbl_0001582C(s8 *unused, struct Sprite *sp)
+{
+    u8 *p = (u8 *)lbl_0001C628;
+
+    if (infoWork.flags & 8)
+    {
+        if (sp->y > *(f32 *)(p + 4))
+        {
+            sp->y -= *(f32 *)(p + 0x28);
+            if (sp->y < *(f32 *)(p + 4))
+                sp->y = ((f32 *)p)[1];
+        }
+    }
+    else
+    {
+        if (sp->y < *(f32 *)(p + 0x2C))
+        {
+            sp->y += *(f32 *)(p + 0x30);
+            if (sp->y > *(f32 *)(p + 0x2C))
+                sp->y = ((f32 *)p)[11];
+        }
+    }
+}
+void lbl_000158AC(s8 *unused, struct Sprite *sp)
+{
+    u8 *p;
+
+    p = (u8 *)lbl_0001C628;
+    sprintf(sp->text, (char *)lbl_0001D9A0, infoWork.timerCurr / 60);
+    if (infoWork.flags & 8)
+    {
+        if (sp->y > *(f32 *)(p + 0xC))
+        {
+            sp->y -= *(f32 *)(p + 0x28);
+            if (sp->y < *(f32 *)(p + 0xC))
+                sp->y = ((f32 *)p)[3];
+        }
+    }
+    else
+    {
+        if (sp->y < *(f32 *)(p + 0x34))
+        {
+            sp->y += *(f32 *)(p + 0x30);
+            if (sp->y > *(f32 *)(p + 0x34))
+                sp->y = ((f32 *)p)[13];
+        }
+    }
+}
+void lbl_00015998(int a, u8 *p)
+{
+    int v = *(s16 *)((u8 *)&infoWork + 4);
+
+    sprintf((char *)(p + 0x8c), (char *)lbl_0001D9A8,
+            (s32)(*(f64 *)lbl_0001C660 * ((f32)(v % 60) / *(f64 *)lbl_0001C668)));
+}
+void lbl_00015A40(int idx, f32 a, f32 b)
+{
+    u8 *p = (u8 *)&lbl_10018920 + idx * 0xbc;
+    int i;
+    int n;
+    struct FightRail *r;
+
+    *(f32 *)p = a;
+    *(f32 *)(p + 4) = b;
+    *(f32 *)(p + 8) = a;
+    *(f32 *)(p + 0xc) = b;
+    *(s32 *)(p + 0x10) = 0;
+    *(s32 *)(p + 0x14) = 0;
+    memset(p + 0x1c, 0, 0xa0);
+    *(s32 *)(p + 0x18) = *(s16 *)((u8 *)&lbl_10017664 + idx * 0x18 + 0xc);
+    r = (struct FightRail *)(p + 0x1c);
+    n = *(s32 *)(p + 0x18);
+    for (i = 0; i < n; i++, r++)
+    {
+        r->unk0 = *(f32 *)lbl_0001C640;
+        r->unk8 = r->unk0;
+    }
+}
+void lbl_00015B98(s8 *unused, struct Sprite *sp)
+{
+    struct FightSub *s;
+    u8 *p;
+    struct FightEnt *e;
+    f32 t;
+    int i;
+
+    i = sp->userVar;
+    s = &lbl_10017664.sub[i];
+    p = (u8 *)lbl_0001C628;
+    e = &lbl_10018920.ent[i];
+    if (!(s->unk12 & 2))
+    {
+        if (e->unkC > e->unk4)
+        {
+            e->unkC -= *(f32 *)(p + 0x48);
+            if (e->unkC < e->unk4)
+                e->unkC = e->unk4;
+        }
+    }
+    else
+    {
+        t = *(f32 *)(p + 0x4C) + e->unk4;
+        if (e->unkC < t)
+        {
+            e->unkC += *(f32 *)(p + 0x50);
+            if (e->unkC > t)
+                e->unkC = t;
+        }
+    }
+    sp->x = e->unk8;
+    sp->y = e->unkC;
+}
+void lbl_00015C4C(int a, u8 *p)
+{
+    u8 *e = (u8 *)&lbl_10018920 + *(s32*)(p + 0x48) * 0xbc;
+    *(f32*)(p + 4) = *(f32*)lbl_0001C67C + *(f32*)(e + 8);
+    *(f32*)(p + 8) = *(f32*)(e + 0xc) - *(f32*)lbl_0001C680;
+}
+void lbl_00015C8C(int a, u8 *p)
+{
+    int idx = *(s32 *)(p + 0x48);
+    u8 *e = (u8 *)&lbl_10018920 + idx * 0xbc;
+    u8 *s = (u8 *)&lbl_10017664 + idx * 0x18;
+    int old = (*(s32 *)(e + 0x10) + 0x2000) >> 16;
+    int lim = *(s32 *)(s + 8) << 16;
+
+    *(s32 *)(e + 0x14) -= *(s32 *)(e + 0x14) >> 6;
+    if (*(s32 *)(e + 0x10) > lim)
+    {
+        *(s32 *)(e + 0x14) -= 1092;
+        *(s32 *)(e + 0x10) += *(s32 *)(e + 0x14);
+        if (*(s32 *)(e + 0x10) < lim)
+        {
+            *(s32 *)(e + 0x10) = lim;
+            if (*(s32 *)(e + 0x14) < 0)
+                *(s32 *)(e + 0x14) =
+                    *(f32 *)lbl_0001C684 * (f32)*(s32 *)(e + 0x14);
+        }
+    }
+    else
+    {
+        *(s32 *)(e + 0x14) += 0x444;
+        *(s32 *)(e + 0x10) += *(s32 *)(e + 0x14);
+        if (*(s32 *)(e + 0x10) > lim)
+        {
+            *(s32 *)(e + 0x10) = lim;
+            if (*(s32 *)(e + 0x14) > 0)
+                *(s32 *)(e + 0x14) =
+                    *(f32 *)lbl_0001C684 * (f32)*(s32 *)(e + 0x14);
+        }
+    }
+    if (old != ((*(s32 *)(e + 0x10) + 0x2000) >> 16))
+        *(s32 *)((u8 *)&lbl_10017664 + 0x748) |= 2;
+}
+#pragma peephole on
+asm void lbl_00015E00(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00015E00.s"
+}
+#pragma peephole on
+asm void lbl_00016414(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00016414.s"
+}
+#pragma peephole on
+asm void lbl_000165B4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_000165B4.s"
+}
+#pragma peephole on
+void lbl_00016B8C(void)
+{
+    struct Sprite *sp;
+
+    func_8000D5B8();
+    sp = create_sprite();
+    if (sp != NULL)
+    {
+        lbl_00016C08();
+        sp->x = *(f32 *)lbl_0001C6FC;
+        sp->y = *(f32 *)lbl_0001C700;
+        sp->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_00016CC8;
+        sp->drawFunc = (void (*)(struct Sprite *))lbl_000170F8;
+        sprintf(sp->text, (char *)lbl_0001D9B8);
+    }
+}
+void lbl_00016C08(void)
+{
+    struct FightHud *w;
+    u8 *p;
+    Vec *v;
+    int i;
+
+    w = &lbl_10018920;
+    p = (u8 *)lbl_0001C628;
+    w->unk2F0 = 0;
+    w->unk2F4 = -1;
+    v = w->unk2F8;
+    for (i = 0; i < 4; i++, v++)
+    {
+        v->x = *(f32 *)(p + 0x78);
+        v->y = *(f32 *)(p + 0x78);
+        v->z = *(f32 *)(p + 0x78);
+    }
+    w->unk328.x = *(f32 *)(p + 0x78);
+    w->unk328.y = *(f32 *)(p + 0x78);
+    w->unk340 = w->unk328;
+    w->unk334 = *(f32 *)(p + 0x78);
+    w->unk338 = *(f32 *)(p + 0x78);
+}
+asm void lbl_00016CC8(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00016CC8.s"
+}
+#pragma peephole on
+
+void lbl_000170F8(void)
+{
+    u8 *d = (u8 *)&lbl_10018920;
+    u8 *k = lbl_0001C628;
+    f32 *sc;
+    f32 *w;
+    f32 sum;
+    f32 dif;
+    int i;
+    Vec pad;
+    f32 *p;
+
+    reset_text_draw_settings();
+    set_text_font(9);
+    p = (f32 *)(d + 0x2F8);
+    for (i = 0; i < 4; i++, p += 3)
+    {
+        if (p[0] > *(f32 *)(k + 0x78))
+        {
+            sum = p[0] + p[1];
+            dif = p[0] - p[1];
+            set_text_pos(*(f32 *)(k + 0xD4) - *(f32 *)(k + 0xF4) * sum,
+                         *(f32 *)(k + 0xD8) - *(f32 *)(k + 0xF8) * dif);
+            set_text_scale(*(f32 *)(k + 0xFC) * sum, *(f32 *)(k + 0xFC) * dif);
+            sprite_putc(i + 0x30);
+        }
+    }
+    reset_text_draw_settings();
+    set_text_font(9);
+    if (*(sc = (f32 *)(d + 0x32C)) > *(f32 *)(k + 0x78))
+    {
+        w = (f32 *)(d + 0x328);
+        set_text_pos(*(f32 *)(k + 0xD4) - *(f32 *)(k + 0x100) * *w,
+                     *(f32 *)(k + 0xD8) - *(f32 *)(k + 0xC8) * *sc);
+        set_text_scale(*w, *sc);
+        sprite_puts((char *)lbl_0001D9CC);
+    }
+}
+
+asm void lbl_00017230(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00017230.s"
+}
+#pragma peephole on
+
+asm void lbl_0001745C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_0001745C.s"
+}
+#pragma peephole on
+
+asm void lbl_000175B8(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_000175B8.s"
+}
+#pragma peephole on
 
 #pragma force_active reset

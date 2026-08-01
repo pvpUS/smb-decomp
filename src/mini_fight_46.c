@@ -31,6 +31,7 @@
 #include "sound.h"
 #include "sprite.h"
 #include "stage.h"
+#include "stobj.h"
 #include "variables.h"
 #include "window.h"
 #include "../data/common.nlobj.h"
@@ -60,20 +61,24 @@ extern u8 lbl_0001C270[];
 extern u8 lbl_0001C2D8[];
 struct FightPanel
 {
-    u8 unk0;
-    u8 unk1;
-    s16 state;
-    s16 timer;
-    u8 pad6[6];
-    f32 unkC;
-    u8 pad10[8];
-    f32 unk18;
-    u8 pad1C[8];
-    f32 unk24;
+    /*0x00*/ u8 unk0;
+    /*0x01*/ u8 unk1;
+    /*0x02*/ s16 state;
+    /*0x04*/ s16 timer;
+    /*0x06*/ s16 unk6;
+    /*0x08*/ u8 pad08[4];
+    /*0x0C*/ f32 unkC;
+    /*0x10*/ u8 pad10[8];
+    /*0x18*/ f32 unk18;
+    /*0x1C*/ u8 pad1C[8];
+    /*0x24*/ f32 unk24;
+    /*0x28*/ u8 pad28[4];
+    /*0x2C*/ u8 *unk2C;
 };
 struct F38CPool
 {
-    f32 unk0, unk4, unk8, unkC, unk10, unk14;
+    f32 unk0, unk4, unk8, unkC, unk10, unk14, unk18, unk1C, unk20, unk24;
+    f32 unk28, unk2C, unk30;
 };
 extern u8 lbl_0001C308[];
 extern u8 lbl_0001C320[];
@@ -172,10 +177,8 @@ extern u8 lbl_10018FD4[];
 extern u8 lbl_10019040[];
 extern u8 backgroundInfo[];
 extern u8 g_bgLightInfo[];
-extern u8 g_stobjInfo[];
 extern u8 infoWork[];
 extern u8 lbl_801EED98[];
-extern u8 lbl_8028C0B0[];
 extern u8 pauseMenuState[];
 extern u8 polyDisp[];
 extern u8 worldInfo[];
@@ -206,7 +209,6 @@ extern void mathutil_tan();
 extern void mathutil_vec_normalize_len();
 extern void mathutil_vec_set_len();
 extern void mini_commend_free_data();
-extern void spawn_stobj();
 extern void u_math_unk15();
 extern void ape_skel_anim_main();
 extern void avdisp_draw_model_culled_sort_all();
@@ -350,10 +352,6 @@ void lbl_0000F078(void);
 void lbl_0000F2C4(void);
 void lbl_0000F2C8(void);
 void lbl_0000F38C(struct FightPanel *p);
-void lbl_0000F4C8(void);
-void lbl_0000F628(void);
-void lbl_0000F6F4(void);
-void lbl_0000F848(void);
 void lbl_0000F9A0(void);
 int lbl_0000F9DC(u8 *p);
 void lbl_0000FA18(void);
@@ -408,6 +406,16 @@ void lbl_0001A550(void);
 void lbl_0001A554(void);
 void lbl_0001B910(void);
 void lbl_0001BA8C(void);
+void lbl_0000F4C8(struct FightPanel *p);
+
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+void lbl_0000F628(struct FightPanel *p);
+void lbl_0000F6F4(struct FightPanel *p);
+
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+void lbl_0000F848(struct FightPanel *p);
 
 #pragma force_active on
 void lbl_0000F38C(struct FightPanel *p)
@@ -450,4 +458,172 @@ void lbl_0000F38C(struct FightPanel *p)
         break;
     }
 }
+void lbl_0000F4C8(struct FightPanel *p)
+{
+    struct Effect ef;
+    struct Stobj st;
+    struct F38CPool *k = (struct F38CPool *)lbl_0001C308;
+
+    switch (p->state)
+    {
+    case 0:
+        p->state = 1;
+        p->timer = lbl_0000F9DC((u8 *)p) + 0x78;
+        memset(&ef, 0, sizeof(ef));
+        ef.type = 0x19;
+        ef.playerId = p->unk0;
+        spawn_effect(&ef);
+        if (p->unkC < k->unk8)
+            p->unkC = *(f32 *)(lbl_0001C308 + 8);
+        p->unk24 = k->unk14;
+    case 1:
+        p->timer -= 1;
+        if (p->timer < 0)
+            p->state = 2;
+        break;
+    case 2:
+        p->state = 3;
+        p->unkC = k->unk8;
+        memset(&st, 0, sizeof(st));
+        st.type = 5;
+        st.localPos = *(Vec *)(p->unk2C + 8);
+        st.localPos.y += k->unk20;
+        st.unk3C.x = k->unk24;
+        st.unk3C.y = k->unk24;
+        st.unk3C.z = k->unk24;
+        st.animGroupId = (s8)p->unk6;
+        st.extraData = p;
+        spawn_stobj(&st);
+        break;
+    case 3:
+        break;
+    }
+}
+void lbl_0000F628(struct FightPanel *p)
+{
+    struct Effect ef;
+
+    switch (p->state)
+    {
+    case 0:
+        p->state = 1;
+        p->timer = lbl_0000F9DC((u8 *)p) + 0x78;
+        memset(&ef, 0, sizeof(ef));
+        ef.type = 0x19;
+        ef.playerId = p->unk0;
+        spawn_effect(&ef);
+    case 1:
+        p->timer -= 1;
+        if (p->timer < 0)
+            p->state = 2;
+        break;
+    case 2:
+        p->state = 3;
+        p->unkC = *(f32 *)lbl_0001C330;
+        p->unk24 = *(f32 *)lbl_0001C330;
+        break;
+    case 3:
+        break;
+    }
+}
+void lbl_0000F6F4(struct FightPanel *p)
+{
+    struct Effect ef;
+    struct Item it;
+    struct F38CPool *k = (struct F38CPool *)lbl_0001C308;
+
+    switch (p->state)
+    {
+    case 0:
+        p->state = 1;
+        p->timer = 0x78;
+        memset(&ef, 0, sizeof(ef));
+        ef.type = 0x19;
+        ef.playerId = p->unk0;
+        spawn_effect(&ef);
+        if (p->unkC < k->unk8)
+            p->unkC = *(f32 *)(lbl_0001C308 + 8);
+        p->unk24 = k->unk14;
+    case 1:
+        p->timer -= 1;
+        if (p->timer < 0)
+            p->state = 2;
+        break;
+    case 2:
+        p->state = 3;
+        memset(&it, 0, sizeof(it));
+        it.type = 3;
+        it.subType = (rand() & 0x7FFF) % 2;
+        it.animGroupId = 0;
+        it.pos = *(Vec *)(p->unk2C + 8);
+        it.pos.y += k->unk2C;
+        item_create(&it);
+        break;
+    case 3:
+        break;
+    }
+}
+
+void lbl_0000F848(struct FightPanel *p)
+{
+    struct Effect ef;
+    struct Stobj st;
+    struct F38CPool *k = (struct F38CPool *)lbl_0001C308;
+
+    switch (p->state)
+    {
+    case 0:
+        p->state = 1;
+        p->timer = lbl_0000F9DC((u8 *)p) + 0x78;
+        memset(&ef, 0, sizeof(ef));
+        ef.type = 0x19;
+        ef.playerId = p->unk0;
+        spawn_effect(&ef);
+        if (p->unkC < k->unk8)
+            p->unkC = *(f32 *)(lbl_0001C308 + 8);
+        p->unk24 = k->unk14;
+    case 1:
+        p->timer -= 1;
+        if (p->timer < 0)
+            p->state = 2;
+        break;
+    case 2:
+        p->state = 3;
+        memset(&st, 0, sizeof(st));
+        st.type = 6;
+        st.localPos = *(Vec *)(p->unk2C + 8);
+        st.localPos.y += k->unk20;
+        st.unk3C.x = k->unk30;
+        st.unk3C.y = k->unk30;
+        st.unk3C.z = k->unk30;
+        st.animGroupId = (s8)p->unk6;
+        st.extraData = p;
+        spawn_stobj(&st);
+        break;
+    case 3:
+        break;
+    }
+}
+
+void lbl_0000F9A0(void)
+{
+    *(s32*)lbl_100188E0 = (rand() & 0x7fff) % 2;
+}
+int lbl_0000F9DC(u8 *p)
+{
+    switch (*(s32*)lbl_100188E0) {
+    case 0:
+        return p[0];
+    case 1:
+        return 0x30 - p[0];
+    default:
+        return 0;
+    }
+}
+asm void lbl_0000FA18(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_0000FA18.s"
+}
+#pragma peephole on
 #pragma force_active reset

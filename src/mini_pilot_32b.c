@@ -206,24 +206,16 @@ void lbl_00008134(void);
 void lbl_000082C0(void);
 void lbl_00008568(void);
 void lbl_000085B4(void);
-void lbl_0000893C(void);
 void lbl_000089F8(void);
 void lbl_00008C40(void);
-void lbl_000090A0(void);
-void lbl_000091EC(void);
 void lbl_00009440(void);
-void lbl_000097AC(void);
 void lbl_000097C8(void);
 void lbl_000099A4(void);
-void lbl_00009A98(void);
-void lbl_00009B04(void);
 void lbl_00009C18(void);
 void lbl_00009F4C(void);
-void lbl_00009FB0(void);
 void lbl_0000A098(void);
 void lbl_0000A69C(void);
 void lbl_0000A754(void);
-void lbl_0000AD6C(void);
 void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
@@ -231,11 +223,454 @@ void lbl_0000B130(void);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
-#pragma force_active on
-asm void lbl_000082C0(void)
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+void lbl_0000893C(struct Sprite *sprite);
+void lbl_000090A0(struct Sprite *sprite);
+struct PilotRadarItem
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_000082C0.s"
+    /*0x00*/ Vec pos;
+    /*0x0C*/ f32 scale;
+};  // size = 0x10
+struct PilotRadarSet
+{
+    /*0x00*/ struct PilotRadarItem *items;
+    /*0x04*/ s16 count;
+    /*0x06*/ u8 pad[2];
+};  // size = 8
+void lbl_000091EC(struct Sprite *sprite);
+void lbl_000097AC(u8 *p);
+void lbl_00009A98(struct Sprite *sprite);
+void lbl_0000AD6C(s32 color, s32 arg2, const char *fmt, ...);
+void lbl_00009B04(s8 *status, struct Sprite *sprite);
+void lbl_00009FB0(s8 *status, struct Sprite *sprite, int d1, int d2, int d3);
+
+#pragma force_active on
+void lbl_000082C0(void)
+{
+    u8 *k = (u8 *)lbl_0000C360;
+    struct Ball *ball = currentBall;
+    struct Sprite *sprite;
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->type = 1;
+        sprite->x = *(f32 *)(k + 0);
+        sprite->y = *(f32 *)(k + 4);
+        sprite->depth = *(f32 *)(k + 8);
+        sprite->bmpId = 0xb3a;
+        sprite->textAlign = 0;
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->x = *(f32 *)(k + 0xc);
+        sprite->y = *(f32 *)(k + 4);
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000893C;
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->type = 1;
+        sprite->x = *(f32 *)(k + 0x10);
+        sprite->y = *(f32 *)(k + 0x14);
+        sprite->bmpId = ((u32 *)neutralFaceTable)[ball->ape->charaId];
+        sprite->textAlign = 0;
+        sprite->scaleX = *(f32 *)(k + 0x18);
+        sprite->scaleY = *(f32 *)(k + 0x1c);
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->x = *(f32 *)(k + 0x20);
+        sprite->y = *(f32 *)(k + 0x14);
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_000089F8;
+    }
+
+    *(s16 *)lbl_100000B0 = 0;
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->x = *(f32 *)(k + 0x24);
+        sprite->y = *(f32 *)(k + 0x28);
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_00008C40;
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->x = *(f32 *)(k + 0x2c);
+        sprite->y = *(f32 *)(k + 0x30);
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_000090A0;
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->bmpId = 0xb19;
+        sprite->x = *(f32 *)(k + 0x34);
+        sprite->y = *(f32 *)(k + 0x38);
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_000091EC;
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->x = *(f32 *)(k + 0x3c);
+        sprite->y = *(f64 *)(k + 0x40)
+                  + *(f64 *)(k + 0x48) * (4 - modeCtrl.playerCount);
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_00009440;
+    }
+
+    if (*(s32 *)lbl_802F1FD0 & 8)
+    {
+        sprite = create_sprite();
+        if (sprite != NULL)
+        {
+            sprite->x = *(f32 *)(k + 0x50);
+            sprite->y = *(f32 *)(k + 0x2c);
+            sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_00009B04;
+            sprite->drawFunc = (void (*)(struct Sprite *))lbl_00009C18;
+            sprite->userVar = 0;
+            sprite->scaleX = *(f32 *)(k + 0x54);
+            sprite->scaleY = *(f32 *)(k + 0x54);
+        }
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->x = *(f32 *)(k + 0x58);
+        sprite->y = *(f32 *)(k + 0x5c);
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_000097AC;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_000097C8;
+    }
 }
 
+#pragma peephole on
+void lbl_00008568(void)
+{
+    struct Sprite *sprite = create_sprite();
+
+    if (sprite != NULL)
+    {
+        sprite->x = *(f32 *)lbl_0000C3C8;
+        sprite->y = *(f32 *)lbl_0000C3CC;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_000085B4;
+    }
+}
+asm void lbl_000085B4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_000085B4.s"
+}
+#pragma peephole on
+void lbl_0000893C(struct Sprite *sprite)
+{
+    u8 *k = (u8 *)lbl_0000C360;
+    f32 x = sprite->x;
+    f32 y = sprite->y;
+
+    f32 len;
+
+    x += *(f64 *)(k + 0xa0);
+    y += *(f64 *)(k + 0xa8);
+    reset_text_draw_settings();
+    set_text_font(0x58);
+    set_text_pos(x, y);
+    len = mathutil_vec_len((Vec *)lbl_10000068);
+    sprite_printf((char *)lbl_0000D324, (s32)(*(f64 *)(k + 0xb0) * len));
+}
+asm void lbl_000089F8(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_000089F8.s"
+}
+
+asm void lbl_00008C40(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_00008C40.s"
+}
+
+#pragma peephole on
+void lbl_000090A0(struct Sprite *sprite)
+{
+    u8 *k = (u8 *)lbl_0000C360;
+    NLsprarg params;
+    struct Ball *ball = currentBall;
+    f32 x = sprite->x;
+    f32 y = sprite->y;
+    f32 v;
+
+    params.zm_x = *(f32 *)(k + 0x54);
+    params.zm_y = *(f32 *)(k + 0x54);
+    params.u0 = params.v0 = *(f32 *)(k + 0x98);
+    params.u1 = params.v1 = *(f32 *)(k + 0x54);
+    params.ang = 0;
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = 5;
+    params.trnsl = *(f32 *)(k + 0x54);
+    params.base_color = 0x00FFFFFF;
+    params.offset_color = 0;
+    params.sprno = 0x58;
+    params.x = *(f64 *)(k + 0x178) + x;
+    params.y = y - *(f64 *)(k + 0x130);
+    params.z = *(f32 *)(k + 0x9C);
+    nlSprPut(&params);
+    v = mathutil_sqrt(mathutil_vec_sq_len(&ball->vel));
+    reset_text_draw_settings();
+    set_text_font(0x54);
+    set_text_pos(x, y);
+    sprite_printf((char *)lbl_0000D338, (s32)(*(f64 *)(k + 0xB0) * v));
+}
+#pragma peephole on
+void lbl_000091EC(struct Sprite *sprite)
+{
+    u8 *k;
+    NLsprarg params;
+    Vec pos;
+    struct Ball *ball = currentBall;
+    struct Camera *cam;
+    struct PilotRadarSet *set;
+    struct PilotRadarItem *items;
+    s16 count;
+    s16 courseId;
+    f32 x = sprite->x;
+    f32 y = sprite->y;
+    f32 dx;
+    f32 dz;
+    int i;
+    int sprno;
+
+    k = (u8 *)lbl_0000C360;
+    cam = &cameraInfo[ball->playerId];
+    courseId = *(s16 *)lbl_10000040;
+    set = &((struct PilotRadarSet *)lbl_0000D2E8)[courseId];
+    items = set->items;
+    count = set->count;
+    params.zm_x = *(f32 *)(k + 0x54);
+    params.zm_y = *(f32 *)(k + 0x54);
+    params.u0 = params.v0 = *(f32 *)(k + 0x98);
+    params.u1 = params.v1 = *(f32 *)(k + 0x54);
+    params.ang = 0;
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = 5;
+    params.trnsl = *(f32 *)(k + 0x54);
+    params.base_color = 0x00FFFFFF;
+    params.offset_color = 0;
+    params.attr = 0xA;
+    params.sprno = 0xB19;
+    params.x = x;
+    params.y = y;
+    params.z = *(f32 *)(k + 0xF0);
+    nlSprPut(&params);
+
+    mathutil_mtxA_from_identity();
+    mathutil_mtxA_rotate_y(-cam->rotY);
+    mathutil_mtxA_translate_neg(&ball->pos);
+
+    for (i = 0; i < count; i++)
+    {
+        mathutil_mtxA_tf_point(&items[i].pos, &pos);
+        pos.y = *(f32 *)(k + 0x98);
+        if (mathutil_sqrt(mathutil_sum_of_sq_2(pos.x, pos.z)) >= *(f64 *)(k + 0x180))
+        {
+            mathutil_vec_normalize_len(&pos);
+            pos.x = *(f64 *)(k + 0x180) * pos.x;
+            pos.y = *(f64 *)(k + 0x180) * pos.y;
+            pos.z = *(f64 *)(k + 0x180) * pos.z;
+            sprno = 0xB2F;
+            params.ang = -cam->rotY;
+            params.zm_x = *(f32 *)(k + 0x54);
+            params.zm_y = *(f32 *)(k + 0x54);
+        }
+        else
+        {
+            sprno = 0xB30;
+            params.zm_x = items[i].scale;
+            params.zm_y = params.zm_x;
+        }
+        dx = *(f64 *)(k + 0x188) * pos.x;
+        dz = *(f64 *)(k + 0x188) * pos.z;
+        mathutil_mtxA_push();
+        params.base_color = 0x00FF2020;
+        params.sprno = sprno;
+        params.x = x + dx;
+        params.y = y + dz;
+        params.z = *(f32 *)(k + 0x9C);
+        nlSprPut(&params);
+        mathutil_mtxA_pop();
+    }
+}
+
+asm void lbl_00009440(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_00009440.s"
+}
+
+#pragma peephole on
+void lbl_000097AC(u8 *p)
+{
+    if (lbl_802F1FF6 > 2)
+        *p = 0;
+}
+asm void lbl_000097C8(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_000097C8.s"
+}
+#pragma peephole on
+void lbl_000099A4(void)
+{
+    u8 *k = (u8 *)lbl_0000C360;
+    struct Sprite *sprite;
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->x = *(f32 *)(k + 0x1E8);
+        sprite->y = *(f32 *)(k + 0x5C);
+        sprite->type = 0;
+        sprite->fontId = 9;
+        sprite->textAlign = 4;
+        sprite->flags |= 0x1000;
+        sprintf(sprite->text, (char *)lbl_0000D360);
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->type = 1;
+        sprite->depth = *(f32 *)(k + 0xF0);
+        sprite->bmpId = 0xB31;
+        sprite->x = *(f32 *)(k + 0x1E8);
+        sprite->y = *(f32 *)(k + 0x1EC);
+        sprite->scaleX = *(f32 *)(k + 0x1F0);
+        sprite->scaleY = *(f32 *)(k + 0x1F4);
+        sprite->textAlign = 4;
+    }
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->x = *(f32 *)(k + 0x1F8);
+        sprite->y = *(f32 *)(k + 0x1FC);
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_00009A98;
+    }
+}
+#pragma peephole on
+void lbl_00009A98(struct Sprite *sprite)
+{
+    f32 x = sprite->x;
+    f32 y = sprite->y;
+
+    reset_text_draw_settings();
+    set_text_font(0xB1);
+    func_80071B50(0x200000);
+    lbl_0000AD6C(0xFFFFFF, 0, (char *)lbl_0000D368, x, y);
+}
+#pragma peephole on
+void lbl_00009B04(s8 *status, struct Sprite *sprite)
+{
+    u8 *k = (u8 *)lbl_0000C360;
+
+    if (lbl_802F1FF6 == 0xa && *(s32 *)lbl_1000008C < 0x50)
+    {
+        if (sprite->userVar < 0xc)
+            sprite->userVar++;
+    }
+    else if (sprite->userVar > 0)
+        sprite->userVar--;
+
+    sprite->scaleX = *(f64 *)(k + 0xb8) + *(f64 *)(k + 0x200) * (f32)sprite->userVar;
+    sprite->scaleY = sprite->scaleX;
+    sprite->x = *(f64 *)(k + 0x208) + *(f64 *)(k + 0x210) * (f32)sprite->userVar;
+    sprite->y = *(f64 *)(k + 0x218) + *(f64 *)(k + 0x220) * (f32)sprite->userVar;
+}
+
+asm void lbl_00009C18(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_00009C18.s"
+}
+
+#pragma peephole on
+void lbl_00009F4C(void)
+{
+    struct Sprite *sprite = create_sprite();
+
+    if (sprite != NULL)
+    {
+        sprite->x = *(f32 *)lbl_0000C548;
+        sprite->y = *(f32 *)lbl_0000C5C0;
+        sprite->userVar = 0;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_00009FB0;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000A098;
+    }
+}
+#pragma peephole on
+// The last three parameters are dead in the body but ARE visible in the frame:
+// mwcc sizes the parameter save area at r1+8 from the DECLARED count, so the
+// three int->float temporaries below land at 0x20/0x28/0x30 and the frame is
+// 0x38.  With only the two parameters the callback type declares, the frame is
+// 0x28 and every temporary displacement is 16 low.  Their real types are
+// UNVERIFIED -- only the 12 bytes of parameter save area they occupy is
+// attested.  5 and 6 declared parameters are byte-identical here.
+#pragma peephole on
+void lbl_00009FB0(s8 *status, struct Sprite *sprite, int d1, int d2, int d3)
+{
+    u8 *k = (u8 *)lbl_0000C360;
+
+    if (lbl_802F1FF6 > 4)
+    {
+        *status = 0;
+        return;
+    }
+    if (*(s16 *)lbl_10000088 == 4)
+    {
+        if (sprite->userVar > 0)
+            sprite->userVar--;
+    }
+    else if (sprite->userVar < 0x14)
+        sprite->userVar++;
+
+    // Each discarded (f32) cast emits mwcc's int->float store pair with no
+    // load: the value is CSE'd against the one conversion that is used, but
+    // the stack setup is not.  Dropping either one loses 4 instructions.
+    (f32)sprite->userVar;
+    sprite->scaleX = *(f64 *)(k + 0xb8);
+    sprite->scaleY = sprite->scaleX;
+    sprite->x = *(f64 *)(k + 0x268) + *(f64 *)(k + 0x270) * (f32)sprite->userVar;
+    (f32)sprite->userVar;
+    sprite->y = *(f64 *)(k + 0x278);
+}
+
+asm void lbl_0000A098(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_0000A098.s"
+}
+
+#pragma peephole on
+void lbl_0000A69C(void)
+{
+    struct Sprite *sprite = create_sprite();
+    s32 i;
+
+    if (sprite != NULL)
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000A754;
+
+    for (i = 0; i < 4; i++)
+        ((s16 *)lbl_100000A8)[i] =
+            (s32)(*(f64 *)lbl_0000C430
+                  * mathutil_sqrt((f32)((s32 *)lbl_10000044)[i]))
+            + 0x5A;
+}
 #pragma force_active reset

@@ -58,8 +58,8 @@ lbl_0000F888:
 /* 0000F8C0 C8030000 */ lfd f0, (lbl_000264A8+0x20)@l(r3)
 /* 0000F8C4 FFE00072 */ fmul f31, f0, f1
 /* 0000F8C8 4BFF9A09 */ bl lbl_000092D0
-/* 0000F8CC 3C600000 */ lis r3, lbl_000264E0@ha
-/* 0000F8D0 C8030000 */ lfd f0, lbl_000264E0@l(r3)
+/* 0000F8CC 3C600000 */ lis r3, (lbl_000264A8+0x38)@ha
+/* 0000F8D0 C8030000 */ lfd f0, (lbl_000264A8+0x38)@l(r3)
 /* 0000F8D4 387D0000 */ addi r3, r29, 0
 /* 0000F8D8 3881000C */ addi r4, r1, 0xc
 /* 0000F8DC FC00082A */ fadd f0, f0, f1

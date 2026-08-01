@@ -278,9 +278,172 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_0000B6B0(void)
+void lbl_0000B6B0(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000B6B0.s"
+    u8 *p = lbl_00010118;
+    u8 *w = lbl_10000F70;
+    double pad;
+    Mtx m;
+    int *q;
+    int wd;
+    int ht;
+    int i;
+    float z;
+    float dz;
+    float sc;
+    float nb;
+    float a;
+    float b;
+    float t;
+    float c;
+    float d;
+    float e;
+    float f2;
+
+    wd = currRenderMode->fbWidth;
+    ht = currRenderMode->efbHeight;
+    GXSetTexCopySrc(0, 0, wd, ht);
+    GXSetTexCopyDst(wd, ht, 4, 0);
+    GXCopyTex(*(void **)(w + 0x34), 0);
+    GXPixModeSync();
+    GXSetNumChans(0);
+    GXLoadTexObj_cached((GXTexObj *)(w + 0x10), 0);
+    GXSetTexCoordGen2(0, 1, 4, 0x1E, 0, 0x7D);
+    GXSetTevOrder_cached(0, 0, 0, 4);
+    GXSetTevDirect(0);
+    GXSetTevKColorSel_cached(0, 4);
+    GXSetTevColorIn_cached(0, 0xF, 8, 0xE, 0xF);
+    GXSetTevColorOp_cached(0, 0, 0, 0, 0, 0);
+    GXSetTexCoordGen2(1, 1, 4, 0x21, 0, 0x7D);
+    GXSetTevOrder_cached(1, 1, 0, 4);
+    GXSetTevDirect(1);
+    GXSetTevKColorSel_cached(1, 4);
+    GXSetTevColorIn_cached(1, 0xF, 8, 0xE, 0);
+    GXSetTevColorOp_cached(1, 0, 0, 0, 0, 0);
+    GXSetTexCoordGen2(2, 1, 4, 0x24, 0, 0x7D);
+    GXSetTevOrder_cached(2, 2, 0, 4);
+    GXSetTevDirect(2);
+    GXSetTevKColorSel_cached(2, 4);
+    GXSetTevColorIn_cached(2, 0xF, 8, 0xE, 0);
+    GXSetTevColorOp_cached(2, 0, 0, 0, 0, 0);
+    GXSetTexCoordGen2(3, 1, 4, 0x27, 0, 0x7D);
+    GXSetTevOrder_cached(3, 3, 0, 4);
+    GXSetTevDirect(3);
+    GXSetTevKColorSel_cached(3, 4);
+    GXSetTevKAlphaSel_cached(3, 4);
+    GXSetTevColorIn_cached(3, 0xF, 8, 0xE, 0);
+    GXSetTevColorOp_cached(3, 0, 0, 3, 1, 0);
+    GXSetTevAlphaIn_cached(3, 7, 7, 7, 6);
+    GXSetTevAlphaOp_cached(3, 0, 0, 0, 1, 0);
+    GXSetNumTevStages_cached(4);
+    GXSetNumTexGens(4);
+    GXSetNumIndStages(0);
+    GXSetBlendMode_cached(1, 4, 5, 0);
+    GXSetFog_cached(0, *(float *)(p + 0x14), *(float *)(p + 4),
+                    *(float *)(p + 0x18), *(float *)(p + 0x1C),
+                    *(GXColor *)(p + 0x20));
+    gxutil_set_vtx_attrs(0x2200);
+    GXSetVtxAttrFmt(1, 9, 1, 4, 0);
+    GXSetVtxAttrFmt(1, 0xD, 1, 4, 0);
+    mathutil_mtxA_from_identity();
+    GXLoadPosMtxImm(mathutilData->mtxA, 0);
+    q = (int *)(w + 8);
+    if (*(int *)(w + 8) != 0)
+    {
+        C_MTXScale(m, *(float *)(p + 0x24), *(float *)(p + 0x24),
+                   *(float *)(p + 0x24));
+        nb = -*(float *)w;
+        sc = *(float *)(w + 0xC);
+        GXSetZMode_cached(1, 4, 0);
+        i = *q;
+        dz = nb / (float)(i + 2);
+        z = dz;
+        while (i > 0)
+        {
+            t = -(sc * (z - nb)) / z;
+            a = *(float *)(p + 0x28) * t;
+            b = *(float *)(p + 0x2C) * t;
+            m[0][3] = a;
+            m[1][3] = *(float *)(p + 0x14);
+            GXLoadTexMtxImm(m, 0x1E, 1);
+            m[0][3] = -a;
+            GXLoadTexMtxImm(m, 0x21, 1);
+            m[0][3] = *(float *)(p + 0x14);
+            m[1][3] = b;
+            GXLoadTexMtxImm(m, 0x24, 1);
+            m[1][3] = -b;
+            GXLoadTexMtxImm(m, 0x27, 1);
+            c = currentCamera->sub28.aspect *
+                (d = z * -currentCamera->sub28.unk38);
+            GXBegin(0x80, 1, 4);
+            GXWGFifo.f32 = -c;
+            GXWGFifo.f32 = d;
+            GXWGFifo.f32 = z;
+            GXWGFifo.f32 = *(float *)(p + 0x14);
+            GXWGFifo.f32 = *(float *)(p + 0x14);
+            GXWGFifo.f32 = c;
+            GXWGFifo.f32 = d;
+            GXWGFifo.f32 = z;
+            GXWGFifo.f32 = *(float *)(p + 0x24);
+            GXWGFifo.f32 = *(float *)(p + 0x14);
+            GXWGFifo.f32 = c;
+            GXWGFifo.f32 = -d;
+            GXWGFifo.f32 = z;
+            GXWGFifo.f32 = *(float *)(p + 0x24);
+            GXWGFifo.f32 = *(float *)(p + 0x24);
+            GXWGFifo.f32 = -c;
+            GXWGFifo.f32 = -d;
+            GXWGFifo.f32 = z;
+            GXWGFifo.f32 = *(float *)(p + 0x14);
+            GXWGFifo.f32 = *(float *)(p + 0x24);
+            z += dz;
+            i--;
+        }
+        GXSetZMode_cached(1, 1, 0);
+        i = *q;
+        z = nb - *(float *)(w + 4);
+        dz = -*(float *)(w + 4) / (float)(i + 1);
+        while (i > 0)
+        {
+            t = -(sc * (nb - z)) / z;
+            a = *(float *)(p + 0x28) * t;
+            b = *(float *)(p + 0x2C) * t;
+            m[0][3] = a;
+            m[1][3] = *(float *)(p + 0x14);
+            GXLoadTexMtxImm(m, 0x1E, 1);
+            m[0][3] = -a;
+            GXLoadTexMtxImm(m, 0x21, 1);
+            m[0][3] = *(float *)(p + 0x14);
+            m[1][3] = b;
+            GXLoadTexMtxImm(m, 0x24, 1);
+            m[1][3] = -b;
+            GXLoadTexMtxImm(m, 0x27, 1);
+            e = currentCamera->sub28.aspect *
+                (f2 = z * -currentCamera->sub28.unk38);
+            GXBegin(0x80, 1, 4);
+            GXWGFifo.f32 = -e;
+            GXWGFifo.f32 = f2;
+            GXWGFifo.f32 = z;
+            GXWGFifo.f32 = *(float *)(p + 0x14);
+            GXWGFifo.f32 = *(float *)(p + 0x14);
+            GXWGFifo.f32 = e;
+            GXWGFifo.f32 = f2;
+            GXWGFifo.f32 = z;
+            GXWGFifo.f32 = *(float *)(p + 0x24);
+            GXWGFifo.f32 = *(float *)(p + 0x14);
+            GXWGFifo.f32 = e;
+            GXWGFifo.f32 = -f2;
+            GXWGFifo.f32 = z;
+            GXWGFifo.f32 = *(float *)(p + 0x24);
+            GXWGFifo.f32 = *(float *)(p + 0x24);
+            GXWGFifo.f32 = -e;
+            GXWGFifo.f32 = -f2;
+            GXWGFifo.f32 = z;
+            GXWGFifo.f32 = *(float *)(p + 0x14);
+            GXWGFifo.f32 = *(float *)(p + 0x24);
+            z -= dz;
+            i--;
+        }
+    }
 }
 #pragma force_active reset

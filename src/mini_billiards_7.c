@@ -184,10 +184,7 @@ void lbl_00006DC0(void);
 void lbl_000077D8(void);
 void lbl_00007974(void);
 void lbl_00007C74(void);
-void lbl_00007D18(void);
 void lbl_00007D80(void);
-void lbl_00008EC0(void);
-void lbl_0000939C(void);
 void lbl_00009540(void);
 void lbl_00009788(void);
 void lbl_00009E34(void);
@@ -196,8 +193,6 @@ void lbl_00009F0C(void);
 void lbl_00009F3C(void);
 void lbl_0000A054(void);
 void lbl_0000C85C(void);
-void lbl_0000D0A4(void);
-void lbl_0000D330(void);
 void lbl_0000D7E8(void);
 void lbl_0000E8D0(void);
 void lbl_00010FD0(void);
@@ -225,10 +220,549 @@ void lbl_0001A0B0(void);
 void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+s8 lbl_0000D0A4(void);
+s8 lbl_0000D330(void);
+void lbl_00008EC0(int, int);
+s8 lbl_0000939C(int);
+extern u8 lbl_0001C2B8[4]; /* TYPED-TEST */
+void lbl_00007D18(s16 arg0, s32 arg1);
+struct Rec7D18 {
+    s16 unk0;
+    s16 unk2;
+    s32 unk4;
+    s32 unk8;
+    s32 unkC;
+};
+struct Work7D18 {
+    u8 pad[0xA5BC];
+    struct Rec7D18 recs[64];
+};
+
 #pragma force_active on
 asm void lbl_00000800(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_billiards/lbl_00000800.s"
 }
+#pragma peephole on
+void lbl_00000E68(void)
+{
+    if (((s8 *)lbl_10000000)[lbl_802F1C32 * 6 + 0xa66] != 0) {
+        if ((s32) * (u8 *)(lbl_10000000 + 0xa) == 0x19) {
+            *(struct ControllerInfo **)(lbl_10000000 + 0x9c88) =
+                &controllerInfo[playerControllerIDs[1 - lbl_802F1C32]];
+        } else {
+            lbl_0001968C();
+            *(struct ControllerInfo **)(lbl_10000000 + 0x9c88) =
+                (struct ControllerInfo *)(lbl_10000000 + 0x9c8c);
+        }
+    } else {
+        *(struct ControllerInfo **)(lbl_10000000 + 0x9c88) =
+            &controllerInfo[playerControllerIDs[lbl_802F1C32]];
+    }
+}
+void lbl_00000F34(void)
+{
+    lbl_00009F0C();
+    lbl_00000F5C();
+    lbl_00009F3C();
+}
+asm void lbl_00000F5C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_00000F5C.s"
+}
+#pragma peephole on
+asm void lbl_000023B0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_000023B0.s"
+}
+#pragma peephole on
+asm void lbl_000025B0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_000025B0.s"
+}
+#pragma peephole on
+void lbl_00002B4C(void)
+{
+    u8 *q = lbl_10000000;
+    u8 *p = lbl_0001C2B8;
+    int i;
+
+    for (i = 0; i < 8; i++) {
+        *(u8 *)(q + 0x9948 + i * 0x68) = 0;
+        *(f32 *)(q + 0x9950 + i * 0x68) = *(f32 *)(p + 0x8B4);
+        *(f32 *)(q + 0x9954 + i * 0x68) = *(f32 *)(p + 0x8B4);
+    }
+
+    *(f32 *)(q + 0x9888) = *(f32 *)(p + 0x8EC);
+    *(f32 *)(q + 0x9890) = *(f32 *)(p + 0x960);
+    *(f32 *)(q + 0x98AC) = *(f32 *)(p + 0x8B8);
+    *(f32 *)(q + 0x98B4) = *(f32 *)(p + 0x8B4);
+    *(f32 *)(q + 0x98F0) = *(f32 *)(p + 0x8EC);
+    *(f32 *)(q + 0x98F8) = *(f32 *)(p + 0x964);
+    *(f32 *)(q + 0x9914) = *(f32 *)(p + 0x8B8);
+    *(f32 *)(q + 0x991C) = *(f32 *)(p + 0x8B4);
+    *(f32 *)(q + 0x38) = *(f32 *)(p + 0x8B4);
+    *(f32 *)(q + 0x3C) = *(f32 *)(p + 0x8B4);
+    *(f32 *)(q + 0x40) = *(f32 *)(p + 0x968);
+    *(f32 *)(q + 0x44) = *(f32 *)(p + 0x968);
+    *(u8 *)(q + 0x9879) = 0;
+    *(u8 *)(q + 0x98E1) = 0;
+    *(u8 *)(q + 0xC) = 3;
+    *(u8 *)(q + 0xD) = 1;
+}
+asm void lbl_00002C80(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_00002C80.s"
+}
+#pragma peephole on
+void lbl_0000341C(void)
+{
+    u8 *q = lbl_10000000;
+    u8 *p = lbl_0001C2B8;
+    f32 *w;
+    u8 *in;
+    u16 btn;
+    f32 sc[6];
+    f32 k1, hf;
+    f32 sx, sy;
+
+    mathutil_sin_cos_v(*(s16 *)(q + 0x4C) + *(s16 *)(q + 0x4E), sc);
+
+    in = *(u8 **)(q + 0x9C88);
+    btn = *(u16 *)in;
+
+    k1 = *(f32 *)(p + 0x968);
+    hf = *(f32 *)(p + 0x8C0);
+    sx = hf * (hf * (k1 * (f32)*(s8 *)(in + 2)));
+    sy = -(hf * (hf * (k1 * (f32)*(s8 *)(in + 3))));
+
+    if (btn & 2)
+        sx = *(f32 *)(p + 0x948);
+    else if (btn & 1)
+        sx = *(f32 *)(p + 0x9D8);
+
+    if (btn & 4)
+        sy = *(f32 *)(p + 0x948);
+    else if (btn & 8)
+        sy = *(f32 *)(p + 0x9D8);
+
+    w = (f32 *)(q + 0x9894) - 1;
+    *w += sy * sc[1] - sx * sc[0];
+    if (*w > *(f32 *)(p + 0x95C))
+        *w = *(f32 *)(p + 0x95C);
+    else if (*w < *(f32 *)(p + 0x9DC))
+        *w = *(f32 *)(p + 0x9DC);
+
+    if (*(s8 *)(q + 0x10) == 0) {
+        if (lbl_0000D330()) {
+            *(s8 *)(q + 0x10) = 1;
+            *(s32 *)(q + 0x20) = 0;
+        }
+    } else if (lbl_0000D0A4()) {
+        *(s8 *)(q + 0x10) = 0;
+        *(s32 *)(q + 0x20) = 0;
+    }
+
+    *(Vec *)(q + 0x9894) = *(Vec *)(q + 0x9888);
+
+    *(f32 *)(q + 0x98BC) = *(f32 *)(p + 0x8B4);
+    *(f32 *)(q + 0x98C0) = *(f32 *)(p + 0x8B4);
+    *(f32 *)(q + 0x98C4) = *(f32 *)(p + 0x8B4);
+    *(f32 *)(q + 0x98C8) = *(f32 *)(p + 0x8B8);
+    *(f32 *)(q + 0x98CC) = *(f32 *)(p + 0x8B4);
+    *(f32 *)(q + 0x98D0) = *(f32 *)(p + 0x8B4);
+    *(f32 *)(q + 0x98D4) = *(f32 *)(p + 0x8B4);
+    *(f32 *)(q + 0x98D8) = *(f32 *)(p + 0x8B8);
+
+    if ((**(u16 **)(q + 0x9C88) & 0x100) && *(s8 *)(q + 0xC) == 0 &&
+        *(s32 *)(q + 0x20) > 0x1E) {
+        *(s8 *)(q + 0xC) = 1;
+        *(s32 *)(q + 0x20) = 0;
+        *(s8 *)(q + 0xB) = *(s8 *)(q + 0xA);
+        lbl_00003F4C();
+        *(s8 *)(q + 0xA) = 0xE;
+        *(s32 *)(q + 0x2C) = 0;
+        lbl_802F1DFC = 0;
+        u_somePlayerId = 0;
+        u_play_sound_0(0x175);
+    }
+}
+asm void lbl_0000367C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_0000367C.s"
+}
+#pragma peephole on
+struct BilliardsPlayer
+{
+    s8 unk0;
+    s8 chara;
+    u8 filler2[4];
+};
+
+struct BilliardsApe
+{
+    u8 filler0[0x64];
+    struct Ape *ape;
+};
+
+void lbl_00003CC8(void)
+{
+    u8 *q = lbl_10000000;
+    int i;
+    int k;
+    int id;
+    int cnt[4];
+
+    for (i = 15; i >= 0; i--) {
+        if (((int *)(q + 0x64))[i] != -1) {
+            thread_kill(((int *)(q + 0x64))[i]);
+            ((int *)(q + 0x64))[i] = -1;
+        }
+    }
+    if (*(s8 *)(q + 0xA) != 8 && *(s8 *)(q + 0xA) != 9 && *(s8 *)(q + 0xA) != 0xA) {
+        cnt[3] = 0;
+        cnt[2] = 0;
+        cnt[1] = 0;
+        cnt[0] = 0;
+        k = 0;
+        for (i = 0; i < 9; i++) {
+            if ((u32)i <= 1 && *(s8 *)(q + 0xA) == 7) {
+                id = ((struct BilliardsPlayer *)(q + 0xA64))[i].chara;
+            } else if (i == 0 || i == 9) {
+                id = ((struct BilliardsPlayer *)(q + 0xA64))[lbl_802F1C32].chara;
+            } else {
+                int a = ((struct BilliardsPlayer *)(q + 0xA64))[lbl_802F1C32].chara;
+                int b =
+                    ((struct BilliardsPlayer *)(q + 0xA64))[1 - lbl_802F1C32].chara;
+                do {
+                    k = (k + 1) & 3;
+                    cnt[k]++;
+                } while (k == a || k == b);
+                id = k;
+            }
+            ((struct BilliardsApe *)(q + 0x9878))[i].ape = u_make_ape(id);
+            u_start_indexed_anim(((struct BilliardsApe *)(q + 0x9878))[i].ape, 1, 0);
+            ((struct BilliardsApe *)(q + 0x9878))[i].ape->ballId = i;
+            if ((u32)i <= 1 && *(s8 *)(q + 0xA) == 7)
+                ((struct BilliardsApe *)(q + 0x9878))[i].ape->colorId = i;
+            else if (i == 0)
+                ((struct BilliardsApe *)(q + 0x9878))[i].ape->colorId = lbl_802F1C32;
+            else
+                ((struct BilliardsApe *)(q + 0x9878))[i].ape->colorId = cnt[id] - 1;
+            ((int *)(q + 0x64))[i] = thread_create(
+                (ThreadCallback)lbl_00019264,
+                ((struct BilliardsApe *)(q + 0x9878))[i].ape, THREAD_GROUP_5);
+        }
+    } else {
+        for (i = 0; i < 2; i++) {
+            id = ((struct BilliardsPlayer *)(q + 0xA64))[i].chara;
+            ((struct BilliardsApe *)(q + 0x9878))[i].ape =
+                u_make_ape(id);
+            u_start_indexed_anim(((struct BilliardsApe *)(q + 0x9878))[i].ape, 1, 0);
+            ((struct BilliardsApe *)(q + 0x9878))[i].ape->ballId = i;
+            ((struct BilliardsApe *)(q + 0x9878))[i].ape->colorId = i;
+            ((int *)(q + 0x64))[i] = thread_create(
+                (ThreadCallback)lbl_00019264,
+                ((struct BilliardsApe *)(q + 0x9878))[i].ape, THREAD_GROUP_5);
+        }
+    }
+    *(u8 *)(q + 0x1F) = 1;
+}
+asm void lbl_00003F4C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_00003F4C.s"
+}
+#pragma peephole on
+asm void lbl_00004634(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_00004634.s"
+}
+#pragma peephole on
+struct W55FC {
+    u8 _0[0xa];
+    s8 fA;      /* 0xa */
+    s8 fB;      /* 0xb */
+    u8 _c[0x20 - 0xc];
+    s32 f20;    /* 0x20 */
+    u8 _24[0x2c - 0x24];
+    s32 f2C;    /* 0x2c */
+};
+
+void lbl_000055FC(void)
+{
+    struct W55FC *w = (struct W55FC *)lbl_10000000;
+    lbl_00000800();
+    w->f20 = 0;
+    w->fB = w->fA;
+    lbl_00003F4C();
+    w->fA = 0xe;
+    w->f2C = 0;
+}
+struct BilliardsPlayerB
+{
+    s8 unk0;
+    s8 chara;
+    s8 unk2;
+    u8 filler3;
+    s16 unk4;
+};
+
+struct BilliardsApeB
+{
+    s8 unk0;
+    u8 filler1[0x67];
+};
+
+void lbl_00005654(void)
+{
+    u8 *q = lbl_10000000;
+    u8 *p = lbl_0001C2B8;
+    struct BilliardsApeB *w = &((struct BilliardsApeB *)(q + 0x9878))[9];
+    int i;
+    int c;
+
+    if (((struct BilliardsApeB *)(q + 0x9878))[9].unk0 != 1) {
+        if (*(s32 *)(q + 0x20) == 0x1E) {
+            *(s8 *)(q + 0x13) = 0x1E;
+        } else if (*(s32 *)(q + 0x20) == 0x32) {
+            start_screen_fade(0x101, 0xFFFFFF, 0xA);
+        }
+    }
+    if (*(s32 *)(q + 0x20) > 0x3C) {
+        lbl_00007C74();
+        *(s8 *)(q + 0xB) = *(s8 *)(q + 0xA);
+        *(s32 *)(q + 0x20) = 0;
+        *(s8 *)(q + 0x14) = 0;
+        *(s8 *)(q + 0x15) = 0;
+        if (w->unk0 != 1) {
+            start_screen_fade(0x100, 0xFFFFFF, 4);
+            *(s8 *)(q + 0x10) = 0;
+            *(s8 *)(q + 0xA) = 0x16;
+            if (*(s16 *)(q + 0x1A) == 0) {
+                *(s8 *)(q + 0x12) = 1;
+                for (i = 1; i < 10; i++) {
+                    if (((struct BilliardsApeB *)(q + 0x9878))[i].unk0 == 1) {
+                        *(s8 *)(q + 0x12) = 0;
+                        break;
+                    }
+                }
+            } else {
+                *(s8 *)(q + 0x12) = 0;
+            }
+            if (*(s16 *)(q + 0x1C) == 1) {
+                lbl_00008EC0(0, 1);
+                lbl_802F1DFC = 0;
+                u_somePlayerId = 0;
+                u_play_sound_0(0x174);
+            } else if (*(s8 *)(q + 0x12) != 0) {
+                lbl_00008EC0(1, 1);
+                lbl_802F1DFC = 0;
+                u_somePlayerId = 0;
+                u_play_sound_0(0x48);
+            }
+            if (((struct BilliardsPlayerB *)(q + 0xA64))[lbl_802F1C32].unk2 != 0)
+                func_8002BFCC(0x152, 0x153);
+            else
+                func_8002BFCC(0x156, 0x157);
+            u_play_music(0, 8);
+            cameraInfo[0].eye.x = *(f32 *)(p + 0x8B4);
+            cameraInfo[0].eye.y = *(f32 *)(p + 0xA58);
+            cameraInfo[0].eye.z = *(f32 *)(p + 0xA70);
+            lbl_0001723C();
+            *(s8 *)(q + 2) = 0;
+            ((struct BilliardsPlayerB *)(q + 0xA64))[lbl_802F1C32].unk4 += 1;
+            lbl_00008EC0(0xD, 1);
+        } else {
+            if (*(s8 *)(q + 0xF) == 0) {
+                lbl_00008EC0(3, 1);
+                lbl_802F1C32 = 1 - lbl_802F1C32;
+                *(s16 *)(q + 0x1A) += 1;
+                c = lbl_802F1C32;
+                lbl_802F1DFC = ((struct BilliardsPlayerB *)(q + 0xA64))[c].chara;
+                u_somePlayerId = c;
+                u_play_sound_0(0x1E);
+            }
+            lbl_00003F4C();
+            *(s8 *)(q + 0xA) = 0xE;
+            *(s32 *)(q + 0x2C) = 0;
+        }
+    }
+}
+
+void lbl_000059A8(void)
+{
+    u8 *q = lbl_10000000;
+    u8 *p = lbl_0001C2B8;
+    int i;
+
+    (*(struct Ape **)(q + 0x98DC))->flags |= 0x200000;
+    if ((s8)*(u8 *)(q + 0x9878) != 1 && *(f32 *)(q + 0x988C) < *(f32 *)(p + 0xA78)) {
+        *(f32 *)(q + 0x988C) =
+            *(f32 *)(p + 0x948) + *(f32 *)(p + 0xA40) * *(f32 *)(q + 0x988C);
+        *(s8 *)(q + 0x9878) = -2;
+    }
+    if (*(s32 *)(q + 0x20) <= 0x78)
+        return;
+    if ((s8)*(u8 *)(q + 0x9C20) != 1) {
+        *(s8 *)(q + 0x9C20) = 1;
+        *(f32 *)(q + 0x9C30) = *(f32 *)(p + 0xA7C);
+        *(f32 *)(q + 0x9C34) = *(f32 *)(p + 0x8C0);
+        *(f32 *)(q + 0x9C38) = *(f32 *)(p + 0x8B4);
+        *(f32 *)(q + 0x9C54) = *(f32 *)(p + 0x8B4);
+        *(f32 *)(q + 0x9C58) = *(f32 *)(p + 0x8B4);
+        *(f32 *)(q + 0x9C5C) = *(f32 *)(p + 0x8B4);
+        do {
+            for (i = 0; i < 9; i++) {
+                if ((s8)*(u8 *)&((u8 *)(q + 0x9878))[i * 0x68] == 1 &&
+                    mathutil_sum_of_sq_2(*(f32 *)&((u8 *)(q + 0x9888))[i * 0x68] - *(f32 *)(q + 0x9C30),
+                                         *(f32 *)&((u8 *)(q + 0x9890))[i * 0x68] - *(f32 *)(q + 0x9C38)) <
+                        *(f32 *)(p + 0x9F0)) {
+                    *(f32 *)&((u8 *)(q + 0x9888))[i * 0x68] -= *(f32 *)(p + 0x8C0);
+                    break;
+                }
+            }
+        } while (i < 9);
+    }
+    for (i = 1; i < 10; i++) {
+        if ((s8)*(u8 *)&((u8 *)(q + 0x9878))[i * 0x68] == 1) {
+            *(s8 *)(q + 0x49) = i;
+            break;
+        }
+    }
+    for (i = 0; i < 10; i++) {
+        *(Vec *)&((u8 *)(q + 0x9894))[i * 0x68] = *(Vec *)&((u8 *)(q + 0x9888))[i * 0x68];
+        *(f32 *)&((u8 *)(q + 0x98BC))[i * 0x68] = *(f32 *)(p + 0x8B4);
+        *(f32 *)&((u8 *)(q + 0x98C0))[i * 0x68] = *(f32 *)(p + 0x8B4);
+        *(f32 *)&((u8 *)(q + 0x98C4))[i * 0x68] = *(f32 *)(p + 0x8B4);
+        *(f32 *)&((u8 *)(q + 0x98C8))[i * 0x68] = *(f32 *)(p + 0x8B8);
+        *(f32 *)&((u8 *)(q + 0x98CC))[i * 0x68] = *(f32 *)(p + 0x8B4);
+        *(f32 *)&((u8 *)(q + 0x98D0))[i * 0x68] = *(f32 *)(p + 0x8B4);
+        *(f32 *)&((u8 *)(q + 0x98D4))[i * 0x68] = *(f32 *)(p + 0x8B4);
+        *(f32 *)&((u8 *)(q + 0x98D8))[i * 0x68] = *(f32 *)(p + 0x8B8);
+        *(s8 *)&((u8 *)(q + 0x987B))[i * 0x68] = 0;
+    }
+    *(s8 *)(q + 0x10) = 0;
+    lbl_802F1C32 = 1 - lbl_802F1C32;
+    *(s16 *)(q + 0x1A) += 1;
+    lbl_802F1DFC = 0;
+    u_somePlayerId = 0;
+    u_play_sound_0(0x17B);
+    *(f32 *)(q + 0x50) = *(f32 *)(p + 0x9C8);
+    *(s8 *)(q + 0xB) = *(s8 *)(q + 0xA);
+    *(s32 *)(q + 0x20) = 0;
+    *(s8 *)(q + 0xA) = 0xD;
+    lbl_0001B880();
+    lbl_00003CC8();
+    u_play_music(0x64, 8);
+}
+asm void lbl_00005DD0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_00005DD0.s"
+}
+#pragma peephole on
+asm void lbl_00006DC0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_00006DC0.s"
+}
+#pragma peephole on
+void lbl_000077D8(void)
+{
+    Mtx m;
+    u8 *b = lbl_10000000;
+    u8 *c = lbl_0001C2B8;
+
+    mathutil_mtxA_from_identity();
+    mathutil_mtxA_translate_xyz(*(f32 *)(c + 0x8b4), *(f32 *)(c + 0x8b8),
+                                *(f32 *)(c + 0x8b4));
+    mathutil_mtxA_to_mtx(m);
+    func_8009DB40(m);
+
+    if (*(s32 *)(b + 0x20) == 0xf0 && *(s8 *)(b + 0x1e) == 5) {
+        func_8009DDC4(2);
+        camera_set_state_all(0x41);
+        cameraInfo[1].state = 0x42;
+        cameraInfo[0].unk26 = 10;
+        cameraInfo[0].flags |= 0x10;
+        cameraInfo[1].unk26 = 10;
+        cameraInfo[1].flags |= 0x10;
+        lbl_802F1C30 = 0x2aaa;
+    }
+
+    if (*(s8 *)(b + 0x1e) == 5 && *(s32 *)(b + 0x20) > 0xf0) {
+        if (lbl_802F1C30 <= 0x1000)
+            func_8009DB9C(0xb);
+    }
+
+    if ((*(s8 *)(b + 0x1e) != 5 && *(s32 *)(b + 0x20) > 0x258)
+        || (*(s8 *)(b + 0x1e) == 5 && *(s8 *)(b + 0x17) != 0)) {
+        if (lbl_0000939C(2) != 0) {
+            u_play_sound_0(0xd1);
+            *(s32 *)(b + 0x20) = -61;
+        }
+    }
+
+    if (*(s32 *)(b + 0x20) < 0) {
+        if (*(s32 *)(b + 0x20) == -61) {
+            start_screen_fade(0x101, 0xffffff, 0x3c);
+            u_play_music(0x3c, 2);
+        }
+        if (*(s32 *)(b + 0x20) == -1) {
+            mini_commend_free_data();
+            func_80012434(modeCtrl.gameType);
+        }
+    }
+}
+asm void lbl_00007974(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_00007974.s"
+}
+#pragma peephole on
+void lbl_00007C74(void)
+{
+    int i;
+    for (i = 0; i < 64; i++) {
+        *(s16 *)(lbl_1000A5BC + i * 0x10 + 0x0) = -1;
+        *(s32 *)(lbl_1000A5BC + i * 0x10 + 0xc) = 0;
+    }
+}
+void lbl_00007D18(s16 arg0, s32 arg1)
+{
+    struct Work7D18 *w = (struct Work7D18 *)lbl_10000000;
+    struct Rec7D18 *p = w->recs;
+    int i;
+    for (i = 0; i < 64; p++, i++) {
+        if (p->unk0 == -1) {
+            w->recs[i].unk0 = arg0;
+            w->recs[i].unkC = arg1;
+            w->recs[i].unk4 = lbl_802F1DFC;
+            w->recs[i].unk8 = u_somePlayerId;
+            return;
+        }
+    }
+}
+asm void lbl_00007D80(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_00007D80.s"
+}
+#pragma peephole on
+asm void lbl_00008EC0(int a, int b)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_billiards/lbl_00008EC0.s"
+}
+#pragma peephole on
 #pragma force_active reset

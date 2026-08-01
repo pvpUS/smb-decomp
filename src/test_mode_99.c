@@ -278,9 +278,69 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_0000C984(void)
+void lbl_0000C984(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000C984.s"
+    int i;
+    u8 *p = lbl_10000FAC;
+    float *k = (float *)lbl_00010150;
+
+    for (i = 0x100; i > 0; i--)
+    {
+        *(float *)(p + 0) = k[21] * ((float)rand() / k[22] - k[11]);
+        *(float *)(p + 4) = k[23] * ((float)rand() / k[22] - k[11]);
+        *(float *)(p + 0xC) = k[1];
+        *(float *)(p + 0x10) = k[1];
+        *(s16 *)(p + 0x1C) = rand();
+        *(float *)(p + 0x20) =
+            k[24] * (k[11] + k[25] * ((float)rand() / k[22]));
+        *(float *)(p + 0x24) =
+            k[24] * (k[11] + k[25] * ((float)rand() / k[22]));
+        *(float *)(p + 0x28) = k[3];
+        p += 0x2C;
+    }
+}
+void lbl_0000CB0C(void)
+{
+}
+void lbl_0000CB10(void)
+{
+    int i;
+    u8 *p = lbl_10000FAC;
+    float *k = (float *)lbl_00010150;
+
+    for (i = 0x100; i > 0; i--)
+    {
+        *(float *)(p + 0xC) = *(float *)(p + 0xC) * k[28];
+        *(float *)(p + 0x10) = *(float *)(p + 0x10) * k[28];
+        *(float *)(p + 0x10) = *(float *)(p + 0x10) + k[29];
+        *(float *)(p + 0) = *(float *)(p + 0) + *(float *)(p + 0xC);
+        *(float *)(p + 4) = *(float *)(p + 4) + *(float *)(p + 0x10);
+        *(s16 *)(p + 0x1C) += 0x60;
+        if (*(float *)(p + 4) < k[30] - *(float *)(p + 0x24))
+        {
+            if (!(controllerInfo[0].held.button & 8))
+            {
+                *(float *)(p + 0) = k[21] * ((float)rand() / k[22] - k[11]);
+                *(float *)(p + 4) = k[23] * (k[11] * ((float)rand() / k[22]));
+                *(float *)(p + 0xC) = k[6] * ((float)rand() / k[22] - k[11]);
+                *(float *)(p + 0x10) = k[1];
+            }
+            else
+            {
+                *(float *)(p + 0) = k[31] * mathutil_sin(powerOnTimer << 5);
+                *(float *)(p + 4) = k[32];
+                *(float *)(p + 0xC) = k[33] * ((float)rand() / k[22] - k[11]);
+                *(float *)(p + 0x10) =
+                    k[34] * ((float)rand() / k[22]) - k[33];
+            }
+            *(s16 *)(p + 0x1C) = rand();
+            *(float *)(p + 0x20) =
+                k[24] * (k[11] + k[25] * ((float)rand() / k[22]));
+            *(float *)(p + 0x24) =
+                k[24] * (k[11] + k[25] * ((float)rand() / k[22]));
+            *(float *)(p + 0x28) = k[3];
+        }
+        p += 0x2C;
+    }
 }
 #pragma force_active reset

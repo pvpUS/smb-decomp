@@ -183,19 +183,7 @@ void lbl_000080E0(void);
 void lbl_000082E4(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
-void lbl_000087CC(struct Camera *, Vec *, Vec *, s16, float);
-void lbl_000089FC(void);
-void lbl_00008B8C(void);
-void lbl_00008C68(void);
-void lbl_00008D2C(void);
-void lbl_00008DF0(void);
-void lbl_00008EC0(void);
-void lbl_00008FB0(void);
-void lbl_00009048(void);
-void lbl_000090CC(void);
-void lbl_00009134(void);
-void lbl_0000919C(void);
-void lbl_00009230(void);
+void lbl_000087CC(struct Camera *camera, Vec *eye, Vec *lookAt, s16 fov, float t);
 void lbl_000096B4(void);
 void lbl_000097B4(void);
 void lbl_00009AA8(void);
@@ -252,6 +240,25 @@ static inline void camera_face_direction(struct Camera *camera, Vec *lookDir)
     camera->rotZ = 0;
 }
 
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+struct BowlCamCfg {
+    u8 filler0[8];
+    f32 zero;                  // 0x08 == 0.0f
+};
+void lbl_000089FC(struct Camera *camera, struct Ball *ball);
+void lbl_00008B8C(struct Camera *camera, struct Ball *ball);
+void lbl_00008C68(struct Camera *camera, struct Ball *ball);
+void lbl_00008D2C(struct Camera *camera, struct Ball *ball);
+void lbl_00008DF0(struct Camera *camera, struct Ball *ball);
+void lbl_00008EC0(struct Camera *camera, struct Ball *ball);
+void lbl_00008FB0(struct Camera *camera, struct Ball *ball);
+void lbl_00009048(struct Camera *camera, struct Ball *ball);
+void lbl_000090CC(struct Camera *camera, struct Ball *ball);
+void lbl_00009134(struct Camera *camera, struct Ball *ball);
+void lbl_0000919C(struct Camera *camera, struct Ball *ball);
+void lbl_00009230(struct Camera *camera, struct Ball *ball);
+
 #pragma force_active on
 // lbl_000087CC (0x87CC): ease the camera towards the given eye/lookAt/fov by the
 // fraction `t`, re-derive its Euler angles and record this frame's velocities.
@@ -284,5 +291,225 @@ void lbl_000087CC(struct Camera *camera, Vec *eye, Vec *lookAt, s16 fov, float t
     camera->lookAtVel.x = camera->lookAt.x - sp28.x;
     camera->lookAtVel.y = camera->lookAt.y - sp28.y;
     camera->lookAtVel.z = camera->lookAt.z - sp28.z;
+}
+// lbl_000089FC (0x89FC): camera substate 0 -- reset the camera onto the ball,
+// aim it at the fixed lane target and hand control to substate 2.
+void lbl_000089FC(struct Camera *camera, struct Ball *ball)
+{
+    struct BowlCamCfg *cfg = (struct BowlCamCfg *)lbl_00011338;
+    Vec sp10;
+
+    camera_clear(camera);
+    camera->unkAC = ball->pos;
+    camera->eye = ball->pos;
+    camera->lookAt = *(Vec *)lbl_000153E8;
+    camera->eyeVel.x = cfg->zero;
+    camera->eyeVel.y = cfg->zero;
+    camera->eyeVel.z = cfg->zero;
+    camera->lookAtVel.x = cfg->zero;
+    camera->lookAtVel.y = cfg->zero;
+    camera->lookAtVel.z = cfg->zero;
+    sp10.x = camera->lookAt.x - camera->eye.x;
+    sp10.y = camera->lookAt.y - camera->eye.y;
+    sp10.z = camera->lookAt.z - camera->eye.z;
+    camera_face_direction(camera, &sp10);
+    camera->unk26 = 9;
+    camera->sub28.fov = 0x1300;
+    cameraInfo[ball->playerId].flags &= ~4;
+    cameraInfo[ball->playerId].flags |= 8;
+    camera->subState = 2;
+}
+// lbl_00008B8C (0x8B8C): camera substate -- trail the ball down the lane,
+// leading it by an amount that grows as the ball slows (capped at tbl+0x28),
+// and clamp the eye into the lane box.
+void lbl_00008B8C(struct Camera *camera, struct Ball *ball)
+{
+    u8 *tbl = lbl_00011338;
+    Vec sp10;
+    f64 lead;
+    f64 t;
+
+    sp10.x = *(f64 *)(tbl + 0x10) * ball->pos.x;
+    sp10.y = *(f32 *)(tbl + 0x18);
+    t = *(f64 *)(tbl + 0x20);
+    t /= -ball->vel.z;
+    if (t < *(f64 *)(tbl + 0x28))
+        lead = t;
+    else
+        lead = *(f64 *)(tbl + 0x28);
+    t = *(f64 *)(tbl + 0x20) + ball->pos.z;
+    sp10.z = t + lead;
+    if (sp10.z < *(f64 *)(tbl + 0x30))
+        sp10.z = *(f32 *)(tbl + 0x38);
+    if (sp10.x < *(f64 *)(tbl + 0x40))
+        sp10.x = *(f32 *)(tbl + 0x48);
+    if (sp10.x > *(f64 *)(tbl + 0x50))
+        sp10.x = *(f32 *)(tbl + 0x58);
+    lbl_000087CC(camera, &sp10, (Vec *)lbl_000153E8, 0x1800, *(f32 *)(tbl + 0x5c));
+}
+// lbl_00008C68 (0x8C68): camera substate -- follow the ball down the lane from
+// behind, clamping the eye into the lane box.
+void lbl_00008C68(struct Camera *camera, struct Ball *ball)
+{
+    u8 *tbl = lbl_00011338;
+    Vec sp1c;
+    Vec sp10;
+
+    sp1c.x = ball->pos.x;
+    sp1c.y = *(f32 *)(tbl + 0x60);
+    sp1c.z = *(f64 *)(tbl + 0x68) + ball->pos.z;
+    if (sp1c.z < *(f64 *)(tbl + 0x30))
+        sp1c.z = *(f32 *)(tbl + 0x38);
+    if (sp1c.x < *(f64 *)(tbl + 0x40))
+        sp1c.x = *(f32 *)(tbl + 0x48);
+    if (sp1c.x > *(f64 *)(tbl + 0x50))
+        sp1c.x = *(f32 *)(tbl + 0x58);
+    sp10.x = ball->pos.x;
+    sp10.y = *(f32 *)(tbl + 0x70);
+    sp10.z = *(f32 *)(lbl_000153E8 + 8);
+    lbl_000087CC(camera, &sp1c, &sp10, 0x1400, *(f32 *)(tbl + 0x5c));
+}
+// lbl_00008D2C (0x8D2C): camera substate -- pull back to the fixed pin-deck
+// viewpoint, looking at the aim point in lbl_000153E8.
+void lbl_00008D2C(struct Camera *camera, struct Ball *ball)
+{
+    u8 *look = lbl_000153E8;
+    u8 *tbl = lbl_00011338;
+    Vec sp1c;
+    Vec sp10;
+
+    sp1c.x = ball->pos.x;
+    sp1c.y = *(f32 *)(tbl + 0x74);
+    sp1c.z = *(f32 *)(tbl + 0x78);
+    if (sp1c.z < *(f64 *)(tbl + 0x30))
+        sp1c.z = *(f32 *)(tbl + 0x38);
+    if (sp1c.x < *(f64 *)(tbl + 0x40))
+        sp1c.x = *(f32 *)(tbl + 0x48);
+    if (sp1c.x > *(f64 *)(tbl + 0x50))
+        sp1c.x = *(f32 *)(tbl + 0x58);
+    sp10.x = *(f32 *)(look + 0);
+    sp10.y = *(f32 *)(look + 4) - *(f64 *)(tbl + 0x80);
+    sp10.z = *(f32 *)(look + 8);
+    lbl_000087CC(camera, &sp1c, &sp10, 0x1000, *(f32 *)(tbl + 0x5c));
+}
+// lbl_00008DF0 (0x8DF0): camera substate -- like 0x8C68 but at the higher eye
+// height and looking at the fixed aim point.
+void lbl_00008DF0(struct Camera *camera, struct Ball *ball)
+{
+    u8 *look = lbl_000153E8;
+    u8 *tbl = lbl_00011338;
+    Vec sp1c;
+    Vec sp10;
+
+    sp1c.x = ball->pos.x;
+    sp1c.y = *(f32 *)(tbl + 0x88);
+    sp1c.z = *(f64 *)(tbl + 0x68) + ball->pos.z;
+    if (sp1c.z < *(f64 *)(tbl + 0x30))
+        sp1c.z = *(f32 *)(tbl + 0x38);
+    if (sp1c.x < *(f64 *)(tbl + 0x40))
+        sp1c.x = *(f32 *)(tbl + 0x48);
+    if (sp1c.x > *(f64 *)(tbl + 0x50))
+        sp1c.x = *(f32 *)(tbl + 0x58);
+    sp10.x = *(f32 *)(look + 0);
+    sp10.y = *(f32 *)(look + 4) - *(f64 *)(tbl + 0x90);
+    sp10.z = *(f32 *)(look + 8);
+    lbl_000087CC(camera, &sp1c, &sp10, 0x1400, *(f32 *)(tbl + 0x5c));
+}
+// lbl_00008EC0 (0x8EC0): camera substate -- ride just behind the ball, looking
+// straight at it.  Once the ball is no longer flagged 0x1000 the eye leads it
+// by the distance it will cover before stopping.
+void lbl_00008EC0(struct Camera *camera, struct Ball *ball)
+{
+    u8 *tbl = lbl_00011338;
+    Vec sp1c;
+    Vec sp10;
+
+    sp1c.x = ball->pos.x;
+    sp1c.y = *(f32 *)(tbl + 0x98);
+    if (ball->flags & 0x1000)
+        sp1c.z = *(f64 *)(tbl + 0x20) + ball->pos.z;
+    else
+        sp1c.z = *(f64 *)(tbl + 0x20) + ball->pos.z
+                 + *(f64 *)(tbl + 0x20) / -ball->vel.z;
+    if (sp1c.z < *(f64 *)(tbl + 0x30))
+        sp1c.z = *(f32 *)(tbl + 0x38);
+    if (sp1c.x < *(f64 *)(tbl + 0xa0))
+        sp1c.x = *(f32 *)(tbl + 0xa8);
+    if (sp1c.x > *(f64 *)(tbl + 0xb0))
+        sp1c.x = *(f32 *)(tbl + 0xb8);
+    sp10 = ball->pos;
+    lbl_000087CC(camera, &sp1c, &sp10, 0x1800, *(f32 *)(tbl + 0x5c));
+}
+void lbl_00008FB0(struct Camera *camera, struct Ball *ball)
+{
+    Vec sp1c;
+    Vec sp10;
+    u8 *tbl = lbl_00011338;
+
+    sp1c.x = ball->pos.x;
+    sp1c.y = *(f32 *)(tbl + 0x98);
+    sp1c.z = *(double *)(tbl + 0x68) + ball->pos.z + *(double *)(tbl + 0xc0) * ball->vel.z;
+    sp10 = ball->pos;
+    lbl_000087CC(camera, &sp1c, &sp10, 0x800, *(f32 *)(tbl + 0x98));
+    camera->subState = 7;
+}
+void lbl_00009048(struct Camera *camera, struct Ball *ball)
+{
+    Vec sp1c;
+    Vec sp10;
+    u8 *tbl = lbl_00011338;
+
+    sp1c.x = ball->pos.x;
+    sp1c.y = *(f32 *)(tbl + 0x98);
+    sp1c.z = *(double *)(tbl + 0x68) + ball->pos.z + *(double *)(tbl + 0xc0) * ball->vel.z;
+    sp10 = ball->pos;
+    lbl_000087CC(camera, &sp1c, &sp10, 0x800, *(f32 *)(tbl + 0x5c));
+}
+void lbl_000090CC(struct Camera *camera, struct Ball *ball)
+{
+    Vec sp1c;
+    Vec sp10;
+    f32 *tbl = (f32 *)lbl_00011338;
+
+    sp1c.x = tbl[0x32];
+    sp1c.y = tbl[0x26];
+    sp1c.z = tbl[0x33];
+    sp10.x = tbl[0x34];
+    sp10.y = tbl[0x35];
+    sp10.z = tbl[0x36];
+    lbl_000087CC(camera, &sp1c, &sp10, 0x1800, tbl[0x26]);
+}
+void lbl_00009134(struct Camera *camera, struct Ball *ball)
+{
+    Vec sp1c;
+    Vec sp10;
+    f32 *tbl = (f32 *)lbl_00011338;
+
+    sp1c.x = tbl[0x37];
+    sp1c.y = tbl[0x38];
+    sp1c.z = tbl[0x39];
+    sp10.x = tbl[0x3a];
+    sp10.y = tbl[0x3b];
+    sp10.z = tbl[0x3c];
+    lbl_000087CC(camera, &sp1c, &sp10, 0x1800, tbl[0x26]);
+}
+void lbl_0000919C(struct Camera *camera, struct Ball *ball)
+{
+    camera_clear(camera);
+    camera->unk26 = 9;
+    camera->sub28.unk28 = *(f32 *)lbl_00011340;
+    camera->sub28.unk2C = *(f32 *)lbl_00011340;
+    camera->sub28.fov = 0x1c71;
+    if (func_8009D7CC() == 0)
+        camera->timerCurr = func_8009D7E8() * 0x110;
+    else
+        camera->timerCurr = 0;
+    camera->subState = 0xb;
+    lbl_00009230(camera, ball);
+}
+asm void lbl_00009230(struct Camera *camera, struct Ball *ball)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_bowling/lbl_00009230.s"
 }
 #pragma force_active reset

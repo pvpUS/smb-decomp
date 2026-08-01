@@ -278,9 +278,125 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_0000C260(void)
+void lbl_0000C260(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000C260.s"
+    float *k = (float *)lbl_00010150;
+    Mtx44 proj;
+
+    GXSetCopyClear(*(GXColor *)k, 0xFFFFFF);
+    GXSetTexCopySrc(0, 0, 0x20, 0x20);
+    GXSetTexCopyDst(0x20, 0x20, 0, 0);
+    GXCopyTex(*(void **)(lbl_10003BAC + 0x20), 1);
+    GXSetViewport(k[1], k[1], k[2], k[2], k[1], k[3]);
+    GXSetScissor(0, 0, 0x100, 0x100);
+    C_MTXPerspective(proj, k[4], k[5], k[6], k[7]);
+    GXSetProjection(proj, 0);
+    lbl_0000CDE0();
+    GXSetTexCopySrc(0, 0, 0x100, 0x100);
+    GXSetTexCopyDst(0x100, 0x100, 0x28, 0);
+    GXCopyTex(*(void **)(lbl_10003BAC + 0x20), 1);
+    GXSetViewport(k[1], k[1], currRenderMode->fbWidth, currRenderMode->xfbHeight, k[1], k[3]);
+    GXSetScissor(0, 0, currRenderMode->fbWidth, currRenderMode->efbHeight);
+    reset_camera_perspective();
+}
+void lbl_0000C3F0(void)
+{
+    float *k = (float *)lbl_00010150;
+    u8 *g = lbl_10000FA8;
+    Mtx44 proj;
+    float m1[2][3];
+    float m2[2][3];
+    int w;
+    int h;
+
+    C_MTXPerspective(proj, k[4], k[5], k[6], k[7]);
+    GXSetProjection(proj, 0);
+    w = currRenderMode->fbWidth;
+    h = currRenderMode->efbHeight;
+    GXSetTexCopySrc(0, 0, w, h);
+    GXSetTexCopyDst(w, h, 4, 0);
+    GXCopyTex(*(void **)(g + 0x2C48), 0);
+    GXSetNumChans(0);
+    GXInvalidateTexAll();
+    GXLoadTexObj_cached((GXTexObj *)(g + 0x2C04), 0);
+    GXLoadTexObj_cached((GXTexObj *)(g + 0x2C28), 1);
+    GXLoadTexObj_cached((GXTexObj *)(*(u8 **)(*(u8 **)g + 0xC) + 0x20), 2);
+    GXSetTexCoordGen2(0, 0, 0, 0x1E, 0, 0x7D);
+    GXSetTexCoordGen2(1, 0, 0, 0x1E, 0, 0x7D);
+    mathutil_mtxA_from_identity();
+    mathutilData->mtxA[0][0] = k[10];
+    mathutilData->mtxA[0][2] = k[11];
+    mathutilData->mtxA[1][1] = k[12];
+    mathutilData->mtxA[1][2] = k[11] - k[11] / (float)currRenderMode->efbHeight;
+    GXLoadTexMtxImm(mathutilData->mtxA, 0x1E, 0);
+    GXSetTevOrder_cached(0, 0, 1, 0xFF);
+    GXSetTevColorIn_cached(0, 0xF, 0xF, 0xF, 8);
+    GXSetTevColorOp_cached(0, 0, 0, 0, 1, 0);
+    GXSetTevAlphaIn_cached(0, 7, 7, 7, 6);
+    GXSetTevAlphaOp_cached(0, 0, 0, 0, 1, 0);
+    GXSetIndTexOrder(0, 1, 0);
+    GXSetTevIndirect(0, 0, 0, 0, 1, 0, 0, 0, 0, 0);
+    m1[0][0] = k[13];
+    m1[0][1] = k[1];
+    m1[0][2] = k[1];
+    m1[1][0] = k[13];
+    m1[1][1] = k[1];
+    m1[1][2] = k[1];
+    GXSetIndTexMtx(1, m1, 0);
+    GXSetTexCoordGen2(2, 1, 4, 0x3C, 0, 0x7D);
+    GXSetTevOrder_cached(1, 2, 2, 0xFF);
+    GXSetTevColorIn_cached(1, 8, 0xF, 0xF, 0);
+    GXSetTevColorOp_cached(1, 0, 0, 0, 1, 0);
+    GXSetTevAlphaIn_cached(1, 7, 7, 7, 6);
+    GXSetTevAlphaOp_cached(1, 0, 0, 0, 1, 0);
+    GXSetTevIndirect(1, 0, 0, 0, 2, 0, 0, 0, 0, 0);
+    m2[0][0] = k[11];
+    m2[0][1] = k[1];
+    m2[0][2] = k[1];
+    m2[1][0] = k[14];
+    m2[1][1] = k[1];
+    m2[1][2] = k[1];
+    GXSetIndTexMtx(2, m2, 0);
+    GXSetTevSwapMode_cached(2, 0, 1);
+    GXSetTevOrder_cached(2, 1, 0, 0xFF);
+    GXSetTevColorIn_cached(2, 0xF, 0xF, 0xF, 0);
+    GXSetTevColorOp_cached(2, 0, 0, 0, 1, 0);
+    GXSetTevAlphaIn_cached(2, 7, 7, 7, 4);
+    GXSetTevAlphaOp_cached(2, 0, 0, 0, 1, 0);
+    GXSetNumTevStages_cached(3);
+    GXSetNumTexGens(3);
+    GXSetNumIndStages(1);
+    GXSetBlendMode_cached(0, 1, 0, 0);
+    GXSetZMode_cached(1, 7, 0);
+    fog_gx_set();
+    gxutil_set_vtx_attrs(0x2200);
+    GXSetVtxAttrFmt(6, 9, 1, 4, 0);
+    GXSetVtxAttrFmt(6, 0xD, 1, 4, 0);
+    mathutil_mtxA_from_identity();
+    GXLoadPosMtxImm(mathutilData->mtxA, 0);
+    GXBegin(0x80, 6, 4);
+    GXWGFifo.f32 = k[15];
+    GXWGFifo.f32 = k[16];
+    GXWGFifo.f32 = k[17];
+    GXWGFifo.f32 = k[1];
+    GXWGFifo.f32 = k[1];
+    GXWGFifo.f32 = k[18];
+    GXWGFifo.f32 = k[16];
+    GXWGFifo.f32 = k[17];
+    GXWGFifo.f32 = k[19];
+    GXWGFifo.f32 = k[1];
+    GXWGFifo.f32 = k[18];
+    GXWGFifo.f32 = k[20];
+    GXWGFifo.f32 = k[17];
+    GXWGFifo.f32 = k[19];
+    GXWGFifo.f32 = k[19];
+    GXWGFifo.f32 = k[15];
+    GXWGFifo.f32 = k[20];
+    GXWGFifo.f32 = k[17];
+    GXWGFifo.f32 = k[1];
+    GXWGFifo.f32 = k[19];
+    GXSetTevDirect(0);
+    GXSetNumIndStages(0);
+    reset_camera_perspective();
 }
 #pragma force_active reset

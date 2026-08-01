@@ -226,7 +226,6 @@ void lbl_000095F8(void);
 void lbl_00009998(void);
 void lbl_00009A0C(void);
 void lbl_0000A304(void);
-void lbl_0000A440(void);
 void lbl_0000A78C(void);
 void lbl_0000A7DC(void);
 void lbl_0000A7E0(void);
@@ -278,9 +277,42 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_0000A440(void)
+void lbl_0000A440(int q1)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000A440.s"
+    u8 *w = lbl_10000E00;
+    float *k = (float *)lbl_00010080;
+    u8 *p;
+    int size;
+    int j;
+    int i;
+
+    if (*(void **)(w + 0x158) == NULL)
+    {
+        size = GXGetTexBufferSize(0x20, 4, 1, 0, 0);
+        *(void **)(w + 0x158) = OSAllocFromHeap(__OSCurrHeap, size);
+        p = *(u8 **)(w + 0x158);
+        memset(p, 0, 0x20);
+        memset(p + 0x20, 0, 0x20);
+        p += 0x40;
+        for (i = 4; i > 0; i--)
+        {
+            for (j = 8; j > 0; j--)
+            {
+                *p = k[19] * (k[16] + k[20] * (float)j);
+                p++;
+            }
+        }
+        for (i = 4; i > 0; i--)
+        {
+            for (j = 8; j > 0; j--)
+            {
+                *p = k[19] * (k[21] * (float)(j - 1));
+                p++;
+            }
+        }
+        DCFlushRange(*(void **)(w + 0x158), size);
+    }
+    GXInitTexObj((GXTexObj *)(w + 0x138), *(void **)(w + 0x158), 0x20, 4, 1, 0,
+                 0, 0);
 }
 #pragma force_active reset

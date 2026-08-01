@@ -180,22 +180,22 @@ void lbl_0000907C(void);
 void lbl_00009178(void);
 void lbl_000091BC(void);
 void lbl_000092C4(void);
-void lbl_000092D0(void);
+f32 lbl_000092D0(void);
 void lbl_000092E0(void);
 s16 lbl_000092F0(void);
 void lbl_00009300(void);
 void lbl_00009310(void);
 void lbl_00009320(Vec *);
 void lbl_00009340(Vec *);
-void lbl_00009360(void);
+void lbl_00009360(Vec *);
 void lbl_00009384(s16 *);
-void lbl_00009394(void);
+void lbl_00009394(s16 *);
 void lbl_000093A4(s16 *);
 void lbl_000093B4(void);
 void lbl_000093C4(void);
-void lbl_000093D4(void);
+u8 lbl_000093D4(int a, int b);
 void lbl_000093F0(void);
-void lbl_00009404(void);
+u8 lbl_00009404(void);
 void lbl_00009414(void);
 void lbl_00009424(void);
 void lbl_00009438(void);
@@ -230,13 +230,12 @@ void lbl_0000E99C(void);
 void lbl_0000F11C(void);
 void lbl_0000F194(void);
 void lbl_0000F290(struct Ball *ball);
-void lbl_0000F750(void);
-void lbl_0000F7E8(void);
-void lbl_0000FA18(void);
-void lbl_0000FBC8(void);
+void lbl_0000F7E8(struct Ball *ball);
+void lbl_0000FA18(struct Ball *ball);
+void lbl_0000FBC8(struct Ball *ball);
 void lbl_0000FCE0(void);
 void lbl_000100D4(void);
-void lbl_00010304(void);
+void lbl_00010304(struct Ball *ball, struct PhysicsBall *physBall, int c);
 void lbl_000106B8(void);
 void lbl_00010808(void);
 void lbl_000109CC(void);
@@ -281,6 +280,10 @@ void lbl_00025EA8(void);
 void lbl_0002609C(void);
 void lbl_000260C0(void);
 
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+void lbl_0000F750(struct Ball *ball);
+
 #pragma force_active on
 void lbl_0000F290(struct Ball *ball)
 {
@@ -321,6 +324,122 @@ void lbl_0000F290(struct Ball *ball)
     *(s32 *)lbl_10000170 = 0;
     *(u8 *)lbl_10000178 = 9;
     ball->state = 0x1A;
+    ball->unk148 = 4;
+}
+void lbl_0000F750(struct Ball *ball)
+{
+
+    ball->unk92 = decodedStageLzPtr->startPos->yrot;
+    lbl_00009340(&ball->prevPos);
+    lbl_00009320(&ball->pos);
+    lbl_000093A4(&ball->unk92);
+    lbl_00009384(&ball->unk92);
+    ball->vel.x = 0.0f;
+    ball->vel.y = -1.0e-8f;
+    ball->vel.z = 0.0f;
+    ball->state = 0x1A;
+    ball->unk148 = 4;
+}
+void lbl_0000F7E8(struct Ball *ball)
+{
+    struct PhysicsBall pb;
+    u8 *st = (u8 *)lbl_10000170;
+    s32 *cp;
+    u32 limit;
+
+    if (lbl_000093D4(*(cp = &modeCtrl.currPlayer), lbl_00009404()) == 1)
+        limit = 0x21c;
+    else if (lbl_000093D4(*cp, lbl_00009404()) == 2)
+        limit = 0xf0;
+    else if (lbl_000093D4(*cp, lbl_00009404()) == 3)
+        limit = 0xf0;
+
+    if (*(u32 *)(st + 0xc) >= 0 && *(u32 *)(st + 0xc) < limit) {
+        ball->ape->flags &= ~0x4000;
+        ball->prevPos.y = ball->pos.y;
+        ball->pos.y = 2.0 + lbl_000092D0() +
+                      0.5 * mathutil_sin(globalAnimTimer << 10);
+        ball->vel.y = ball->pos.y - ball->prevPos.y;
+        init_physball_from_ball(ball, &pb);
+    } else if (*(u32 *)(st + 0xc) == limit) {
+        ball->ape->flags |= 0x4000;
+        ball->flags |= 0x40;
+        cameraInfo[*cp].subState = 8;
+        init_physball_from_ball(ball, &pb);
+    } else {
+        mathutil_mtxA_from_quat(&ball->ape->unk60);
+        mathutil_mtxA_rotate_y(0x800);
+        mathutil_mtxA_to_quat(&ball->ape->unk60);
+        if (!(ball->flags & 0x200) && (ball->ape->flags & 0x4000)) {
+            ball->flags &= ~0x500;
+            ball->flags |= 0x200;
+            u_play_sound_0(0x126);
+        }
+        lbl_00010304(ball, &pb, 0);
+    }
+    *(u32 *)(st + 0xc) += 1;
+    handle_ball_rotational_kinematics(ball, &pb, 0);
+    update_ball_ape_transform(ball, &pb, 0);
+    ball->unk80 += 1;
+}
+#pragma peephole on
+void lbl_0000FA18(struct Ball *ball)
+{
+    union { struct PhysicsBall pb; f64 a; } u;
+    u8 *st = (u8 *)lbl_10000170;
+
+
+    if (*(u32 *)(st + 0xc) >= 0 && *(u32 *)(st + 0xc) < 0x3c) {
+        ball->ape->flags &= ~0x4000;
+        ball->prevPos.y = ball->pos.y;
+        ball->pos.y = 2.0 + lbl_000092D0() +
+                      0.5 * mathutil_sin(globalAnimTimer << 10);
+        ball->vel.y = ball->pos.y - ball->prevPos.y;
+        init_physball_from_ball(ball, &u.pb);
+    } else if (*(u32 *)(st + 0xc) == 0x3c) {
+        ball->ape->flags |= 0x4000;
+        ball->flags |= 0x40;
+        cameraInfo[0].subState = 8;
+        init_physball_from_ball(ball, &u.pb);
+    } else {
+        mathutil_mtxA_from_quat(&ball->ape->unk60);
+        mathutil_mtxA_rotate_y(0x800);
+        mathutil_mtxA_to_quat(&ball->ape->unk60);
+        if (!(ball->flags & 0x200) && (ball->ape->flags & 0x4000)) {
+            ball->flags &= ~0x500;
+            ball->flags |= 0x200;
+            u_play_sound_0(0x126);
+        }
+        lbl_00010304(ball, &u.pb, 0);
+    }
+    *(u32 *)(st + 0xc) += 1;
+    handle_ball_rotational_kinematics(ball, &u.pb, 0);
+    update_ball_ape_transform(ball, &u.pb, 0);
+    ball->unk80 += 1;
+}
+#pragma peephole on
+void lbl_0000FBC8(struct Ball *ball)
+{
+    Vec sp;
+
+    ball->vel.x = 0.0f;
+    ball->vel.y = -1.0e-7f;
+    ball->vel.z = 0.0f;
+    ball->unk80 = 0;
+    ball->unk98.w = 1.0f;
+    ball->unk98.x = 0.0f;
+    ball->unk98.y = 0.0f;
+    ball->unk98.z = 0.0f;
+    lbl_00009360(&ball->pos);
+    ball->pos.y = ball->pos.y + 0.5 * (24.0 * (24.0 * ball->accel));
+    ball->prevPos = ball->pos;
+    lbl_00009320(&ball->pos);
+    lbl_00009394(&ball->unk92);
+    sp.x = -mathutil_sin(ball->unk92);
+    sp.y = 0.0f;
+    sp.z = -mathutil_sin(ball->unk92 + 0x4000);
+    mot_ape_set_quat_from_vec(ball->ape, &sp);
+    ball->state = 0x1a;
     ball->unk148 = 4;
 }
 #pragma force_active reset

@@ -289,7 +289,7 @@ void lbl_00007F88(void);
 void lbl_00008160(void);
 void lbl_00008324(void);
 void lbl_000084A0(void);
-void lbl_000085D8(void);
+void lbl_000085D8(struct Ball *, s16);
 void lbl_00008A10(void);
 void lbl_00008B60(void);
 void lbl_00008C4C(void);
@@ -375,9 +375,145 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_000085D8(void)
+// INVENTED -- per-racer state hanging off struct Ball::unk144.  UNVERIFIED.
+struct RaceSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000085D8.s"
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+    u8 filler18[0x1FC - 0x18];
+    /*0x1FC*/ Vec unk1FC[4];
+    /*0x22C*/ f32 unk22C[4];
+};
+
+// INVENTED -- 16-byte slot array at lbl_10000000 + 0x64.  UNVERIFIED.
+struct RaceItemSlot
+{
+    /*0x00*/ s32 unk0;
+    /*0x04*/ s32 unk4;
+    /*0x08*/ s16 unk8;
+    /*0x0A*/ s16 unkA;
+    /*0x0C*/ s16 unkC;
+    u8 fillerE[0x10 - 0xE];
+};
+
+void lbl_000085D8(struct Ball *ball, s16 type)
+{
+    u8 *cfg = lbl_00013740;
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+    struct RaceItemSlot *slot;
+    struct Ball *b;
+    Vec *v;
+    Vec *ps;
+    s16 who;
+    s16 i;
+    int blocked;
+    s16 idx;
+    f32 best;
+    f32 sc;
+    struct Item item;
+    Vec d;
+    Vec c;
+    Vec bb;
+    Vec a;
+
+    idx = -1;
+    for (i = 0; i < 0x100; i++)
+    {
+        if (((struct RaceItemSlot *)lbl_10000064)[i].unk0 == 0)
+        {
+            idx = i;
+            break;
+        }
+    }
+    if (idx == -1)
+    {
+        if (debugFlags & 4)
+            printf((char *)lbl_00015AC8);
+        return;
+    }
+    u_play_sound_0(0xE2);
+    memset(&item, 0, sizeof(item));
+    item.type = 2;
+    item.subType = type;
+    item.animGroupId = 0;
+    v = &ball->vel;
+    if (mathutil_vec_len(v) > *(f32 *)(cfg + 8))
+    {
+        mathutil_vec_set_len(v, &d, *(f32 *)(cfg + 0x1D8) * ball->currRadius);
+        item.pos.x = ball->pos.x + d.x;
+        item.pos.y = ball->pos.y + d.y;
+        item.pos.z = ball->pos.z + d.z;
+        mathutil_vec_set_len(v, &item.vel, *(f32 *)(cfg + 0x35C));
+        item.vel.x = ball->vel.x + item.vel.x;
+        item.vel.y = ball->vel.y + item.vel.y;
+        item.vel.z = ball->vel.z + item.vel.z;
+    }
+    else
+    {
+        mathutil_mtxA_from_quat((Quaternion *)((u8 *)ball->ape + 0x60));
+        bb = *(Vec *)(cfg + 0x344);
+        bb.x = *(f32 *)(cfg + 0x1D8) * -ball->currRadius;
+        ps = &bb;
+        d = *ps;
+        mathutil_mtxA_tf_vec(&d, &d);
+        item.pos.x = ball->pos.x + d.x;
+        item.pos.y = ball->pos.y + d.y;
+        item.pos.z = ball->pos.z + d.z;
+        mathutil_vec_set_len(&d, &item.vel, *(f32 *)(cfg + 0x35C));
+    }
+    blocked = 0;
+    if (st->unk14 & 0x20)
+    {
+        c = item.vel;
+        mathutil_vec_normalize_len(&c);
+    }
+    else
+    {
+        a = *(Vec *)(cfg + 0x350);
+        ps = &a;
+        c = *ps;
+        mathutil_mtxA_from_rotate_y(cameraInfo[ball->playerId].rotY);
+        mathutil_mtxA_tf_vec(&c, &c);
+        if (mathutil_vec_dot_prod(&c, &item.vel) < *(f32 *)(cfg + 8))
+            blocked = 1;
+    }
+    who = -1;
+    if (!blocked)
+    {
+        best = *(f32 *)(cfg + 0x70);
+        b = ballInfo;
+        for (i = 0; i < 4; i++, b++)
+        {
+            if ((s8)b->unk0 != 2)
+                continue;
+            if (b->playerId == ball->playerId)
+                continue;
+            if (((struct RaceSub *)b->unk144)->unk14 & 0x40)
+                continue;
+            if (st->unk22C[b->playerId] > *(f32 *)(cfg + 0x1B8))
+                continue;
+            if (mathutil_vec_dot_normalized_safe(
+                    &c, &st->unk1FC[b->playerId]) < *(f32 *)(cfg + 8))
+                continue;
+            sc = mathutil_vec_dot_normalized_safe(&c,
+                                                  &st->unk1FC[b->playerId]);
+            sc = sc * (*(f32 *)(cfg + 0x20) -
+                       st->unk22C[b->playerId] / *(f32 *)(cfg + 0x1B8));
+            if (sc > best)
+            {
+                who = b->playerId;
+                best = sc;
+            }
+        }
+    }
+    slot = &((struct RaceItemSlot *)lbl_10000064)[idx];
+    slot->unk0 = 1;
+    slot->unk4 = 0;
+    slot->unk8 = ball->playerId;
+    slot->unkA = who;
+    slot->unkC = 0xB4;
+    item.stageBanana = (struct StageBanana *)slot;
+    item_create(&item);
 }
+
 #pragma force_active reset
