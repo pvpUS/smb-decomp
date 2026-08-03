@@ -203,9 +203,24 @@ def parse_obj(text, fn):
 # PCMP_REGBLIND=gf  both.  Non-volatiles (r14..r31, f14..f31), r1 and r2 are
 # always left exact.  Use this to tell a WRONG SCHEDULE from a schedule that is
 # already right and only numbered differently -- the aligned score cannot.
+#
+# PCMP_REGBLIND=G/F/GF  blind ALL of that register file (r0, r3..r31 / f0..f31),
+# i.e. the CALLEE-SAVED numbers too.  r1 and r2 are never blinded -- they are
+# not allocatable, so blinding them would hide a real frame or SDA difference.
+#
+# RUN 15 -- the lowercase form is blind to callee-saved renumbering BY
+# CONSTRUCTION, and run 14 already knew that abstractly (sel_ngc's f31/f30 swap
+# read as "structural").  option then measured what it costs: on its `8C40`,
+# `gf` reports 23 in 22 -- "structural, do not sweep" -- while an all-register
+# blind reports 4 in 3, the schedule being byte-identical from insn 9 to 391.
+# The entire residual was callee-saved rank, which is a SWEEPABLE axis.  Two of
+# its five near-misses were mis-triaged that way.  So a `gf` reading is only
+# evidence of "structural" once `GF` agrees with it; run BOTH.
 BLIND = os.environ.get('PCMP_REGBLIND', '')
 _GPR = re.compile(r'\br(?:0|[3-9]|1[0-2])\b')
 _FPR = re.compile(r'\bf(?:[0-9]|1[0-3])\b')
+_GPR_ALL = re.compile(r'\br(?:0|[3-9]|1[0-9]|2[0-9]|3[01])\b')
+_FPR_ALL = re.compile(r'\bf(?:[0-9]|1[0-9]|2[0-9]|3[01])\b')
 
 
 # A 16-bit immediate field has ONE encoding but two spellings: the .s side
@@ -237,9 +252,14 @@ def to_words(seq):
         s = re.sub(r'(-?)0x([0-9a-fA-F]+)',
                    lambda m: str(int(m.group(1) + str(int(m.group(2), 16)))), s)
         s = _signed16(s)
-        if 'g' in BLIND:
+        # Uppercase wins: it is the strictly wider blind of the same file.
+        if 'G' in BLIND:
+            s = _GPR_ALL.sub('rA', s)
+        elif 'g' in BLIND:
             s = _GPR.sub('rV', s)
-        if 'f' in BLIND:
+        if 'F' in BLIND:
+            s = _FPR_ALL.sub('fA', s)
+        elif 'f' in BLIND:
             s = _FPR.sub('fV', s)
         res.append(s)
     return res

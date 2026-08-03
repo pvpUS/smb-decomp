@@ -49,11 +49,17 @@ def main():
     probe = sys.argv[2]
     fn = sys.argv[3] if len(sys.argv) > 3 else 'pf'
     ctx = int(sys.argv[4]) if len(sys.argv) > 4 else 3
-    # Was `os.environ.get('PCMP_MODULE', 'mini_bowling')` -- a hardcoded default
-    # that read mini_bowling's asm from inside every other module's tree, so it
-    # died with a misleading FileNotFoundError (or, worse, silently diffed
-    # against the wrong module's function of the same label).  FOUR separate
-    # modules reported this in run 14.  Defer to rel_pcmp, which infers it.
+    # FIXED IN RUN 14 -- this used to default PCMP_MODULE to one hard-coded
+    # module name, so it read that module's asm from inside every OTHER
+    # module's tree and died with a misleading FileNotFoundError (or, worse,
+    # silently diffed against the wrong module's function of the same label).
+    # Four modules reported it in run 14.  It now defers to rel_pcmp, which
+    # infers the module from the tree.
+    #
+    # The old default is deliberately NOT spelled out here: run 15's option
+    # agent grepped this file for that module name, hit this very comment, and
+    # reported the defect as still live for a third time.  If you are checking
+    # whether it is fixed, read the next line, not the commentary.
     mod = pcmp.probe_module()
     spath = os.path.join(TREE, 'asm', 'nonmatchings', pcmp.asm_stem(mod),
                          label + '.s')

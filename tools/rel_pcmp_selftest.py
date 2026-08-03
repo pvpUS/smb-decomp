@@ -126,9 +126,53 @@ def main():
         print('  %-11s %-16s %d in %d   exp %d / got %d   %s'
               % (mod, label, n, reg, len(exp), len(got), 'ok' if ok else 'FAIL'))
 
+    fails += check_regblind()
+
     print('\n%s (%d failure(s))' % ('ALL PASS' if not fails else 'FAILURES',
                                     fails))
     return 1 if fails else 0
+
+
+# PCMP_REGBLIND is what decides whether a near-miss gets a type/rank sweep or
+# is written off as structural, so a wrong blind costs a whole run.  Run 15
+# added the uppercase all-register form after option measured `gf` calling one
+# of its functions structural (23 in 22) that an all-register blind put at
+# 4 in 3 -- pure callee-saved rank, which IS sweepable.
+#
+# r1 and r2 must survive EVERY mode: they are not allocatable, so blinding them
+# would hide a real frame or SDA difference and manufacture a false MATCH.
+BLIND_CASES = [
+    # mode, instruction, must-blind, must-stay-exact
+    ('gf', 'mr r31,r3',        ['r3'],         ['r31']),
+    ('gf', 'fmr f31,f1',       ['f1'],         ['f31']),
+    ('GF', 'mr r31,r3',        ['r31', 'r3'],  []),
+    ('GF', 'fmr f31,f1',       ['f31', 'f1'],  []),
+    ('G',  'fmr f31,f1',       [],             ['f31', 'f1']),
+    ('F',  'mr r31,r3',        [],             ['r31', 'r3']),
+    ('GF', 'stw r0,8(r1)',     ['r0'],         ['r1']),
+    ('GF', 'lwz r2,4(r2)',     [],             ['r2']),
+    ('GF', 'add r29,r14,r12',  ['r29', 'r14', 'r12'], []),
+]
+
+
+def check_regblind():
+    """Re-import rel_pcmp under each mode -- BLIND is read at import time."""
+    import importlib
+    print('=== PCMP_REGBLIND ===')
+    fails = 0
+    saved = os.environ.get('PCMP_REGBLIND', '')
+    for mode, insn, gone, kept in BLIND_CASES:
+        os.environ['PCMP_REGBLIND'] = mode
+        importlib.reload(pcmp)
+        out = pcmp.to_words([insn])[0]
+        bad = [r for r in gone if re.search(r'\b%s\b' % r, out)] + \
+              [r for r in kept if not re.search(r'\b%s\b' % r, out)]
+        fails += bool(bad)
+        print('  %-3s %-20s -> %-22s %s'
+              % (mode, insn, out, 'ok' if not bad else 'FAIL %s' % bad))
+    os.environ['PCMP_REGBLIND'] = saved
+    importlib.reload(pcmp)
+    return fails
 
 
 if __name__ == '__main__':
