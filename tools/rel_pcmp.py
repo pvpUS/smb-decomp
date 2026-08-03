@@ -217,6 +217,20 @@ def parse_obj(text, fn):
 # its five near-misses were mis-triaged that way.  So a `gf` reading is only
 # evidence of "structural" once `GF` agrees with it; run BOTH.
 BLIND = os.environ.get('PCMP_REGBLIND', '')
+# RUN 15 -- any value that is not made of g/f/G/F used to be SILENTLY IGNORED,
+# so `PCMP_REGBLIND=all` blinded nothing and read exactly like an unblinded
+# score.  mini_bowling was briefly misled by it, and the failure is the
+# expensive direction: a blind that quietly does nothing reports a schedule as
+# WRONG when it is right, which is the reading that sends the next run down a
+# type sweep instead of a rank sweep.  Adding the uppercase form made more
+# plausible-looking wrong values available, so it is now checked.
+if set(BLIND) - set('gfGF'):
+    sys.exit('PCMP_REGBLIND=%r: only g, f, G, F (and combinations) are '
+             'understood.\n  lowercase = blind that file\'s VOLATILES '
+             '(r0,r3..r12 / f0..f13)\n  UPPERCASE = blind ALL of it '
+             '(r0,r3..r31 / f0..f31); r1 and r2 are never blinded.\n'
+             '  An unrecognised value used to be ignored silently and score '
+             'as if unblinded.' % BLIND)
 _GPR = re.compile(r'\br(?:0|[3-9]|1[0-2])\b')
 _FPR = re.compile(r'\bf(?:[0-9]|1[0-3])\b')
 _GPR_ALL = re.compile(r'\br(?:0|[3-9]|1[0-9]|2[0-9]|3[01])\b')
