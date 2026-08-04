@@ -1,8 +1,20 @@
 #!/usr/bin/env python3
 """Per-function diff of a built REL .plf against asm/nonmatchings/<mod>/*.s.
 
-Usage: python tools/rel_fdiff.py mkbe.rel_<mod>.plf lbl_XXXXXXXX ...
-(set FDIFF_MODULE to the module name; defaults to mini_race)
+Usage: FDIFF_MODULE=<stem> python tools/rel_fdiff.py mkbe.rel_<mod>.plf lbl_X ...
+
+FDIFF_MODULE is the src/asm STEM, not the module name -- they differ for
+sel_ngc, whose stem is `sel_ngc_rel`.  There is NO default: run 10 removed the
+`mini_race` one because an unset variable silently diffed the module you named
+against mini_race's asm, and an unset variable now raises.
+
+RUN 16 -- these two lines used to read "set FDIFF_MODULE to the module name;
+defaults to mini_race", i.e. the docstring documented the exact defect the code
+was fixed for, and sel_ngc filed it as a live bug.  That is the THIRD
+false-or-half-false tool report in three runs caused by stale prose (rel_pdiff
+in runs 15 and 16).  Standing rule: fix the prose in the same commit as the
+behaviour, and never quote the old expression verbatim -- a grep for it hits
+live-looking code.  (The error message below was already correct.)
 
 Function addresses inside the .plf are taken from the link map (they shift as
 soon as any converted function's size differs), so this stays valid even when
