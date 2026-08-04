@@ -308,38 +308,38 @@ void lbl_0000B834(void);
 void lbl_0000B8C8(void);
 void lbl_0000B948(void);
 void lbl_0000BB0C(void);
-static void lbl_0000BCE8(void);
-static void lbl_0000C03C(void);
-void lbl_0000C134(void);
-void lbl_0000C230(void);
+static void lbl_0000BCE8(s32, f32);
+static void lbl_0000C03C();
+void lbl_0000C134();
+void lbl_0000C230();
 void lbl_0000C2B4(void);
 void lbl_0000C438(void);
 void lbl_0000C590(void);
 void lbl_0000C5EC(void);
-void lbl_0000C668(void);
+void lbl_0000C668();
 void lbl_0000C76C(void);
-void lbl_0000C7E4(void);
+void lbl_0000C7E4();
 void lbl_0000C93C(void);
 void lbl_0000C9B0(void);
 void lbl_0000CA24(void);
 void lbl_0000CA9C(void);
 void lbl_0000CB3C(void);
 void lbl_0000CE24(void);
-void lbl_0000CF44(void);
+void lbl_0000CF44();
 void lbl_0000D03C(void);
-void lbl_0000D0FC(void);
+void lbl_0000D0FC();
 void lbl_0000D19C(void);
-void lbl_0000D20C(void);
+void lbl_0000D20C();
 void lbl_0000D2B8(void);
-void lbl_0000D41C(void);
+void lbl_0000D41C();
 void lbl_0000D4E4(void);
 void lbl_0000D69C(void);
-void lbl_0000D880(void);
+void lbl_0000D880();
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
-void lbl_0000DE5C(void);
+void lbl_0000DE5C();
 void lbl_0000DF6C(void);
-void lbl_0000E11C(void);
+void lbl_0000E11C();
 void lbl_0000E1CC(void);
 void lbl_0000E520(void);
 void lbl_0000E7AC(void);
@@ -388,15 +388,73 @@ asm void lbl_0000BB0C(void)
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_0000BB0C.s"
 }
-static asm void lbl_0000BCE8(void)
+#pragma peephole on
+static void lbl_0000BCE8(s32 idx, f32 dy)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000BCE8.s"
+    u8 *cfg = lbl_00013C48;
+    f32 t;
+
+    lbl_0000C668(idx, *(f32 *)(cfg + 0x34), *(f32 *)(cfg + 0x6C) + dy);
+    lbl_0000C7E4(idx, *(f32 *)(cfg + 0x34), *(f32 *)(cfg + 0x70) + dy);
+    t = *(f32 *)(cfg + 0x78) + dy;
+    lbl_0000D20C(idx, *(f32 *)(cfg + 0x74), t);
+    lbl_0000D0FC(idx, *(f32 *)(cfg + 0x7C), t);
+    lbl_0000CF44(idx, *(f32 *)(cfg + 0x80), *(f32 *)(cfg + 0x84) + dy);
+    lbl_0000D41C(idx, *(f32 *)(cfg + 0x88), *(f32 *)(cfg + 0x8C) + dy);
+    t = *(f32 *)(cfg + 0x90) + dy;
+    lbl_0000DE5C(idx, *(f32 *)cfg, t);
+    lbl_0000E11C(idx, *(f32 *)cfg, t);
 }
-static asm void lbl_0000BDD0(void)
+static void lbl_0000BDD0(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000BDD0.s"
+    u8 *cfg = lbl_00013C48;
+
+    if (modeCtrl.splitscreenMode == 3)
+    {
+        lbl_0000C03C();
+        return;
+    }
+    lbl_0000C230();
+    lbl_0000D880();
+    switch (modeCtrl.splitscreenMode)
+    {
+    case 0:
+        lbl_0000C668(0, *(f32 *)(cfg + 0x34), *(f32 *)(cfg + 0x6C));
+        lbl_0000C7E4(0, *(f32 *)(cfg + 0x34), *(f32 *)(cfg + 0x70));
+        lbl_0000D20C(0, *(f32 *)(cfg + 0x74), *(f32 *)(cfg + 0x78));
+        lbl_0000D0FC(0, *(f32 *)(cfg + 0x7C), *(f32 *)(cfg + 0x78));
+        lbl_0000CF44(0, *(f32 *)(cfg + 0x80), *(f32 *)(cfg + 0x84));
+        lbl_0000D41C(0, *(f32 *)(cfg + 0x88), *(f32 *)(cfg + 0x8C));
+        lbl_0000DE5C(0, *(f32 *)cfg, *(f32 *)(cfg + 0x90));
+        lbl_0000E11C(0, *(f32 *)cfg, *(f32 *)(cfg + 0x90));
+        lbl_0000C134(1, *(f32 *)(cfg + 0x18), *(f32 *)(cfg + 0x4));
+        lbl_0000C134(2, *(f32 *)cfg, *(f32 *)(cfg + 0x4));
+        break;
+    case 1:
+        lbl_0000C668(1, *(f32 *)(cfg + 0x34), *(f32 *)(cfg + 0x6C));
+        lbl_0000C7E4(1, *(f32 *)(cfg + 0x34), *(f32 *)(cfg + 0x70));
+        lbl_0000D20C(1, *(f32 *)(cfg + 0x74), *(f32 *)(cfg + 0x78));
+        lbl_0000D0FC(1, *(f32 *)(cfg + 0x7C), *(f32 *)(cfg + 0x78));
+        lbl_0000CF44(1, *(f32 *)(cfg + 0x80), *(f32 *)(cfg + 0x84));
+        lbl_0000D41C(1, *(f32 *)(cfg + 0x88), *(f32 *)(cfg + 0x8C));
+        lbl_0000DE5C(1, *(f32 *)cfg, *(f32 *)(cfg + 0x90));
+        lbl_0000E11C(1, *(f32 *)cfg, *(f32 *)(cfg + 0x90));
+        lbl_0000C134(0, *(f32 *)(cfg + 0x18), *(f32 *)(cfg + 0x4));
+        lbl_0000C134(2, *(f32 *)cfg, *(f32 *)(cfg + 0x4));
+        break;
+    case 2:
+        lbl_0000C134(0, *(f32 *)(cfg + 0x18), *(f32 *)(cfg + 0x18));
+        lbl_0000C134(1, *(f32 *)cfg, *(f32 *)(cfg + 0x18));
+        lbl_0000C668(2, *(f32 *)(cfg + 0x34), *(f32 *)(cfg + 0x94));
+        lbl_0000C7E4(2, *(f32 *)(cfg + 0x34), *(f32 *)(cfg + 0x98));
+        lbl_0000D20C(2, *(f32 *)(cfg + 0x74), *(f32 *)(cfg + 0x9C));
+        lbl_0000D0FC(2, *(f32 *)(cfg + 0x7C), *(f32 *)(cfg + 0x9C));
+        lbl_0000CF44(2, *(f32 *)(cfg + 0x80), *(f32 *)(cfg + 0xA0));
+        lbl_0000D41C(2, *(f32 *)(cfg + 0x88), *(f32 *)(cfg + 0xA4));
+        lbl_0000DE5C(2, *(f32 *)cfg, *(f32 *)(cfg + 0xA8));
+        lbl_0000E11C(2, *(f32 *)cfg, *(f32 *)(cfg + 0xA8));
+        break;
+    }
 }
 static asm void lbl_0000C03C(void)
 {

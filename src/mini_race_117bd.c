@@ -176,6 +176,8 @@ extern u8 lbl_802F16BC[];
 extern u8 backgroundInfo[];
 
 // Imported functions the code calls that no included header declares.
+extern void avdisp_set_bound_sphere_scale(float);
+extern void avdisp_draw_model_culled_sort_translucent(struct GMAModel *);
 extern void item_replace_type_funcs();
 extern void u_load_minigame_graphics();
 extern void u_ball_init_1();
@@ -368,7 +370,6 @@ void lbl_00012D50(void);
 
 void lbl_00012E00(void);
 void lbl_00012ED0(struct Effect *);
-void lbl_00012F34(void);
 void lbl_00013120(struct Effect *);
 void lbl_00013124(void);
 void lbl_000131FC(struct Effect *);
@@ -378,11 +379,52 @@ void lbl_0001331C(struct Effect *);
 void lbl_00013328(void);
 void lbl_0001356C(void);
 void lbl_00013670(struct Effect *);
+void lbl_00012F34(struct Effect *e);
 #pragma force_active on
-asm void lbl_00012F34(void)
+void lbl_00012F34(struct Effect *e)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00012F34.s"
+    u8 *cfg = (u8 *)lbl_00014060;
+    struct Camera *cam;
+    f32 a;
+    f32 b;
+    f32 sc;
+    f32 d;
+    f32 r;
+    f32 t;
+    Vec pos;
+    Vec scale;
+
+    cam = &cameraInfo[currentBall->playerId];
+    a = *(f32 *)(cfg + 0x48) * cam->sub28.vp.height;
+    b = *(f32 *)(cfg + 0x4C) / a;
+    d = mathutil_vec_distance(&cam->eye, &e->pos);
+    d = cam->sub28.unk38 * d;
+    r = a / d;
+    if (r < *(f32 *)(cfg + 0x50))
+    {
+        t = *(f32 *)(cfg + 0x50) * d;
+        sc = t * b;
+    }
+    else
+        sc = *(f32 *)(cfg + 0x4C);
+    if (e->playerId == currentBall->playerId)
+    {
+        pos = ballInfo[e->playerId].pos;
+        pos.y -= *(f32 *)(cfg + 0x4C);
+    }
+    else
+    {
+        pos = e->pos;
+    }
+    mathutil_mtxA_from_mtxB_translate(&pos);
+    mathutil_mtxA_sq_from_identity();
+    mathutil_mtxA_translate_xyz(*(f32 *)(cfg + 0x54), *(f32 *)(cfg + 0x54), *(f32 *)(cfg + 0x4C));
+    scale.x = e->scale.x * sc;
+    scale.y = e->scale.y * sc;
+    scale.z = e->scale.z * sc;
+    mathutil_mtxA_scale(&scale);
+    avdisp_set_bound_sphere_scale(MAX(scale.x, MAX(scale.y, scale.z)));
+    avdisp_draw_model_culled_sort_translucent(e->model);
 }
 
 #pragma force_active reset

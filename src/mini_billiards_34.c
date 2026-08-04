@@ -199,7 +199,7 @@ void lbl_0000A054(void);
 void lbl_0000C85C(void);
 s32 lbl_0000D0A4(void);
 void lbl_0000D330(void);
-void lbl_0000D7E8(void);
+void lbl_0000D7E8(struct Camera *, struct Ball *);
 void lbl_0000E8D0(void);
 void lbl_00010FD0(void);
 void lbl_000111B4(void);
@@ -228,7 +228,7 @@ void lbl_0001B880(void);
 
 // Carried over from the heads of the absorbed files (merged by
 // tools/rel_merge_tu.py -- these are what the tool used to drop).
-static void lbl_0000E3A4(void);
+static void lbl_0000E3A4(Vec *, f32 *, s32, Vec *, f32 *, f32, f32, f32);
 
 #pragma force_active on
 s32 lbl_0000D0A4(void)
@@ -290,12 +290,265 @@ asm void lbl_0000D330(void)
     nofralloc
 #include "../asm/nonmatchings/mini_billiards/lbl_0000D330.s"
 }
-asm void lbl_0000D7E8(void)
+#pragma peephole on
+void lbl_0000D7E8(struct Camera *camera, struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_0000D7E8.s"
+    u8 *g = lbl_1000B340;
+    u8 *p = lbl_0001CF00;
+    f32 a;
+    f32 b;
+    f32 fx;
+    f32 fy;
+    f32 fz;
+    f32 rs;
+    f32 len;
+    f32 s;
+    f32 t;
+    s32 n;
+    s32 i;
+    s16 diff;
+    s8 flag;
+    Vec e;
+    Vec dir;
+    Vec pts[10];
+    f32 w[10];
+    f32 ang;
+    Vec d1;
+    Vec d2;
+    Vec vv;
+
+    if (*(s8 *)lbl_1000000A == 0xA || *(s8 *)lbl_1000000A == 9
+        || *(s8 *)lbl_1000000A == 0xB || *(s8 *)lbl_1000000A == 0x15
+        || *(s8 *)lbl_1000000A == 0x17 || *(s8 *)lbl_1000000A == 7) {
+        b = a = *(f32 *)(p + 0x20);
+        flag = 0;
+    } else {
+        b = a = *(f32 *)(p + 0x7C);
+        flag = 1;
+    }
+
+    if (*(s8 *)lbl_1000000A == 8 || *(s8 *)lbl_1000000A == 9
+        || *(s8 *)lbl_1000000A == 0xA || *(s8 *)lbl_1000000A == 0xB) {
+        if (cameraInfo[0].eye.y > *(f32 *)(p + 0xC)) {
+            fx = (*(f32 *)(p + 0x80) - b - *(f32 *)(p + 0x84))
+                 / (*(f32 *)(p + 0x88) - a);
+            fy = *(f32 *)(p + 0x8C)
+                 / (*(f32 *)(p + 0x80) - b - *(f32 *)(p + 0x84));
+            fz = *(f32 *)(p + 0x20);
+        } else {
+            fx = (*(f32 *)(p + 0x80) - b) / (*(f32 *)(p + 0x90) - a);
+            fy = *(f32 *)(p + 0x8C) / (*(f32 *)(p + 0x80) - b);
+            fz = *(f32 *)(p + 0x20);
+        }
+    } else if (*(s8 *)lbl_1000000A == 0x12 || *(s8 *)lbl_1000000A == 0x13
+               || *(s8 *)lbl_1000000A == 0x14) {
+        fx = (*(f32 *)(p + 0x94) - b) / (*(f32 *)(p + 0x98) - a);
+        fy = *(f32 *)(p + 0x8C) / (*(f32 *)(p + 0x94) - b);
+        fz = *(f32 *)(p + 0x9C);
+    } else if (*(s8 *)lbl_1000000A == 0x15) {
+        fx = (*(f32 *)(p + 0xA0) - b) / (*(f32 *)(p + 0xA4) - a);
+        fy = *(f32 *)(p + 0x8C) / (*(f32 *)(p + 0xA0) - b);
+        fz = *(f32 *)(p + 0xA8);
+    } else {
+        fx = (*(f32 *)(p + 0x80) - b) / (*(f32 *)(p + 0x98) - a);
+        fy = *(f32 *)(p + 0x8C) / (*(f32 *)(p + 0x80) - b);
+        fz = *(f32 *)(p + 0x20);
+    }
+
+    if (*(s32 *)lbl_10000020 <= 1) {
+        *(Vec *)(g + 4) = cameraInfo[0].eye;
+        *(s8 *)(g + 0x1C) = 0;
+        *(s8 *)(g + 0x1D) = 0;
+        *(f32 *)(g + 0x10) = camera->lookAt.x - camera->eye.x;
+        *(f32 *)(g + 0x14) = camera->lookAt.y - camera->eye.y;
+        *(f32 *)(g + 0x18) = camera->lookAt.z - camera->eye.z;
+    }
+
+    if (*(s8 *)lbl_1000000A == 0x13) {
+        if (camera->eye.y < *(f32 *)(p + 0x44))
+            camera->eye.y = camera->eye.y + *(f32 *)(p + 0x38);
+    }
+
+    n = 0;
+    for (i = 0; i < 10; i++) {
+        if (*(f32 *)(lbl_10009878 + i * 0x68 + 8) > *(f32 *)(p + 0x20)) {
+            if (*(f32 *)(lbl_10009878 + i * 0x68 + 0xC) > *(f32 *)(p + 0x20)) {
+                *(f32 *)(lbl_10009878 + i * 0x68 + 8) =
+                    *(f32 *)(lbl_10009878 + i * 0x68 + 8)
+                    + *(f32 *)(lbl_10009878 + i * 0x68 + 0xC);
+                if (*(f32 *)(lbl_10009878 + i * 0x68 + 8) > *(f32 *)(p + 0x28))
+                    *(f32 *)(lbl_10009878 + i * 0x68 + 8) = *(f32 *)(p + 0x28);
+                else
+                    n++;
+            }
+        }
+    }
+
+    if (n == 0) {
+        for (i = 0; i < 10; i++) {
+            if (*(f32 *)(lbl_10009878 + i * 0x68 + 8) > *(f32 *)(p + 0x20)) {
+                if (*(f32 *)(lbl_10009878 + i * 0x68 + 0xC)
+                    < *(f32 *)(p + 0x20)) {
+                    *(f32 *)(lbl_10009878 + i * 0x68 + 8) =
+                        *(f32 *)(lbl_10009878 + i * 0x68 + 8)
+                        + *(f32 *)(lbl_10009878 + i * 0x68 + 0xC);
+                    if (*(f32 *)(lbl_10009878 + i * 0x68 + 8)
+                        < *(f32 *)(p + 0x20))
+                        *(f32 *)(lbl_10009878 + i * 0x68 + 8) =
+                            *(f32 *)(p + 0x20);
+                }
+            }
+        }
+    }
+
+    n = 0;
+    for (i = 0; i < 10; i++) {
+        if (*(f32 *)(lbl_10009878 + i * 0x68 + 8) > *(f32 *)(p + 0xAC)) {
+            pts[n].x = *(f32 *)(lbl_10009878 + i * 0x68 + 0x10);
+            pts[n].y = *(f32 *)(lbl_10009878 + i * 0x68 + 0x14);
+            if (pts[n].y < *(f32 *)(p + 0x1C))
+                pts[n].y = *(f32 *)(p + 0x1C);
+            pts[n].z = *(f32 *)(lbl_10009878 + i * 0x68 + 0x18);
+            w[n] = *(f32 *)(p + 0x1C);
+            d1.x = pts[n].x - camera->eye.x;
+            d1.y = pts[n].y - camera->eye.y;
+            d1.z = pts[n].z - camera->eye.z;
+            rs = mathutil_rsqrt(d1.z * d1.z + (d1.x * d1.x + d1.y * d1.y));
+            w[n] *= rs;
+            pts[n].x = d1.x * rs;
+            pts[n].y = d1.y * rs;
+            pts[n].z = d1.z * rs;
+            n++;
+        }
+    }
+    lbl_0000E3A4(pts, w, n, &dir, &ang, fx, fy, fz);
+
+    n = 0;
+    for (i = 0; i < 10; i++) {
+        if (*(f32 *)(lbl_10009878 + i * 0x68 + 8) > *(f32 *)(p + 0x20)) {
+            pts[n].x = *(f32 *)(lbl_10009878 + i * 0x68 + 0x10);
+            pts[n].y = *(f32 *)(lbl_10009878 + i * 0x68 + 0x14);
+            if (pts[n].y < *(f32 *)(p + 0x1C))
+                pts[n].y = *(f32 *)(p + 0x1C);
+            pts[n].z = *(f32 *)(lbl_10009878 + i * 0x68 + 0x18);
+            w[n] = *(f32 *)(p + 0x1C);
+            d2.x = pts[n].x - camera->eye.x;
+            d2.y = pts[n].y - camera->eye.y;
+            d2.z = pts[n].z - camera->eye.z;
+            rs = mathutil_rsqrt(d2.z * d2.z + (d2.x * d2.x + d2.y * d2.y));
+            w[n] *= rs;
+            pts[n].x = d2.x * rs;
+            pts[n].y = d2.y * rs;
+            pts[n].z = d2.z * rs;
+            pts[n].x = dir.x
+                       + (pts[n].x - dir.x)
+                             * *(f32 *)(lbl_10009878 + i * 0x68 + 8);
+            pts[n].y = dir.y
+                       + (pts[n].y - dir.y)
+                             * *(f32 *)(lbl_10009878 + i * 0x68 + 8);
+            pts[n].z = dir.z
+                       + (pts[n].z - dir.z)
+                             * *(f32 *)(lbl_10009878 + i * 0x68 + 8);
+            w[n] *= *(f32 *)(lbl_10009878 + i * 0x68 + 8);
+            n++;
+        }
+    }
+    lbl_0000E3A4(pts, w, n, &dir, &ang, fx, fy, fz);
+
+    diff = (s32)ang - lbl_802F1C30;
+    if (*(s32 *)lbl_10000020 <= 1 && *(s8 *)lbl_1000000A != 0xB
+        && *(s8 *)lbl_1000000A != 0x14
+        && (*(s8 *)lbl_1000000A != 0x17
+            || *(s8 *)(lbl_10009878 + 0x3A8) == 1)) {
+        lbl_802F1C30 = ang;
+    } else if (ang > lbl_802F1C30) {
+        lbl_802F1C30 = ang;
+        *(s8 *)(g + 0x1D) = 0;
+    } else if (*(s8 *)(g + 0x1D) != 0) {
+        if (diff == 0) {
+            *(s8 *)(g + 0x1D) = 0;
+        } else {
+            if (diff < -32)
+                diff = -32;
+            lbl_802F1C30 += diff;
+        }
+    } else if (diff < -256) {
+        *(s8 *)(g + 0x1D) = 1;
+        if (diff < -32)
+            diff = -32;
+        lbl_802F1C30 += diff;
+    }
+
+    if (lbl_802F1C30 > 0x6000)
+        lbl_802F1C30 = 0x6000;
+    *(f32 *)lbl_10000054 = mathutil_tan(lbl_802F1C30 >> 1);
+    mathutil_vec_normalize_len(&dir);
+
+    e.x = camera->lookAt.x - *(f32 *)(g + 4);
+    e.y = camera->lookAt.y - *(f32 *)(g + 8);
+    e.z = camera->lookAt.z - *(f32 *)(g + 0xC);
+    mathutil_vec_normalize_len(&e);
+
+    camera->lookAt.x = e.x + camera->eye.x;
+    camera->lookAt.y = e.y + camera->eye.y;
+    camera->lookAt.z = e.z + camera->eye.z;
+
+    e.x = dir.x - (camera->lookAt.x - camera->eye.x);
+    e.y = dir.y - (camera->lookAt.y - camera->eye.y);
+    e.z = dir.z - (camera->lookAt.z - camera->eye.z);
+    len = mathutil_sqrt(e.z * e.z + (e.x * e.x + e.y * e.y));
+
+    if (flag == 0
+        || (*(s32 *)lbl_10000020 <= 1 && *(s8 *)lbl_1000000A != 0xB
+            && *(s8 *)lbl_1000000A != 0x14)) {
+        camera->lookAt.x = dir.x + camera->eye.x;
+        camera->lookAt.y = dir.y + camera->eye.y;
+        camera->lookAt.z = dir.z + camera->eye.z;
+    } else {
+        if (*(s8 *)(g + 0x1C) == 0) {
+            if (!(len > *(f32 *)(p + 0x70) * *(f32 *)lbl_10000054))
+                goto done;
+            *(s8 *)(g + 0x1C) = 1;
+        }
+        if (len > *(f32 *)(p + 0x70) * *(f32 *)lbl_10000054) {
+            s = *(f32 *)(p + 0x28)
+                - *(f32 *)(p + 0x70) * *(f32 *)lbl_10000054 / len;
+            vv.x = camera->lookAt.x + e.x * s - camera->eye.x;
+            vv.y = camera->lookAt.y + e.y * s - camera->eye.y;
+            vv.z = camera->lookAt.z + e.z * s - camera->eye.z;
+            e.x = vv.x - *(f32 *)(g + 0x10);
+            e.y = vv.y - *(f32 *)(g + 0x14);
+            e.z = vv.z - *(f32 *)(g + 0x18);
+            camera->lookAt.x = camera->eye.x + vv.x;
+            camera->lookAt.y = camera->eye.y + vv.y;
+            camera->lookAt.z = camera->eye.z + vv.z;
+        } else if (len < *(f32 *)(p + 0xB0) * *(f32 *)lbl_10000054) {
+            *(s8 *)(g + 0x1C) = 0;
+        } else {
+            s = *(f32 *)(p + 0xB4) * (len / *(f32 *)lbl_10000054);
+            if (s > *(f32 *)(p + 0xB8))
+                s = *(f32 *)(p + 0xB8);
+            t = *(f32 *)(p + 0x28) - s;
+            e.x = dir.x + camera->eye.x;
+            e.y = dir.y + camera->eye.y;
+            e.z = dir.z + camera->eye.z;
+            camera->lookAt.x = e.x * s + camera->lookAt.x * t;
+            camera->lookAt.y = e.y * s + camera->lookAt.y * t;
+            camera->lookAt.z = e.z * s + camera->lookAt.z * t;
+        }
+    }
+done:
+    *(Vec *)(g + 0x10) = dir;
+    e.x = camera->lookAt.x - camera->eye.x;
+    e.y = camera->lookAt.y - camera->eye.y;
+    e.z = camera->lookAt.z - camera->eye.z;
+    camera->rotY = mathutil_atan2(e.x, e.z) - 0x8000;
+    camera->rotX =
+        mathutil_atan2(e.y, mathutil_sqrt(mathutil_sum_of_sq_2(e.x, e.z)));
+    camera->rotZ = 0;
+    *(Vec *)(g + 4) = camera->eye;
 }
-static asm void lbl_0000E3A4(void)
+static asm void lbl_0000E3A4(Vec *pts, f32 *w, s32 n, Vec *out, f32 *ang, f32 a, f32 b, f32 c)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_billiards/lbl_0000E3A4.s"

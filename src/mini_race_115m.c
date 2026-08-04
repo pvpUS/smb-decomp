@@ -31,6 +31,7 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "avdisp.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_race.s) or imported.  Declared so mwcc accepts `@ha/@l`.
@@ -182,10 +183,7 @@ extern void raycast_stage_down();
 extern void vibration_control();
 extern void func_800246F4();
 extern void mot_ape_set_quat_from_vec();
-extern void avdisp_get_eff_vertices();
 extern void item_create();
-extern void avdisp_draw_model_unculled_sort_translucent();
-extern void avdisp_draw_model_culled_sort_translucent();
 extern void gxutil_load_pos_nrm_matrix();
 extern void mathutil_incr_mtx_stack();
 extern void thread_create();
@@ -195,20 +193,14 @@ extern void func_8002BB20();
 extern void fade_color_base_default();
 extern void func_800AB6F8();
 extern void stcoli_sub33();
-extern void avdisp_get_eff_vtxinfo();
 extern void lens_flare_draw();
-extern void avdisp_set_bound_sphere_scale();
-extern void avdisp_set_post_mult_color();
 extern void bitmap_init_tev();
-extern void avdisp_draw_model_unculled_sort_none();
 extern void ape_skel_anim_main();
 extern void set_ape_model_lod();
 extern void func_800AB444();
 extern void func_8006AD3C();
 extern void ord_tbl_draw_nodes();
-extern void avdisp_set_alpha();
 extern void ape_destroy();
-extern void avdisp_set_z_mode();
 extern void func_800AB2A0();
 extern void func_8006AAEC();
 extern void draw_test_camera_target();
@@ -376,7 +368,7 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 void lbl_000115C8(u8 *);
-void lbl_00011658(void);
+void lbl_00011658(struct RaceDraw *);
 void lbl_00011870(u8 *);
 void lbl_000118BC(u8 *);
 void lbl_000118D8(u8 *);
@@ -396,11 +388,99 @@ void lbl_00012400(u8 *);
 void lbl_00012424(void);
 void lbl_000124E0(void);
 void lbl_0001280C(u8 *);
-#pragma force_active on
-asm void lbl_00011658(void)
+// INVENTED -- offsets read off the asm, names are placeholders.  UNVERIFIED.
+struct RaceDrawEnt
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00011658.s"
+    /*0x00*/ s16 id;
+    u8 filler2[2];
+    /*0x04*/ f32 unk4;
+    /*0x08*/ f32 unk8;
+    /*0x0C*/ s32 unkC;
+};
+
+// INVENTED -- UNVERIFIED.
+struct RaceDraw
+{
+    u8 filler0[6];
+    /*0x06*/ s16 unk6;
+    u8 filler8[0x12 - 8];
+    /*0x12*/ s16 unk12;
+    /*0x14*/ f32 unk14;
+    u8 filler18[0x1C - 0x18];
+    /*0x1C*/ struct RaceDrawEnt *unk1C;
+    /*0x20*/ f32 unk20;
+    /*0x24*/ f32 unk24;
+    /*0x28*/ f32 unk28;
+    u8 filler2C[0x38 - 0x2C];
+    /*0x38*/ s16 unk38;
+    /*0x3A*/ s16 unk3A;
+    /*0x3C*/ s16 unk3C;
+};
+
+#pragma force_active on
+void lbl_00011658(struct RaceDraw *d)
+{
+    u8 *cfg = lbl_00013F40;
+    struct RaceDrawEnt *e;
+    struct GMAModel *model;
+    f32 size;
+    f32 scale;
+    f32 alpha;
+    s16 id;
+    Vec spC;
+    Vec v;
+    Vec *ps;
+
+    e = d->unk1C;
+    size = d->unk14;
+    alpha = *(f32 *)(cfg + 0x34);
+    if (d->unk6 == 0 && d->unk12 < 0x3C && (d->unk12 & 8))
+        return;
+    for (; (id = e->id) >= 0; e++)
+    {
+        model = minigameGma->modelEntries[id].model;
+        v = *(Vec *)(cfg + 0x28);
+        v.x = d->unk20;
+        v.y = d->unk24 + e->unk4 * (size / e->unk8);
+        v.z = d->unk28;
+        ps = &v;
+        spC = *ps;
+        mathutil_mtxA_from_mtxB_translate(&spC);
+        if (e->unkC != 0)
+            mathutil_mtxA_sq_from_identity();
+        else
+        {
+            mathutil_mtxA_rotate_y(d->unk3A);
+            mathutil_mtxA_rotate_x(d->unk38);
+            mathutil_mtxA_rotate_z(d->unk3C);
+        }
+        scale = size / model->boundSphereRadius;
+        if (*(f32 *)(cfg + 0x38) != scale)
+            mathutil_mtxA_scale_xyz(scale, scale, scale);
+        if (alpha < *(f32 *)cfg)
+        {
+            if (test_scaled_sphere_in_frustum(&model->boundSphereCenter,
+                                              model->boundSphereRadius, scale) == 0)
+                return;
+            mathutil_mtxA_get_translate_alt(&spC);
+            if (d->unk6 != 4)
+            {
+                alpha = -((*(f32 *)(cfg + 0x3C) + (spC.z + size)) / size);
+                if (alpha <= *(f32 *)cfg)
+                    return;
+                if (alpha > *(f32 *)(cfg + 0x38))
+                    alpha = *(f32 *)(cfg + 0x38);
+            }
+            else
+            {
+                alpha = *(f32 *)(cfg + 0x38);
+            }
+        }
+        avdisp_set_alpha(alpha);
+        avdisp_set_bound_sphere_scale(scale);
+        gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+        avdisp_draw_model_unculled_sort_translucent(model);
+    }
 }
 
 #pragma force_active reset

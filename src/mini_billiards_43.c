@@ -227,9 +227,30 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm f32 lbl_00018608(double, double, double, double, double, double)
+f32 lbl_00018608(double a, double b, double c, double d, double e,
+                 double g)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00018608.s"
+    double num;
+    double den;
+    double t;
+    double m;
+    double u;
+    double r;
+    double s;
+    num = e * (b - d) + g * (c - a) + a * (d - b) + b * (a - c);
+    den = (d - b) * (d - b) + (a - c) * (a - c);
+    m = (a - e) * (a - e) + (b - g) * (b - g);
+    u = (c - e) * (c - e) + (d - g) * (d - g);
+    t = num * num / den;
+    r = m;
+    if (m > u)
+        r = u;
+    if (r > t) {
+        s = -((a - e) * (c - a) + (b - g) * (d - b)) / den;
+        if (s >= *(double *)lbl_00020B68
+            && s <= *(double *)lbl_00020B78)
+            r = t;
+    }
+    return sqrt(r);
 }
 #pragma force_active reset

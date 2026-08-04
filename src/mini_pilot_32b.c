@@ -206,9 +206,9 @@ void lbl_00008134(void);
 void lbl_000082C0(void);
 void lbl_00008568(void);
 void lbl_000085B4(void);
-void lbl_000089F8(void);
-void lbl_00008C40(void);
-void lbl_00009440(void);
+void lbl_000089F8(struct Sprite *sprite);
+void lbl_00008C40(struct Sprite *sprite, int d1);
+void lbl_00009440(struct Sprite *sprite);
 void lbl_000097C8(void);
 void lbl_000099A4(void);
 void lbl_00009C18(void);
@@ -216,7 +216,7 @@ void lbl_00009F4C(void);
 void lbl_0000A098(void);
 void lbl_0000A69C(void);
 void lbl_0000A754(void);
-void lbl_0000AE94(void);
+s32 lbl_0000AE94(s32 x);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
 void lbl_0000B130(void);
@@ -238,6 +238,14 @@ struct PilotRadarSet
     /*0x04*/ s16 count;
     /*0x06*/ u8 pad[2];
 };  // size = 8
+// UNVERIFIED/INVENTED: an 8-byte block of four s16 bitmap IDs, one per player,
+// block-copied out of the module pool into a stack local and then indexed by
+// ball->colorId.  Only the size and element type are attested (by the block copy
+// and the lhax walk).  Same shape as the one in src/mini_pilot_45.c.
+struct PilotIdPair
+{
+    s16 v[4];
+};
 void lbl_000091EC(struct Sprite *sprite);
 void lbl_000097AC(u8 *p);
 void lbl_00009A98(struct Sprite *sprite);
@@ -386,16 +394,180 @@ void lbl_0000893C(struct Sprite *sprite)
     len = mathutil_vec_len((Vec *)lbl_10000068);
     sprite_printf((char *)lbl_0000D324, (s32)(*(f64 *)(k + 0xb0) * len));
 }
-asm void lbl_000089F8(void)
+#pragma peephole on
+void lbl_000089F8(struct Sprite *sprite)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_000089F8.s"
+    u8 *k = (u8 *)lbl_0000C360;
+    NLsprarg params;
+    struct Ball *ball = currentBall;
+    f32 x = sprite->x;
+    f32 y = sprite->y;
+    f64 ty;
+
+    params.zm_x = *(f32 *)(k + 0x54);
+    params.zm_y = *(f32 *)(k + 0x54);
+    params.u0 = params.v0 = *(f32 *)(k + 0x98);
+    params.u1 = params.v1 = *(f32 *)(k + 0x54);
+    params.ang = 0;
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = 5;
+    params.trnsl = *(f32 *)(k + 0x54);
+    params.base_color = 0x00FFFFFF;
+    params.offset_color = 0;
+    params.sprno = 0xB09;
+    params.x = *(f64 *)(k + 0x80) + x;
+    params.y = *(f64 *)(k + 0xB8) + y;
+    params.z = *(f32 *)(k + 0x9C);
+    nlSprPut(&params);
+
+    params.u0 = *(f64 *)(k + 0xC0) * modeCtrl.currPlayer;
+    params.u1 = *(f64 *)(k + 0xC0) + params.u0;
+    params.v0 = *(f64 *)(k + 0xC0) * lbl_0000AE94(ball->colorId);
+    params.v1 = *(f64 *)(k + 0xC0) + params.v0;
+    params.zm_x = *(f32 *)(k + 0xC8);
+    params.zm_y = *(f32 *)(k + 0xC8);
+    params.sprno = 0xB0C;
+    params.x = x;
+    params.y = y;
+    params.z = *(f32 *)(k + 0x9C);
+    nlSprPut(&params);
+
+    reset_text_draw_settings();
+    set_text_font(0x53);
+    func_80071B1C(*(f32 *)(k + 0x8));
+    set_text_mul_color(0);
+    ty = *(f64 *)(k + 0xD8) + y;
+    set_text_pos(*(f64 *)(k + 0xD0) + x, *(f64 *)(k + 0xD0) + ty);
+    sprite_printf((char *)lbl_0000D328, ((s32 *)lbl_10000044)[modeCtrl.currPlayer]);
+    func_80071B1C(*(f32 *)(k + 0x9C));
+    set_text_mul_color(0x00FFFFFF);
+    set_text_pos(x, ty);
+    sprite_printf((char *)lbl_0000D328, ((s32 *)lbl_10000044)[modeCtrl.currPlayer]);
 }
 
-asm void lbl_00008C40(void)
+#pragma peephole on
+void lbl_00008C40(struct Sprite *sprite, int d1)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00008C40.s"
+    char *s = (char *)lbl_0000D218;
+    NLsprarg params;
+    s16 ids[4];
+    s16 *cnt = (s16 *)lbl_100000A8;
+    u8 *k = (u8 *)lbl_0000C360;
+    struct Ball *ball = currentBall;
+    f32 x;
+    f32 y;
+    f32 px;
+    f32 py;
+    f32 t;
+    f64 x2;
+    f32 px2;
+    s16 n;
+
+    *(struct PilotIdPair *)ids = *(struct PilotIdPair *)(k + 0xE0);
+    x = sprite->x;
+    y = sprite->y;
+
+    if (*(u32 *)lbl_802F1FD0 & 0x1000)
+    {
+        if (cnt[4] < *(f64 *)(k + 0xE8))
+            cnt[4]++;
+    }
+    else if (cnt[4] > 0)
+        cnt[4]--;
+
+    params.zm_x = *(f32 *)(k + 0x54);
+    params.zm_y = *(f32 *)(k + 0x54);
+    params.u0 = params.v0 = *(f32 *)(k + 0x98);
+    params.u1 = params.v1 = *(f32 *)(k + 0x54);
+    params.ang = 0;
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = 5;
+    params.trnsl = *(f32 *)(k + 0x54);
+    params.base_color = 0x00FFFFFF;
+    params.offset_color = 0;
+    params.sprno = 0xB18;
+    params.x = x;
+    params.y = y;
+    params.z = *(f32 *)(k + 0xF0);
+    nlSprPut(&params);
+
+    t = *(f64 *)(k + 0xF8) - *(f64 *)(k + 0x100) * ball->pos.y;
+    if (t < *(f64 *)(k + 0x108))
+        t = *(f32 *)(k + 0x110);
+
+    px = *(f64 *)(k + 0x88) + x;
+    x2 = y - *(f64 *)(k + 0xB8);
+    py = x2 + t;
+    params.sprno = 0xB16;
+    params.x = px;
+    params.y = py;
+    params.z = *(f32 *)(k + 0x8);
+    nlSprPut(&params);
+
+    params.sprno = ids[ball->colorId];
+    params.x = *(f64 *)(k + 0x118) + px;
+    params.y = py - *(f32 *)(k + 0x120);
+    params.z = *(f32 *)(k + 0x8);
+    nlSprPut(&params);
+
+    n = cnt[4];
+    if (n != 0)
+    {
+        params.attr = 0xD;
+        params.zm_x = n / *(f64 *)(k + 0xE8);
+        params.zm_y = params.zm_x;
+        params.sprno = 0xB39;
+        params.x = *(f64 *)(k + 0x128) + px;
+        params.y = *(f64 *)(k + 0x130) + py;
+        params.z = *(f32 *)(k + 0x9C);
+        nlSprPut(&params);
+        params.attr = 5;
+    }
+
+    params.zm_x = *(f32 *)(k + 0xC8);
+    params.zm_y = *(f32 *)(k + 0x138);
+    params.sprno = ((s32 *)neutralFaceTable)[playerCharacterSelection[modeCtrl.currPlayer]];
+    params.x = *(f32 *)(k + 0xC) + px;
+    params.y = py - *(f32 *)(k + 0x13C);
+    params.z = *(f32 *)(k + 0x8);
+    nlSprPut(&params);
+
+    params.zm_x = *(f32 *)(k + 0x140);
+    params.zm_y = *(f32 *)(k + 0xC8);
+    params.sprno = 0xB15;
+    x2 = x - *(f64 *)(k + 0x48);
+    px2 = x2;
+    params.x = px2;
+    params.y = *(f64 *)(k + 0x148) + y;
+    params.z = *(f32 *)(k + 0x9C);
+    nlSprPut(&params);
+
+    params.sprno = 0xB15;
+    params.x = px2;
+    params.y = *(f64 *)(k + 0x150) + y;
+    params.z = *(f32 *)(k + 0x9C);
+    nlSprPut(&params);
+
+    params.sprno = 0xB15;
+    params.x = px2;
+    params.y = *(f64 *)(k + 0x158) + y;
+    params.z = *(f32 *)(k + 0x9C);
+    nlSprPut(&params);
+
+    reset_text_draw_settings();
+    set_text_font(0x57);
+    set_text_pos(px2, y - *(f64 *)(k + 0x148));
+    if (t <= *(f64 *)(k + 0x108))
+    {
+        if ((globalAnimTimer >> 3) & 1)
+            sprite_printf(s + 0x108, (s32)ball->pos.y);
+    }
+    else
+        sprite_printf(s + 0x114);
+    set_text_pos(x2, *(f64 *)(k + 0x160) + y);
+    sprite_printf(s + 0x118);
+    set_text_pos(*(f64 *)(k + 0x168) + x2, *(f64 *)(k + 0x170) + y);
+    sprite_printf(s + 0x11C);
 }
 
 #pragma peephole on
@@ -509,10 +681,107 @@ void lbl_000091EC(struct Sprite *sprite)
     }
 }
 
-asm void lbl_00009440(void)
+#pragma peephole on
+void lbl_00009440(struct Sprite *sprite)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00009440.s"
+    char *s = (char *)lbl_0000D218;
+    NLsprarg params;
+    u8 *k = (u8 *)lbl_0000C360;
+    int i;
+    int p;
+    f32 x = sprite->x;
+    f32 y = sprite->y;
+    f64 ty;
+    f64 tx1;
+    f64 tx2;
+    f64 tyl;
+
+    if (modeCtrl.playerCount == 1)
+        y += *(f64 *)(k + 0x48);
+
+    params.zm_x = *(f32 *)(k + 0x54);
+    params.zm_y = *(f32 *)(k + 0x54);
+    params.u0 = params.v0 = *(f32 *)(k + 0x98);
+    params.u1 = params.v1 = *(f32 *)(k + 0x54);
+    params.ang = 0;
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = 5;
+    params.trnsl = *(f32 *)(k + 0x54);
+    params.base_color = 0x00FFFFFF;
+    params.offset_color = 0;
+    params.sprno = 0xB0F;
+    params.x = x;
+    params.y = y;
+    params.z = *(f32 *)(k + 0x8);
+    nlSprPut(&params);
+
+    params.offset_color = 0x5C3B1B;
+    params.sprno = 0xB0D;
+    params.x = *(f64 *)(k + 0x190) + x;
+    ty = *(f64 *)(k + 0xD0) + y;
+    params.y = ty;
+    params.z = *(f32 *)(k + 0x9C);
+    nlSprPut(&params);
+
+    reset_text_draw_settings();
+    set_text_mul_color(0xFF000000);
+    set_text_add_color(params.offset_color);
+    set_text_font(0x56);
+    set_text_pos(*(f64 *)(k + 0x198) + x, ty);
+    sprite_printf(s + 0x10C, *(s16 *)lbl_10000066);
+
+    params.zm_x = *(f32 *)(k + 0x54);
+    params.zm_y = *(f32 *)(k + 0x54);
+    params.u0 = params.v0 = *(f32 *)(k + 0x98);
+    params.u1 = params.v1 = *(f32 *)(k + 0x54);
+    params.ang = 0;
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = 5;
+    params.trnsl = *(f32 *)(k + 0x54);
+    params.base_color = 0x00FFFFFF;
+    params.offset_color = 0;
+
+    if (modeCtrl.playerCount > 1)
+    {
+        qsort(lbl_1000005C, 4, 2, lbl_0000AEE0);
+
+        params.zm_x = *(f32 *)(k + 0x54);
+        params.zm_y = *(f32 *)(k + 0x54);
+        params.u0 = params.v0 = *(f32 *)(k + 0x98);
+        params.u1 = params.v1 = *(f32 *)(k + 0x54);
+        params.ang = 0;
+        params.listType = NLSPR_LISTTYPE_AUTO;
+        params.attr = 5;
+        params.trnsl = *(f32 *)(k + 0x54);
+        params.base_color = 0x00FFFFFF;
+        params.offset_color = 0;
+
+        tx1 = *(f64 *)(k + 0x1A0) + x;
+        tx2 = *(f64 *)(k + 0x1A8) + x;
+
+        for (i = 0; i < g_poolInfo.playerPool.count; i++)
+        {
+            p = ((s16 *)lbl_1000005C)[i];
+            if (g_poolInfo.playerPool.statusList[p] != 0)
+            {
+                y += *(f64 *)(k + 0x48);
+                params.v0 = *(f64 *)(k + 0xC0) * lbl_0000AE94(ballInfo[p].colorId);
+                params.v1 = *(f64 *)(k + 0xC0) + params.v0;
+                params.zm_y = *(f32 *)(k + 0xC8);
+                params.sprno = 0xB11;
+                params.x = x;
+                params.y = y;
+                params.z = *(f32 *)(k + 0x8);
+                nlSprPut(&params);
+                set_text_font(0x55);
+                tyl = *(f64 *)(k + 0x1A0) + y;
+                set_text_pos(tx1, tyl);
+                sprite_printf(s + 0x124, p + 1);
+                set_text_pos(tx2, tyl);
+                sprite_printf(s + 0x110, ((s32 *)lbl_10000044)[p]);
+            }
+        }
+    }
 }
 
 #pragma peephole on

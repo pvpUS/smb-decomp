@@ -180,7 +180,7 @@ extern void mathutil_mtxA_tf_vec_xyz();
 extern void mathutil_mtxA_to_mtx();
 extern void mathutil_mtxA_to_quat();
 extern void mathutil_mtxA_translate_xyz();
-extern void mathutil_sin();
+extern f32 mathutil_sin();
 extern void mathutil_tan();
 extern void mathutil_vec_normalize_len();
 extern void mathutil_vec_set_len();
@@ -360,7 +360,7 @@ void lbl_00012248(void);
 void lbl_00013C1C(void);
 void lbl_00013C6C(void);
 void lbl_00015300(void);
-void lbl_000154B0(void);
+void lbl_000154B0(int x, int y, int idx);
 void lbl_00015C8C(int a, u8 *p);
 void lbl_00015E00(void);
 void lbl_00016414(void);
@@ -456,8 +456,8 @@ void lbl_00015C4C(int a, u8 *p);
 void lbl_00016C08(void);
 void lbl_00016CC8(void);
 void lbl_000170F8(void);
-void lbl_0001745C(void);
-void lbl_000175B8(void);
+void lbl_0001745C(s8 *unused, struct Sprite *sp);
+void lbl_000175B8(s8 *unused, struct Sprite *sp);
 
 // Carried over from the heads of the absorbed files (merged by
 // tools/rel_merge_tu.py -- these are what the tool used to drop).
@@ -467,10 +467,77 @@ struct FightCell
 };
 
 #pragma force_active on
-asm void lbl_000154B0(void)
+void lbl_000154B0(int x, int y, int idx)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000154B0.s"
+    u8 *d = lbl_0001D8B0;
+    u8 *k = lbl_0001C628;
+    struct Sprite *sp;
+    u8 *p;
+    f32 t;
+
+    lbl_00015A40(idx, (f32)x, (f32)y);
+    sp = create_sprite();
+    if (sp != NULL)
+    {
+        sp->type = 1;
+        sp->x = (f32)x;
+        sp->y = (f32)y;
+        sp->textAlign = 0;
+        sp->bmpId = ((u16 *)(d + 0xc0))[playerCharacterSelection[idx]];
+        sp->scaleX = *(f32 *)(k + 0x18);
+        sp->scaleY = *(f32 *)(k + 0x18);
+        sp->userVar = idx;
+        sp->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_00015B98;
+        sprintf(sp->text, (char *)(d + 0xc8));
+    }
+    sp = create_sprite();
+    if (sp != NULL)
+    {
+        if (!(lbl_10017664.sub[idx].unk12 & 1))
+            p = &((u8 (*)[0x10])(d + 0x60))[idx][0];
+        else
+            p = d + 0xa0;
+
+        t = ((f32 *)(d + 0xb0))[idx];
+        sp->type = 1;
+        sp->x = (f32)(x + 10);
+        sp->y = (f32)(y - 15);
+        sp->textAlign = 0;
+        sp->bmpId = 0x908;
+        sp->unk7C = ((f32 *)p)[0];
+        sp->unk80 = ((f32 *)p)[1] + t;
+        sp->unk84 = ((f32 *)p)[2];
+        sp->unk88 = ((f32 *)p)[3] + t;
+        sp->scaleX = *(f32 *)(k + 8);
+        sp->scaleY = *(f32 *)(k + 0x1c);
+        sp->userVar = idx;
+        sp->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_00015C4C;
+        sprintf(sp->text, (char *)(d + 0xd0));
+    }
+    sp = create_sprite();
+    if (sp != NULL)
+    {
+        sp->type = 1;
+        sp->x = (f32)(x + 50);
+        sp->y = (f32)(y + 4);
+        sp->textAlign = 0;
+        sp->userVar = idx;
+        sp->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_00015C8C;
+        sp->drawFunc = (void (*)(struct Sprite *))lbl_00015E00;
+        sprintf(sp->text, (char *)(d + 0xdc));
+    }
+    sp = create_sprite();
+    if (sp != NULL)
+    {
+        sp->type = 1;
+        sp->x = ((s16 *)(d + 0x34))[lbl_10017664.unk74C * 2];
+        sp->y = ((s16 *)(d + 0x36))[lbl_10017664.unk74C * 2];
+        sp->textAlign = 0;
+        sp->userVar = idx;
+        sp->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_00016414;
+        sp->drawFunc = (void (*)(struct Sprite *))lbl_000165B4;
+        sprintf(sp->text, (char *)(d + 0xe8));
+    }
 }
 #pragma peephole on
 
@@ -740,17 +807,86 @@ asm void lbl_00017230(void)
 }
 #pragma peephole on
 
-asm void lbl_0001745C(void)
+void lbl_0001745C(s8 *unused, struct Sprite *sp)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0001745C.s"
+    u8 *k = lbl_0001C628;
+    u8 *e = lbl_10018C6C + sp->userVar * 0x24;
+
+    if (*(f32 *)e < *(f32 *)(e + 0xC))
+    {
+        *(f32 *)e = *(f32 *)e + *(f32 *)(k + 0x108);
+        if (*(f32 *)e > *(f32 *)(e + 0xC))
+            *(f32 *)e = *(f32 *)(e + 0xC);
+    }
+    else if (*(f32 *)e > *(f32 *)(e + 0xC))
+    {
+        *(f32 *)e = *(f32 *)e - *(f32 *)(k + 0x108);
+        if (*(f32 *)e < *(f32 *)(e + 0xC))
+            *(f32 *)e = *(f32 *)(e + 0xC);
+    }
+    if (*(f32 *)(e + 4) < *(f32 *)(e + 0x10))
+    {
+        *(f32 *)(e + 4) = *(f32 *)(e + 4) + *(f32 *)(k + 0x108);
+        if (*(f32 *)(e + 4) > *(f32 *)(e + 0x10))
+            *(f32 *)(e + 4) = *(f32 *)(e + 0x10);
+    }
+    else if (*(f32 *)(e + 4) > *(f32 *)(e + 0x10))
+    {
+        *(f32 *)(e + 4) = *(f32 *)(e + 4) - *(f32 *)(k + 0x108);
+        if (*(f32 *)(e + 4) < *(f32 *)(e + 0x10))
+            *(f32 *)(e + 4) = *(f32 *)(e + 0x10);
+    }
+    *(f32 *)(e + 0x18) =
+        *(f32 *)(e + 0x18)
+        + *(f32 *)(k + 0x10C) * (*(f32 *)(e + 0x1C) - *(f32 *)(e + 0x18));
+    if (*(f32 *)(e + 0x20) < *(f32 *)(k + 0x18))
+    {
+        if (ballInfo[sp->userVar].flags & 0x200)
+        {
+            *(f32 *)(e + 0x20) = *(f32 *)(e + 0x20) + *(f32 *)(k + 0x110);
+            if (*(f32 *)(e + 0x20) > *(f32 *)(k + 0x18))
+                *(f32 *)(e + 0x20) = ((f32 *)k)[6];
+        }
+    }
+    sp->x = *(f32 *)e;
+    sp->y = *(f32 *)(e + 4);
+    sp->scaleX = *(f32 *)(e + 0x1C);
+    sp->scaleY = *(f32 *)(e + 0x18);
 }
 #pragma peephole on
 
-asm void lbl_000175B8(void)
+struct FightAnimDef
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000175B8.s"
+    s32 nframes;   // 0x00  UNVERIFIED
+    u16 *frames;   // 0x04  UNVERIFIED
+};
+
+void lbl_000175B8(s8 *unused, struct Sprite *sp)
+{
+    u8 *k = (u8 *)lbl_0001C628;
+    int idx = sp->userVar;
+    struct FightAnimDef *a = ((struct FightAnimDef **)lbl_0001DBC0)
+                                 [playerCharacterSelection[idx]];
+    u8 *e = (u8 *)lbl_10018C6C + idx * 0x24;
+    f32 t;
+    f32 rot;
+    int ang;
+    Vec pad;
+
+    sp->bmpId = a->frames[(int)((f32)(a->nframes - 1) * *(f32 *)(e + 0x20))];
+    pad = *(Vec *)e;
+    t = *(f32 *)(k + 0x74) + *(f32 *)(k + 0x74) * *(f32 *)(e + 0x20);
+    ang = (globalAnimTimer << 10) + (sp->userVar << 15);
+    pad.x += *(f32 *)(k + 0xf8) * t * mathutil_sin(ang + 0x4000);
+    pad.y += *(f32 *)(k + 0x114) * t *
+             (__fabs(mathutil_sin(ang)) - *(f64 *)(k + 0x118));
+    rot = *(f32 *)(k + 0x120) * t * mathutil_sin(ang + 0x4000);
+    sp->x += *(f32 *)(k + 0x6c) * (pad.x - sp->x);
+    sp->y += *(f32 *)(k + 0x6c) * (pad.y - sp->y);
+    sp->rotation =
+        sp->rotation + *(f32 *)(k + 0x6c) * (rot - sp->rotation);
+    sp->scaleX = *(f32 *)(e + 0x18);
+    sp->scaleY = *(f32 *)(k + 0x104) * *(f32 *)(e + 0x18);
 }
 #pragma peephole on
 

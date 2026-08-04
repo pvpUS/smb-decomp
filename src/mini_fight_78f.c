@@ -395,8 +395,8 @@ void lbl_0001A554(void);
 void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
-static void lbl_00017950(void);
-static void lbl_00017BA0(void);
+static void lbl_00017950(s8 *arg, struct Sprite *sp);
+static void lbl_00017BA0(s8 *arg, struct Sprite *sp);
 
 // Carried over from the heads of the absorbed files (merged by
 // tools/rel_merge_tu.py -- these are what the tool used to drop).
@@ -409,16 +409,80 @@ asm void lbl_000177C8(void)
 #include "../asm/nonmatchings/mini_fight/lbl_000177C8.s"
 }
 #pragma peephole on
-static asm void lbl_00017950(void)
+static void lbl_00017950(s8 *arg, struct Sprite *sp)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00017950.s"
+    u8 *k = lbl_0001C628;
+
+    if (!(*(u32 *)lbl_10018CFC & 4))
+    {
+        if (sp->userVar & 1)
+            sp->y += *(f32 *)(k + 0x130);
+        else
+            sp->y -= *(f32 *)(k + 0x130);
+        sp->scaleY += *(f32 *)(k + 8) * (*(f32 *)(k + 0x134) - sp->scaleY);
+        if (sp->scaleY <= *(f32 *)(k + 0x78))
+        {
+            sp->scaleY = ((f32 *)k)[0x1e];
+            *arg = 0;
+        }
+        if (sp->addR != 0)
+            sp->addR = *(f32 *)(k + 0xa0) * sp->addR;
+        if (sp->addG != 0)
+            sp->addG = *(f32 *)(k + 0xa0) * sp->addG;
+        if (sp->addB != 0)
+            sp->addB = *(f32 *)(k + 0xa0) * sp->addB;
+    }
+    else if (sp->counter != 0)
+    {
+        sp->counter--;
+    }
+    else
+    {
+        sp->scaleX = *(f32 *)(k + 0x74);
+        sp->scaleY += *(f32 *)(k + 8) * (*(f32 *)(k + 0x74) - sp->scaleY);
+        if (sp->addR != 0)
+            sp->addR = *(f32 *)(k + 0xa0) * sp->addR;
+        if (sp->addG != 0)
+            sp->addG = *(f32 *)(k + 0xa0) * sp->addG;
+        if (sp->addB != 0)
+            sp->addB = *(f32 *)(k + 0xa0) * sp->addB;
+    }
 }
 #pragma peephole on
-static asm void lbl_00017BA0(void)
+static void lbl_00017BA0(s8 *arg, struct Sprite *sp)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00017BA0.s"
+    u8 *k = lbl_0001C628;
+
+    if (!(*(u32 *)lbl_10018CFC & 4))
+    {
+        sp->scaleX += *(f32 *)(k + 8) * (*(f32 *)(k + 0x134) - sp->scaleX);
+        if (sp->scaleX <= *(f32 *)(k + 0x78))
+        {
+            sp->scaleX = ((f32 *)k)[0x1e];
+            *arg = 0;
+        }
+        if (sp->addR != 0)
+            sp->addR = *(f32 *)(k + 0xa0) * sp->addR;
+        if (sp->addG != 0)
+            sp->addG = *(f32 *)(k + 0xa0) * sp->addG;
+        if (sp->addB != 0)
+            sp->addB = *(f32 *)(k + 0xa0) * sp->addB;
+    }
+    else if (sp->counter != 0)
+    {
+        sp->counter--;
+    }
+    else
+    {
+        sp->scaleX += *(f32 *)(k + 8) * (*(f32 *)(k + 0x74) - sp->scaleX);
+        sp->scaleY = *(f32 *)(k + 0x74);
+        if (sp->addR != 0)
+            sp->addR = *(f32 *)(k + 0xa0) * sp->addR;
+        if (sp->addG != 0)
+            sp->addG = *(f32 *)(k + 0xa0) * sp->addG;
+        if (sp->addB != 0)
+            sp->addB = *(f32 *)(k + 0xa0) * sp->addB;
+    }
 }
 #pragma peephole on
 
