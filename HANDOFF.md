@@ -387,16 +387,32 @@ harvested. **`C:/tmp/smbm/_harvest_run17/` holds 20 artifacts + README.**
 - **`C:/tmp/smbm/RUN17_RESULTS.md`** holds all nine reports verbatim (230 KB).
 - **`C:/tmp/smbm/_harvest_run17/`** — 20 artifacts + README, including the
   `inject.py` that does NOT poison a pragma sweep.
-- **`C:/tmp/smbm/warm_reset_run18.sh` EXISTS AND IS READY** (run-17's, plus a
-  note that `rel_pcmp`/`rel_carve` changed and that the `*.h` glob now carries
-  four probe preambles). **`RUN18_BRIEF.md` DOES NOT EXIST YET — writing it is
-  the next session's first action.** Base the brief on
-  `RUN16_BRIEF.md` + `RUN17_BRIEF.md` + this section. Carry forward verbatim:
-  the STANDING RULES block, the **fixed**-blind guidance, the stored-draft
-  revert hazard, and **"treat every inherited 'does not compile' as unverified"**.
-- **Do NOT re-copy the `GF`-artefact check as written** — run 16's version does
-  not catch the literal-zero case. Say instead: *the tool is fixed; re-score
-  inherited zeros under it.*
+- **RUN-18 PREP IS COMPLETE. The next session launches nine agents directly.**
+  - `C:/tmp/smbm/warm_reset_run18.sh` — ready, **and all nine warm copies have
+    already been reset and re-gated GOLDEN from deleted objects** with the fixed
+    tools in place. Re-run it only if the main tree moves again.
+  - `C:/tmp/smbm/RUN18_BRIEF.md` — written (40 KB).
+  - `C:/tmp/smbm/RUN17_RESULTS.md` — all nine reports verbatim (230 KB).
+  - `C:/tmp/smbm/_harvest_run17/` — 24 items + README.
+- **★ THE WHOLE BACKLOG IS ALREADY RE-SCORED UNDER THE FIXED BLIND** and the
+  table is §1 of the brief — 47 stored drafts across nine modules, both blinds,
+  scored one draft at a time so the multi-draft `FAIL` noise cannot appear.
+  **Agents must NOT repeat the triage.** Two inherited zeros were artefacts:
+  **test_mode `F940` and sel_ngc `9868` are each `1 in 1`, not `0 in 0`** — and
+  `F940` had 42 variants spent against it. Everything else reproduced.
+  (Harness kept: `_harvest_run17/rescore18.py` + `rescore18b.py`, raw output in
+  `RESCORE18_raw.txt`.)
+- **★ A SECOND ARTEFACT MECHANISM IS STILL OPEN.** The run-17 fix covers the
+  literal-zero RA. It does **not** cover run 16's `AEDC` case, where `parse_s`
+  masks `SYM@l` to `0` and it collides with a genuine literal `0` — measured
+  still live (`AEDC` is plain 2 in 2, `GF` 0 in 0 under the fixed tool). Fixing
+  it needs `rel_probe` to emit relocations. **Until then the check is: open the
+  original `.s` at the diff index and see whether the expected instruction
+  carries a `@l`/`@ha` symbol operand.** Run 16's documented check does not
+  catch it.
+- **`tools/rel_ablind.py` is promoted** — both blinds over a real link, no probe
+  preamble needed, `--module` flag; verified across all three module naming
+  conventions.
 - **ONE AGENT PER MODULE, NO WORKERS** — fifth consecutive run, zero stranding.
 
 ---
