@@ -164,8 +164,48 @@ def tu_groups(funcs, ro):
     return tus, merged
 
 
+def rodata_segments(root, mod):
+    """Every asm data segment of this module, in SOURCES-ish order.
+
+    RUN 15 -- THIS IS THE DEFECT THAT MADE THIS TOOL'S ANCHOR COUNT WRONG FOR
+    FOURTEEN RUNS.  It only ever read `asm/<mod>.s`, so every magic double that
+    a CARVE moved into `asm/<mod>_d<N>.s` was invisible, and the tool cheerfully
+    reported a smaller anchor count that four separate runs then believed.
+
+    mini_race is the proof: this tool reported `4 magic anchors`, which is just
+    the four `.4byte 0x43300000` left in `asm/mini_race.s`.  `objdump -h` over
+    all 301 objects shows `asm/mini_race_d1.s.o` emitting 0x48C of .rodata
+    holding FOUR MORE, and `src/mini_race_100.c.o` emitting a fifth.  Once you
+    count them, 21 a-BLOCKED rows / 2,444 insn turn out to read a magic a C
+    object ALREADY emits -- no carve needed anywhere in that module.
+
+    The glob is `<mod>_*.s`, NOT `<mod>_d*.s`: mini_golf's carve needed a
+    hand-written `asm/mini_golf_pool_tail.s`, the one data segment in this
+    project that does not follow the _d<N> naming.  rel_merge_back.py had to be
+    widened for the same reason.  Do not narrow it back.
+
+    NOTE what this still cannot see: a magic emitted by a C OBJECT.  Nothing
+    that reads only asm can.  `rel_magicscan.py` reads the golden linked REL and
+    is the authority; cross-check against it.
+    """
+    main = os.path.join(root, 'asm', f'{mod}.s')
+    segs = [main] if os.path.exists(main) else []
+    segs += sorted(g for g in glob.glob(os.path.join(root, 'asm', f'{mod}_*.s'))
+                   if g not in segs)
+    return segs
+
+
 def analyse(root, mod, verbose=False):
-    ro = rodata_labels(os.path.join(root, 'asm', f'{mod}.s'))
+    ro, per_seg = {}, []
+    for seg in rodata_segments(root, mod):
+        lbls = rodata_labels(seg)
+        n_magic = sum(1 for v in lbls.values() if v[1])
+        if lbls:
+            per_seg.append((os.path.basename(seg), len(lbls), n_magic))
+        # first segment listed wins a duplicate label; carved segments never
+        # re-define one, so this only matters if a carve is half-undone.
+        for k, v in lbls.items():
+            ro.setdefault(k, v)
     funcs = functions(root, mod, ro)
     if not funcs:
         print(f'{mod}: no split asm found')
@@ -183,6 +223,12 @@ def analyse(root, mod, verbose=False):
     print(f'\n=== {mod} ===')
     print(f'{len(funcs)} functions, {total} insn, {len(ro)} rodata labels, '
           f'{len(anchors)} magic anchors -> {len(tus)} TUs')
+    if len(per_seg) > 1:
+        print('  .rodata read from %d segments: %s'
+              % (len(per_seg), ', '.join('%s (%d lbl, %d magic)' % s
+                                         for s in per_seg)))
+    print('  NOTE: asm segments only. A magic emitted by a C object is invisible'
+          ' here -- cross-check rel_magicscan.py, which reads the linked REL.')
     print(f'TU size (insn): min {sizes[0]}  median {sizes[len(sizes)//2]}  max {sizes[-1]}')
     if verbose:
         for k, t in enumerate(tus, 1):
