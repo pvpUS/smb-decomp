@@ -454,10 +454,106 @@ asm void lbl_000015D8(void)
 #include "../asm/nonmatchings/mini_pilot/lbl_000015D8.s"
 }
 
-asm void lbl_0000178C(void)
+// The pilot intro state machine.  One spelling is load-bearing and cost four
+// variants: the id-table read has to be `(s8)(w + i)[0x78]` -- a u8 subscript on
+// the index-advanced base, narrowed afterwards.  `*(s8 *)(w + 0x78 + i)`,
+// `*(s8 *)(w + i + 0x78)` and `((s8 *)(w + i))[0x78]` all fold the 0x78 into the
+// INDEX and emit `addi`+`lbzx`, where the original keeps it as the load
+// displacement (`add`+`lbz 0x78`).  6 aligned in 2 regions for each of those.
+#pragma peephole on
+void lbl_0000178C(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_0000178C.s"
+    u8 *w = (u8 *)lbl_10000000;
+    struct Ball *ball = currentBall;
+    u8 *k = (u8 *)lbl_0000BE80;
+    s16 st;
+
+    lbl_802F1FF0++;
+    st = *(s16 *)(w + 0x88);
+    if (st >= 2)
+        *(s32 *)(w + 0x8C) += 1;
+
+    switch (st)
+    {
+    case 0:
+        if (((controllerInfo[playerControllerIDs[ball->playerId]].pressed.button
+              & PAD_BUTTON_A)
+             && lbl_802F1FF0 > 15)
+            || lbl_802F1FF0 > 0x4B0)
+        {
+            u_play_sound_0(0x10);
+            *(s16 *)(w + 0x88) = 1;
+        }
+        break;
+    case 1:
+        *(f32 *)(w + 0x24) *= *(f64 *)(k + 0xF8)
+            + *(f64 *)(k + 0x100) * (rand() / *(f32 *)(k + 0x58));
+        if (*(f32 *)(w + 0x24) < *(f64 *)(k + 0x108))
+        {
+            *(s16 *)(w + 0x88) = 2;
+            *(f32 *)(w + 0x24) = *(f32 *)(k + 0x30);
+        }
+        break;
+    case 2:
+        if (*(s32 *)(w + 0x8C) > 30)
+        {
+            if ((s8)(w + *(s8 *)(w + 0x90))[0x78] != -1)
+            {
+                lbl_802F1FD0 |= 0x800;
+                u_play_sound_0(0x1A6);
+                u_play_music(0, 8);
+            }
+            else
+            {
+                u_play_sound_0(0x1A8);
+            }
+            *(s16 *)(w + 0x88) = 3;
+        }
+        break;
+    case 3:
+        if (*(s32 *)(w + 0x8C) == 45)
+        {
+            if ((s8)(w + *(s8 *)(w + 0x90))[0x78] != -1)
+                u_play_sound_0(0x392C);
+            else
+                u_play_sound_0(0x392E);
+        }
+        else if (*(s32 *)(w + 0x8C) == 60)
+        {
+            if (lbl_802F1FD0 & 0x800)
+                u_play_sound_0(0x121);
+        }
+        if (*(s32 *)(w + 0x8C) > 160
+            || (*(s32 *)(w + 0x8C) > 90
+                && (controllerInfo[playerControllerIDs[ball->playerId]].pressed.button
+                    & PAD_BUTTON_A)))
+        {
+            u_play_music(100, 8);
+            *(s32 *)(w + 0x8C) = 160;
+            *(s16 *)(w + 0x88) = 4;
+        }
+        break;
+    case 4:
+        if (*(s32 *)(w + 0x8C) > 180)
+        {
+            if (lbl_802F1FD0 & 0x800)
+                lbl_802F1FF4 = 5;
+            else
+                lbl_802F1FF4 = 9;
+        }
+        break;
+    }
+
+    *(s16 *)(w + 0x8A) -= (s32)*(f32 *)(w + 0x24);
+    *(s8 *)(w + 0x90) = *(u16 *)(w + 0x8A) * *(s8 *)(w + 0x87) / 0x10000;
+    if (*(s8 *)(w + 0x90) != *(s8 *)(w + 0x22) && *(s8 *)(w + 0x23) == 0)
+    {
+        u_play_sound_0(0x3B136);
+        *(s8 *)(w + 0x23) = 3;
+    }
+    if (*(s8 *)(w + 0x23) > 0)
+        *(s8 *)(w + 0x23) -= 1;
+    *(s8 *)(w + 0x22) = *(s8 *)(w + 0x90);
 }
 
 #pragma force_active reset

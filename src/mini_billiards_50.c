@@ -226,10 +226,189 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm void lbl_0001968C(void)
+void lbl_0001968C(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_0001968C.s"
+    u8 *q = lbl_00020C40;
+    u8 *g = lbl_1000B418;
+    u8 *w;
+    struct Camera *cam;
+    f32 v;
+    f32 d;
+    f32 dd;
+    s16 ang;
+    s16 t;
+    s16 u;
+    s16 z;
+    s8 hit;
+    Vec a;
+    Vec b;
+    Vec c;
+
+    *(s8 *)(g + 0x20) = (s8)(*(s8 *)lbl_10000061 * 4);
+    if (*(s8 *)lbl_1000001E > 0)
+        *(s8 *)(g + 0x20) += *(s8 *)lbl_1000001E - 1;
+    if (*(s8 *)(g + 0x20) > 0xF)
+        *(s8 *)(g + 0x20) = 0xF;
+
+    v = (*(f32 *)(q + 0)
+         + *(f32 *)(q + 4) * (*(f32 *)(q + 8) - (f32)*(s8 *)(g + 0x20)))
+        * ((f32)rand() / *(f32 *)(q + 0xC));
+    *(s8 *)(lbl_10009C8C + 4) = 0;
+    *(s8 *)(lbl_10009C8C + 5) = 0;
+    *(s8 *)(lbl_10009C8C + 2) = 0;
+    *(s8 *)(lbl_10009C8C + 3) = 0;
+
+    if (*(s32 *)lbl_10000020 == 0
+        || (*(s8 *)lbl_1000000A == 8 && *(s32 *)lbl_10000020 == 1))
+        lbl_00019F5C();
+
+    if (*(s8 *)lbl_1000000A == 0x13 || *(s8 *)lbl_1000000A == 0xA) {
+        *(s16 *)lbl_10009C8C = 0;
+    } else if (*(s8 *)lbl_1000000A == 0xC) {
+        w = lbl_10009C8C;
+        *(s16 *)w = 0;
+        d = *(f32 *)(g + 4) - *(f32 *)(lbl_10009878 + 0x18);
+        if (d < *(f32 *)(q + 0x10)) {
+            *(s8 *)(w + 3) = (rand() & 0x7FFF) % 40 + 20;
+        } else if (d > *(f32 *)(q + 0x14)) {
+            *(s8 *)(w + 3) = -((rand() & 0x7FFF) % 40) - 20;
+        } else if (powerOnTimer & 1) {
+            *(s16 *)w = 0x100;
+        } else {
+            *(s16 *)w = 0;
+        }
+    } else if (*(s8 *)lbl_1000000A == 0xD) {
+        mathutil_mtxA_from_identity();
+        mathutil_mtxA_translate_xyz(*(f32 *)(lbl_10009878 + 0x10),
+                                    *(f32 *)(q + 0x18),
+                                    *(f32 *)(lbl_10009878 + 0x18));
+        mathutil_mtxA_rotate_y(*(s16 *)lbl_1000004C + *(s16 *)lbl_1000004E);
+        c.x = *(f32 *)(g + 0);
+        c.y = *(f32 *)(q + 0x18);
+        c.z = *(f32 *)(g + 4);
+        mathutil_mtxA_rigid_inv_tf_point(&c, &c);
+        if (mathutil_vec_len(&c)
+                < *(f32 *)(q + 0x1C)
+            || *(s32 *)lbl_10000020 > 0x258) {
+            if (powerOnTimer & 1)
+                *(s16 *)lbl_10009C8C = 0x100;
+            else
+                *(s16 *)lbl_10009C8C = 0;
+        } else {
+            c.x = c.x * *(f32 *)(q + 0x20);
+            c.z = c.z * *(f32 *)(q + 0x20);
+            if (__fabs(c.x) < *(f64 *)(q + 0x28)) {
+                if (c.x > *(f32 *)(q + 0x30))
+                    c.x = *(f32 *)(q + 0x34);
+                else if (c.x < *(f32 *)(q + 0x38))
+                    c.x = *(f32 *)(q + 0x3C);
+            }
+            if (__fabs(c.z) < *(f64 *)(q + 0x28)) {
+                if (c.z > *(f32 *)(q + 0x30))
+                    c.z = *(f32 *)(q + 0x34);
+                else if (c.z < *(f32 *)(q + 0x38))
+                    c.z = *(f32 *)(q + 0x3C);
+            }
+            if (c.x > *(f32 *)(q + 0x40))
+                c.x = *(f32 *)(q + 0x40);
+            else if (c.x < *(f32 *)(q + 0x44))
+                c.x = *(f32 *)(q + 0x44);
+            if (c.z > *(f32 *)(q + 0x40))
+                c.z = *(f32 *)(q + 0x40);
+            else if (c.z < *(f32 *)(q + 0x44))
+                c.z = *(f32 *)(q + 0x44);
+            *(s8 *)(lbl_10009C8C + 2) = (s8)(s32)c.x;
+            *(s8 *)(lbl_10009C8C + 3) = (s8)(-(s32)c.z);
+        }
+    } else if (*(s8 *)lbl_1000000B == 0xC) {
+        if (powerOnTimer & 1)
+            *(s16 *)lbl_10009C8C = 0x100;
+        else
+            *(s16 *)lbl_10009C8C = 0;
+    } else if (*(s8 *)lbl_1000000A != 0x11 && *(s8 *)lbl_1000000A != 8) {
+        hit = 0;
+        ang = mathutil_atan2(-*(f32 *)(lbl_10009878 + 0x34),
+                             -*(f32 *)(lbl_10009878 + 0x3C));
+        t = ang - *(s16 *)(g + 0xC) - 0x8000;
+        if (t != 0) {
+            if (t < 0)
+                t = t / 2 - 1;
+            else
+                t = t / 2 + 1;
+            if (t < -60)
+                t = -60;
+            else if (t > 60)
+                t = 60;
+            else if (t < 16 && t > 0)
+                t = 16;
+            else if (t > -16 && t < 0)
+                t = -16;
+            u = ang - *(s16 *)lbl_1000004C - *(s16 *)lbl_1000004E;
+            if (abs(u) < 0x2000)
+                *(s8 *)(lbl_10009C8C + 2) = (s8)t;
+            else if (abs(u) > 0x6000)
+                *(s8 *)(lbl_10009C8C + 2) = -t;
+            else if (u > 0x1000)
+                *(s8 *)(lbl_10009C8C + 3) = (s8)t;
+            else if (u < -0x1000)
+                *(s8 *)(lbl_10009C8C + 3) = -t;
+            hit = 1;
+        }
+        change_current_camera(0);
+        mathutil_mtxA_from_mtxB();
+        cam = cameraInfo;
+        a.x = *(f32 *)(g + 0x10);
+        a.y = *(f32 *)(q + 0x14);
+        a.z = *(f32 *)(g + 0x14);
+        u_math_unk15(&a, &b, cam->sub28.unk38);
+        a.x = *(f32 *)(g + 0x18);
+        a.z = *(f32 *)(g + 0x1C);
+        u_math_unk15(&a, &c, cam->sub28.unk38);
+        ang = mathutil_atan2(b.x - c.x, b.y - c.y);
+        mathutil_sqrt(mathutil_sum_of_sq_2(b.x - c.x, b.y - c.y));
+        if (*(f32 *)lbl_10000050 < *(f32 *)(q + 0x48))
+            z = 0x800;
+        else if (*(f32 *)lbl_10000050 < *(f32 *)(q + 0x4C))
+            z = 0x400;
+        else
+            z = 0x100;
+        if (c.z > *(f32 *)(q + 0x18) || b.z > *(f32 *)(q + 0x18)) {
+            *(s8 *)(lbl_10009C8C + 4) = 0x3C;
+            *(s8 *)(lbl_10009C8C + 5) = -60;
+            hit = 1;
+        } else if (abs(ang) > z
+                   && __fabs(b.x - c.x) > *(f64 *)(q + 0x50)) {
+            if (abs(ang) < 0x2000)
+                *(s8 *)(lbl_10009C8C + 5) = 0x3C;
+            if (ang < 0)
+                t = ang / 16 - 1;
+            else
+                t = ang / 16 + 1;
+            if (t < -60)
+                t = -60;
+            else if (t > 60)
+                t = 60;
+            *(s8 *)(lbl_10009C8C + 4) = (s8)t;
+            hit = 1;
+        }
+        if ((hit == 0 || *(s32 *)lbl_10000020 > 0x258)
+            && *(s8 *)lbl_1000000C == 0)
+            *(s16 *)lbl_10009C8C = 0x100;
+        else
+            *(s16 *)lbl_10009C8C = 0;
+    } else {
+        if (*(s8 *)lbl_1000000A == 8 && lbl_802F1C32 == 1)
+            dd = *(f32 *)lbl_1000003C;
+        else
+            dd = *(f32 *)lbl_10000038;
+        if (__fabs(dd - *(f32 *)(g + 8)) < *(f32 *)(q + 0x58) + v)
+            *(s16 *)lbl_10009C8C = 0x100;
+        else
+            *(s16 *)lbl_10009C8C = 0;
+        if ((*(s8 *)lbl_10000048 == 0 && *(s8 *)(g + 0xE) != 0)
+            || (*(s8 *)lbl_10000048 != 0 && *(s8 *)(g + 0xE) == 0))
+            *(u16 *)lbl_10009C8C |= 0x800;
+    }
 }
 #pragma peephole on
 void lbl_00019F5C(void)

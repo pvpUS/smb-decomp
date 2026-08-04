@@ -340,31 +340,20 @@ void lbl_0000DF6C(void);
 void lbl_0000E11C(void);
 void lbl_0000E1CC(void);
 void lbl_0000E520(void);
-void lbl_0000E7AC(void);
-void lbl_0000E7C4(void);
+void lbl_0000E7C4(struct Sprite *sprite);
 void lbl_0000E900(void);
 void lbl_0000EC20(void);
-void lbl_0000F084(void);
-void lbl_0000F118(void);
 void lbl_0000F174(void);
 void lbl_0000F3D4(void);
-void lbl_0000FC8C(void);
-void lbl_0000FCC4(void);
-void lbl_0000FD48(void);
+void lbl_0000FCC4(s8 *arg0, struct Sprite *sprite);
+void lbl_0000FD48(s8 *arg0, struct Sprite *sprite);
 void lbl_0000FDD8(void);
-void lbl_0000FE90(void);
-void lbl_0000FEF8(void);
-void lbl_000100B4(void);
-void lbl_00010130(void);
-void lbl_00010218(void);
-void lbl_000102FC(void);
+void lbl_000102FC(s8 *arg0, struct Sprite *sprite);
 void lbl_00010484(void);
-void lbl_0001053C(void);
+void lbl_0001053C(s8 *arg0, struct Sprite *sprite);
 void lbl_000106C4(void);
-void lbl_0001075C(void);
 void lbl_000107D0(void);
-void lbl_000108E8(void);
-void lbl_00010918(void);
+void lbl_00010918(struct Sprite *sprite);
 void lbl_00010B70(void);
 void lbl_00010BC8(void);
 void lbl_00010DCC(void);
@@ -373,6 +362,38 @@ void lbl_0001157C(void);
 void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
+
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+void lbl_0000E7AC(s8 *str, struct Sprite *sprite);
+static void lbl_0000E9D4(void);
+void lbl_0000F084(s8 *arg0, struct Sprite *sprite);
+void lbl_0000F118(s8 *status, struct Sprite *sprite);
+void lbl_0000F90C(void);
+static void lbl_0000F9F4(void);
+static void lbl_0000FBA4(s8 *arg0, struct Sprite *sprite);
+void lbl_0000FC8C(u8 *arg0, struct RaceState *obj);
+struct RaceState
+{
+    u8 filler0[0x10];
+    s16 unk10;
+    u8 filler12[0x22];
+    void *unk34;
+};
+void lbl_0000FE90(s8 *arg0, struct Sprite *sprite);
+void lbl_000100B4(s8 *arg0, struct Sprite *sprite);
+void lbl_0000FEF8(s16 arg0);
+void lbl_00010130(s16 arg0, f32 x, f32 y);
+void lbl_00010218(int idx);
+void lbl_0001075C(u8 *arg0, struct RaceCfgObj *obj);
+struct RaceCfgObj
+{
+    u8 filler0[0x48];
+    s32 unk48;
+    u8 filler4c[0x6c - 0x4c];
+    f32 unk6c;
+};
+void lbl_000108E8(s8 *str, struct Sprite *sprite);
 
 #pragma force_active on
 asm void lbl_0000E1CC(void)
@@ -384,5 +405,571 @@ asm void lbl_0000E520(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_0000E520.s"
+}
+#pragma peephole on
+void lbl_0000E7AC(s8 *str, struct Sprite *sprite)
+{
+    if (sprite->userVar > 0)
+        sprite->userVar--;
+}
+#pragma peephole on
+void lbl_0000E7C4(struct Sprite *sprite)
+{
+    NLsprarg params;
+    u8 *cfg = lbl_00013C48;
+    s16 n;
+    f32 u;
+    f32 d;
+    f32 x;
+
+    u = (f32)sprite->userVar / *(f32 *)(cfg + 0x3C);
+    d = *(f64 *)(cfg + 0x1D8) -
+        __fabs(*(f32 *)(cfg + 0xE8) * (u - *(f32 *)(cfg + 0x1C8)));
+    x = *(f32 *)(cfg + 0x1E0) * d;
+    n = (s16)x;
+    if ((s16)x > 0xFF)
+        n = 0xFF;
+    params.zm_x = sprite->scaleX;
+    params.zm_y = sprite->scaleY;
+    params.u0 = params.v0 = *(f32 *)(cfg + 0x18);
+    params.u1 = params.v1 = *(f32 *)(cfg + 0x8);
+    params.ang = 0;
+    params.listType = -1;
+    params.attr = 5;
+    params.trnsl = *(f32 *)(cfg + 0x8);
+    params.base_color = 0xFFFFFF;
+    params.offset_color = 0;
+    params.offset_color = (n << 16) | (n << 8) | n;
+    params.attr = 0xA;
+    params.sprno = sprite->bmpId;
+    params.x = sprite->x;
+    params.y = sprite->y;
+    params.z = sprite->depth;
+    nlSprPut(&params);
+}
+#pragma peephole on
+void lbl_0000E900(void)
+{
+    char unused[16];
+    struct Sprite *sprite;
+    s16 i;
+
+    for (i = 0; i < 4; i++)
+    {
+        if (((u8 **)lbl_10000054)[i] == NULL)
+            return;
+        sprite = create_sprite();
+        if (sprite == NULL)
+            return;
+        sprite->type = 0;
+        sprite->x = *(f32 *)lbl_00013E2C;
+        sprite->y = *(f32 *)lbl_00013E30 + i * 0x1C;
+        sprite->fontId = 0x45;
+        sprite->textAlign = 0;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000E9D4;
+        sprite->userVar = i;
+    }
+}
+static asm void lbl_0000E9D4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_0000E9D4.s"
+}
+asm void lbl_0000EC20(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_0000EC20.s"
+}
+#pragma peephole on
+void lbl_0000F084(s8 *arg0, struct Sprite *sprite)
+{
+    int phase;
+
+    if (sprite->counter <= 0)
+    {
+        *arg0 = 0;
+    }
+    else
+    {
+        sprite->counter--;
+        phase = sprite->counter % 8;
+        if (phase > 4)
+            sprite->unk78 &= ~1;
+        else
+            sprite->unk78 |= 1;
+        if (sprite->counter >= 0x48 && phase == 7)
+            u_play_sound_0(0x3B134);
+    }
+}
+void lbl_0000F118(s8 *status, struct Sprite *sprite)
+{
+    s32 m;
+
+    if (sprite->counter <= 0)
+    {
+        *status = STAT_NULL;
+        return;
+    }
+    sprite->counter--;
+    m = sprite->counter % 16;
+    if (m > 8)
+        sprite->unk78 &= ~1;
+    else
+        sprite->unk78 |= 1;
+}
+asm void lbl_0000F174(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_0000F174.s"
+}
+asm void lbl_0000F3D4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_0000F3D4.s"
+}
+asm void lbl_0000F90C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_0000F90C.s"
+}
+static asm void lbl_0000F9F4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_0000F9F4.s"
+}
+#pragma peephole on
+void lbl_0000FBA4(s8 *arg0, struct Sprite *sprite)
+{
+    u8 *cfg = lbl_00013C48;
+    u8 *base = lbl_10000028;
+    struct Ball_child *bc = ballInfo[sprite->userVar].unk144;
+    f32 t;
+
+    if (sprite->counter >= 0)
+        sprite->counter--;
+    t = (f32)sprite->counter / *(f32 *)(cfg + 0xAC);
+    if (sprite->counter >= 0x14)
+    {
+        sprite->opacity = *(f32 *)(cfg + 0x18);
+    }
+    else if (sprite->counter >= 0)
+    {
+        sprite->opacity = *(f64 *)(cfg + 0x1D8) - t;
+        sprite->x -= *(f32 *)(cfg + 0x8);
+    }
+    if ((*(u16 *)(base + 2) & 8) && (bc->unk14 & 2) && sprite->counter < 0)
+    {
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000FC8C;
+        sprite->counter = 0x78;
+    }
+}
+#pragma peephole on
+void lbl_0000FC8C(u8 *arg0, struct RaceState *obj)
+{
+    int t = obj->unk10;
+    if (t >= 0)
+        obj->unk10 = t - 1;
+    if (obj->unk10 >= 0)
+        return;
+    obj->unk34 = (void *)lbl_0000FCC4;
+    obj->unk10 = 0x14;
+}
+void lbl_0000FCC4(s8 *arg0, struct Sprite *sprite)
+{
+    f32 t;
+
+    if (sprite->counter >= 0)
+        sprite->counter--;
+    t = (f32)sprite->counter / *(f32 *)lbl_00013CF4;
+    if (sprite->counter >= 0)
+    {
+        sprite->opacity = t;
+        sprite->x -= *(f32 *)lbl_00013C50;
+    }
+    if (sprite->counter < 0)
+        *arg0 = 0;
+}
+void lbl_0000FD48(s8 *arg0, struct Sprite *sprite)
+{
+    char unused[8];
+    u8 *cfg = lbl_00013C48;
+    f32 t;
+
+    if (sprite->counter >= 0)
+        sprite->counter--;
+    t = (f32)sprite->counter / *(f32 *)(cfg + 0xAC);
+    if (sprite->counter >= 0x14)
+    {
+        sprite->opacity = *(f32 *)(cfg + 0x18);
+    }
+    else if (sprite->counter >= 0)
+    {
+        sprite->opacity = *(f64 *)(cfg + 0x1D8) - t;
+        sprite->x -= *(f32 *)(cfg + 0x8);
+    }
+}
+#pragma peephole on
+void lbl_0000FDD8(void)
+{
+    /* the original frame reserves 8 bytes of locals here that the body
+       never touches; keeping the slot is what makes the prologue match. */
+    char unusedBuf[8];
+    u8 *cfg = lbl_00013C48;
+    struct Sprite *sprite = create_sprite();
+
+    if (sprite == NULL)
+        return;
+    sprite->type = 0;
+    sprite->fontId = 9;
+    sprite->x = *(f32 *)cfg;
+    sprite->y = *(f32 *)(cfg + 0x284);
+    sprite->depth = *(f32 *)(cfg + 0xD8);
+    sprite->scaleX = *(f32 *)(cfg + 0x180);
+    sprite->scaleY = *(f32 *)(cfg + 0x180);
+    sprite->textAlign = 4;
+    sprite->mulR = 0xFF;
+    sprite->mulG = 0xA0;
+    sprite->mulB = 0x55;
+    sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000FE90;
+    sprite->counter = 0x14;
+    sprintf(sprite->text, (char *)lbl_00015D44);
+}
+void lbl_0000FE90(s8 *arg0, struct Sprite *sprite)
+{
+    u8 *cfg = lbl_00013C48;
+    f32 t = (f32)sprite->counter / *(f32 *)(cfg + 0xAC);
+
+    if (sprite->counter > 0)
+        sprite->counter--;
+    sprite->scaleY = *(f64 *)(cfg + 0x288) * (*(f64 *)(cfg + 0x1D8) - t);
+}
+void lbl_0000FEF8(s16 arg0)
+{
+    u8 *str = lbl_00015C08;
+    u8 *cfg = lbl_00013C48;
+    u8 *st = (u8 *)ballInfo[arg0].unk144;
+    struct Sprite *sprite;
+    int tag;
+
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    tag = arg0 + 0x67;
+    sprite->tag = tag;
+    sprite->type = 0;
+    sprite->fontId = 0x45;
+    sprite->x = *(f32 *)(cfg + 0x0);
+    sprite->y = *(f32 *)(cfg + 0x290);
+    sprite->depth = *(f32 *)(cfg + 0xD8);
+    sprite->textAlign = 4;
+    sprintf(sprite->text, (char *)(str + 0x16C));
+
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    sprite->tag = tag;
+    sprite->type = 0;
+    sprite->fontId = 0x45;
+    sprite->x = *(f32 *)(cfg + 0x0);
+    sprite->y = *(f32 *)(cfg + 0x220);
+    sprite->depth = *(f32 *)(cfg + 0xD8);
+    sprite->textAlign = 4;
+    sprintf(sprite->text, (char *)(str + 0xB0), st[0x1C8], st[0x1C9], st[0x1CA]);
+
+    if (*(s32 *)lbl_10001068 < 0)
+        return;
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    sprite->tag = tag;
+    sprite->type = 0;
+    sprite->fontId = 9;
+    sprite->x = *(f32 *)(cfg + 0x0);
+    sprite->y = *(f32 *)(cfg + 0x50);
+    sprite->depth = *(f32 *)(cfg + 0xD8);
+    sprite->scaleX = *(f32 *)(cfg + 0x294);
+    sprite->scaleY = *(f32 *)(cfg + 0x180);
+    sprite->mulR = 0xFF;
+    sprite->mulG = 0x80;
+    sprite->mulB = 0x20;
+    sprite->textAlign = 4;
+    sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_000100B4;
+    sprite->counter = 0x14;
+    if (*(s32 *)lbl_10001068 == 0)
+    {
+        sprintf(sprite->text, (char *)(str + 0x1B8));
+        u_play_sound_0(0x1E3);
+    }
+    else
+    {
+        sprintf(sprite->text, (char *)(str + 0x1CC));
+        u_play_sound_0(0x1E5);
+    }
+}
+
+void lbl_000100B4(s8 *arg0, struct Sprite *sprite)
+{
+    u8 *cfg = lbl_00013C48;
+    f32 e;
+    f32 t = (f32)sprite->counter / *(f32 *)(cfg + 0xAC);
+
+    if (sprite->counter > 0)
+        sprite->counter--;
+    sprite->scaleX = *(f32 *)(cfg + 0x294) + (e = *(f32 *)(cfg + 0xE8) * t);
+    sprite->scaleY = *(f32 *)(cfg + 0x180) + e;
+    sprite->opacity = *(f32 *)(cfg + 0x8) - t;
+}
+void lbl_00010130(s16 arg0, f32 x, f32 y)
+{
+    u8 *cfg = lbl_00013C48;
+    struct Sprite *sprite;
+    int tag;
+
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    tag = arg0 + 0x67;
+    sprite->tag = tag;
+    sprite->x = x;
+    sprite->y = y;
+    sprite->fontId = 0x45;
+    sprite->textAlign = 0;
+    sprite->depth = *(f32 *)(cfg + 0xD8);
+    sprite->flags = 0x200000;
+    sprintf(sprite->text, (char *)lbl_00015DE0);
+
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    sprite->tag = tag;
+    sprite->x = x;
+    sprite->y = *(f32 *)(cfg + 0xAC) + y;
+    sprite->fontId = 0x45;
+    sprite->textAlign = 0;
+    sprite->depth = *(f32 *)(cfg + 0xD8);
+    sprite->flags = 0x200000;
+    sprintf(sprite->text, (char *)lbl_00015DE8);
+}
+void lbl_00010218(int idx)
+{
+    u8 *cfg = lbl_00013C48;
+    struct Sprite *sprite = create_sprite();
+    f64 depth;
+
+    if (sprite != NULL)
+    {
+        sprite->x = *(f32 *)(cfg + 0x0);
+        sprite->y = *(f32 *)(cfg + 0x4);
+        if (modeCtrl.unk30 == 1)
+            depth = *(f64 *)(cfg + 0x298);
+        else
+            depth = *(f64 *)(cfg + 0x2A0);
+        sprite->depth = depth;
+        sprite->fontId = 9;
+        sprite->textAlign = 4;
+        sprite->mulR = 0xFF;
+        sprite->mulG = 0xC8;
+        sprite->mulB = 0;
+        sprite->counter = (s16)idx;
+        sprite->userVar = idx;
+        sprite->flags |= 0x1000;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_000102FC;
+        sprintf(sprite->text, (char *)lbl_00015DF0);
+    }
+    u_play_sound_0(0x1E8);
+}
+#pragma peephole on
+void lbl_000102FC(s8 *arg0, struct Sprite *sprite)
+{
+    u8 *cfg = lbl_00013C48;
+    s16 n = sprite->counter;
+    int e = sprite->userVar - n;
+
+    if (e < 0x1E)
+    {
+        sprite->opacity = *(f64 *)(cfg + 0x2A8) * e;
+        sprite->scaleX = *(f32 *)(cfg + 0x8);
+        sprite->scaleY = mathutil_sin(e * 0x222);
+    }
+    else if (e < 0x3C)
+    {
+        sprite->opacity = *(f32 *)(cfg + 0x8);
+        sprite->scaleX = *(f32 *)(cfg + 0x8);
+        sprite->scaleY = *(f64 *)(cfg + 0x1D8) -
+                         *(f64 *)(cfg + 0x2B0) * mathutil_sin((e - 30) * 0x444);
+    }
+    else if (n <= 0xF)
+    {
+        sprite->opacity = *(f64 *)(cfg + 0x2B8) * n;
+        sprite->scaleX = *(f64 *)(cfg + 0x2B8) * sprite->counter;
+        sprite->scaleY = *(f32 *)(cfg + 0x8);
+    }
+    else
+    {
+        sprite->opacity = *(f32 *)(cfg + 0x8);
+        sprite->scaleX = *(f32 *)(cfg + 0x8);
+        sprite->scaleY = *(f32 *)(cfg + 0x8);
+    }
+    if (--sprite->counter <= 0)
+        *arg0 = 0;
+}
+#pragma peephole on
+void lbl_00010484(void)
+{
+    u8 *cfg = lbl_00013C48;
+    u8 *base = lbl_10000028;
+    struct Sprite *sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    sprite->type = 0;
+    sprite->fontId = 9;
+    sprite->x = *(f32 *)(cfg + 0);
+    sprite->y = *(f32 *)(cfg + 4);
+    sprite->depth = *(f32 *)(cfg + 0xd8);
+    sprite->textAlign = 4;
+    sprite->flags |= 0x1000;
+    sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0001053C;
+    sprite->counter = 0x7e;
+    sprite->userVar = 0x7e;
+    sprintf(sprite->text, (char *)lbl_00015DF8, *(u16 *)(base + 6) + 1);
+}
+#pragma peephole on
+void lbl_0001053C(s8 *arg0, struct Sprite *sprite)
+{
+    char unused[8];
+    u8 *cfg = lbl_00013C48;
+    s16 n = sprite->counter;
+    int e = sprite->userVar - n;
+
+    if (e < 0x1E)
+    {
+        sprite->opacity = *(f64 *)(cfg + 0x2A8) * e;
+        sprite->scaleX = mathutil_sin(e * 0x222);
+        sprite->scaleY = *(f32 *)(cfg + 0x8);
+    }
+    else if (e < 0x3C)
+    {
+        sprite->opacity = *(f32 *)(cfg + 0x8);
+        sprite->scaleX = *(f64 *)(cfg + 0x1D8) -
+                         *(f64 *)(cfg + 0x2B0) * mathutil_sin((e - 30) * 0x444);
+        sprite->scaleY = *(f32 *)(cfg + 0x8);
+    }
+    else if (n <= 0xF)
+    {
+        sprite->opacity = *(f64 *)(cfg + 0x2B8) * n;
+        sprite->scaleX = *(f32 *)(cfg + 0x8);
+        sprite->scaleY = *(f64 *)(cfg + 0x2B8) * sprite->counter;
+    }
+    else
+    {
+        sprite->opacity = *(f32 *)(cfg + 0x8);
+        sprite->scaleX = *(f32 *)(cfg + 0x8);
+        sprite->scaleY = *(f32 *)(cfg + 0x8);
+    }
+    if (--sprite->counter <= 0)
+        *arg0 = 0;
+}
+#pragma peephole on
+void lbl_000106C4(void)
+{
+    u8 *cfg = lbl_00013C48;
+    struct Sprite *sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    sprite->type = 1;
+    sprite->bmpId = 0x4b;
+    sprite->x = *(f32 *)(cfg + 0x18);
+    sprite->y = *(f32 *)(cfg + 0x18);
+    sprite->depth = *(f32 *)(cfg + 0xc);
+    sprite->scaleX = *(f32 *)(cfg + 0xcc);
+    sprite->scaleY = *(f32 *)(cfg + 0x30);
+    sprite->opacity = *(f32 *)(cfg + 0x18);
+    sprite->mulR = 0;
+    sprite->mulG = 0;
+    sprite->mulB = 0;
+    sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0001075C;
+    sprite->userVar = 0;
+}
+void lbl_0001075C(u8 *arg0, struct RaceCfgObj *obj)
+{
+    u8 *cfg = lbl_00013C48;
+    obj->unk6c = obj->unk6c + *(f64 *)(cfg + 0x2c0);
+    if (obj->unk6c > *(f64 *)(cfg + 0x2c8))
+    {
+        obj->unk6c = *(f32 *)(cfg + 0x1c8);
+        if (obj->unk48 == 0)
+        {
+            lbl_000107D0();
+            obj->unk48 = -1;
+        }
+    }
+}
+asm void lbl_000107D0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_000107D0.s"
+}
+#pragma peephole on
+void lbl_000108E8(s8 *str, struct Sprite *sprite)
+{
+    if (sprite->counter <= 0)
+        return;
+    sprite->x -= *(f32 *)lbl_00013C50;
+    sprite->counter--;
+}
+#pragma peephole on
+void lbl_00010918(struct Sprite *sprite)
+{
+    NLsprarg params;
+    u8 *str = lbl_00015C08;
+    u8 *cfg = lbl_00013C48;
+    u8 *rec = ((u8 **)lbl_10001AE0)[sprite->userVar];
+    f32 v;
+    f32 y;
+
+    if (sprite->counter > 0x14)
+        return;
+    v = *(f64 *)(cfg + 0x1D8) - (f32)sprite->counter / *(f32 *)(cfg + 0xAC);
+    reset_text_draw_settings();
+    func_80071B50(0x200000);
+    set_text_opacity(v);
+    y = sprite->y;
+    params.zm_x = *(f32 *)(cfg + 0x8);
+    params.zm_y = *(f32 *)(cfg + 0x8);
+    params.u0 = params.v0 = *(f32 *)(cfg + 0x18);
+    params.u1 = params.v1 = *(f32 *)(cfg + 0x8);
+    params.ang = 0;
+    params.listType = -1;
+    params.attr = 5;
+    params.trnsl = *(f32 *)(cfg + 0x8);
+    params.base_color = 0xFFFFFF;
+    params.offset_color = 0;
+    params.base_color = 0xFFFF0000;
+    params.sprno = 0x717;
+    params.x = sprite->x;
+    params.y = y;
+    params.z = sprite->depth;
+    nlSprPut(&params);
+    func_80071B1C(sprite->depth);
+    set_text_font(0x48);
+    set_text_pos(*(f32 *)(cfg + 0xE4) + sprite->x, *(f32 *)(cfg + 0xE4) + y);
+    sprite_printf((char *)(str + 0xA0), *(u16 *)(rec + 0x20));
+    set_text_font(0x45);
+    y = *(f32 *)(cfg + 0x1C) + y;
+    set_text_pos(*(f32 *)(cfg + 0xF0) + sprite->x, y);
+    if (*(u32 *)(rec + 0x14) & 0x20)
+    {
+        sprite_printf((char *)(str + 0x118), *(u16 *)rec + 1);
+    }
+    else
+    {
+        set_text_mul_color(((u32 *)str)[*(u16 *)rec]);
+        sprite_printf((char *)(str + 0x120), *(u16 *)rec + 1);
+    }
+    set_text_font(0x45);
+    set_text_pos(*(f32 *)(cfg + 0x1EC) + (*(f32 *)(cfg + 0xF0) + sprite->x), y);
+    sprite_printf((char *)(str + 0x12C), ((s16 *)lbl_10000048)[*(u16 *)rec]);
+    if (((s16 *)lbl_10000048)[*(u16 *)rec] != 1)
+        sprite_printf((char *)(str + 0x138));
 }
 #pragma force_active reset

@@ -184,12 +184,12 @@ void lbl_000082E4(void);
 void lbl_000086E4(void);
 void lbl_0000871C(void);
 void lbl_000087CC(struct Camera *camera, Vec *eye, Vec *lookAt, s16 fov, float t);
-void lbl_000096B4(void);
+int lbl_000096B4(void);
 void lbl_000097B4(void);
 void lbl_00009AA8(void);
 void lbl_00009D18(void);
 void lbl_00009F60(void);
-void lbl_0000A138(void);
+int lbl_0000A138(void);
 void lbl_0000A23C(void);
 void lbl_0000A610(void);
 void lbl_0000A778(void);
@@ -507,9 +507,116 @@ void lbl_0000919C(struct Camera *camera, struct Ball *ball)
     camera->subState = 0xb;
     lbl_00009230(camera, ball);
 }
-asm void lbl_00009230(struct Camera *camera, struct Ball *ball)
+void lbl_00009230(struct Camera *camera, struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00009230.s"
+    u8 *tbl = lbl_00011338;
+    Vec sp1c;
+    Vec sp10;
+    int n;
+    int m;
+    int m2;
+    int k;
+    f32 t;
+    s16 d;
+
+    if ((debugFlags & 0xa) && camera->subState == 0xb)
+        return;
+    n = func_8009D7E8();
+    if (n <= 0)
+        return;
+    if (camera->timerCurr < n * 0x110)
+    {
+        k = camera->timerCurr / 0x110;
+        m = camera->timerCurr - k * 0x110;
+        if (n > 2)
+        {
+            switch (k)
+            {
+            case 0:
+                func_8009D7FC(1, &sp1c);
+                break;
+            case 1:
+                func_8009D7FC(0, &sp1c);
+                break;
+            case 2:
+                func_8009D7FC(2, &sp1c);
+                break;
+            case 3:
+                func_8009D7FC(3, &sp1c);
+                break;
+            }
+        }
+        else
+        {
+            func_8009D7FC(k, &sp1c);
+        }
+        if (m >= 0xcc)
+        {
+            camera->eye.x = sp1c.x + 0.0;
+            camera->eye.y = *(f64 *)(tbl + 0xf8) + sp1c.y;
+            camera->eye.z = sp1c.z - *(f64 *)(tbl + 0x100) - *(f64 *)(tbl + 0x10);
+            camera->rotX = 0;
+            camera->rotY = -32768;
+            camera->rotZ = 0;
+        }
+        else
+        {
+            t = m / *(f32 *)(tbl + 0x108);
+            t = (*(f64 *)(tbl + 0x50) + *(f64 *)(tbl + 0x110) * t) * (t * t);
+            camera->eye.x = sp1c.x;
+            camera->eye.y = *(f64 *)(tbl + 0xf8) * t
+                          + sp1c.y * (*(f64 *)(tbl + 0x20)
+                                      - *(f64 *)(tbl + 0x118) * (*(f64 *)(tbl + 0x20) - t));
+            camera->eye.z = sp1c.z - *(f64 *)(tbl + 0x100) - *(f64 *)(tbl + 0x10);
+            camera->rotX = 0;
+            camera->rotY = -32768;
+            camera->rotZ = 0;
+        }
+    }
+    else
+    {
+        m2 = camera->timerCurr - n * 0x110;
+        if (m2 < 8)
+            t = m2 * *(f64 *)(tbl + 0x120);
+        else
+            t = *(f32 *)(tbl + 0x98);
+        t = *(f64 *)(tbl + 0x20)
+          - (*(f64 *)(tbl + 0x20) - t) * (*(f64 *)(tbl + 0x20) - t);
+        func_8009D98C(&sp10);
+        camera->eye.x = sp10.x;
+        camera->eye.y = *(f64 *)(tbl + 0x128) + sp10.y;
+        camera->eye.z = sp10.z - *(f64 *)(tbl + 0x130) - *(f64 *)(tbl + 0x50) * t;
+        if (lbl_0000A138())
+        {
+            d = *(f64 *)(tbl + 0x138) * (0x900 - camera->rotX) < *(f64 *)(tbl + 0x140)
+              ? *(f64 *)(tbl + 0x138) * (0x900 - camera->rotX)
+              : *(f64 *)(tbl + 0x140);
+        }
+        else
+        {
+            d = *(f64 *)(tbl + 0x148) * -camera->rotX;
+        }
+        camera->rotX += d;
+        camera->rotY = -32768;
+        camera->rotZ = 0;
+        if (d == 0)
+            polyDisp.flags |= 0x20;
+        else
+            polyDisp.flags &= ~0x20;
+    }
+    func_8009DB6C(mathutilData->mtxA);
+    mathutil_mtxA_translate(&camera->eye);
+    mathutil_mtxA_rotate_y(camera->rotY);
+    mathutil_mtxA_rotate_x(camera->rotX);
+    mathutil_mtxA_rotate_z(camera->rotZ);
+    mathutil_mtxA_get_translate(&camera->eye);
+    mathutil_mtxA_to_euler_yxz(&camera->rotY, &camera->rotX, &camera->rotZ);
+    mathutil_mtxA_tf_point_xyz(&camera->lookAt, *(f32 *)(tbl + 8),
+                               *(f32 *)(tbl + 8), *(f32 *)(tbl + 0x150));
+    camera->timerCurr++;
+    if (lbl_000096B4() && camera->timerCurr < n * 0x110 && camera->timerCurr > 10)
+        camera->timerCurr = n * 0x110;
+    if (camera->timerCurr > 0x880)
+        camera->timerCurr = 0x880;
 }
 #pragma force_active reset

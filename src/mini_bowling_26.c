@@ -306,10 +306,182 @@ void lbl_000066C4(struct Ape *ape, int status)
     ball->unk100 = 0;
     ball->lookPointPrio = *(f32 *)(cfg + 0x1c98);
 }
-asm void lbl_000068C4(struct Ape *ape, float speed)
+struct BowlScore {  // 0x4c per-player bowling score sheet, array based at +0xc
+    u8 filler0[6];
+    s8 unk6;          // 0x06
+    s8 unk7;          // 0x07
+    s8 roll;          // 0x08 index of the roll just completed
+    s8 unk9;          // 0x09 pin-pattern / frame index (0..12)
+    s16 total[11];    // 0x0a
+    s8 pins[21];      // 0x20
+    s8 state[21];     // 0x35
+    u8 filler4A[2];
+};
+
+void lbl_000068C4(struct Ape *ape, float speed)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_000068C4.s"
+    u8 *w = lbl_10000000;
+    u8 *cfg = lbl_0000F020;
+    s32 flags = *(s32 *)lbl_00014F20;
+    struct BowlScore *sheet;
+    int stat = 0xe;
+    int mot = 0;
+    int i;
+    f32 v;
+
+    if (flags & 4)
+    {
+        if (currentBall->vel.x > *(f64 *)(cfg + 0x1dc0))
+            mot = 1;
+        else if (currentBall->vel.x < *(f64 *)(cfg + 0x1dc0))
+            mot = 2;
+        else
+            mot = 0;
+    }
+    else if (flags & 0x1a)
+    {
+        mot = 0;
+    }
+    else if (flags & 0x20)
+    {
+        if (*(s32 *)w == 0x46)
+        {
+            v = *(f32 *)(w + 0x16c);
+            if (v > *(f64 *)(cfg + 0x2150))
+            {
+                mot = 3;
+                u_play_sound_0(0x3B12D);
+            }
+            else if (v > *(f64 *)(cfg + 0x2158))
+            {
+                mot = 4;
+                u_play_sound_0(0x3B020);
+            }
+            else
+            {
+                mot = 5;
+                u_play_sound_0(0x3B01F);
+            }
+        }
+        else if (*(s32 *)w > 0x46)
+        {
+            mot = 6;
+        }
+        else if (*(s32 *)w <= 1)
+        {
+            stat = 0xa;
+            mot = 4;
+        }
+    }
+    else if ((flags & 0x40) && *(s32 *)w > 0x366)
+    {
+        stat = 0xa;
+        mot = 4;
+    }
+    else if (flags & 0x80)
+    {
+        sheet = (struct BowlScore *)(w + 0xc) + modeCtrl.currPlayer;
+        i = sheet->roll;
+        switch (sheet->state[i])
+        {
+        case 2:
+            if (sheet->unk9 < 3)
+            {
+                if (ape->charaId == 1)
+                {
+                    stat = 8;
+                    mot = 1;
+                }
+                else
+                {
+                    stat = 5;
+                    mot = 0xa;
+                }
+            }
+            else if (sheet->unk9 < 0xc)
+            {
+                stat = 5;
+                mot = 8;
+            }
+            else
+            {
+                stat = 5;
+                mot = 0xc;
+            }
+            if (*(f64 *)(cfg + 0x2160) == *(s32 *)w ||
+                *(f64 *)(cfg + 0x1e70) == *(s32 *)w)
+                u_play_sound_0(0x59);
+            break;
+        case 3:
+            stat = 5;
+            mot = 4;
+            if (*(f64 *)(cfg + 0x2160) == *(s32 *)w ||
+                *(f64 *)(cfg + 0x1e70) == *(s32 *)w)
+                u_play_sound_0(0x58);
+            break;
+        case 5:
+        case 6:
+        case 7:
+            stat = 9;
+            mot = 3;
+            if ((*(f64 *)(cfg + 0x2160) == *(s32 *)w ||
+                 *(f64 *)(cfg + 0x1e70) == *(s32 *)w) &&
+                (currentBall->flags & BALL_FLAG_GOAL))
+                u_play_sound_0(0x1c);
+            break;
+        case 1:
+        default:
+            if (sheet->unk7 == 1 && sheet->pins[i] >= 6)
+            {
+                stat = 5;
+                mot = 2;
+                if (*(f64 *)(cfg + 0x2160) == *(s32 *)w ||
+                    *(f64 *)(cfg + 0x1e70) == *(s32 *)w)
+                    u_play_sound_0(0x1b);
+            }
+            else
+            {
+                stat = 9;
+                mot = 2;
+                if (*(f64 *)(cfg + 0x2160) == *(s32 *)w ||
+                    *(f64 *)(cfg + 0x1e70) == *(s32 *)w)
+                    u_play_sound_0(0x1c);
+            }
+            break;
+        }
+    }
+    else if (flags & 0x2000)
+    {
+        if (*(s8 *)(w + 0x13e) == 0)
+        {
+            stat = 5;
+            if ((u32)*(s8 *)(w + 6) >= 9)
+                mot = 0xc;
+            else
+                mot = 6;
+            if (*(f64 *)(cfg + 0x2160) == *(s32 *)w ||
+                *(f64 *)(cfg + 0x1e70) == *(s32 *)w)
+                u_play_sound_0(0x59);
+        }
+        else
+        {
+            stat = 9;
+            if (*(s8 *)(w + 8) < 1)
+                mot = 3;
+            else
+                mot = 2;
+            if ((*(f64 *)(cfg + 0x2160) == *(s32 *)w ||
+                 *(f64 *)(cfg + 0x1e70) == *(s32 *)w) &&
+                (currentBall->flags & BALL_FLAG_GOAL))
+                u_play_sound_0(0x1c);
+        }
+    }
+    else
+    {
+        u_choose_ape_anim(ape, speed);
+        return;
+    }
+    new_ape_stat_motion(ape, stat, mot, 0, speed);
 }
 #pragma peephole on
 void lbl_00006E64(u32 color, char *str, float x, float y)

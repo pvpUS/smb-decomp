@@ -172,7 +172,7 @@ void lbl_000093F0(void);
 void lbl_00009414(void);
 void lbl_00009424(void);
 void lbl_00009458(void);
-void lbl_00009478(void);
+u8 lbl_00009478(void);
 void lbl_00009488(void);
 void lbl_00009538(void);
 void lbl_000095C4(void);
@@ -218,7 +218,7 @@ void lbl_0001199C(void);
 void lbl_00011A6C(void);
 void lbl_00011DAC(void);
 void lbl_00011FEC(void);
-void lbl_000123B4(void);
+void lbl_000123B4(s16 a, u32 b);
 void lbl_00012A14(void);
 void lbl_00012C80(void);
 void lbl_00012EEC(void);
@@ -521,9 +521,120 @@ asm void lbl_00011FEC(void)
     nofralloc
 #include "../asm/nonmatchings/mini_golf/lbl_00011FEC.s"
 }
-asm void lbl_000123B4(void)
+#pragma peephole on
+void lbl_000123B4(s16 a, u32 b)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_000123B4.s"
+    NLsprarg sp;
+    char buf[256];
+    u8 *tbl = (u8 *)lbl_00026E28;
+    u8 *pool = (u8 *)lbl_00026550;
+    f32 y;
+
+    reset_text_draw_settings();
+    set_text_font(9);
+    if (a == 1) {
+        set_text_pos(*(f32 *)(pool + 0x20c), *(f32 *)(pool + 0x210));
+        sprite_puts((char *)(tbl + 0x3a3c));
+        set_text_pos(*(f32 *)(pool + 0x214), *(f32 *)(pool + 0x210));
+        sprite_puts((char *)(tbl + 0x3a44));
+        set_text_pos(*(f32 *)(pool + 0x218), *(f32 *)(pool + 0x21c));
+        sprite_puts((char *)(tbl + 0x3a48));
+    } else if (a == 2) {
+        if (lbl_00009478() == 1 && (s32)lbl_802F1BE8.unk0 == 1) {
+            set_text_pos(*(f32 *)(pool + 0x220), *(f32 *)(pool + 0x224));
+            switch (modeCtrl.currPlayer) {
+            case 0:
+                set_text_mul_color(0xFF0000);
+                sprite_puts((char *)(tbl + 0x39d4));
+                break;
+            case 1:
+                set_text_mul_color(0x2C65FF);
+                sprite_puts((char *)(tbl + 0x39d8));
+                break;
+            }
+            set_text_pos(*(f32 *)(pool + 0x228), *(f32 *)(pool + 0x224));
+            sprite_puts((char *)(tbl + 0x3a4c));
+        } else {
+            set_text_pos(*(f32 *)(pool + 0x22c), *(f32 *)(pool + 0x224));
+            sprite_puts((char *)(tbl + 0x3a50));
+        }
+    } else if (a == 3) {
+        if (b > 0x78) {
+            b = 0xf0 - b;
+            y = *(f64 *)(pool + 0x230) + *(f32 *)(pool + 0x170) * mathutil_sin((int)(*(f32 *)(pool + 0x160) * (b / *(f32 *)(pool + 0x164)) - *(f32 *)(pool + 0x168)))
+                  / (*(f32 *)(pool + 0x134) + (f32)b * b / *(f32 *)(pool + 0x238));
+            y = ((f64 *)pool)[0x46] > y ? y : (f32)(*(f64 *)(pool + 0x240) - y);
+            set_text_pos(y, *(f32 *)(pool + 0x224));
+            sprite_puts((char *)(tbl + 0x3a58));
+        } else {
+            set_text_pos(*(f32 *)(pool + 0x218), *(f32 *)(pool + 0x224));
+            sprite_puts((char *)(tbl + 0x3a58));
+        }
+    } else if (a == 4) {
+        if (b > 0x78) {
+            b = 0xf0 - b;
+            y = *(f32 *)(pool + 0x224) - *(f32 *)(pool + 0x200) * mathutil_sin((int)(*(f32 *)(pool + 0x160) * (b / *(f32 *)(pool + 0x164)) - *(f32 *)(pool + 0x168)))
+                  / (*(f32 *)(pool + 0x134) + (f32)b * b / *(f32 *)(pool + 0x238));
+            y = ((f32 *)pool)[0x89] > y ? y : *(f32 *)(pool + 0x248) - y;
+            set_text_pos(*(f32 *)(pool + 0x24c), y);
+            sprite_puts((char *)(tbl + 0x3a5c));
+        } else {
+            set_text_pos(*(f32 *)(pool + 0x24c), *(f32 *)(pool + 0x224));
+            sprite_puts((char *)(tbl + 0x3a5c));
+        }
+    } else if (a == 10) {
+        if (lbl_00009478() == 2 && (s32)lbl_802F1BE8.unk0 == 1) {
+            set_text_pos(*(f32 *)(pool + 0x250), *(f32 *)(pool + 0x224));
+            switch (modeCtrl.currPlayer) {
+            case 0:
+                set_text_mul_color(0xFF0000);
+                sprite_puts((char *)(tbl + 0x39d4));
+                break;
+            case 1:
+                set_text_mul_color(0x2C65FF);
+                sprite_puts((char *)(tbl + 0x39d8));
+                break;
+            }
+            set_text_pos(*(f32 *)(pool + 0x254), *(f32 *)(pool + 0x224));
+            sprite_puts((char *)(tbl + 0x3a64));
+        } else if (b > 0xb4) {
+            b = 0x12c - b;
+            y = *(f32 *)(pool + 0x224) - *(f32 *)(pool + 0x200) * mathutil_sin((int)(*(f32 *)(pool + 0x160) * (b / *(f32 *)(pool + 0x164)) - *(f32 *)(pool + 0x168)))
+                  / (*(f32 *)(pool + 0x134) + (f32)b * b / *(f32 *)(pool + 0x238));
+            y = ((f32 *)pool)[0x89] > y ? y : *(f32 *)(pool + 0x248) - y;
+            set_text_pos(*(f32 *)(pool + 0x258), y);
+            sprite_puts((char *)(tbl + 0x3a6c));
+        } else {
+            set_text_pos(*(f32 *)(pool + 0x258), *(f32 *)(pool + 0x224));
+            sprite_puts((char *)(tbl + 0x3a6c));
+        }
+    } else if (a == 0x63) {
+        set_text_pos(*(f32 *)(pool + 0x25c), *(f32 *)(pool + 0x260));
+        sprite_puts((char *)(tbl + 0x3a74));
+        sp = *(NLsprarg *)(tbl + 0x37f0);
+        sp.x = *(f32 *)(pool + 0x264);
+        sp.y = *(f32 *)(pool + 0x178);
+        nlSprPut(&sp);
+        sp.x = *(f32 *)(pool + 0x268);
+        sp.y = *(f32 *)(pool + 0x178);
+        nlSprPut(&sp);
+    } else if (b > 0x78) {
+        b = 0xf0 - b;
+        y = *(f32 *)(pool + 0x224) - *(f32 *)(pool + 0x200) * mathutil_sin((int)(*(f32 *)(pool + 0x160) * (b / *(f32 *)(pool + 0x164)) - *(f32 *)(pool + 0x168)))
+                  / (*(f32 *)(pool + 0x134) + (f32)b * b / *(f32 *)(pool + 0x238));
+        y = ((f32 *)pool)[0x89] > y ? y : *(f32 *)(pool + 0x248) - y;
+        set_text_pos(*(f32 *)(pool + 0x20c), y);
+        sprite_puts((char *)(tbl + 0x3a78));
+        set_text_pos(*(f32 *)(pool + 0x26c), y);
+        sprintf(buf, (char *)(tbl + 0x3a80), a);
+        sprite_puts(buf);
+    } else {
+        set_text_pos(*(f32 *)(pool + 0x20c), *(f32 *)(pool + 0x224));
+        sprite_puts((char *)(tbl + 0x3a78));
+        set_text_pos(*(f32 *)(pool + 0x26c), *(f32 *)(pool + 0x224));
+        sprintf(buf, (char *)(tbl + 0x3a80), a);
+        sprite_puts(buf);
+    }
 }
+#pragma opt_common_subs reset
 #pragma force_active reset

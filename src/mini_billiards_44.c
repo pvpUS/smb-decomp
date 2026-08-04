@@ -152,7 +152,7 @@ extern void func_8009DB40();
 extern void func_8009DB9C();
 extern void func_8009DDC4();
 extern void mini_commend_free_data();
-extern void sqrt();
+extern double sqrt(double);
 extern void u_load_minigame_graphics();
 extern void window_printf_1();
 
@@ -212,7 +212,7 @@ void lbl_00017A00(void);
 void lbl_00018008(void);
 void lbl_00018474(void);
 void lbl_00018608(void);
-void lbl_000186EC(void);
+int lbl_000186EC(Vec *, Vec *, Vec *, f32, Vec *, s8, f32 *);
 void lbl_000189B4(void);
 void lbl_00018A98(void);
 void lbl_00018C78(void);
@@ -227,9 +227,76 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm void lbl_000186EC(void)
+int lbl_000186EC(Vec *a, Vec *b, Vec *c, f32 r, Vec *out, s8 mode, f32 *outT)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_000186EC.s"
+    u8 *pool = lbl_00020B58;
+    f64 z0;
+    f64 z1;
+    f64 dx;
+    f64 dz;
+    f64 aa;
+    f64 bb;
+    f64 cc;
+    f64 d;
+    f64 t1;
+    f64 t2;
+    f64 t;
+    f64 hx;
+    f64 hz;
+    f64 nb;
+
+    dx = (f64)b->x - a->x;
+    dz = (f64)b->z - a->z;
+    if (__fabs((f32)dx) < *(f64 *)(pool + 8) && __fabs((f32)dz) < *(f64 *)(pool + 8))
+        return 0;
+
+    aa = dx * dx + dz * dz;
+    bb = dx * ((f64)a->x - c->x) + dz * ((f64)a->z - c->z);
+    cc = (f64)c->z * c->z + ((f64)c->x * c->x
+       + (((f64)a->x * a->x + (f64)a->z * a->z)
+          - *(f64 *)(pool + 0x28) * ((f64)c->x * a->x + (f64)c->z * a->z))) - (f64)r * r;
+    d = bb * bb - aa * cc;
+    if (d < *(f64 *)(pool + 0x10))
+        return 0;
+
+    d = sqrt(d);
+    t2 = ((nb = -bb) - d) / aa;
+    t1 = (nb + d) / aa;
+
+    if ((t1 < ((f64 *)pool)[2] || t1 > *(f64 *)(pool + 0x20)) && (t2 < *(volatile f64 *)(pool + 0x10) || t2 > *(f64 *)(pool + 0x20)))
+    {
+        if (mode == 0)
+            t = t2;
+        else if (mode == 1)
+            t = t1;
+        else
+            return 0;
+    }
+    else if (t1 >= *(volatile f64 *)(pool + 0x10) && t1 <= ((f64 *)pool)[4] && t2 >= *(f64 *)(pool + 0x10) && t2 <= *(f64 *)(pool + 0x20))
+    {
+        if ((t1 * dz) * (t1 * dz) + (t1 * dx) * (t1 * dx)
+            < (t2 * dz) * (t2 * dz) + (t2 * dx) * (t2 * dx))
+            t = t1;
+        else
+            t = t2;
+    }
+    else
+    {
+        if (t1 > *(volatile f64 *)(pool + 0x10) && t1 <= *(volatile f64 *)(pool + 0x20))
+            t = t1;
+        else
+            t = t2;
+    }
+
+    hx = (f64)a->x + t * dx;
+    hz = (f64)a->z + t * dz;
+    if (__fabs(a->x - b->x) > __fabs(a->z - b->z))
+        *outT = (hx - a->x) / ((f64)b->x - a->x);
+    else
+        *outT = (hz - a->z) / ((f64)b->z - a->z);
+    out->y = *(f32 *)(pool + 0x18);
+    out->x = hx;
+    out->z = hz;
+    return 1;
 }
 #pragma force_active reset

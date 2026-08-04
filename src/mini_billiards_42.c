@@ -227,9 +227,47 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm int lbl_00018474(Vec *, Vec *, Vec *, Vec *, f32, f32, f32 *)
+int lbl_00018474(Vec *a, Vec *b, Vec *c, Vec *d, f32 r0, f32 r1, f32 *out)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00018474.s"
+    double dx;
+    double dy;
+    double dz;
+    double s;
+    double vx;
+    double vy;
+    double vz;
+    double qa;
+    double qb;
+    double qc;
+    double disc;
+
+    *out = *(f32 *)lbl_00020B58;
+    dx = (double)a->x - c->x;
+    dy = (double)a->y - c->y;
+    dz = (double)a->z - c->z;
+    vx = ((double)b->x - d->x) - dx;
+    vy = ((double)b->y - d->y) - dy;
+    vz = ((double)b->z - d->z) - dz;
+    qa = vz * vz + (vx * vx + vy * vy);
+    if (*(f64 *)(lbl_00020B58 + 8) > qa)
+        return 0;
+    s = r0 + r1;
+    qb = dz * vz + (dx * vx + dy * vy);
+    qc = dz * dz + (dx * dx + dy * dy) - s * s;
+    disc = qb * qb - qa * qc;
+    if (((f64 *)lbl_00020B58)[2] > disc)
+        return 0;
+    if (*(f64 *)(lbl_00020B58 + 0x10) >= qc) {
+        *out = *(f32 *)(lbl_00020B58 + 0x18);
+        return 1;
+    }
+    if (!(*(f64 *)(lbl_00020B58 + 0x10) >= qa + qb + qb + qc)) {
+        if (*(f64 *)(lbl_00020B58 + 0x10) <= qb)
+            return 0;
+        if (-qb >= qa)
+            return 0;
+    }
+    *out = -(qb + sqrt(disc)) / qa;
+    return 1;
 }
 #pragma force_active reset

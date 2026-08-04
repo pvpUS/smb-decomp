@@ -201,7 +201,7 @@ void lbl_000097B4(void);
 void lbl_00009AA8(void);
 void lbl_00009D18(void);
 void lbl_00009F60(int idx);
-void lbl_0000A23C(void);
+void lbl_0000A23C(int kind, Vec *pos);
 void lbl_0000A778(int sndId, f32 *pos, int vol, int pitch);
 void lbl_0000A808(void);
 void lbl_0000A878(void);
@@ -261,10 +261,76 @@ asm void lbl_000097B4(void)
     nofralloc
 #include "../asm/nonmatchings/mini_bowling/lbl_000097B4.s"
 }
-asm void lbl_00009AA8(void)
+#pragma peephole on
+void lbl_00009AA8(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00009AA8.s"
+    u8 *pp = lbl_100004E0;
+    u8 *work = lbl_100004E0;
+    u8 *t = lbl_00011490;
+    struct BowlSpark *s;
+    struct BowlSpark *b;
+    u8 *p;
+    int i;
+    int n;
+    Vec sp8;
+
+    n = 0;
+    if (debugFlags & 0xa)
+        return;
+
+    b = (struct BowlSpark *)(work + 0x11ca0);
+    for (i = 0; i < 4; i++, b++)
+        if (b->timer > 0)
+            b->timer--;
+
+    s = (struct BowlSpark *)(work + 0x11c60);
+    for (i = 0; i < 4; i++, s++)
+    {
+        if (s->timer <= 0)
+            continue;
+        s->timer--;
+        if (s->timer <= 0)
+        {
+            s->timer = 0;
+            lbl_0000A23C(s->kind, &s->pos);
+            lbl_0000A778(0xac, (f32 *)s, 0x1b, 0x2000);
+        }
+        else if (s->timer & 1)
+        {
+            sp8.x = s->pos.x;
+            sp8.y = s->pos.y
+                  * (*(f64 *)(t + 0x3218) - *(f32 *)(t + 0x3220) * s->timer);
+            sp8.z = s->pos.z;
+            lbl_0000A610(6, &sp8);
+        }
+    }
+
+    if (*(s32 *)(work + 0x11ce0) <= 0)
+        return;
+
+    p = pp;
+    for (i = 0; i < 0xa28; i++, p += 0x1c)
+    {
+        if (n >= *(s32 *)(work + 0x11ce0))
+            return;
+        if (*(s16 *)(p + 0x18) <= 0)
+            continue;
+        *(f32 *)(p + 0xc) = *(f64 *)(t + 0x3228) * *(f32 *)(p + 0xc);
+        *(f32 *)(p + 0x10) = *(f64 *)(t + 0x3228) * *(f32 *)(p + 0x10);
+        *(f32 *)(p + 0x14) = *(f64 *)(t + 0x3228) * *(f32 *)(p + 0x14);
+        *(f32 *)(p + 0x10) = *(f32 *)(p + 0x10) + *(f64 *)(t + 0x3230);
+        *(f32 *)(p + 0) = *(f32 *)(p + 0xc) + *(f32 *)(p + 0);
+        *(f32 *)(p + 4) = *(f32 *)(p + 0x10) + *(f32 *)(p + 4);
+        *(f32 *)(p + 8) = *(f32 *)(p + 0x14) + *(f32 *)(p + 8);
+        *(s16 *)(p + 0x18) = *(s16 *)(p + 0x18) - 1;
+        if (*(s16 *)(p + 0x18) <= 0)
+        {
+            *(s16 *)(p + 0x18) = 0;
+            *(s32 *)(work + 0x11ce0) -= 1;
+        }
+        else
+            n++;
+    }
 }
 asm void lbl_00009D18(void)
 {
@@ -373,7 +439,7 @@ int lbl_0000A138(void)
     }
     return ret;
 }
-asm void lbl_0000A23C(void)
+asm void lbl_0000A23C(int kind, Vec *pos)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_bowling/lbl_0000A23C.s"

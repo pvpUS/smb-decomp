@@ -800,10 +800,72 @@ void lbl_000170F8(void)
     }
 }
 
-asm void lbl_00017230(void)
+void lbl_00017230(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00017230.s"
+    u8 *d = lbl_0001D8B0;
+    u8 *k = lbl_0001C628;
+    int i;
+    u8 *pl;
+    struct Ball *ball;
+    s8 *st;
+    u8 *e;
+    u8 *w = (u8 *)&lbl_10017664;
+    struct Sprite *sp;
+    u8 col[4];
+    int n;
+
+    n = *(s8 *)(w + 0x744);
+    if (n <= 0)
+        return;
+    e = ((u8 **)(d + 0x288))[n];
+    pl = w + 8;
+    ball = ballInfo;
+    st = g_poolInfo.playerPool.statusList;
+    for (i = 0; i < 4; i++, pl += 0x18, ball++, st++)
+    {
+        if (*st == 0)
+            continue;
+        if (*(s16 *)(pl + 0x10) != 0)
+            continue;
+        *(struct FightCell *)(lbl_10018C6C + i * 0x24) =
+            *(struct FightCell *)e;
+        *(u32 *)col = ((u32 *)(d + 0x29C))[ball->colorId];
+        sp = create_sprite();
+        if (sp != NULL)
+        {
+            sp->x = *(f32 *)e;
+            sp->y = *(f32 *)(e + 4);
+            sp->fontId = 9;
+            sp->textAlign = 5;
+            sp->depth = *(f32 *)(k + 0x6C);
+            sp->mulR = (col[0] + 0xFF) >> 1;
+            sp->mulG = (col[1] + 0xFF) >> 1;
+            sp->mulB = (col[2] + 0xFF) >> 1;
+            sp->userVar = i;
+            sp->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0001745C;
+            if (*(u16 *)(pl + 0x12) & 1)
+                sprintf(sp->text, (char *)(d + 0x320));
+            else
+                sprintf(sp->text, (char *)(d + 0x32C), i + 1);
+        }
+        sp = create_sprite();
+        if (sp != NULL)
+        {
+            sp->x = *(f32 *)e;
+            sp->y = *(f32 *)(e + 4);
+            sp->type = 1;
+            sp->fontId = 0;
+            sp->textAlign = 3;
+            sp->depth = *(f32 *)(k + 0x6C);
+            sp->bmpId = 0x5B;
+            sp->scaleX = *(f32 *)(k + 0x18);
+            sp->scaleY = *(f32 *)(k + 0x104);
+            sp->userVar = i;
+            sp->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_000175B8;
+            sprintf(sp->text, (char *)(d + 0x338));
+        }
+        e += 0x24;
+    }
 }
 #pragma peephole on
 

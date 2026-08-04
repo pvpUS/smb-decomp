@@ -228,7 +228,7 @@ void lbl_0001B880(void);
 
 // Carried over from the heads of the absorbed files (merged by
 // tools/rel_merge_tu.py -- these are what the tool used to drop).
-static void lbl_0000E3A4(Vec *, f32 *, s32, Vec *, f32 *, f32, f32, f32);
+static s32 lbl_0000E3A4(Vec *, f32 *, s32, Vec *, f32 *, f32, f32, f32);
 
 #pragma force_active on
 s32 lbl_0000D0A4(void)
@@ -548,10 +548,90 @@ done:
     camera->rotZ = 0;
     *(Vec *)(g + 4) = camera->eye;
 }
-static asm void lbl_0000E3A4(Vec *pts, f32 *w, s32 n, Vec *out, f32 *ang, f32 a, f32 b, f32 c)
+static s32 lbl_0000E3A4(Vec *pts, f32 *w, s32 n, Vec *out, f32 *ang, f32 a, f32 b, f32 c)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_0000E3A4.s"
+    u8 *p = (u8 *)lbl_0001CF00;
+    Vec u;
+    Vec v;
+    f32 t;
+    s32 i;
+    s32 j;
+    s32 cnt;
+    f32 d;
+    f32 q;
+    f32 rs;
+    f32 s;
+    f32 e;
+    f32 g;
+    f32 xmax;
+    f32 ymax;
+    f32 xmin;
+    f32 ymin;
+
+    out->x = *(f32 *)(p + 0x20);
+    out->y = *(f32 *)(p + 0x20);
+    out->z = *(f32 *)(p + 0x20);
+    for (i = 0; i < n; i++) {
+        out->x += pts[i].x;
+        out->y += pts[i].y;
+        out->z += pts[i].z;
+    }
+    d = *(f32 *)(p + 0x28) / (f32)n;
+    out->x *= d;
+    out->y *= d;
+    out->z *= d;
+    mathutil_vec_normalize_len(out);
+
+    cnt = 0;
+    do {
+        mathutil_mtxA_from_identity();
+        s = out->x * out->x + out->z * out->z;
+        d = s;
+        if (s < ((f32 *)p)[9])
+            d = *(f32 *)(p + 0x24);
+        g = d;
+        q = func_8000716C(&t, g);
+        rs = mathutil_rsqrt(d + out->y * out->y);
+        mathutil_mtxA_rotate_y_sin_cos(out->x * q, out->z * q);
+        mathutil_mtxA_rotate_x_sin_cos(out->y * rs, -rs * t);
+
+        xmax = ymax = xmin = ymin = *(f32 *)(p + 0x20);
+        for (j = 0; j < n; j++) {
+            mathutil_mtxA_rigid_inv_tf_vec(&pts[j], &u);
+            e = *(f32 *)(p + 0xbc) / u.z;
+            u.x *= e;
+            u.y *= e;
+            e = u.x + w[j];
+            if (e > xmax)
+                xmax = e;
+            e = u.x - w[j];
+            if (e < xmin)
+                xmin = e;
+            e = u.y + w[j];
+            if (e > ymax)
+                ymax = e;
+            e = u.y - w[j];
+            if (e < ymin)
+                ymin = e;
+        }
+        v.x = *(f32 *)(p + 0x1c) * (xmax + xmin);
+        v.y = *(f32 *)(p + 0x1c) * (ymax + ymin);
+        v.z = *(f32 *)(p + 0xbc);
+        mathutil_mtxA_tf_vec(&v, out);
+        mathutil_vec_normalize_len(out);
+        cnt++;
+    } while ((__fabs(v.x) > *(f64 *)(p + 0xc0)
+              || __fabs(v.y) > *(f64 *)(p + 0xc0))
+             && cnt < 0x3e8);
+
+    xmax *= a;
+    a = xmax > ymax ? xmax : ymax;
+    *ang = (f32)(mathutil_atan(a * b) * 2);
+    if (__fabs(c) > *(f64 *)(p + 0xc8)) {
+        mathutil_mtxA_tf_vec_xyz(out, v.x, v.y + b * (c * a), v.z);
+        mathutil_vec_normalize_len(out);
+    }
+    return cnt;
 }
 asm void lbl_0000E8D0(void)
 {

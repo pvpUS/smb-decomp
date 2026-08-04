@@ -95,7 +95,8 @@ extern void func_800A4DF0();
 extern void func_800AB358();
 extern void sub_8009F554();
 extern void func_8009F4B8();
-extern void func_8009F4CC();
+//@SUB extern void func_8009F4CC();|extern void func_8009F4CC(u8);
+extern void func_8009F4CC(u8);
 extern void func_800AB2A0();
 extern void func_800AB564();
 extern void func_800AB5F8();
@@ -120,7 +121,8 @@ void lbl_00003F10(void);
 void lbl_00003F6C(void);
 void lbl_00003FF0(void);
 void lbl_00004204(void);
-void lbl_00004260(void);
+//@SUB void lbl_00004260(void);|void lbl_00004260(int);
+void lbl_00004260(int);
 void lbl_000042BC(void);
 void lbl_000047D0(void);
 void lbl_00004858(void);
@@ -153,10 +155,143 @@ void lbl_0000B218(void);
 void lbl_0000C148(void);
 
 #pragma force_active on
-static asm void lbl_0000077C(void)
+static void lbl_0000077C(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_0000077C.s"
+    u8 *p = lbl_10000000;
+    s32 *m;
+    s32 *n;
+    int cur;
+    int o2;
+    int o4;
+    int v2;
+    int v4;
+    int sel;
+    if (eventInfo[EVENT_MEMCARD].state == EV_STATE_RUNNING)
+        return;
+    cur = sel = *(s32 *)(lbl_10000000 + 0x130);
+    if ((g_currPlayerButtons[4] & 8) || (g_currPlayerAnalogButtons[4] & 8))
+    {
+        if (sel <= 3)
+        {
+            if (--sel < 0)
+                sel = 3;
+        }
+    }
+    else if ((g_currPlayerButtons[4] & 4) || (g_currPlayerAnalogButtons[4] & 4))
+    {
+        if (sel <= 3)
+        {
+            if (++sel > 3)
+                sel = 0;
+        }
+    }
+    if (sel != cur)
+    {
+        u_play_sound_0(0x6C);
+        *(s32 *)(lbl_10000000 + 0x130) = sel;
+    }
+    switch (*(s32 *)(lbl_10000000 + 0x130))
+    {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+        if (g_currPlayerButtons[2] & 0x200)
+        {
+            u_play_sound_0(0x6B);
+            lbl_00004260(0x5F);
+            gameSubmodeRequest = 0xAE;
+            return;
+        }
+        break;
+    }
+    switch (sel)
+    {
+    case 0:
+        m = &((s32 *)p)[0x4D];
+        *m = 0;
+        if (g_currPlayerButtons[2] & 0x100)
+        {
+            u_play_sound_0(0x6A);
+            memcard_set_mode((u8)*m);
+            event_start(EVENT_MEMCARD);
+        }
+        break;
+    case 1:
+        m = &((s32 *)p)[0x4D];
+        *m = 1;
+        if (g_currPlayerButtons[2] & 0x100)
+        {
+            u_play_sound_0(0x6A);
+            memcard_set_mode((u8)*m);
+            event_start(EVENT_MEMCARD);
+        }
+        break;
+    case 2:
+        v2 = func_8009F4C4();
+        o2 = v2;
+        if ((g_currPlayerButtons[4] & 1) || (g_currPlayerAnalogButtons[4] & 1)
+         || (g_currPlayerButtons[4] & 2) || (g_currPlayerAnalogButtons[4] & 2))
+        {
+            if (v2 == 1)
+                v2 = 0;
+            else
+                v2 = 1;
+        }
+        if (o2 != v2)
+        {
+            u_play_sound_0(0x65);
+            func_8009F4CC((u8)v2);
+        }
+        break;
+    case 3:
+        if (g_currPlayerButtons[2] & 0x100)
+        {
+            u_play_sound_0(0x6A);
+            *(s32 *)(lbl_10000000 + 0x130) = 4;
+            n = &((s32 *)p)[0x4E];
+            *n = 0;
+        }
+        break;
+    case 4:
+        n = &((s32 *)p)[0x4E];
+        v4 = o4 = *n;
+        if ((g_currPlayerButtons[4] & 2) || (g_currPlayerAnalogButtons[4] & 2))
+            v4 = 0;
+        else if ((g_currPlayerButtons[4] & 1) || (g_currPlayerAnalogButtons[4] & 1))
+            v4 = 1;
+        if (v4 != o4)
+        {
+            u_play_sound_0(0x6C);
+            *n = v4;
+        }
+        if (g_currPlayerButtons[2] & 0x100)
+        {
+            if (*n == 1)
+            {
+                u_play_sound_0(0x6A);
+                func_800A4DF0();
+                *(s32 *)(lbl_10000000 + 0x130) = 5;
+            }
+            else
+            {
+                u_play_sound_0(0x6B);
+                *(s32 *)(lbl_10000000 + 0x130) = 3;
+            }
+        }
+        else if (g_currPlayerButtons[2] & 0x200)
+        {
+            u_play_sound_0(0x6B);
+            *(s32 *)(lbl_10000000 + 0x130) = 3;
+        }
+        break;
+    case 5:
+        if (g_currPlayerButtons[2] != 0)
+        {
+            u_play_sound_0(0x6B);
+            *(s32 *)(lbl_10000000 + 0x130) = 3;
+        }
+        break;
+    }
 }
-
 #pragma force_active reset

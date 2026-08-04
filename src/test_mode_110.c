@@ -1,3 +1,17 @@
+/* NOT MATCHED -- lbl_0000DF28, best draft. */
+/*  score: ALIGNED 49 in 28 regions, span 8-230 of 230 (raw 220), insn 230/230. */
+/*  Structure is believed exact: frame 0x28 bought with one dead parameter, */
+/*  `switch (*(int*)(p+0x8C)) { case 0: }` around the lbl_0000D084 dispatch */
+/*  (reproduces `beq E00C; b E060` where a plain `if` gives one `bne`), */
+/*  a short-lived `r` copied to the callee-saved `m` at the join (`mr r30,r3`), */
+/*  `chg = (old != *(int*)(p+0x6C))` for the addic/subfe !=0 idiom. */
+/*  EVERY residual region is one whole-function callee-saved rotation: */
+/*    original  r30=m   r29=chg  r28=&motInfo r27=q,i r26=s */
+/*    this      r30=chg r29=&motInfo r28=i    r27=lst r26=m */
+/*  plus 2-3 zero constants the original coalesces into those registers. */
+/*  Declaration order (10 positions), guard shape (5), i=0 placement (4), */
+/*  per-case variable splitting, padding locals, size_t/u32 typing and four */
+/*  static-inline helper shapes are ALL inert on that rotation. */
 /*
  * test_mode.c -- REL module: isolated function lbl_0000DF28.
  * This file holds exactly one function so it can be converted from the
@@ -259,14 +273,14 @@ void lbl_0000C984(void);
 void lbl_0000CB0C(void);
 void lbl_0000CB10(void);
 void lbl_0000CDE0(void);
-void lbl_0000D084(void);
+int lbl_0000D084(void);
 void lbl_0000D3C0(void);
 void lbl_0000D844(void);
 void lbl_0000D9FC(void);
 void lbl_0000DB2C(void);
-void lbl_0000DC60(void);
+void lbl_0000DC60(const char *, const char *, ...);
 void lbl_0000DDA4(void);
-void lbl_0000DF28(void);
+void lbl_0000DF28(int a1);
 void lbl_0000E2E8(void);
 void lbl_0000E3E8(void);
 void lbl_0000E628(void);
@@ -278,10 +292,130 @@ void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
-#pragma force_active on
-asm void lbl_0000DF28(void)
+static inline void u_pick(u8 *p, int memoff, int lstoff)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000DF28.s"
+    char *s;
+    char **lst;
+    int len;
+    int i;
+    int t;
+
+    if (*(int *)(p + 0x8C) == 0)
+    {
+        t = *(int *)(p + 0x54);
+        *(int *)(p + 0x54) = 0;
+        if (t != 0)
+        {
+            s = (char *)motInfo + *(int *)(p + 0x6C) * 0xB4 + memoff;
+            lst = *(char ***)(p + lstoff);
+            len = strlen(s);
+            *(char ***)(p + 0x98) = lst;
+            for (i = 0; lst[i] != NULL; i++)
+            {
+                if (strncmp(s, lst[i], len) == 0)
+                {
+                    *(int *)(p + 0x90) = i;
+                    *(int *)(p + 0x94) = i;
+                    goto found;
+                }
+            }
+            *(int *)(p + 0x90) = 0;
+            *(int *)(p + 0x94) = 0;
+        found:
+            *(int *)(p + 0x8C) = 1;
+        }
+    }
+}
+
+#pragma force_active on
+#pragma opt_propagation off
+void lbl_0000DF28(int a1)
+{
+    u8 *q = lbl_000148E8;
+    u8 *p = lbl_10003BF8;
+    int m;
+    int chg;
+    int old;
+    int r;
+
+    chg = 0;
+    if (*(int *)(p + 0x8C) == 0)
+    {
+        r = *(int *)(p + 0x58);
+        *(int *)(p + 0x58) = chg;
+        if (r != 0)
+        {
+            *(int *)(p + 0x88) = chg;
+            return;
+        }
+    }
+
+    m = 0;
+    *(int *)(p + 0x7C) = m;
+    window_set_cursor_pos(3, 7);
+    window_printf_2((char *)(q + 0xEDC));
+    window_set_cursor_pos(1, 8);
+    lbl_0000DC60((char *)(q + 0xEF4), (char *)(q + 0xEFC), *(int *)(p + 0x6C));
+    lbl_0000DC60((char *)(q + 0xF00), (char *)(q + 0xF0C),
+                 motInfo[*(int *)(p + 0x6C)].skelName);
+    lbl_0000DC60((char *)(q + 0xF10), (char *)(q + 0xF0C),
+                 motInfo[*(int *)(p + 0x6C)].modelName);
+
+    switch (*(int *)(p + 0x8C))
+    {
+    case 0:
+        r = lbl_0000D084();
+        if (r == 1)
+        {
+            if (--*(int *)(p + 0x78) < 0)
+                *(int *)(p + 0x78) = *(int *)(p + 0x7C) - 1;
+        }
+        else if (r == 2)
+        {
+            if (++*(int *)(p + 0x78) >= *(int *)(p + 0x7C))
+                *(int *)(p + 0x78) = m;
+        }
+        m = r;
+        break;
+    }
+
+    switch (*(int *)(p + 0x78))
+    {
+    case 0:
+        old = *(int *)(p + 0x6C);
+        if (m == 3)
+        {
+            if (--*(int *)(p + 0x6C) < 0)
+                *(int *)(p + 0x6C) = 3;
+        }
+        else if (m == 4)
+        {
+            if (++*(int *)(p + 0x6C) > 3)
+                *(int *)(p + 0x6C) = 0;
+        }
+        chg = (old != *(int *)(p + 0x6C));
+        break;
+    case 1:
+        u_pick(p, 0, 0x80);
+        if (*(int *)(p + 0xA4) != 0)
+        {
+            chg = 1;
+            strcpy(motInfo[*(int *)(p + 0x6C)].skelName,
+                   (*(char ***)(p + 0x80))[*(int *)(p + 0x90)]);
+        }
+        break;
+    case 2:
+        u_pick(p, 0x18, 0x84);
+        if (*(int *)(p + 0xA4) != 0)
+        {
+            chg = 1;
+            strcpy(motInfo[*(int *)(p + 0x6C)].modelName,
+                   (*(char ***)(p + 0x84))[*(int *)(p + 0x90)]);
+        }
+        break;
+    }
+
+    if (chg != 0)
+        lbl_0000D9FC();
 }
 #pragma force_active reset
