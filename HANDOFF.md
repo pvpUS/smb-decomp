@@ -448,6 +448,15 @@ directions.
 
 ### RUN-17 PREP
 
+- **`C:/tmp/smbm/warm_reset_run17.sh` EXISTS AND IS READY.** Two fixes over
+  run 16's: it now syncs `tools/rel_split_args/` (removing a permanent
+  four-file false positive from the tamper check every agent runs), and the
+  three-runs-stale `mini_golf_pool_tail.s` note is corrected in place.
+- **`C:/tmp/smbm/RUN17_BRIEF.md` DOES NOT EXIST YET — writing it is the next
+  session's first action.** Base it on `RUN16_BRIEF.md` plus this section.
+  Carry forward verbatim: the STANDING RULES block, the `GF`-artefact check,
+  the stored-draft revert hazard, and the `python`-on-stdin rule in mini_race's
+  wording.
 - **`C:/tmp/smbm/RUN16_RESULTS.md`** holds all nine reports verbatim (228 KB).
 - **Re-measure the entire backlog under `GF` first** — it converted three
   functions this run that had been written off for three to four runs each.
