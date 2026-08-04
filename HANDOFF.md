@@ -387,8 +387,10 @@ harvested. **`C:/tmp/smbm/_harvest_run17/` holds 20 artifacts + README.**
 - **`C:/tmp/smbm/RUN17_RESULTS.md`** holds all nine reports verbatim (230 KB).
 - **`C:/tmp/smbm/_harvest_run17/`** — 20 artifacts + README, including the
   `inject.py` that does NOT poison a pragma sweep.
-- **`warm_reset_run18.sh` and `RUN18_BRIEF.md` DO NOT EXIST YET.** Base the
-  reset on run 17's (**keep the new usage banner**) and the brief on
+- **`C:/tmp/smbm/warm_reset_run18.sh` EXISTS AND IS READY** (run-17's, plus a
+  note that `rel_pcmp`/`rel_carve` changed and that the `*.h` glob now carries
+  four probe preambles). **`RUN18_BRIEF.md` DOES NOT EXIST YET — writing it is
+  the next session's first action.** Base the brief on
   `RUN16_BRIEF.md` + `RUN17_BRIEF.md` + this section. Carry forward verbatim:
   the STANDING RULES block, the **fixed**-blind guidance, the stored-draft
   revert hazard, and **"treat every inherited 'does not compile' as unverified"**.
