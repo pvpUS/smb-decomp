@@ -277,10 +277,84 @@ void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
-#pragma force_active on
-asm void lbl_0000E3E8(void)
+
+struct TestE3Work
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000E3E8.s"
+    u8 filler0[0x4];
+    /*0x04*/ struct Ape *ape;
+    u8 filler8[0xC0-0x08];
+    /*0xC0*/ struct Struct80089CBC *unkC0;
+};
+
+struct TestE3Ids
+{
+    s32 v[8];
+};
+
+#pragma force_active on
+void lbl_0000E3E8(void)
+{
+    u8 *P = lbl_000101E0;
+    struct TestE3Work *w = (struct TestE3Work *)lbl_10003BF8;
+    struct Struct80089CBC *e = w->unkC0;
+
+    mathutil_mtxA_push();
+    mathutil_mtxA_from_identity();
+    mathutil_mtxA_translate_xyz(*(f32 *)(P + 0xC), *(f32 *)(P + 0x7C),
+                                *(f32 *)(P + 0x80));
+    switch (e->unk0)
+    {
+    case 0:
+    case 1:
+    case 4:
+    case 5:
+    case 6:
+        mathutil_mtxA_rotate_z(-16384);
+        mathutil_mtxA_rotate_y(-16384);
+        mathutil_mtxA_scale_s(*(f32 *)(P + 0x84));
+        gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+        func_80086D20(w->ape, e->unk0, e->unk8);
+        break;
+    case 2:
+    case 3:
+        window_set_cursor_pos(15, 20);
+        window_printf_2((char *)lbl_00015868);
+        break;
+    case 7:
+    {
+        struct TestE3Ids t;
+        struct GMAModelEntry *ents;
+        int i;
+        int m;
+
+        mathutil_mtxA_translate_xyz(*(f32 *)(P + 0xC), *(f32 *)(P + 0x88),
+                                    *(f32 *)(P + 0xC));
+        mathutil_mtxA_rotate_z(-16384);
+        mathutil_mtxA_rotate_y(-16384);
+        mathutil_mtxA_rotate_z((s16)(*(f32 *)(P + 0x8C) * (s32)e->unk8));
+        mathutil_mtxA_scale_s(*(f32 *)(P + 0x84));
+        window_set_cursor_pos(15, 18);
+        window_printf_2((char *)lbl_00015890, e->unk8);
+        t = *(struct TestE3Ids *)(P + 0x5C);
+        ents = charaGMAs[w->ape->charaId * 2]->modelEntries;
+        i = w->ape->charaId << 1;
+        if (w->unkC0->unk10 == 4)
+        {
+            i++;
+            mathutil_mtxA_translate_xyz(*(f32 *)(P + 0xC), *(f32 *)(P + 0x90),
+                                        *(f32 *)(P + 0xC));
+        }
+        else
+        {
+            mathutil_mtxA_translate_xyz(*(f32 *)(P + 0xC), *(f32 *)(P + 0x94),
+                                        *(f32 *)(P + 0xC));
+        }
+        m = t.v[i];
+        gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+        avdisp_draw_model_unculled_sort_none(ents[m].model);
+        break;
+    }
+    }
+    mathutil_mtxA_pop();
 }
 #pragma force_active reset

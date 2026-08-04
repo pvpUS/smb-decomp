@@ -167,7 +167,7 @@ void lbl_00009394(void);
 void lbl_000093A4(void);
 void lbl_000093B4(void);
 void lbl_000093C4(void);
-void lbl_000093D4(void);
+u8 lbl_000093D4(int a, int b);
 void lbl_000093F0(void);
 void lbl_00009414(void);
 void lbl_00009424(void);
@@ -217,7 +217,7 @@ void lbl_000115F8(s32 idx, u8 mode, f32 x, f32 y);
 void lbl_0001199C(void);
 void lbl_00011A6C(void);
 void lbl_00011DAC(void);
-void lbl_00011FEC(void);
+void lbl_00011FEC(u32 t);
 void lbl_000123B4(s16 a, u32 b);
 void lbl_00012A14(void);
 void lbl_00012C80(void);
@@ -516,11 +516,86 @@ asm void lbl_00011DAC(void)
     nofralloc
 #include "../asm/nonmatchings/mini_golf/lbl_00011DAC.s"
 }
-asm void lbl_00011FEC(void)
+#pragma peephole on
+#pragma opt_propagation off
+void lbl_00011FEC(u32 t)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_00011FEC.s"
+    NLsprarg sp;
+    char buf[256];
+    NLsprarg sp2;
+    u8 *tbl = (u8 *)lbl_00026E28;
+    u8 *pool = (u8 *)lbl_00026550;
+    u16 *p;
+    int sum;
+    f32 q;
+    f64 k;
+    int i;
+
+    sp = *(NLsprarg *)(tbl + 0x640);
+    if (t > *(f64 *)(pool + 0x1c0)) {
+        q = *(f32 *)(pool + 0x1d0) * (0xb4 - t);
+        k = *(f64 *)(pool + 0x1c8);
+        sp.x = k + q * (0xb4 - t) / ((f64 *)pool)[0x2b] / *(f64 *)(pool + 0x158);
+    } else if (!(t > *(f64 *)(pool + 0x1d8))) {
+        if (t > 0x3c) {
+            sp.x = *(f32 *)(pool + 0x1e0) * (f32)(*(f64 *)(pool + 0x1d8) - t) * (*(f64 *)(pool + 0x1d8) - t) / ((f64 *)pool)[0x2b] / *(f64 *)(pool + 0x158);
+        } else {
+            sp.x = *(f32 *)(pool + 0x1e0);
+        }
+    }
+    nlSprPut(&sp);
+    sp2 = *(NLsprarg *)(tbl + 0x5f0);
+    if (ballInfo[modeCtrl.currPlayer].ape->charaId == 0)
+        p = (u16 *)(tbl + 0x3840);
+    else if (ballInfo[modeCtrl.currPlayer].ape->charaId == 1)
+        p = (u16 *)(tbl + 0x3848);
+    else if (ballInfo[modeCtrl.currPlayer].ape->charaId == 2)
+        p = (u16 *)(tbl + 0x3850);
+    else if (ballInfo[modeCtrl.currPlayer].ape->charaId == 3)
+        p = (u16 *)(tbl + 0x3858);
+    sp2.sprno = *p;
+    sp2.x = *(f64 *)(pool + 0x1e8) + sp.x;
+    sp2.y = *(f64 *)(pool + 0x1f0) + sp.y;
+    sp2.z = *(f32 *)(pool + 0x1b4);
+    sp2.zm_x = *(f32 *)(pool + 0x1f8);
+    sp2.zm_y = *(f32 *)(pool + 0x1fc);
+    nlSprPut(&sp2);
+    reset_text_draw_settings();
+    set_text_font(0xB1);
+    set_text_mul_color(0xFFFFFF);
+    func_80071B1C(*(f32 *)(pool + 0x1b4));
+    func_80071B50(0x200000);
+    set_text_pos(*(f32 *)(pool + 0x200) + sp.x, *(f32 *)(pool + 0x204) + sp.y);
+    switch (ballInfo[modeCtrl.currPlayer].ape->charaId) {
+    case 0:
+        sprite_puts((char *)(tbl + 0x3a00));
+        break;
+    case 1:
+        sprite_puts((char *)(tbl + 0x3a08));
+        break;
+    case 2:
+        sprite_puts((char *)(tbl + 0x3a10));
+        break;
+    case 3:
+        sprite_puts((char *)(tbl + 0x3a18));
+        break;
+    }
+    sum = 0;
+    if ((s8)lbl_802F1BE8.unk4 == 0 || (s8)lbl_802F1BE8.unk4 == 1) {
+        for (i = 0; i < (u8)lbl_00009404(); i++)
+            sum += lbl_000093D4(modeCtrl.currPlayer, i) - 3;
+    } else {
+        for (i = 9; i < (u8)lbl_00009404(); i++)
+            sum += lbl_000093D4(modeCtrl.currPlayer, i) - 3;
+    }
+    set_text_pos(*(f32 *)(pool + 0x208) + sp.x, *(f32 *)(pool + 0x204) + sp.y);
+    if (sum > 0)
+        sprintf(buf, (char *)(tbl + 0x3a20), sum);
+    else
+        sprintf(buf, (char *)(tbl + 0x3a30), sum);
+    sprite_puts(buf);
 }
+#pragma opt_propagation reset
 #pragma peephole on
 void lbl_000123B4(s16 a, u32 b)
 {

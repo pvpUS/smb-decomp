@@ -277,4 +277,58 @@ asm void lbl_0001B5B8(void)
     nofralloc
 #include "../asm/nonmatchings/mini_golf/lbl_0001B5B8.s"
 }
+#pragma peephole on
+void lbl_00022524(void)
+{
+    u8 *tbl = (u8 *)lbl_00026E28;
+
+    nlSprPut((NLsprarg *)(tbl + 0x690));
+    nlSprPut((NLsprarg *)(tbl + 0x6e0));
+    if ((s8)lbl_802F1BE8.unk4 == 0) {
+        if ((s32)lbl_802F1BE8.unk0 == 0) {
+            nlSprPut((NLsprarg *)(tbl + 0x730));
+        } else if ((s32)lbl_802F1BE8.unk0 == 1) {
+            nlSprPut((NLsprarg *)(tbl + 0x7d0));
+        }
+        nlSprPut((NLsprarg *)(tbl + 0x870));
+        nlSprPut((NLsprarg *)(tbl + 0x910));
+        nlSprPut((NLsprarg *)(tbl + 0x9b0));
+    } else if ((s8)lbl_802F1BE8.unk4 != 0) {
+        if ((s32)lbl_802F1BE8.unk0 == 0) {
+            nlSprPut((NLsprarg *)(tbl + 0x780));
+        } else if ((s32)lbl_802F1BE8.unk0 == 1) {
+            nlSprPut((NLsprarg *)(tbl + 0x820));
+        }
+        nlSprPut((NLsprarg *)(tbl + 0x8c0));
+        nlSprPut((NLsprarg *)(tbl + 0x960));
+        nlSprPut((NLsprarg *)(tbl + 0xa00));
+    }
+    nlSprPut((NLsprarg *)(tbl + 0xa50));
+    nlSprPut((NLsprarg *)(tbl + 0xaa0));
+}
+asm void lbl_00022610(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_golf/lbl_00022610.s"
+}
+asm void lbl_00022904(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_golf/lbl_00022904.s"
+}
+asm void lbl_00022D4C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_golf/lbl_00022D4C.s"
+}
+asm void lbl_000230E4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_golf/lbl_000230E4.s"
+}
+asm void lbl_00023AB4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_golf/lbl_00023AB4.s"
+}
 #pragma force_active reset

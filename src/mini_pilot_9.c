@@ -292,18 +292,6 @@ void lbl_000008AC(void)
         }
     }
 }
-asm void lbl_00000A30(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00000A30.s"
-}
-
-asm void lbl_00000BFC(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00000BFC.s"
-}
-
 struct PilotTgt
 {
     /*0x00*/ Vec pos;
@@ -314,6 +302,113 @@ struct PilotTgt
 };
 struct PilotIdTbl3 { s16 v[3]; };
 struct PilotIdTbl6 { s16 v[6]; };
+// Each of the three per-stage tables at k+0x80.. is copied into its own local
+// as a whole object, so each needs a struct type -- the same shape
+// lbl_00000DC8 below already uses for PilotIdTbl3/6.  The three destinations
+// sit at DESCENDING frame addresses for ASCENDING source offsets, which is
+// what rules out a single 0x1C-byte copy of one combined struct.
+struct PilotTgtTbl  { struct PilotTgt *v[3]; };
+struct PilotPickTbl { s8 *v[3]; };
+struct PilotCntTbl  { s8 v[3]; };
+
+// The pilot target-item spawner, and its twin lbl_00000BFC below: same routine
+// over the second table group (k+0x9C/0xA8/0xB4) with subType 1.
+//
+// Two spellings are load-bearing and were worth 40 aligned in 25 between them:
+//   * `Vec *pp;` + `pp = &pos;` as a STATEMENT.  Without the pointer local the
+//     call site recomputes `addi r4,r1,8` every iteration and the function is
+//     one instruction (and one callee-saved GPR, and 8 frame bytes) short of
+//     the original, which hoists `&pos` into r28.  As a declaration
+//     INITIALISER the hoist happens but lands in the prologue instead of
+//     after the memset, which is 2 aligned in 2.
+//   * declaration order pp,i,tgt,base,spread,pick -- a middle permutation of
+//     the 36 tried; every one of them is a byte-identical schedule and differs
+//     only in callee-saved numbering.
+#pragma peephole on
+void lbl_00000A30(void)
+{
+    u8 *k = (u8 *)lbl_0000BE80;
+    struct Item item;
+    struct PilotTgtTbl tgts;
+    struct PilotPickTbl picks;
+    struct PilotCntTbl counts;
+    Vec pos;
+    Vec *pp;
+    int i;
+    struct PilotTgt *tgt;
+    struct PilotTgt *base;
+    f32 spread;
+    s8 *pick;
+
+    tgts = *(struct PilotTgtTbl *)(k + 0x80);
+    picks = *(struct PilotPickTbl *)(k + 0x8C);
+    counts = *(struct PilotCntTbl *)(k + 0x98);
+    base = tgts.v[*(s16 *)lbl_10000040];
+    pick = picks.v[*(s16 *)lbl_10000040];
+    memset(&item, 0, sizeof(item));
+    pp = &pos;
+    item.type = 5;
+    for (i = 0; i < counts.v[*(s16 *)lbl_10000040]; i++)
+    {
+        tgt = &base[pick[rand() & 0xF]];
+        spread = tgt->unkC;
+        item.pos.x = tgt->pos.x
+            + (spread * (rand() / *(f32 *)(k + 0x58))
+               - *(f64 *)(k + 0x68) * spread);
+        item.pos.y = tgt->pos.y;
+        spread = tgt->unk10;
+        item.pos.z = tgt->pos.z
+            + (spread * (rand() / *(f32 *)(k + 0x58))
+               - *(f64 *)(k + 0x68) * spread);
+        pos = item.pos;
+        item.animGroupId = lbl_00000DC8(tgt, pp);
+        item.subType = 3;
+        item_create(&item);
+    }
+}
+
+#pragma peephole on
+void lbl_00000BFC(void)
+{
+    u8 *k = (u8 *)lbl_0000BE80;
+    struct Item item;
+    struct PilotTgtTbl tgts;
+    struct PilotPickTbl picks;
+    struct PilotCntTbl counts;
+    Vec pos;
+    Vec *pp;
+    int i;
+    struct PilotTgt *tgt;
+    struct PilotTgt *base;
+    f32 spread;
+    s8 *pick;
+
+    tgts = *(struct PilotTgtTbl *)(k + 0x9C);
+    picks = *(struct PilotPickTbl *)(k + 0xA8);
+    counts = *(struct PilotCntTbl *)(k + 0xB4);
+    base = tgts.v[*(s16 *)lbl_10000040];
+    pick = picks.v[*(s16 *)lbl_10000040];
+    memset(&item, 0, sizeof(item));
+    pp = &pos;
+    item.type = 5;
+    for (i = 0; i < counts.v[*(s16 *)lbl_10000040]; i++)
+    {
+        tgt = &base[pick[rand() & 0xF]];
+        spread = tgt->unkC;
+        item.pos.x = tgt->pos.x
+            + (spread * (rand() / *(f32 *)(k + 0x58))
+               - *(f64 *)(k + 0x68) * spread);
+        item.pos.y = tgt->pos.y;
+        spread = tgt->unk10;
+        item.pos.z = tgt->pos.z
+            + (spread * (rand() / *(f32 *)(k + 0x58))
+               - *(f64 *)(k + 0x68) * spread);
+        pos = item.pos;
+        item.animGroupId = lbl_00000DC8(tgt, pp);
+        item.subType = 1;
+        item_create(&item);
+    }
+}
 
 #pragma peephole on
 s32 lbl_00000DC8(struct PilotTgt *tgt, Vec *pos)

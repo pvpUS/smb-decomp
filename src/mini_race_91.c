@@ -339,7 +339,7 @@ void lbl_0000DE5C(void);
 void lbl_0000DF6C(void);
 void lbl_0000E11C(void);
 void lbl_0000E1CC(void);
-void lbl_0000E520(void);
+void lbl_0000E520(s16 idx);
 void lbl_0000E7C4(struct Sprite *sprite);
 void lbl_0000E900(void);
 void lbl_0000EC20(void);
@@ -401,10 +401,76 @@ asm void lbl_0000E1CC(void)
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_0000E1CC.s"
 }
-asm void lbl_0000E520(void)
+#pragma peephole on
+void lbl_0000E520(s16 idx)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000E520.s"
+    char unused[8];
+    u8 *cfg = lbl_00013C48;
+    struct Sprite *sprite;
+    f32 x;
+    f32 y;
+
+    if (((struct Ball_child *)ballInfo[idx].unk144)->unk14 & 0x20)
+        return;
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    sprintf(sprite->text, (char *)lbl_00015D14, idx + 1);
+    sprite->tag = idx + 0x67;
+    sprite->type = 1;
+    sprite->bmpId = 0x72D;
+    sprite->textAlign = 4;
+    sprite->depth = *(f32 *)(cfg + 0xD0);
+    switch (modeCtrl.unk30)
+    {
+    case 1:
+        x = *(f32 *)(cfg + 0x0);
+        y = *(f32 *)(cfg + 0x4);
+        sprite->scaleX = *(f32 *)(cfg + 0x8);
+        sprite->scaleY = *(f32 *)(cfg + 0x8);
+        break;
+    case 2:
+        x = *(f32 *)(cfg + 0x0);
+        y = *(f32 *)(cfg + 0x1C4) + *(f32 *)(cfg + 0x4) * idx;
+        sprite->scaleX = *(f32 *)(cfg + 0x180);
+        sprite->scaleY = *(f32 *)(cfg + 0x180);
+        break;
+    case 3:
+        if (modeCtrl.splitscreenMode != 3)
+        {
+            sprite->scaleX = *(f32 *)(cfg + 0x180);
+            sprite->scaleY = *(f32 *)(cfg + 0x180);
+            if (idx == modeCtrl.splitscreenMode)
+            {
+                x = *(f32 *)(cfg + 0x0);
+                y = *(f32 *)(cfg + 0x1C4);
+                if (modeCtrl.splitscreenMode == 2)
+                    y += *(f32 *)(cfg + 0x4);
+            }
+            else
+            {
+                x = *(f32 *)(cfg + 0x54);
+                y = *(f32 *)(cfg + 0x1C4);
+                if (idx != 0 && (modeCtrl.splitscreenMode != 0 || idx != 1))
+                    x += *(f32 *)(cfg + 0x0);
+                if (modeCtrl.splitscreenMode != 2)
+                    y += *(f32 *)(cfg + 0x4);
+            }
+            break;
+        }
+        /* fall through */
+    case 4:
+        x = *(f32 *)(cfg + 0x54) + *(f32 *)(cfg + 0x0) * (idx % 2);
+        y = *(f32 *)(cfg + 0x1C4) + *(f32 *)(cfg + 0x4) * (idx / 2);
+        sprite->scaleX = *(f32 *)(cfg + 0x1C8);
+        sprite->scaleY = *(f32 *)(cfg + 0x1C8);
+        break;
+    }
+    sprite->x = x;
+    sprite->y = y;
+    sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000E7AC;
+    sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000E7C4;
+    sprite->userVar = 0x18;
 }
 #pragma peephole on
 void lbl_0000E7AC(s8 *str, struct Sprite *sprite)
@@ -904,10 +970,32 @@ void lbl_0001075C(u8 *arg0, struct RaceCfgObj *obj)
         }
     }
 }
-asm void lbl_000107D0(void)
+#pragma peephole on
+void lbl_000107D0(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000107D0.s"
+    char unused[16];
+    u8 *cfg = lbl_00013C48;
+    struct Sprite *sprite;
+    s16 i;
+
+    for (i = 0; i < 4; i++)
+    {
+        if (((u8 **)lbl_10001AE0)[i] == NULL)
+            return;
+        sprite = create_sprite();
+        if (sprite == NULL)
+            return;
+        sprite->type = 0;
+        sprite->x = *(f32 *)(cfg + 0x2D0) + i * 0x14;
+        sprite->y = *(f32 *)(cfg + 0x2D4) + i * 0x1C;
+        sprite->depth = *(f32 *)(cfg + 0x2D8);
+        sprite->fontId = 0x45;
+        sprite->textAlign = 0;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_000108E8;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_00010918;
+        sprite->userVar = i;
+        sprite->counter = i * 0x14 + 0x14;
+    }
 }
 #pragma peephole on
 void lbl_000108E8(s8 *str, struct Sprite *sprite)

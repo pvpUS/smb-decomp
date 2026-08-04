@@ -1028,10 +1028,6 @@ SOURCES := \
 	src/mini_golf_56.c \
 	src/mini_golf_57.c \
 	src/mini_golf_58.c \
-	src/mini_golf_59.c \
-	src/mini_golf_60.c \
-	src/mini_golf_61.c \
-	src/mini_golf_62.c \
 	src/mini_golf_63.c \
 	src/mini_golf_64.c \
 	src/mini_golf_65.c \
@@ -1219,6 +1215,7 @@ SOURCES := \
 	src/test_mode_97.c \
 	asm/test_mode_d3.s \
 	src/test_mode_99.c \
+	asm/test_mode_d4.s \
 	src/test_mode_102.c \
 	src/test_mode_103.c \
 	src/test_mode_104.c \
@@ -1242,7 +1239,7 @@ SOURCES := \
 	src/test_mode_120.c \
 	src/test_mode_121.c \
 	src/test_mode_122.c \
-	asm/test_mode_d4.s
+	asm/test_mode_d5.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
 mkbe.test_mode.plf: $(O_FILES)

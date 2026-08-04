@@ -78,7 +78,35 @@ struct FightPanel
 struct F38CPool
 {
     f32 unk0, unk4, unk8, unkC, unk10, unk14, unk18, unk1C, unk20, unk24;
-    f32 unk28, unk2C, unk30;
+    f32 unk28, unk2C, unk30, unk34, unk38;
+};
+struct FightEvent
+{
+    /*0x00*/ f32 time;
+    /*0x04*/ s16 kind;
+    /*0x06*/ u16 mask;
+    /*0x08*/ s16 rotX;
+    /*0x0A*/ s16 rotY;
+    /*0x0C*/ s16 rotZ;
+    u8 pad0E[2];
+    /*0x10*/ Vec pos;
+};
+struct FightEvSeq
+{
+    /*0x00*/ struct FightEvent *cur;
+    /*0x04*/ struct FightEvent *list;
+    /*0x08*/ s32 maxStobjs;
+};
+struct FightSceneSeq
+{
+    u8 unk0[0x14];
+    /*0x14*/ void *work;
+};
+struct FightInfoWork
+{
+    u32 flags;
+    /*0x04*/ s16 timerCurr;
+    /*0x06*/ s16 timerMax;
 };
 extern u8 lbl_0001C308[];
 extern u8 lbl_0001C320[];
@@ -166,7 +194,7 @@ extern u8 lbl_10017664[];
 extern u8 lbl_10017DC8[];
 extern u8 lbl_10017E98[];
 extern u8 lbl_100188E0[];
-extern u8 lbl_100188E8[];
+extern struct FightSceneSeq lbl_100188E8;
 extern u8 lbl_10018900[];
 extern u8 lbl_10018920[];
 extern u8 lbl_10018C6C[];
@@ -177,7 +205,7 @@ extern u8 lbl_10018FD4[];
 extern u8 lbl_10019040[];
 extern u8 backgroundInfo[];
 extern u8 g_bgLightInfo[];
-extern u8 infoWork[];
+extern struct FightInfoWork infoWork;
 extern u8 lbl_801EED98[];
 extern u8 pauseMenuState[];
 extern u8 polyDisp[];
@@ -364,7 +392,7 @@ void lbl_0000FE04(void);
 void lbl_0000FE08(void);
 void lbl_0000FE5C(void);
 void lbl_0000FE7C(void);
-void lbl_0000FE80(void);
+int lbl_0000FE80(void);
 void lbl_0000FEC4(void);
 void lbl_0000FEC8(void);
 void lbl_0000FF30(void);
@@ -620,10 +648,70 @@ int lbl_0000F9DC(u8 *p)
         return 0;
     }
 }
-asm void lbl_0000FA18(void)
+void lbl_0000FA18(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000FA18.s"
+    struct Stobj st;
+    Vec a;
+    Vec b;
+    struct F38CPool *k = (struct F38CPool *)lbl_0001C308;
+    struct FightEvSeq *w;
+    struct FightEvent *e;
+    f32 t;
+    int mask;
+    int i;
+    int j;
+
+    w = lbl_100188E8.work;
+    mask = 1 << (modeCtrl.playerCount - 1);
+    t = (f32)infoWork.timerCurr / (f32)infoWork.timerMax;
+    e = w->cur;
+    while (e->time > t)
+    {
+        if (mask & e->mask)
+        {
+            switch (e->kind)
+            {
+            case 1:
+                if (lbl_0000FE80() < w->maxStobjs)
+                {
+                    memset(&st, 0, sizeof(st));
+                    st.type = SOT_MF_BOX;
+                    st.animGroupId = 0;
+                    st.rotX = e->rotX;
+                    st.rotY = e->rotY;
+                    st.rotZ = e->rotZ;
+                    st.localPos = e->pos;
+                    spawn_stobj(&st);
+                }
+                break;
+            }
+        }
+        e++;
+    }
+    w->cur = e;
+    if ((*(u32 *)(lbl_10017664 + 0x748) & 4) && !(globalAnimTimer & 0x1FF)
+     && lbl_0000FE80() < w->maxStobjs)
+    {
+        i = (rand() & 0x7FFF) % decodedStageLzPtr->unk7C;
+        j = (rand() & 0x7FFF) % decodedStageLzPtr->unk7C;
+        if (i == j)
+        {
+            j++;
+            j %= decodedStageLzPtr->unk7C;
+        }
+        a = decodedStageLzPtr->startPos[i].pos;
+        b = decodedStageLzPtr->startPos[j].pos;
+        memset(&st, 0, sizeof(st));
+        st.type = SOT_MF_BOX;
+        st.animGroupId = 0;
+        st.rotX = 0;
+        st.rotY = rand() & 0x7FFF;
+        st.rotZ = 0;
+        st.localPos.x = (a.x + b.x) * ((f32 *)k)[13] + ((f32)rand() / k->unk10 - k->unk34);
+        st.localPos.y = (a.y + b.y) * k->unk34 + k->unk38;
+        st.localPos.z = (a.z + b.z) * (&k->unk0)[13] + ((f32)rand() / k->unk10 - k->unk34);
+        spawn_stobj(&st);
+    }
 }
 #pragma peephole on
 #pragma force_active reset
