@@ -277,8 +277,16 @@ def sources_block(mod):
 
 def write_sources(mod, items):
     mk, L, s, e, _ = sources_block(mod)
-    block = ['SOURCES := \\'] + \
-            ['\t%s%s' % (it, ' \\' if i < len(items) - 1 else '')
+    # RUN 17 -- the tree's Makefile is natively CRLF, and sources_block() reads
+    # it with newline='' so every element of L keeps its trailing '\r'.  The
+    # rebuilt block below is built from STRIPPED items, so without this it goes
+    # back as bare LF and the module's whole block changes line ending: test_mode
+    # measured 1435 CRLF -> 1303 CRLF + 132 LF on an 8-byte carve, and had to
+    # normalise it by hand before the merge.  Content was identical either way,
+    # which is exactly why it is easy to ship.
+    cr = '\r' if any(l.endswith('\r') for l in L) else ''
+    block = ['SOURCES := \\' + cr] + \
+            ['\t%s%s%s' % (it, ' \\' if i < len(items) - 1 else '', cr)
              for i, it in enumerate(items)]
     L[s:e + 1] = block
     open(mk, 'w', newline='\n').write('\n'.join(L))

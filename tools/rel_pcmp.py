@@ -236,6 +236,32 @@ _FPR = re.compile(r'\bf(?:[0-9]|1[0-3])\b')
 _GPR_ALL = re.compile(r'\br(?:0|[3-9]|1[0-9]|2[0-9]|3[01])\b')
 _FPR_ALL = re.compile(r'\bf(?:[0-9]|1[0-9]|2[0-9]|3[01])\b')
 
+# RUN 17 -- `r0` in the RA/base position of a D-form is the LITERAL ZERO, not
+# GPR0.  The blind above is a plain text substitution, and canon() actively
+# CREATES those literal-zero r0s (`li rD,v` -> `addi rD,r0,v`, `lis` ->
+# `addis rD,r0,v`), so `addi r6,r4,0` (a register move) and `li r6,0` (load
+# zero) both blind to `addi rA,rA,0` and compare EQUAL.  The tool then reports
+# 0 in 0 on a function that is really several instructions wrong -- the same
+# failure mode as run 16's AEDC artefact, but invisible to the documented check
+# ("same mnemonic, same non-register operands"), because these ARE the same
+# mnemonic and the differing operand IS a register spelling.
+#
+# Found by sel_ngc in run 17.  Two corrections to how it was reported, both
+# measured here (scratch test, 3 wrong -> 0):
+#   * `mr rD,rA` vs `li rD,0` is SAFE -- canon rewrites mr to `or`, so the
+#     mnemonics already differ.  The live case is a bare `addi rD,rA,0`.
+#   * It is NOT uppercase-only.  Lowercase `g` blinds r0 too, so `gf` has it.
+# Protecting the field costs nothing on a genuine renumbering: `addi r6,r4,0`
+# vs `addi r7,r5,0` still compares equal.
+_RA0_ADDI = re.compile(r'^(addis?) ([^,]+),r0,')
+_RA0_MEM = re.compile(r'\(r0\)')
+
+
+def _protect_zero_ra(s):
+    """Rename literal-zero RA/base fields so the register blind cannot eat them."""
+    s = _RA0_ADDI.sub(r'\1 \2,rZ,', s)
+    return _RA0_MEM.sub('(rZ)', s)
+
 
 # A 16-bit immediate field has ONE encoding but two spellings: the .s side
 # writes 0xffff where objdump writes -1.  Fold both to the signed reading.
@@ -266,6 +292,11 @@ def to_words(seq):
         s = re.sub(r'(-?)0x([0-9a-fA-F]+)',
                    lambda m: str(int(m.group(1) + str(int(m.group(2), 16)))), s)
         s = _signed16(s)
+        # Must run BEFORE any register substitution, and only when a GPR blind
+        # is actually on -- unblinded output stays verbatim r0 so a printed
+        # diff still reads like real disassembly.
+        if 'G' in BLIND or 'g' in BLIND:
+            s = _protect_zero_ra(s)
         # Uppercase wins: it is the strictly wider blind of the same file.
         if 'G' in BLIND:
             s = _GPR_ALL.sub('rA', s)
@@ -339,29 +370,44 @@ def module():
 def main():
     label = sys.argv[1]
     d = sys.argv[2]
-    fn = sys.argv[3] if len(sys.argv) > 3 else 'pf'
+    # RUN 17 -- argv[3] used to default to 'pf' with no fallback, so a draft
+    # that defines the REAL label (i.e. a whole-file variant rather than a
+    # rel_probe micro-probe) scored FAIL on every row, indistinguishable from a
+    # compile error.  THREE modules hit it independently in one run --
+    # mini_fight's first draft of the function it went on to convert was
+    # already 200-insn-exact and was read as broken -- and _harvest_run16/pd.py
+    # defaults to the label instead, so the two tools disagreed.
+    # Now: try both names, and say which failure it actually was.
+    cands = [sys.argv[3]] if len(sys.argv) > 3 else ['pf', label]
     mod = probe_module()
     spath = os.path.join(TREE, 'asm', 'nonmatchings', asm_stem(mod), label + '.s')
     exp = parse_s(spath)
     rows = []
     for f in sorted(glob.glob(os.path.join(d, '*.c'))):
-        r = subprocess.run(
-            [sys.executable, os.path.join(TREE, 'tools', 'rel_probe.py'),
-             mod, '--func', fn, f],
-            capture_output=True, text=True, cwd=TREE)
-        got = parse_obj(r.stdout + r.stderr, fn)
+        got, why = [], 'FAIL'
+        for fn in cands:
+            r = subprocess.run(
+                [sys.executable, os.path.join(TREE, 'tools', 'rel_probe.py'),
+                 mod, '--func', fn, f],
+                capture_output=True, text=True, cwd=TREE)
+            got = parse_obj(r.stdout + r.stderr, fn)
+            if got:
+                break
+            # a non-zero exit is a real compile failure; a clean exit with no
+            # instructions just means this object defines no such function.
+            why = 'FAIL(compile)' if r.returncode else 'FAIL(no func %s)' % fn
         name = os.path.basename(f)[:-2]
         if not got:
-            rows.append((9999, 0, 0, 0, name, 0))
+            rows.append((9999, 0, 0, 0, name, 0, why))
             continue
         n, reg, lo, hi = score(exp, got)
-        rows.append((n, reg, lo, hi, name, len(got)))
+        rows.append((n, reg, lo, hi, name, len(got), None))
     rows.sort()
     print('%-32s %6s %5s %-12s %s' % ('probe', 'score', 'regs', 'span', 'insn'))
     print('exp insn = %d' % len(exp))
-    for n, reg, lo, hi, name, ln in rows:
+    for n, reg, lo, hi, name, ln, why in rows:
         if n == 9999:
-            print('%-32s  FAIL' % name)
+            print('%-32s  %s' % (name, why))
             continue
         print('%-32s %6d %5d %-12s %d' % (name, n, reg, '%s-%s' % (lo, hi), ln))
 
