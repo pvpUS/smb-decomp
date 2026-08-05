@@ -260,6 +260,7 @@ void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
+void lbl_00003A90(void);
 void lbl_000040C0(void);
 void lbl_00004284(void);
 void lbl_000044AC(void);
@@ -379,6 +380,11 @@ asm void lbl_00003474(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_00003474.s"
+}
+asm void lbl_00003A90(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_00003A90.s"
 }
 asm void lbl_000040C0(void)
 {

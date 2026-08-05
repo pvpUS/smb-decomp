@@ -308,6 +308,8 @@ void lbl_0000B834(void);
 void lbl_0000B8C8(void);
 void lbl_0000B948(void);
 void lbl_0000BB0C(void);
+void lbl_0000BB60(void);
+void lbl_0000BC58(void);
 static void lbl_0000BCE8(s32, f32);
 static void lbl_0000C03C();
 void lbl_0000C134();
@@ -387,6 +389,16 @@ asm void lbl_0000BB0C(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_0000BB0C.s"
+}
+asm void lbl_0000BB60(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_0000BB60.s"
+}
+asm void lbl_0000BC58(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_0000BC58.s"
 }
 #pragma peephole on
 static void lbl_0000BCE8(s32 idx, f32 dy)

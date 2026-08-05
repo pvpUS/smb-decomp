@@ -56,6 +56,32 @@ import shutil
 import subprocess
 import sys
 
+# Pure-C definitions of original-name functions, i.e. banked conversions.
+# `asm ...` declarators are stubs, not conversions, so they are excluded --
+# kept deliberately identical to rel_structcheck.DEF/ASMDEF.
+_DEF = re.compile(r'^(?:static\s+)?(?:asm\s+)?[A-Za-z_][\w\s\*]*?\b'
+                  r'(lbl_[0-9A-Fa-f]+|_prolog|_epilog|_unresolved)\s*\([^;{]*\)\s*$')
+_ASMDEF = re.compile(r'^(?:static\s+)?asm\s')
+
+
+def c_defs(path):
+    """Set of original-name functions this file defines in pure C."""
+    try:
+        text = open(path, errors='replace').read()
+    except OSError:
+        return set()
+    return {_DEF.match(l).group(1) for l in text.split('\n')
+            if _DEF.match(l) and not _ASMDEF.match(l)}
+
+
+def c_defs_lost(variant, owner):
+    """Conversions in `owner` that `variant` would destroy if copied over it.
+
+    A sweep variant is generated from some earlier snapshot of the owner, so it
+    can be missing conversions banked since. Returns the labels at risk.
+    """
+    return c_defs(owner) - c_defs(variant)
+
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Windows hands us a cp1252 stdout, so a single non-ASCII character in a variant
@@ -526,10 +552,27 @@ def main():
     else:
         win = os.path.join(args.sweep, best).replace('\\', '/')
         dst = target_c.replace('\\', '/')
-        print('\n!! %s HAS BEEN RESTORED to its pre-sweep content -- the winning\n'
-              '   variant is NOT installed. Install it before gating:\n'
-              "     cp '%s' '%s' && rm -f '%s.o'\n"
-              '   or re-run with --install-best.' % (args.file, win, dst, dst))
+        lost = c_defs_lost(win, target_c)
+        if lost:
+            # Trap 9, ranked top of the tool list for runs 17, 18 and 19: a
+            # `nearmiss/run<N>/` variant is a WHOLE-FILE copy that predates that
+            # run's own conversions, so `cp`ing it over the owner silently
+            # deletes them. mini_race lost five conversions this way and
+            # mini_fight nearly lost 223 instructions. Refuse to print a command
+            # that reverts banked work.
+            print('\n!! %s HAS BEEN RESTORED to its pre-sweep content, and the\n'
+                  '   winning variant is NOT installable as-is: it is MISSING %d\n'
+                  '   C definition(s) the owner currently has --\n'
+                  '     %s\n'
+                  '   Copying it over the owner would DELETE that banked work.\n'
+                  '   Port the winning body into the current owner instead\n'
+                  '   (_harvest_run17/inject.py), then re-gate.'
+                  % (args.file, len(lost), ', '.join(sorted(lost))))
+        else:
+            print('\n!! %s HAS BEEN RESTORED to its pre-sweep content -- the winning\n'
+                  '   variant is NOT installed. Install it before gating:\n'
+                  "     cp '%s' '%s' && rm -f '%s.o'\n"
+                  '   or re-run with --install-best.' % (args.file, win, dst, dst))
 
     if not any(r[0] == 0 for r in results):
         return 1

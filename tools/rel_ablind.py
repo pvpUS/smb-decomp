@@ -32,6 +32,24 @@ env:
 The module is inferred from the tree directory name (the warm copies are named
 after their module); --module overrides.  Build the .plf first -- and build it
 as the .plf TARGET, never `make src/x.c.o`, or REL_FLAGS do not apply.
+
+THERE IS NO --tree.  Run it FROM the tree (`cd C:/tmp/smbm/<mod>`).  Until run
+19 both `--tree X` and a late `--module X` were silently consumed as LABELS and
+printed `NOT IN MAP`, i.e. the tool scored nothing and said so quietly; three
+modules hit that in run 18.  Both are now hard errors.
+
+TWO LIMITS ON ITS NUMBERS -- run 18 measured both, and neither is a bug:
+
+  * ACCURACY FALLS WITH RELOCATION DENSITY.  It compares objdump TEXT, and the
+    .plf side still has unrelocated `bl` targets and @ha/@l halves, which read
+    as diffs.  mini_fight saw exact agreement with rel_pcmp on three functions;
+    mini_billiards a consistent +2 against rel_ascore; mini_golf got 38 in 30
+    against a TRUE 3 in 3 on a function with 15 `bl`s and 14 @ha/@l pairs, and
+    exact agreement on a one-`bl` function.  Trust it on relocation-light
+    functions; cross-check anything call-heavy against rel_ascore.
+  * IT READS EXACTLY `n` WORDS at the label, so its score is MEANINGLESS on a
+    draft whose instruction count is wrong (mini_fight: 42 in 40 here against a
+    true 2 in 1).  Use rel_pcmp until the count is exact, then this.
 """
 import difflib
 import os
@@ -59,10 +77,35 @@ MODULES = {
 
 argv = sys.argv[1:]
 mod = None
-if argv and argv[0] == '--module':
-    if len(argv) < 2:
-        sys.exit('--module needs a value')
-    mod, argv = argv[1], argv[2:]
+# --module used to be recognised ONLY as argv[0], and --tree not at all, so
+# either one written later fell through to the label loop and printed
+# `NOT IN MAP` -- a silent no-score. Accept --module anywhere; reject --tree
+# and any other stray option loudly, because a label never starts with '-'.
+rest = []
+i = 0
+while i < len(argv):
+    a = argv[i]
+    if a == '--module' or a.startswith('--module='):
+        if a.startswith('--module='):
+            mod = a.split('=', 1)[1]
+        elif i + 1 < len(argv):
+            i += 1
+            mod = argv[i]
+        else:
+            sys.exit('--module needs a value')
+        if not mod:
+            sys.exit('--module needs a value')
+    elif a == '--tree' or a.startswith('--tree='):
+        sys.exit('rel_ablind: there is no --tree. Run it FROM the module tree:\n'
+                 '  cd C:/tmp/smbm/<module> && python tools/rel_ablind.py <label>\n'
+                 '(it reads the .plf in the current directory).')
+    elif a.startswith('-'):
+        sys.exit('rel_ablind: unknown option %r. Labels do not start with "-".\n'
+                 'usage: python tools/rel_ablind.py [--module M] <label> [label ...]' % a)
+    else:
+        rest.append(a)
+    i += 1
+argv = rest
 if mod is None:
     mod = os.environ.get('ABLIND_MODULE') or os.path.basename(TREE)
 if mod not in MODULES:
