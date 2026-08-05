@@ -230,7 +230,7 @@ struct PilotB000;
 struct PilotSpray;
 void lbl_0000B000(struct PilotB000 *p);
 void lbl_0000B130(Vec *pos, Vec *vel, struct PilotSpray *e);
-void lbl_0000B624(void);
+void lbl_0000B624(Vec *pos, Vec *vel, struct PilotSpray *e);
 void lbl_0000BACC(void);
 
 struct PilotB000
@@ -373,10 +373,82 @@ void lbl_0000B454(struct PilotSmoke *p)
     mathutil_mtxA_from_mtxB();
     gxutil_draw_line_multicolor(&start, &end);
 }
-asm void lbl_0000B624(void)
+void lbl_0000B624(Vec *pos, Vec *vel, struct PilotSpray *e)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_0000B624.s"
+    u8 *k = (u8 *)lbl_0000C690;
+    u32 i;
+    struct PilotB000 *parts = e->parts;
+    s32 flag;
+    f32 a;
+    Vec up;
+    Vec dir;
+    Quaternion q;
+    Vec v;
+
+    up = *(Vec *)(k + 0x5C);
+    dir = *vel;
+    mathutil_vec_normalize_len(&dir);
+    mathutil_quat_from_dirs(&q, &up, &dir);
+    mathutil_mtxA_from_quat(&q);
+    mathutil_mtxA_normalize_basis();
+    e->unk8 += *(f32 *)(k + 0x68) * mathutil_sqrt(mathutil_vec_sq_len(vel));
+    gxutil_set_line_width(0x14);
+    gxutil_set_line_blend_params(1, 2, 1, 0xF);
+
+    for (i = 0; i < e->count; i++)
+    {
+        if (parts[i].unk20 > *(f32 *)(k + 0))
+        {
+            mathutil_mtxA_push();
+            lbl_0000B454((struct PilotSmoke *)&parts[i]);
+            mathutil_mtxA_pop();
+        }
+        else if (e->unk8 > *(f32 *)(k + 0x20))
+        {
+            a = rand() / *(f32 *)(k + 0x34) - *(f32 *)(k + 0x40);
+            parts[i].flags = 0;
+            if (!(debugFlags & 0xA))
+                parts[i].unk20 = *(f32 *)(k + 0x18) + *(f32 *)(k + 0x30) * (((f32 *)k)[6] * (rand() / *(f32 *)(k + 0x34)));
+            parts[i].scale = *(f32 *)(k + 0x38);
+            flag = (rand() / *(f32 *)(k + 0x34)) > *(f32 *)(k + 0x38);
+            if (flag)
+            {
+                if (a < *(f32 *)(k + 0))
+                    a -= *(f32 *)(k + 0x6C);
+                else
+                    a += *(f32 *)(k + 0x6C);
+                v.x = a;
+                v.y = *(f32 *)(k + 0);
+                v.z = *(f32 *)(k + 0x70) * ((rand() / *(f32 *)(k + 0x34)) - *(f32 *)(k + 0x3C));
+            }
+            else
+            {
+                v.x = (rand() / *(f32 *)(k + 0x34)) - *(f32 *)(k + 0x40);
+                v.y = *(f32 *)(k + 0);
+                v.z = *(f32 *)(k + 0x6C) * a - *(f32 *)(k + 0x74);
+            }
+            mathutil_mtxA_tf_vec(&v, &v);
+            parts[i].x = pos->x + v.x;
+            parts[i].y = *(f32 *)(k + 0);
+            parts[i].z = pos->z + v.z;
+            if (flag)
+            {
+                parts[i].vx = a * (*(f32 *)(k + 0x78) * (rand() / *(f32 *)(k + 0x34)));
+                parts[i].vy = *(f32 *)(k + 0x7C) * (rand() / *(f32 *)(k + 0x34));
+                parts[i].vz = *(f32 *)(k + 0x80) * mathutil_vec_len(vel);
+            }
+            else
+            {
+                parts[i].vx = *(f32 *)(k + 0x38) * (rand() / *(f32 *)(k + 0x34)) - *(f32 *)(k + 0x3C);
+                parts[i].vy = *(f32 *)(k + 0x84) * (rand() / *(f32 *)(k + 0x34));
+                a = mathutil_vec_len(vel);
+                parts[i].vz = a * (*(f32 *)(k + 0x88) * (rand() / *(f32 *)(k + 0x34)) - *(f32 *)(k + 0x74));
+            }
+            mathutil_mtxA_tf_vec((Vec *)&parts[i].vx, (Vec *)&parts[i].vx);
+            parts[i].unk1C = *(f32 *)(k + 0x20);
+            e->unk8 -= *(f32 *)(k + 0x20);
+        }
+    }
 }
 
 asm void lbl_0000BACC(void)

@@ -224,7 +224,6 @@ void lbl_000094C0(void);
 void lbl_00009560(void);
 void lbl_000095F8(void);
 void lbl_00009998(void);
-void lbl_00009A0C(void);
 void lbl_0000A304(void);
 void lbl_0000A440(void);
 void lbl_0000A78C(void);
@@ -277,10 +276,414 @@ void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
-#pragma force_active on
-asm void lbl_000095F8(void)
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+void lbl_00009A0C(struct TestCam *o);
+struct TestCam
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_000095F8.s"
+    /*0x00*/ u8 filler0[0x24];
+    /*0x24*/ float nearZ;
+    /*0x28*/ float depth;
+    /*0x2C*/ Mtx mtx;
+    /*0x5C*/ float tanFov;
+    /*0x60*/ u8 filler60[0x70 - 0x60];
+    /*0x70*/ GXTexObj tex;
+};
+struct Big158
+{
+    u8 b[0x158];
+};
+/* INVENTED, UNVERIFIED -- copied verbatim from the MATCHED src/test_mode_63.c,
+ * which walks the same lbl_10000E00 array with the same 0x9C stride.
+ */
+struct TestCamWork
+{
+    /*0x00*/ Vec pos;
+    /*0x0C*/ Vec target;
+    /*0x18*/ Vec up;
+    /*0x24*/ float unk24;
+    /*0x28*/ float unk28;
+    /*0x2C*/ Mtx mtx;
+    /*0x5C*/ float unk5C;
+    /*0x60*/ float unk60;
+    /*0x64*/ void *unk64;
+    /*0x68*/ void *unk68;
+    /*0x6C*/ void *unk6C;
+    /*0x70*/ GXTexObj tex;
+    /*0x90*/ s32 idx;
+    /*0x94*/ void *bufs[2];
+};
+
+#pragma force_active on
+void lbl_000095F8(void)
+{
+    float *k = (float *)lbl_00010080;
+    int i;
+    struct TestCamWork *e;
+    f32 rad;
+    Vec vpad;
+    Mtx frusM;
+    Mtx saved;
+    f32 pv[GX_PROJECTION_SZ];
+    Mtx m;
+    float dist;
+    float radsq;
+    float sq;
+    float t;
+
+    GXGetProjectionv(pv);
+    PSMTXCopy(mathutilData->mtxB, saved);
+    e = (struct TestCamWork *)lbl_10000E00;
+    for (i = 2; i > 0; i--)
+    {
+        if (e->unk68 != NULL && e->unk6C != NULL)
+        {
+            float dx;
+            float dy;
+            float dz;
+
+            ((void (*)(void *, Vec *, f32 *))e->unk68)(e->unk64, &e->target, &rad);
+            dx = e->pos.x - e->target.x;
+            dy = e->pos.y - e->target.y;
+            dz = e->pos.z - e->target.z;
+            radsq = rad * rad;
+            sq = dx * dx + dy * dy + dz * dz;
+            dist = mathutil_sqrt(sq);
+            e->unk24 = dist;
+            e->unk28 = k[4];
+            C_MTXLookAt(e->mtx, &e->pos, &e->up, &e->target);
+            PSMTXCopy(e->mtx, mathutilData->mtxB);
+            if (sq > radsq)
+            {
+                rad = rad * (k[5] * mathutil_sqrt(k[3] - radsq / sq));
+                e->unk5C = dist * rad / (sq - radsq);
+            }
+            else
+            {
+                e->unk5C = k[6];
+            }
+            e->unk60 = k[3] / e->unk5C;
+            t = k[7] * e->unk5C;
+            C_MTXFrustum(frusM, t, -t, -t, t, k[7], k[8]);
+            GXSetProjection(frusM, 0);
+            GXSetViewport(k[0], k[0], k[9], k[9], k[0], k[3]);
+            GXSetScissor(0, 0, 0x100, 0x100);
+            ((void (*)(void *, struct TestCamWork *))e->unk6C)(e->unk64, e);
+            GXSetTexCopySrc(0, 0, 0x100, 0x100);
+            GXSetTexCopyDst(0x100, 0x100, GX_TF_I8, 0);
+            GXCopyTex(e->bufs[e->idx], 1);
+            GXInitTexObj(&e->tex, e->bufs[e->idx], 0x100, 0x100, GX_TF_I8,
+                         GX_CLAMP, GX_CLAMP, GX_FALSE);
+            e->idx ^= 1;
+        }
+        e++;
+    }
+    PSMTXCopy(saved, mathutilData->mtxB);
+    ((f32 *)m)[0] = pv[1];
+    ((f32 *)m)[1] = k[0];
+    ((f32 *)m)[2] = pv[2];
+    ((f32 *)m)[3] = k[0];
+    ((f32 *)m)[4] = k[0];
+    ((f32 *)m)[5] = pv[3];
+    ((f32 *)m)[6] = pv[4];
+    ((f32 *)m)[7] = k[0];
+    ((f32 *)m)[8] = k[0];
+    ((f32 *)m)[9] = k[0];
+    ((f32 *)m)[10] = pv[5];
+    ((f32 *)m)[11] = pv[6];
+    ((f32 *)m)[12] = k[0];
+    ((f32 *)m)[13] = k[0];
+    ((f32 *)m)[14] = k[2];
+    ((f32 *)m)[15] = k[0];
+    GXSetProjection(m, 0);
+    GXSetViewport(k[0], k[0], currRenderMode->fbWidth, currRenderMode->xfbHeight, k[0], k[3]);
+    GXSetScissor(0, 0, currRenderMode->fbWidth, currRenderMode->efbHeight);
+}
+void lbl_00009998(void)
+{
+    int i;
+    u8 *p;
+
+    lbl_0000A7FC();
+    lbl_0000AE7C();
+    p = lbl_10000E00;
+    for (i = 2; i > 0; i--)
+    {
+        if (controllerInfo[0].held.button & PAD_BUTTON_UP)
+            lbl_00009A0C((struct TestCam *)p);
+        p += 0x9C;
+    }
+}
+static inline void nop_f(f32 a)
+{
+}
+
+static inline void nop_big(struct Big158 a)
+{
+}
+
+void lbl_00009A0C(struct TestCam *o)
+{
+    float *k = (float *)lbl_00010080;
+    struct TestCam *p = o;
+    GXColor c = *(GXColor *)&k[12];
+    Vec pad8[8];
+    Mtx m;
+    float nz;
+    float fz;
+    float nx;
+    float fx;
+    float nnx;
+    float nfx;
+    float t;
+    int i;
+
+    c.r = 0xFF;
+    c.g = 0xFF;
+    c.b = 0xFF;
+    c.a = 0xFF;
+    GXSetChanMatColor(GX_COLOR0A0, c);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    GXSetChanCtrl(GX_COLOR0A0, 0, 0, 0, 0, 2, 1);
+    GXSetNumChans(1);
+    GXSetTevOrder_cached(GX_TEVSTAGE0, 0xFF, 0xFF, GX_COLOR0A0);
+    GXSetTevDirect(GX_TEVSTAGE0);
+    GXSetTevOp_cached(GX_TEVSTAGE0, 4);
+    GXSetNumTevStages_cached(1);
+    GXSetNumTexGens(0);
+    GXSetNumIndStages(0);
+    GXSetBlendMode_cached(1, 1, 0, 0);
+    GXSetZMode_cached(1, 1, 1);
+    fog_gx_set();
+    gxutil_set_vtx_attrs(0x200);
+    GXSetVtxAttrFmt(6, 9, 1, 4, 0);
+    nz = -p->nearZ;
+    fz = -(p->nearZ + p->depth);
+    nfx = -(fx = p->tanFov * (p->nearZ + p->depth));
+    nnx = -(nx = p->tanFov * p->nearZ);
+    PSMTXInverse(p->mtx, mathutilData->mtxA);
+    PSMTXConcat(mathutilData->mtxB, mathutilData->mtxA, mathutilData->mtxA);
+    GXLoadPosMtxImm(mathutilData->mtxA, 0);
+    if (gxCache->lineWidth != 6 || gxCache->texOffsets != 0)
+    {
+        GXSetLineWidth(6, 0);
+        gxCache->lineWidth = 6;
+        gxCache->texOffsets = 0;
+    }
+    GXBegin(0xA8, 6, 8);
+    GXPosition3f32(k[0], k[0], k[0]);
+    GXPosition3f32(nx, nx, nz);
+    GXPosition3f32(k[0], k[0], k[0]);
+    GXPosition3f32(nnx, nx, nz);
+    GXPosition3f32(k[0], k[0], k[0]);
+    GXPosition3f32(nnx, nnx, nz);
+    GXPosition3f32(k[0], k[0], k[0]);
+    GXPosition3f32(nx, nnx, nz);
+    GXEnd();
+    if (gxCache->lineWidth != 0x12 || gxCache->texOffsets != 0)
+    {
+        GXSetLineWidth(0x12, 0);
+        gxCache->lineWidth = 0x12;
+        gxCache->texOffsets = 0;
+    }
+    GXBegin(0xA8, 6, 8);
+    GXPosition3f32(nx, nx, nz);
+    GXPosition3f32(fx, fx, fz);
+    GXPosition3f32(nnx, nx, nz);
+    GXPosition3f32(nfx, fx, fz);
+    GXPosition3f32(nnx, nnx, nz);
+    GXPosition3f32(nfx, nfx, fz);
+    GXPosition3f32(nx, nnx, nz);
+    GXPosition3f32(fx, nfx, fz);
+    GXEnd();
+    GXBegin(0xB0, 6, 5);
+    GXPosition3f32(nx, nx, nz);
+    GXPosition3f32(nnx, nx, nz);
+    GXPosition3f32(nnx, nnx, nz);
+    GXPosition3f32(nx, nnx, nz);
+    GXPosition3f32(nx, nx, nz);
+    GXEnd();
+    GXBegin(0xB0, 6, 5);
+    GXPosition3f32(fx, fx, fz);
+    GXPosition3f32(nfx, fx, fz);
+    GXPosition3f32(nfx, nfx, fz);
+    GXPosition3f32(fx, nfx, fz);
+    GXPosition3f32(fx, fx, fz);
+    GXEnd();
+    c.r = 0xFF;
+    c.g = 0xC0;
+    c.b = 0x60;
+    c.a = 0xFF;
+    GXSetChanMatColor(GX_COLOR0A0, c);
+    GXSetChanCtrl(GX_COLOR0A0, 0, 0, 0, 0, 2, 1);
+    GXSetNumChans(1);
+    GXLoadTexObj_cached(&p->tex, GX_TEXMAP0);
+    GXLoadTexObj_cached((GXTexObj *)lbl_10000F38, GX_TEXMAP1);
+    GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
+    GXSetTevOrder_cached(0, 0, 0, GX_COLOR0A0);
+    GXSetTevDirect(0);
+    GXSetTevOp_cached(0, 3);
+    GXSetTexCoordGen2(1, 0, 4, 0x1E, 0, 0x7D);
+    C_MTXScale(m, k[0], k[0], k[0]);
+    m[0][0] = k[13];
+    m[0][3] = k[14];
+    m[1][1] = k[13];
+    m[1][3] = k[14];
+    m[2][3] = k[3];
+    GXLoadTexMtxImm(m, 0x1E, 0);
+    GXSetTevOrder_cached(1, 1, 0, GX_COLOR0A0);
+    GXSetTevDirect(1);
+    GXSetTevOp_cached(1, 3);
+    GXSetTevColorIn_cached(1, 8, 0xF, 0xF, 0);
+    GXSetTevColorOp_cached(1, 1, 0, 0, 1, 0);
+    GXSetTexCoordGen2(2, 0, 0, 0x21, 0, 0x7D);
+    C_MTXScale(m, k[0], k[0], k[0]);
+    m[2][3] = k[3];
+    m[0][2] = k[15] / p->depth;
+    m[0][3] = k[16] + k[15] * p->nearZ / p->depth;
+    GXLoadTexMtxImm(m, 0x21, 0);
+    GXSetTevOrder_cached(2, 2, 1, GX_COLOR0A0);
+    GXSetTevDirect(2);
+    GXSetTevOp_cached(2, 4);
+    GXSetTevColorIn_cached(2, 0xF, 0, 8, 0xF);
+    GXSetTevColorOp_cached(2, 0, 0, 0, 1, 0);
+    GXSetTevOrder_cached(3, 0xFF, 0xFF, GX_COLOR0A0);
+    GXSetTevDirect(3);
+    GXSetTevOp_cached(3, 4);
+    GXSetTevColorIn_cached(3, 0xF, 0xA, 0, 0xF);
+    GXSetTevColorOp_cached(3, 0, 0, 0, 1, 0);
+    GXSetNumTevStages_cached(4);
+    GXSetNumTexGens(3);
+    GXSetNumIndStages(0);
+    GXSetBlendMode_cached(1, 1, 1, 0);
+    GXSetZMode_cached(1, 1, 0);
+    fog_gx_set();
+    gxutil_set_vtx_attrs(0x2200);
+    GXSetVtxAttrFmt(6, 9, 1, 4, 0);
+    GXSetVtxAttrFmt(6, 0xD, 1, 1, 0);
+    PSMTXInverse(p->mtx, mathutilData->mtxA);
+    PSMTXConcat(mathutilData->mtxB, mathutilData->mtxA, mathutilData->mtxA);
+    GXLoadPosMtxImm(mathutilData->mtxA, 0);
+    GXBegin(0x80, 6, 0x40);
+    nz = (powerOnTimer & 0x1F) * k[17];
+    t = nz * k[18];
+    for (i = 8; i > 0; i--)
+    {
+        float x = t * (p->tanFov * (p->nearZ + p->depth));
+        float z = -t * (p->nearZ + p->depth);
+
+        GXPosition3f32(x, x, z);
+        GXWGFifo.u8 = 1;
+        GXWGFifo.u8 = 0;
+        GXPosition3f32(-x, x, z);
+        GXWGFifo.u8 = 0;
+        GXWGFifo.u8 = 0;
+        GXPosition3f32(-x, -x, z);
+        GXWGFifo.u8 = 0;
+        GXWGFifo.u8 = 1;
+        GXPosition3f32(x, -x, z);
+        GXWGFifo.u8 = 1;
+        GXWGFifo.u8 = 1;
+        GXPosition3f32(-x, x, z);
+        GXWGFifo.u8 = 0;
+        GXWGFifo.u8 = 0;
+        GXPosition3f32(x, x, z);
+        GXWGFifo.u8 = 1;
+        GXWGFifo.u8 = 0;
+        GXPosition3f32(x, -x, z);
+        GXWGFifo.u8 = 1;
+        GXWGFifo.u8 = 1;
+        GXPosition3f32(-x, -x, z);
+        GXWGFifo.u8 = 0;
+        GXWGFifo.u8 = 1;
+        t += k[18];
+    }
+    GXEnd();
+    nop_big(*(struct Big158 *)lbl_00010080);
 }
 #pragma force_active reset

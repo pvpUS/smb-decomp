@@ -371,14 +371,64 @@ void lbl_00010DCC(void);
 void lbl_00011128(void);
 void lbl_0001157C(void);
 void lbl_00012B10(void);
-void lbl_00012BC4(void);
+struct RaceObj;
+void lbl_00012BC4(struct RaceObj *);
 void lbl_00012D50(void);
 
-#pragma force_active on
-asm void lbl_00012BC4(void)
+struct RaceObjSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00012BC4.s"
+    u8 filler0[0xA];
+    /*0x0A*/ s16 unkA;
+};
+
+struct RaceObj
+{
+    u8 filler0[0x20];
+    /*0x20*/ Vec unk20;
+    /*0x2C*/ Vec unk2C;
+    u8 filler38[0x60 - 0x38];
+    /*0x60*/ struct RaceObjSub *unk60;
+};
+
+struct RaceSub
+{
+    u8 filler0[0x263];
+    /*0x263*/ u8 unk263;
+};
+
+#pragma force_active on
+void lbl_00012BC4(struct RaceObj *o)
+{
+    Vec *v;
+    struct RaceObjSub *w;
+    struct Ball *ball;
+    f32 len;
+    Vec d;
+    f32 len2;
+
+    w = o->unk60;
+    if (w == NULL2)
+        return;
+    if (w->unkA < 0)
+        return;
+    ball = &ballInfo[w->unkA];
+    if (((struct RaceSub *)ball->unk144)->unk263 == 9)
+    {
+        w->unkA = -1;
+        return;
+    }
+    v = &o->unk2C;
+    len2 = len = mathutil_vec_len(v);
+    d.x = ball->pos.x - o->unk20.x;
+    d.y = ball->pos.y - o->unk20.y;
+    d.z = ball->pos.z - o->unk20.z;
+    mathutil_vec_set_len(&d, &d, *(f32 *)lbl_00014054);
+    o->unk2C.x += d.x;
+    o->unk2C.y += d.y;
+    o->unk2C.z += d.z;
+    mathutil_vec_set_len(v, v, len2);
+    if (mathutil_vec_sq_distance(&ball->pos, &o->unk20) < *(f32 *)lbl_00014058)
+        w->unkA = -1;
 }
 
 #pragma force_active reset

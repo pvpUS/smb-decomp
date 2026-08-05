@@ -233,7 +233,7 @@ void lbl_0001B5B8(void);
 void lbl_00022524(void);
 void lbl_00022610(void);
 void lbl_00022904(s16 *p, f32 scale, f32 t);
-void lbl_00022D4C(void);
+void lbl_00022D4C(s16 *p, float f);
 void lbl_000230E4(void);
 void lbl_00023AB4(void);
 void lbl_00023C68(void);
@@ -802,11 +802,55 @@ void lbl_00022904(s16 *p, f32 scale, f32 t)
     }
 }
 #pragma opt_propagation reset
-asm void lbl_00022D4C(void)
+#pragma opt_propagation off
+#pragma peephole on
+void lbl_00022D4C(s16 *p, float f)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_00022D4C.s"
+    NLsprarg b;
+    NLsprarg a;
+    u8 *tbl = (u8 *)lbl_00026E28;
+    u8 *pool = (u8 *)lbl_00026550;
+    float d;
+    int cp;
+
+    b = *(NLsprarg *)(tbl + 0x2d0);
+    b.y = b.y + (d = *(f32 *)(pool + 0x478) * f);
+    nlSprPut(&b);
+    b = *(NLsprarg *)tbl;
+    b.y = b.y + d;
+    nlSprPut(&b);
+    b = ((NLsprarg *)(tbl + 0x370))[*p];
+    b.y = b.y + d;
+    nlSprPut(&b);
+    b = ((NLsprarg *)(tbl + 0x50))[*p];
+    b.y = b.y + d;
+    nlSprPut(&b);
+    b = ((NLsprarg *)(tbl + 0x2d00))[*p];
+    b.y = b.y + d;
+    nlSprPut(&b);
+    b = ((NLsprarg *)(tbl + 0x190))[modeCtrl.currPlayer];
+    b.y = b.y + d;
+    nlSprPut(&b);
+    cp = modeCtrl.currPlayer;
+    if ((u8)lbl_00009968(cp) == 0)
+        lbl_00010E74(ballInfo[cp].ape->charaId, 1, *(f32 *)(pool + 0x454), *(f32 *)(pool + 0x468) + d);
+    else if ((u8)lbl_00009968(cp) == 1)
+        lbl_000115F8(ballInfo[cp].ape->charaId, 1, *(f32 *)(pool + 0x454), *(f32 *)(pool + 0x468) + d);
+    else if ((u8)lbl_00009968(cp) == 2)
+        lbl_00011254(ballInfo[cp].ape->charaId, 1, *(f32 *)(pool + 0x454), *(f32 *)(pool + 0x468) + d);
+    *(s8 *)lbl_100001CA = *p;
+    if (*p == 0)
+        a = *(NLsprarg *)(tbl + 0x5a0);
+    else if (*p == 1)
+        a = *(NLsprarg *)(tbl + 0x550);
+    else if (*p == 2)
+        a = *(NLsprarg *)(tbl + 0x500);
+    else if (*p == 3)
+        a = *(NLsprarg *)(tbl + 0x4b0);
+    a.y = a.y + d;
+    nlSprPut(&a);
 }
+#pragma opt_propagation reset
 asm void lbl_000230E4(void)
 {
     nofralloc

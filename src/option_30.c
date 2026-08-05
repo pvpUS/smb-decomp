@@ -160,7 +160,7 @@ void lbl_00006C34(s8 *arg0, struct Sprite *sprite);
 void lbl_00006C54(void);
 void lbl_00007790(void);
 void lbl_00007848(s8 *arg0, struct Sprite *sprite);
-void lbl_00007868(void);
+void lbl_00007868(struct Sprite *sprite);
 void lbl_00007F90(void);
 void lbl_00008048(s8 *arg0, struct Sprite *sprite);
 void lbl_00008068(void);
@@ -645,10 +645,98 @@ void lbl_00007848(s8 *arg0, struct Sprite *sprite)
 {
     lbl_00003FF0(arg0, sprite);
 }
-asm void lbl_00007868(void)
+void lbl_00007868(struct Sprite *sprite)
 {
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00007868.s"
+    u8 *c = lbl_0000C370;
+    struct Sprite sp;
+    s8 *p;
+    f32 tw;
+    u32 sm;
+    s32 pad1;
+    s32 pad2;
+
+    p = lbl_00003F6C(sprite->tag);
+    if (p != NULL)
+    {
+        mathutil_mtxA_from_translate_xyz(*(f32 *)(p + 4) + *(f32 *)(p + 8),
+                                         *(f32 *)c, *(f32 *)c);
+        mathutil_mtxA_to_mtx((void *)(lbl_10000000 + 0x184));
+        GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+    }
+    nlSprPut((NLsprarg *)lbl_0000C8F0);
+
+    sp.depth = *(f32 *)(c + 0x88);
+    sp.scaleX = *(f32 *)(c + 0x60);
+    sp.scaleY = *(f32 *)(c + 0x60);
+    sp.fontId = 0xB3;
+    sp.addR = 0;
+    sp.addG = 0;
+    sp.addB = 0;
+    sp.flags = 0x200000;
+    strcpy(sp.text, (char *)(lbl_0000C8F0 + 0x9B0));
+
+    u_txt_setup(&sp);
+    func_80071B1C(sp.depth);
+    set_text_mul_color(RGBA(sp.mulR, sp.mulG, sp.mulB, 0));
+    set_text_add_color(RGBA(sp.addR, sp.addG, sp.addB, 0));
+    tw = u_get_text_width(sp.text);
+    sp.x = *(f64 *)(c + 0xA8) - *(f64 *)(c + 0x58) * tw;
+    sp.y = *(f32 *)(c + 0x90);
+    sp.mulR = 0xFF;
+    sp.mulG = 0xFF;
+    sp.mulB = 0;
+    u_txt_shadow(&sp, c);
+
+    lbl_000042BC((NLsprarg *)(lbl_0000C8F0 + 0x7D0), *(f32 *)(c + 0x148),
+                 *(f32 *)(c + 0x9C));
+
+    sp.x = *(f32 *)(c + 0x194);
+    sp.y = *(f32 *)(c + 0x198);
+    strcpy(sp.text, (char *)(lbl_0000C8F0 + 0x9B8));
+    u_txt_shadow(&sp, c);
+
+    sm = OSGetSoundMode();
+    sp.x = *(f32 *)(c + 0x19C);
+    sp.y = *(f32 *)(c + 0x198);
+    sp.scaleX = *(f32 *)(c + 0x158);
+    sp.fontId = 0xB0;
+    strcpy(sp.text, (char *)(lbl_0000C8F0 + 0x9C8));
+    u_txt_shadow(&sp, c);
+
+    sp.fontId = 0xB3;
+    sp.scaleX = *(f32 *)(c + 0x60);
+    ((f32 *)lbl_0000C8F0)[0x964 / 4] = *(f32 *)(c + 0x1A0);
+    ((f32 *)lbl_0000C8F0)[0x968 / 4] = *(f32 *)(c + 0xC8);
+    ((f32 *)lbl_0000C8F0)[0x970 / 4] = *(f32 *)(c + 0x1A4);
+    ((f32 *)lbl_0000C8F0)[0x974 / 4] = *(f32 *)(c + 0x1A8);
+    nlSprPut((NLsprarg *)(lbl_0000C8F0 + 0x960));
+
+    sp.x = *(f32 *)(c + 0x1AC);
+    sp.y = *(f32 *)(c + 0x198);
+    if (sm == 1)
+        strcpy(sp.text, (char *)(lbl_0000C8F0 + 0x9EC));
+    else
+        strcpy(sp.text, (char *)(lbl_0000C8F0 + 0x9F8));
+    u_txt_shadow(&sp, c);
+
+    nlSprPut((NLsprarg *)(lbl_0000C8F0 + 0xF0));
+
+    strcpy(sp.text, (char *)(lbl_0000C8F0 + 0xA00));
+    sp.mulR = 0xFF;
+    sp.mulG = 0xFF;
+    sp.mulB = 0;
+    sp.scaleX = *(f32 *)(c + 0xA4);
+    u_txt_setup(&sp);
+    func_80071B1C(sp.depth);
+    set_text_mul_color(RGBA(sp.mulR, sp.mulG, sp.mulB, 0));
+    set_text_add_color(RGBA(sp.addR, sp.addG, sp.addB, 0));
+    tw = u_get_text_width(sp.text);
+    sp.x = *(f64 *)(c + 0xA8) - *(f64 *)(c + 0x58) * tw;
+    sp.y = *(f32 *)(c + 0x190);
+    u_txt_shadow(&sp, c);
+
+    mathutil_mtxA_from_identity();
+    GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
 }
 #pragma peephole on
 void lbl_00007F90(void)

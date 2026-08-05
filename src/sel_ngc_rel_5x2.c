@@ -143,7 +143,7 @@ void _epilog(void);
 void _unresolved(void);
 void lbl_00000234(void);
 void lbl_0000033C(void);
-void lbl_000005D4(void);
+int lbl_000005D4(int);
 void lbl_00001910(void);
 void lbl_00001968(void);
 void lbl_00001B38(void);
@@ -208,9 +208,190 @@ void lbl_00011824(void);
 void lbl_000118E4(void);
 
 #pragma force_active on
-asm void lbl_000005D4(void)
+int lbl_000005D4(int a)
 {
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_000005D4.s"
+    u8 *w = (u8 *)lbl_10000000;
+    int ret = 0;
+
+    switch (a)
+    {
+    case 0:
+        ret = (*(u32 *)(w + 4) == 0
+             && ((controllerInfo[0].repeat.button & PAD_BUTTON_LEFT)
+              || (controllerInfo[1].repeat.button & PAD_BUTTON_LEFT)
+              || (controllerInfo[2].repeat.button & PAD_BUTTON_LEFT)
+              || (controllerInfo[3].repeat.button & PAD_BUTTON_LEFT)
+              || (analogInputs[0].repeat & PAD_BUTTON_LEFT)
+              || (analogInputs[1].repeat & PAD_BUTTON_LEFT)
+              || (analogInputs[2].repeat & PAD_BUTTON_LEFT)
+              || (analogInputs[3].repeat & PAD_BUTTON_LEFT)))
+            || (*(u32 *)(w + 4) != 0
+             && (((*(u32 *)(w + 4) & 1)
+                  && ((controllerInfo[0].repeat.button & PAD_BUTTON_LEFT)
+               || (analogInputs[0].repeat & PAD_BUTTON_LEFT)))
+              || ((*(u32 *)(w + 4) & 2)
+                  && ((controllerInfo[1].repeat.button & PAD_BUTTON_LEFT)
+               || (analogInputs[1].repeat & PAD_BUTTON_LEFT)))
+              || ((*(u32 *)(w + 4) & 4)
+                  && ((controllerInfo[2].repeat.button & PAD_BUTTON_LEFT)
+               || (analogInputs[2].repeat & PAD_BUTTON_LEFT)))
+              || ((*(u32 *)(w + 4) & 8)
+                  && ((controllerInfo[3].repeat.button & PAD_BUTTON_LEFT)
+               || (analogInputs[3].repeat & PAD_BUTTON_LEFT)))));
+        break;
+    case 1:
+        ret = (*(u32 *)(w + 4) == 0
+             && ((controllerInfo[0].repeat.button & PAD_BUTTON_RIGHT)
+              || (controllerInfo[1].repeat.button & PAD_BUTTON_RIGHT)
+              || (controllerInfo[2].repeat.button & PAD_BUTTON_RIGHT)
+              || (controllerInfo[3].repeat.button & PAD_BUTTON_RIGHT)
+              || (analogInputs[0].repeat & PAD_BUTTON_RIGHT)
+              || (analogInputs[1].repeat & PAD_BUTTON_RIGHT)
+              || (analogInputs[2].repeat & PAD_BUTTON_RIGHT)
+              || (analogInputs[3].repeat & PAD_BUTTON_RIGHT)))
+            || (*(u32 *)(w + 4) != 0
+             && (((*(u32 *)(w + 4) & 1)
+                  && ((controllerInfo[0].repeat.button & PAD_BUTTON_RIGHT)
+               || (analogInputs[0].repeat & PAD_BUTTON_RIGHT)))
+              || ((*(u32 *)(w + 4) & 2)
+                  && ((controllerInfo[1].repeat.button & PAD_BUTTON_RIGHT)
+               || (analogInputs[1].repeat & PAD_BUTTON_RIGHT)))
+              || ((*(u32 *)(w + 4) & 4)
+                  && ((controllerInfo[2].repeat.button & PAD_BUTTON_RIGHT)
+               || (analogInputs[2].repeat & PAD_BUTTON_RIGHT)))
+              || ((*(u32 *)(w + 4) & 8)
+                  && ((controllerInfo[3].repeat.button & PAD_BUTTON_RIGHT)
+               || (analogInputs[3].repeat & PAD_BUTTON_RIGHT)))));
+        break;
+    case 2:
+        ret = (*(u32 *)(w + 4) == 0
+             && ((controllerInfo[0].repeat.button & PAD_BUTTON_UP)
+              || (controllerInfo[1].repeat.button & PAD_BUTTON_UP)
+              || (controllerInfo[2].repeat.button & PAD_BUTTON_UP)
+              || (controllerInfo[3].repeat.button & PAD_BUTTON_UP)
+              || (analogInputs[0].repeat & PAD_BUTTON_UP)
+              || (analogInputs[1].repeat & PAD_BUTTON_UP)
+              || (analogInputs[2].repeat & PAD_BUTTON_UP)
+              || (analogInputs[3].repeat & PAD_BUTTON_UP)))
+            || (*(u32 *)(w + 4) != 0
+             && (((*(u32 *)(w + 4) & 1)
+                  && ((controllerInfo[0].repeat.button & PAD_BUTTON_UP)
+               || (analogInputs[0].repeat & PAD_BUTTON_UP)))
+              || ((*(u32 *)(w + 4) & 2)
+                  && ((controllerInfo[1].repeat.button & PAD_BUTTON_UP)
+               || (analogInputs[1].repeat & PAD_BUTTON_UP)))
+              || ((*(u32 *)(w + 4) & 4)
+                  && ((controllerInfo[2].repeat.button & PAD_BUTTON_UP)
+               || (analogInputs[2].repeat & PAD_BUTTON_UP)))
+              || ((*(u32 *)(w + 4) & 8)
+                  && ((controllerInfo[3].repeat.button & PAD_BUTTON_UP)
+               || (analogInputs[3].repeat & PAD_BUTTON_UP)))));
+        break;
+    case 3:
+        ret = (*(u32 *)(w + 4) == 0
+             && ((controllerInfo[0].repeat.button & PAD_BUTTON_DOWN)
+              || (controllerInfo[1].repeat.button & PAD_BUTTON_DOWN)
+              || (controllerInfo[2].repeat.button & PAD_BUTTON_DOWN)
+              || (controllerInfo[3].repeat.button & PAD_BUTTON_DOWN)
+              || (analogInputs[0].repeat & PAD_BUTTON_DOWN)
+              || (analogInputs[1].repeat & PAD_BUTTON_DOWN)
+              || (analogInputs[2].repeat & PAD_BUTTON_DOWN)
+              || (analogInputs[3].repeat & PAD_BUTTON_DOWN)))
+            || (*(u32 *)(w + 4) != 0
+             && (((*(u32 *)(w + 4) & 1)
+                  && ((controllerInfo[0].repeat.button & PAD_BUTTON_DOWN)
+               || (analogInputs[0].repeat & PAD_BUTTON_DOWN)))
+              || ((*(u32 *)(w + 4) & 2)
+                  && ((controllerInfo[1].repeat.button & PAD_BUTTON_DOWN)
+               || (analogInputs[1].repeat & PAD_BUTTON_DOWN)))
+              || ((*(u32 *)(w + 4) & 4)
+                  && ((controllerInfo[2].repeat.button & PAD_BUTTON_DOWN)
+               || (analogInputs[2].repeat & PAD_BUTTON_DOWN)))
+              || ((*(u32 *)(w + 4) & 8)
+                  && ((controllerInfo[3].repeat.button & PAD_BUTTON_DOWN)
+               || (analogInputs[3].repeat & PAD_BUTTON_DOWN)))));
+        break;
+    case 4:
+        ret = (*(u32 *)(w + 4) == 0
+             && ((controllerInfo[0].pressed.button & PAD_TRIGGER_L)
+              || (controllerInfo[1].pressed.button & PAD_TRIGGER_L)
+              || (controllerInfo[2].pressed.button & PAD_TRIGGER_L)
+              || (controllerInfo[3].pressed.button & PAD_TRIGGER_L)))
+            || (*(u32 *)(w + 4) != 0
+             && (((*(u32 *)(w + 4) & 1)
+                  && (controllerInfo[0].pressed.button & PAD_TRIGGER_L))
+              || ((*(u32 *)(w + 4) & 2)
+                  && (controllerInfo[1].pressed.button & PAD_TRIGGER_L))
+              || ((*(u32 *)(w + 4) & 4)
+                  && (controllerInfo[2].pressed.button & PAD_TRIGGER_L))
+              || ((*(u32 *)(w + 4) & 8)
+                  && (controllerInfo[3].pressed.button & PAD_TRIGGER_L))));
+        break;
+    case 5:
+        ret = (*(u32 *)(w + 4) == 0
+             && ((controllerInfo[0].pressed.button & PAD_TRIGGER_R)
+              || (controllerInfo[1].pressed.button & PAD_TRIGGER_R)
+              || (controllerInfo[2].pressed.button & PAD_TRIGGER_R)
+              || (controllerInfo[3].pressed.button & PAD_TRIGGER_R)))
+            || (*(u32 *)(w + 4) != 0
+             && (((*(u32 *)(w + 4) & 1)
+                  && (controllerInfo[0].pressed.button & PAD_TRIGGER_R))
+              || ((*(u32 *)(w + 4) & 2)
+                  && (controllerInfo[1].pressed.button & PAD_TRIGGER_R))
+              || ((*(u32 *)(w + 4) & 4)
+                  && (controllerInfo[2].pressed.button & PAD_TRIGGER_R))
+              || ((*(u32 *)(w + 4) & 8)
+                  && (controllerInfo[3].pressed.button & PAD_TRIGGER_R))));
+        break;
+    case 6:
+        ret = (*(u32 *)(w + 4) == 0
+             && ((controllerInfo[0].pressed.button & PAD_BUTTON_A)
+              || (controllerInfo[1].pressed.button & PAD_BUTTON_A)
+              || (controllerInfo[2].pressed.button & PAD_BUTTON_A)
+              || (controllerInfo[3].pressed.button & PAD_BUTTON_A)))
+            || (*(u32 *)(w + 4) != 0
+             && (((*(u32 *)(w + 4) & 1)
+                  && (controllerInfo[0].pressed.button & PAD_BUTTON_A))
+              || ((*(u32 *)(w + 4) & 2)
+                  && (controllerInfo[1].pressed.button & PAD_BUTTON_A))
+              || ((*(u32 *)(w + 4) & 4)
+                  && (controllerInfo[2].pressed.button & PAD_BUTTON_A))
+              || ((*(u32 *)(w + 4) & 8)
+                  && (controllerInfo[3].pressed.button & PAD_BUTTON_A))));
+        break;
+    case 7:
+        ret = (*(u32 *)(w + 4) == 0
+             && ((controllerInfo[0].pressed.button & PAD_BUTTON_B)
+              || (controllerInfo[1].pressed.button & PAD_BUTTON_B)
+              || (controllerInfo[2].pressed.button & PAD_BUTTON_B)
+              || (controllerInfo[3].pressed.button & PAD_BUTTON_B)))
+            || (*(u32 *)(w + 4) != 0
+             && (((*(u32 *)(w + 4) & 1)
+                  && (controllerInfo[0].pressed.button & PAD_BUTTON_B))
+              || ((*(u32 *)(w + 4) & 2)
+                  && (controllerInfo[1].pressed.button & PAD_BUTTON_B))
+              || ((*(u32 *)(w + 4) & 4)
+                  && (controllerInfo[2].pressed.button & PAD_BUTTON_B))
+              || ((*(u32 *)(w + 4) & 8)
+                  && (controllerInfo[3].pressed.button & PAD_BUTTON_B))));
+        break;
+    case 8:
+        ret = (*(u32 *)(w + 4) == 0
+             && ((controllerInfo[0].pressed.button & PAD_BUTTON_X)
+              || (controllerInfo[1].pressed.button & PAD_BUTTON_X)
+              || (controllerInfo[2].pressed.button & PAD_BUTTON_X)
+              || (controllerInfo[3].pressed.button & PAD_BUTTON_X)))
+            || (*(u32 *)(w + 4) != 0
+             && (((*(u32 *)(w + 4) & 1)
+                  && (controllerInfo[0].pressed.button & PAD_BUTTON_X))
+              || ((*(u32 *)(w + 4) & 2)
+                  && (controllerInfo[1].pressed.button & PAD_BUTTON_X))
+              || ((*(u32 *)(w + 4) & 4)
+                  && (controllerInfo[2].pressed.button & PAD_BUTTON_X))
+              || ((*(u32 *)(w + 4) & 8)
+                  && (controllerInfo[3].pressed.button & PAD_BUTTON_X))));
+        break;
+    }
+    return ret;
 }
 #pragma force_active reset

@@ -167,7 +167,6 @@ extern void func_800A722C();
 extern void func_800A7314();
 extern void func_800A7370();
 extern void func_800A7440();
-extern void get_font_bitmap_id();
 extern void item_draw();
 extern void load_model();
 extern void mot_ape_8008BAA8();
@@ -277,10 +276,182 @@ void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+static void lbl_000037B0(void);
+extern int get_font_bitmap_id();
+struct TestFontEntry
+{
+    s32 unk0;
+    char *unk4;
+};
+struct TestFontGroup
+{
+    struct TestFontEntry *entries;
+    char *title;
+    s32 unk8;
+};
+
 #pragma force_active on
 asm void lbl_000031B8(void)
 {
     nofralloc
 #include "../asm/nonmatchings/test_mode/lbl_000031B8.s"
+}
+#pragma peephole on
+void lbl_00003774(void)
+{
+    if (debugFlags & 0xA)
+        return;
+    *(int *)lbl_100000B4 = 0;
+    *(int *)lbl_100000B8 = 0;
+    gameSubmodeRequest = 0x74;
+}
+struct TestBmGroup
+{
+    s32 id;
+    s32 pad[2];
+};
+
+static void lbl_000037B0(void)
+{
+    u8 *p = lbl_10000000;
+    u8 *d = lbl_000102B0;
+    struct TestFontEntry *e;
+    int grp;
+    int ent;
+
+    if (debugFlags & 0xA)
+        return;
+    grp = *(int *)(p + 0xB8);
+    if (REPEAT_WITH_R_ACCEL(0, PAD_BUTTON_RIGHT))
+    {
+        struct TestBmGroup *bg = (struct TestBmGroup *)(d + 0x2C70);
+        struct TestBmGroup *q;
+
+        q = bg;
+        q += grp;
+        if (q->id != 0)
+            call_bitmap_free_group(q->id);
+        grp++;
+        if (((struct TestFontGroup *)(d + 0x2C68))[grp].entries == NULL)
+            grp = 0;
+        q = bg;
+        q += grp;
+        if (q->id != 0)
+            call_bitmap_load_group(q->id);
+    }
+    if (REPEAT_WITH_R_ACCEL(0, PAD_BUTTON_LEFT))
+    {
+        struct TestBmGroup *bg = (struct TestBmGroup *)(d + 0x2C70);
+        struct TestBmGroup *q;
+
+        q = bg;
+        q += grp;
+        if (q->id != 0)
+            call_bitmap_free_group(q->id);
+        grp--;
+        if (grp < 0)
+        {
+            grp = 0;
+            while (((struct TestFontGroup *)(d + 0x2C68))[grp].entries != NULL)
+                grp++;
+            grp--;
+        }
+        q = bg;
+        q += grp;
+        if (q->id != 0)
+            call_bitmap_load_group(q->id);
+    }
+    if (grp != *(int *)(p + 0xB8))
+    {
+        *(int *)(p + 0xB4) = 0;
+        *(int *)(p + 0xB8) = grp;
+    }
+    ent = *(int *)(p + 0xB4);
+    e = ((struct TestFontGroup *)(d + 0x2C68))[*(int *)(p + 0xB8)].entries;
+    if (REPEAT_WITH_R_ACCEL(0, PAD_BUTTON_DOWN))
+    {
+        ent++;
+        if (e[ent].unk0 == -1)
+            ent = 0;
+    }
+    if (REPEAT_WITH_R_ACCEL(0, PAD_BUTTON_UP))
+    {
+        ent--;
+        if (ent < 0)
+        {
+            ent = 0;
+            while (e[ent].unk0 != -1)
+                ent++;
+            ent--;
+        }
+    }
+    *(int *)(p + 0xB4) = ent;
+}
+void lbl_00003A4C(void)
+{
+    f32 *k = (f32 *)lbl_0000FE78;
+    u8 *p = lbl_10000000;
+    u8 *d = lbl_000102B0;
+    struct TestFontEntry *f;
+    struct TestFontEntry *e;
+    int i;
+
+    window_set_cursor_pos(2, 2);
+    u_debug_print(((struct TestFontGroup *)(d + 0x2C68))[*(int *)(p + 0xB8)].title);
+    reset_text_draw_settings();
+    e = ((struct TestFontGroup *)(d + 0x2C68))[*(int *)(p + 0xB8)].entries;
+    for (i = 0; e->unk0 >= 0; e++, i++)
+    {
+        if (i == *(int *)(p + 0xB4))
+        {
+            window_set_text_color(2);
+            window_set_cursor_pos(1, i + 4);
+            window_printf_2((char *)(d + 0x2CBC), fontStrArray[e->unk0]);
+            window_set_text_color(0);
+        }
+        else
+        {
+            window_set_cursor_pos(1, i + 4);
+            window_printf_2((char *)(d + 0x2CC4), fontStrArray[e->unk0]);
+        }
+    }
+    f = &((struct TestFontGroup *)(d + 0x2C68))[*(int *)(p + 0xB8)].entries[*(int *)(p + 0xB4)];
+    set_text_font(f->unk0);
+    set_text_pos(k[60], k[61]);
+    sprite_puts(f->unk4);
+    if (!(controllerInfo[0].held.button & PAD_BUTTON_B))
+    {
+        NLsprarg params;
+
+        params.sprno = get_font_bitmap_id(((struct TestFontGroup *)(d + 0x2C68))[*(int *)(p + 0xB8)].entries[*(int *)(p + 0xB4)].unk0);
+        params.x = k[62];
+        params.y = k[63];
+        params.z = k[46];
+        params.zm_x = k[46];
+        params.zm_y = k[46];
+        params.u0 = k[24];
+        params.v0 = k[24];
+        params.u1 = k[46];
+        params.v1 = k[46];
+        params.ang = 0;
+        params.trnsl = k[46];
+        params.listType = -1;
+        params.attr = 10;
+        params.base_color = -1;
+        params.offset_color = 0;
+        nlSprPut(&params);
+    }
+}
+asm void lbl_00003C34(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/test_mode/lbl_00003C34.s"
+}
+asm void lbl_00003D94(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/test_mode/lbl_00003D94.s"
 }
 #pragma force_active reset

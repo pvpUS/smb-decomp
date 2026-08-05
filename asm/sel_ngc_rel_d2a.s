@@ -17,7 +17,6 @@
 .global lbl_00012160
 .global lbl_00012180
 .global lbl_0001219C
-.global lbl_00012238
 .global lbl_0001225C
 .global lbl_000125FC
 .global lbl_00012620
@@ -662,22 +661,9 @@
 .global lbl_100009D8
 
 .section .data
+# lbl_00012238 -- 9-entry switch jump table of lbl_000005D4, now emitted by
+# src/sel_ngc_rel_5x2.c.o (run 22 .data carve).  Kept for reference only.
 .if 0
-lbl_00012180:
-    # 0x12180
-    .asciz "RELOCATION SEL_NGC LOADED"
-.endif
-lbl_0001219C:
-    # 0x1219C
-    .asciz "RELOCATION SEL_NGC PURGED"
-    .balign 4
-    .asciz "\nError: A called an unlinked function.\n"
-    .asciz "Address:      Back Chain    LR Save\n"
-    .balign 4
-    .asciz "0x%08x:   0x%08x    0x%08x\n"
-    .asciz "sel_ngc_rel.c"
-    .balign 4
-    .4byte 0x0A000000
 lbl_00012238:
     # 0x12238
     .4byte _prolog + 0x538
@@ -689,6 +675,7 @@ lbl_00012238:
     .4byte _prolog + 0x1360
     .4byte _prolog + 0x14FC
     .4byte _prolog + 0x1698
+.endif
 lbl_0001225C:
     # 0x1225C
     .asciz "b/c/0xff0000/a/Please do not insert or\nb/c/0xff0000/a/disconnect the controller(s)."

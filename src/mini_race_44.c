@@ -398,10 +398,81 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_00007A9C(struct Ball *ball)
+#pragma peephole on
+void lbl_00007A9C(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00007A9C.s"
+    u8 *cfg = lbl_00013740;
+    struct Ball_child *st = ball->unk144;
+    u32 *vtxinfo;
+    struct RaceEffVtx *verts;
+    f32 best;
+    f32 out;
+    f32 h;
+    f32 d;
+    s16 i;
+    s16 j;
+    Vec tri[3];
+    Vec e1;
+    Vec e2;
+    Vec n;
+
+    vtxinfo = avdisp_get_eff_vtxinfo(((struct RaceGma *)minigameGma)->modelEntries[21].model);
+    verts = avdisp_get_eff_vertices(((struct RaceGma *)minigameGma)->modelEntries[21].model);
+    out = best = *(f32 *)(cfg + 0x70);
+    mathutil_mtxA_from_mtx(ball->unk30);
+    mathutil_mtxA_scale_s(ball->modelScale);
+    for (i = 0; i < *vtxinfo; i += 3)
+    {
+        mathutil_mtxA_tf_vec(&verts[i].pos, &tri[0]);
+        mathutil_mtxA_tf_vec(&verts[i + 1].pos, &tri[1]);
+        mathutil_mtxA_tf_vec(&verts[i + 2].pos, &tri[2]);
+        if (tri[0].y > *(f32 *)(cfg + 8))
+            continue;
+        if (tri[1].y > *(f32 *)(cfg + 8))
+            continue;
+        if (tri[2].y > *(f32 *)(cfg + 8))
+            continue;
+        e1.x = tri[1].x - tri[0].x;
+        e1.y = tri[1].y - tri[0].y;
+        e1.z = tri[1].z - tri[0].z;
+        e2.x = tri[2].x - tri[0].x;
+        e2.y = tri[2].y - tri[0].y;
+        e2.z = tri[2].z - tri[0].z;
+        mathutil_vec_normalize_len(&e1);
+        mathutil_vec_normalize_len(&e2);
+        mathutil_vec_cross_prod(&e1, &e2, &n);
+        if (*(f32 *)(cfg + 8) == n.y)
+            continue;
+        h = -(tri[0].y + (n.x * tri[0].x + n.z * tri[0].z) / n.y);
+        if (!(best < *(f32 *)(cfg + 8)
+              || (h > *(f32 *)(cfg + 8) && best > h)))
+            continue;
+        best = h;
+        h = tri[0].y;
+        for (j = 1; j < 3; j++)
+        {
+            if (tri[j].y < h)
+                h = tri[j].y;
+        }
+        out = -h;
+    }
+    if (best <= *(f32 *)(cfg + 8))
+        return;
+    d = out - ball->currRadius;
+    if (st->unk1CE == 1)
+        u_play_sound_0(0x133);
+    if (st->unk1CE > 5)
+    {
+        if (d > *(f32 *)(cfg + 8))
+            ball->pos.y = ball->pos.y + *(f32 *)(cfg + 0x2E4) * d;
+        else
+            ball->pos.y = ball->pos.y + d;
+    }
+    else
+    {
+        ball->pos.y = ball->pos.y + d;
+    }
+    ball->currRadius = out;
 }
 
 #pragma force_active reset

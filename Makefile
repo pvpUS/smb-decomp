@@ -395,6 +395,7 @@ SOURCES := \
 	src/sel_ngc_rel_3.c \
 	src/sel_ngc_rel_4.c \
 	src/sel_ngc_rel_5.c \
+	asm/sel_ngc_rel_d2b.s \
 	src/sel_ngc_rel_5x2.c \
 	src/sel_ngc_rel_6.c \
 	src/sel_ngc_rel_7.c \
@@ -898,15 +899,6 @@ SOURCES := \
 	src/mini_pilot_8b.c \
 	src/mini_pilot_9.c \
 	asm/mini_pilot_d1.s \
-	src/mini_pilot_10h.c \
-	src/mini_pilot_10i.c \
-	src/mini_pilot_10j.c \
-	src/mini_pilot_10k.c \
-	src/mini_pilot_11.c \
-	src/mini_pilot_12.c \
-	src/mini_pilot_12b.c \
-	src/mini_pilot_12bb.c \
-	src/mini_pilot_12bc.c \
 	src/mini_pilot_12bd.c \
 	src/mini_pilot_12be.c \
 	src/mini_pilot_12bf.c \
@@ -1126,6 +1118,7 @@ SOURCES := \
 	src/test_mode_14.c \
 	src/test_mode_15.c \
 	src/test_mode_16.c \
+	asm/test_mode_dA.s \
 	src/test_mode_17.c \
 	src/test_mode_18.c \
 	src/test_mode_19.c \
@@ -1138,11 +1131,6 @@ SOURCES := \
 	src/test_mode_25b.c \
 	src/test_mode_26.c \
 	src/test_mode_27.c \
-	src/test_mode_27b.c \
-	src/test_mode_28.c \
-	src/test_mode_29.c \
-	src/test_mode_30.c \
-	src/test_mode_31.c \
 	src/test_mode_32.c \
 	src/test_mode_33.c \
 	src/test_mode_34.c \
@@ -1180,8 +1168,6 @@ SOURCES := \
 	src/test_mode_64.c \
 	src/test_mode_65.c \
 	src/test_mode_66.c \
-	src/test_mode_67.c \
-	src/test_mode_68.c \
 	asm/test_mode_d0.s \
 	src/test_mode_69.c \
 	src/test_mode_70.c \

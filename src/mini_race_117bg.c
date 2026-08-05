@@ -381,10 +381,22 @@ void lbl_00013328(void);
 void lbl_0001356C(void);
 void lbl_00013670(struct Effect *);
 #pragma force_active on
-asm void lbl_000131FC(struct Effect *e)
+#pragma peephole on
+static void lbl_000131FC(struct Effect *e)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000131FC.s"
+    u8 *pool = (u8 *)lbl_00014060;
+
+    e->scale.x += e->unk88.y;
+    if (e->scale.x > e->unk88.x)
+    {
+        e->scale.x = e->unk88.x;
+        e->unk88.y *= *(f32 *)(pool + 0x60);
+    }
+    if (e->scale.x < *(f32 *)(pool + 0x54))
+    {
+        e->scale.x = ((f32 *)pool)[0x54 / 4];
+        g_poolInfo.effectPool.statusList[e->poolIndex] = STAT_DEST;
+    }
 }
 
 #pragma force_active reset

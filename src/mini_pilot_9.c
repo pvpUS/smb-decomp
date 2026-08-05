@@ -144,8 +144,6 @@ extern u8 lbl_100000B8[];
 extern u8 neutralFaceTable[];
 extern u8 smileFaceTable[];
 extern u8 lbl_80285A58[];
-extern u8 lbl_80285A68[];
-extern u8 lbl_80285A80[];
 extern u8 lbl_802F1F10[];
 extern u32 lbl_802F1FD0;
 extern u8 lbl_802F1FD8[];
@@ -242,7 +240,6 @@ void lbl_00009FB0(void);
 void lbl_0000A098(void);
 void lbl_0000A69C(void);
 void lbl_0000A754(void);
-void lbl_0000AD6C(void);
 void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
@@ -261,6 +258,51 @@ void lbl_00001B08(void);
 void lbl_00001BB4(void);
 void lbl_00001CE4(void);
 void lbl_00001DE0(void);
+
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+struct PilotPlayRec
+{
+    s16 s[3];
+};
+extern struct PilotPlayRec lbl_80285A68[];
+void lbl_0000AD6C(u32 mulColor, u32 addColor, f32 x, f32 y, char *fmt, ...);
+struct PilotTgtRow
+{
+    s16 unk0;
+    s16 unk2;
+    s16 unk4;
+    s16 unk6;
+    s16 unk8;
+    s16 unkA;
+};
+extern struct PilotTgtRow lbl_80285A80[];
+void lbl_0000B000(void);
+union PilotV
+{
+    Vec v;
+    f64 align;
+};
+void lbl_000023BC(void);
+void lbl_00002408(void);
+void lbl_000024D0(void);
+void lbl_0000253C(void);
+void lbl_000026BC(void);
+void lbl_00002890(void);
+void lbl_00002A2C(void);
+void lbl_00002AE8(void);
+void lbl_00002C18(void);
+void lbl_00002D24(void);
+void lbl_00002E04(void);
+void lbl_00002E94(void);
+void lbl_00002EB4(void);
+void lbl_00002FF4(void);
+void lbl_00003298(void);
+void lbl_00003374(void);
+void lbl_000035B8(void);
+void lbl_00003860(void);
+void lbl_000038D4(void);
+void lbl_00003AD0(void);
 
 #pragma force_active on
 void lbl_000008AC(void)
@@ -474,8 +516,8 @@ void lbl_0000101C(void)
     ((s32 *)lbl_80285A58)[p] = 0;
     lbl_802F1FEC = 0;
     {
-    s16 *a = (s16 *)&lbl_80285A80[p * 12];
-    s16 *b = (s16 *)&lbl_80285A68[p * 6];
+    s16 *a = (s16 *)((u8 *)lbl_80285A80 + p * 12);
+    s16 *b = (s16 *)((u8 *)lbl_80285A68 + p * 6);
     a[0] = 0;
     a[1] = 0;
     a[2] = 0;
@@ -649,6 +691,267 @@ void lbl_0000178C(void)
     if (*(s8 *)(w + 0x23) > 0)
         *(s8 *)(w + 0x23) -= 1;
     *(s8 *)(w + 0x22) = *(s8 *)(w + 0x90);
+}
+
+void lbl_00001B08(void)
+{
+    struct Ball *ball = currentBall;
+
+    if (((s8 *)lbl_10000078)[*(s8 *)lbl_10000090] != 0)
+        cameraInfo[ball->playerId].subState = 6;
+    lbl_802F1FF0 = 0;
+    lbl_802F1FF6 = 6;
+    lbl_802F1FF4 = -1;
+    ((void (**)(void))lbl_0000C748)[6]();
+}
+
+void lbl_00001BB4(void)
+{
+    struct Ball *ball = currentBall;
+    s32 t;
+
+    lbl_802F1FF0++;
+    t = lbl_802F1FF0;
+    if (t == 0x14)
+    {
+        lbl_000022D8();
+    }
+    else if (t == 0x50)
+    {
+        if (cameraInfo[ball->playerId].subState == 7)
+            u_play_sound_0(0x122);
+    }
+    else if (t > 0x78
+          && ((struct PilotPlayRec *)lbl_80285A68)[modeCtrl.currPlayer].s[0] != 0)
+    {
+        lbl_802F1FF4 = 9;
+        return;
+    }
+    t = lbl_802F1FF0;
+    if (t > 0x3c)
+    {
+        if ((controllerInfo[playerControllerIDs[ball->playerId]].pressed.button & 0x100)
+         || t > 0x21c)
+        {
+            SoundOffID(0x122);
+            lbl_802F1FF4 = 9;
+        }
+    }
+}
+
+void lbl_00001CE4(void)
+{
+    s32 i = currentBall->playerId * sizeof(struct Camera);
+    s8 *sub = &cameraInfo[0].subState;
+
+    if (sub[i] != 1)
+        sub[i] = 0;
+
+    if (((s16 *)lbl_802F1FE4)[modeCtrl.currPlayer] == 0)
+    {
+        lbl_802F1FF6 = 7;
+        lbl_802F1FF4 = -1;
+        ((void (**)(void))lbl_0000C748)[7]();
+    }
+    else
+    {
+        *(s16 *)lbl_10000020 = 0;
+        lbl_802F1FF0 = 0;
+        *(s32 *)lbl_1000008C = -1;
+        lbl_802F1FF6 = 10;
+        lbl_802F1FF4 = -1;
+        ((void (**)(void))lbl_0000C748)[10]();
+    }
+}
+
+void lbl_00001DE0(void)
+{
+    u8 *m = (u8 *)lbl_10000000;
+    struct Ball *ball = currentBall;
+    u8 *k = (u8 *)lbl_0000BE80;
+    char *s = (char *)lbl_0000C740;
+    NLsprarg params;
+    u32 c2;
+    u32 c1;
+    f32 x;
+    f32 y;
+    f64 ny;
+
+    lbl_802F1FF0++;
+    if (lbl_802F1FF0 < 20)
+        return;
+
+    x = *(f32 *)(k + 0x110);
+    y = *(f32 *)(k + 0x114);
+
+    if (*(s32 *)(m + 0x8C) < 30)
+    {
+        if (*(s16 *)(m + 0x20) != 0)
+        {
+            c1 = 0xFFFFFF80;
+            c2 = 0xFF808080;
+        }
+        else
+        {
+            c1 = 0xFF808080;
+            c2 = 0xFFFFFF80;
+        }
+        if (*(s32 *)(m + 0x8C) >= 0 && (globalAnimTimer & 4))
+        {
+            c1 &= 0xFF808080;
+            c2 &= 0xFF808080;
+        }
+
+        params.zm_x = *(f32 *)(k + 0x34);
+        params.zm_y = *(f32 *)(k + 0x34);
+        params.u0 = params.v0 = *(f32 *)(k + 0x30);
+        params.u1 = params.v1 = *(f32 *)(k + 0x34);
+        params.ang = 0;
+        params.listType = NLSPR_LISTTYPE_AUTO;
+        params.attr = 5;
+        params.trnsl = *(f32 *)(k + 0x34);
+        params.base_color = 0x00FFFFFF;
+        params.offset_color = 0;
+        params.zm_x = *(f32 *)(k + 0x118);
+        params.zm_y = *(f32 *)(k + 0x11C);
+        params.sprno = 0xB31;
+        params.x = *(f32 *)(k + 0x110);
+        params.y = *(f32 *)(k + 0x114) - *(f64 *)(k + 0x120);
+        params.z = *(f32 *)(k + 0x128);
+        nlSprPut(&params);
+
+        reset_text_draw_settings();
+        set_text_font(0xB1);
+        func_80071B50(0x200000);
+        lbl_0000AD6C(0x00FFFFFF, 0, *(f64 *)(k + 0x130) + x, y, s + 0x5A0);
+        lbl_0000AD6C(c1, 0, *(f64 *)(k + 0x138) + (*(f64 *)(k + 0x140) + x), ny = *(f64 *)(k + 0x130) + y, s + 0x5AC);
+        lbl_0000AD6C(c2, 0, *(f64 *)(k + 0x138) + (*(f64 *)(k + 0x148) + x), ny, s + 0x5B0);
+    }
+
+    if (lbl_802F1FF0 < 30)
+        return;
+
+    if (*(s32 *)(m + 0x8C) == -1)
+    {
+        if ((controllerInfo[playerControllerIDs[ball->playerId]].pressed.button
+             & (PAD_BUTTON_LEFT | PAD_BUTTON_RIGHT))
+         || (analogInputs[playerControllerIDs[ball->playerId]].pressed
+             & (ANALOG_STICK_LEFT | ANALOG_STICK_RIGHT)))
+        {
+            u_play_sound_0(9);
+            *(s16 *)(m + 0x20) ^= 1;
+        }
+        if ((controllerInfo[playerControllerIDs[ball->playerId]].pressed.button & PAD_BUTTON_A)
+         && lbl_802F1FF0 > 38)
+        {
+            if (*(s16 *)(m + 0x20) != 0)
+            {
+                lbl_802F1FD0 |= 0x400;
+                lbl_0000215C();
+                lbl_000021B4();
+                u_play_sound_0(0x10);
+                u_play_music(0, 8);
+            }
+            else
+            {
+                u_play_sound_0(0x36);
+            }
+            *(s32 *)(m + 0x8C) = 0;
+        }
+    }
+    else
+    {
+        *(s32 *)(m + 0x8C) += 1;
+        if (lbl_802F1FD0 & 0x400)
+        {
+            if (*(s32 *)(m + 0x8C) == 20)
+                u_play_sound_0(0x11E);
+            else if (*(s32 *)(m + 0x8C) >= 0x73)
+                lbl_802F1FF4 = 7;
+        }
+        else
+        {
+            if (*(s32 *)(m + 0x8C) >= 30)
+                lbl_802F1FF4 = 7;
+        }
+    }
+}
+
+void lbl_0000215C(void)
+{
+    s32 player = modeCtrl.currPlayer;
+    s16 *p = &((s16 *)lbl_802F1FE4)[player];
+
+    if (*p != 0)
+        ((s16 *)((u8 *)lbl_80285A80 + player * 12))[*p]++;
+    *p = 0;
+}
+void lbl_000021B4(void)
+{
+    if (lbl_80285A80[modeCtrl.currPlayer].unk2 != 0) {
+    {
+        union PilotV a;
+        union PilotV b;
+
+        a.v = *(Vec *)lbl_0000BFD0;
+        b.v = *(Vec *)&a.v;
+        *(Vec *)lbl_10000068 = b.v;
+        *(Vec *)lbl_100000B8 = b.v;
+        u_play_sound_0(0x1A2);
+    }
+    } else if (lbl_80285A80[modeCtrl.currPlayer].unk4 != 0) {
+        u_play_sound_0(0x19D);
+    } else if (lbl_80285A80[modeCtrl.currPlayer].unk8 != 0) {
+        u_play_sound_0(0x1B6);
+    } else if (lbl_80285A80[modeCtrl.currPlayer].unk6 != 0) {
+        u_play_sound_0(0x19F);
+    } else if (lbl_80285A80[modeCtrl.currPlayer].unkA != 0) {
+        u_play_sound_0(0x1AC);
+    }
+}
+void lbl_000022D8(void)
+{
+    s16 *c;
+    struct PilotPlayRec *rec;
+
+    rec = &lbl_80285A68[modeCtrl.currPlayer];
+    c = &rec->s[((s8 *)lbl_10000078)[*(s8 *)lbl_10000090]];
+    *c = *c + 1;
+    if (rec->s[2] != 0)
+    {
+        u_play_sound_0(0x1b1);
+        lbl_00000A30();
+    }
+    if (lbl_80285A68[modeCtrl.currPlayer].s[1] != 0)
+    {
+        u_play_sound_0(0x1aa);
+        lbl_000008AC();
+    }
+    if (lbl_80285A68[modeCtrl.currPlayer].s[0] != 0)
+        u_play_sound_0(0x1b3);
+}
+
+void lbl_000023BC(void)
+{
+    u_play_music(100, 8);
+    hud_show_ready_banner(0x78);
+    lbl_802F1FF0 = 0;
+    lbl_802F1FF4 = 8;
+}
+
+void lbl_00002408(void)
+{
+    struct Ball *ball = currentBall;
+
+    lbl_802F1FF0++;
+    if (*(f64 *)lbl_0000BFE0 == lbl_802F1FF0)
+    {
+        u_somePlayerId = ball->playerId;
+        lbl_802F1DFC = playerCharacterSelection[u_somePlayerId];
+        u_play_sound_0(0x1E);
+    }
+    if (lbl_802F1FF0 > 0x78)
+        lbl_802F1FF4 = 0xB;
 }
 
 #pragma force_active reset

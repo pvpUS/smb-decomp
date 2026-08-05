@@ -330,7 +330,7 @@ void lbl_0000D0FC(void);
 void lbl_0000D19C(void);
 void lbl_0000D20C(void);
 void lbl_0000D2B8(void);
-void lbl_0000D41C(void);
+void lbl_0000D41C(s32 idx, f32 x, f32 y);
 void lbl_0000D4E4(void);
 void lbl_0000D69C(void);
 void lbl_0000D880(void);
@@ -376,7 +376,7 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_0000D41C(void)
+asm void lbl_0000D41C(s32 idx, f32 x, f32 y)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_0000D41C.s"

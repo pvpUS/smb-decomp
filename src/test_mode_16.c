@@ -278,9 +278,66 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_0000215C(void)
+void lbl_0000215C(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000215C.s"
+    float *k = (float *)lbl_0000FE78;
+    GXColor c;
+    Mtx44 m;
+
+    C_MTXPerspective(m, k[25], k[26], k[27], k[28]);
+    GXSetProjection(m, 0);
+    c.r = 0xFF;
+    c.g = 0xFF;
+    c.b = 0xFF;
+    c.a = *(u32 *)(lbl_10000040 + 4);
+    GXSetChanMatColor(GX_COLOR0A0, c);
+    c.r = 0;
+    c.g = 0;
+    c.b = 0;
+    c.a = 0;
+    GXSetChanAmbColor(GX_COLOR0A0, c);
+    GXSetChanCtrl(GX_COLOR0A0, 0, 0, 0, 0, 2, 1);
+    GXSetNumChans(1);
+    GXInvalidateTexAll();
+    GXLoadTexObj_cached((GXTexObj *)(lbl_10000040 + 8), 0);
+    GXSetTexCoordGen2(0, 0, 0, 0x1E, 0, 0x7D);
+    mathutil_mtxA_from_identity();
+    mathutilData->mtxA[0][0] = k[29];
+    mathutilData->mtxA[0][2] = k[30];
+    mathutilData->mtxA[1][1] = k[31];
+    mathutilData->mtxA[1][2] = k[30] - k[30] / (float)currRenderMode->efbHeight;
+    GXLoadTexMtxImm(mathutilData->mtxA, 0x1E, 0);
+    GXSetTevOrder_cached(0, 0, 0, GX_COLOR0A0);
+    GXSetTevColorIn_cached(0, 0xF, 0xA, 8, 0xF);
+    GXSetTevColorOp_cached(0, 0, 0, 0, 1, 0);
+    GXSetTevAlphaIn_cached(0, 7, 7, 7, 5);
+    GXSetTevAlphaOp_cached(0, 0, 0, 0, 1, 0);
+    GXSetTevDirect(0);
+    GXSetNumTevStages_cached(1);
+    GXSetNumTexGens(1);
+    GXSetNumIndStages(0);
+    GXSetBlendMode_cached(1, 4, 5, 0);
+    GXSetZMode_cached(1, 7, 0);
+    fog_gx_set();
+    gxutil_set_vtx_attrs(0x200);
+    GXSetVtxAttrFmt(1, 9, 1, 4, 0);
+    mathutil_mtxA_from_identity();
+    GXLoadPosMtxImm(mathutilData->mtxA, 0);
+    GXBegin(0x80, 1, 4);
+    GXWGFifo.f32 = k[32];
+    GXWGFifo.f32 = k[33];
+    GXWGFifo.f32 = k[34];
+    GXWGFifo.f32 = k[35];
+    GXWGFifo.f32 = k[33];
+    GXWGFifo.f32 = k[34];
+    GXWGFifo.f32 = k[35];
+    GXWGFifo.f32 = k[36];
+    GXWGFifo.f32 = k[34];
+    GXWGFifo.f32 = k[32];
+    GXWGFifo.f32 = k[36];
+    GXWGFifo.f32 = k[34];
+    GXEnd();
+    GXSetZMode_cached(1, 1, 1);
+    reset_camera_perspective();
 }
 #pragma force_active reset
