@@ -351,15 +351,39 @@ and three said so unprompted:
    answering why mwcc puts an inline global's address CSE in the entry block
    (`scan_stmw.py` found three matched counterexamples).
 
-### RUN-19 PREP
+### RUN-19 PREP — COMPLETE. The next session launches nine agents directly.
 
+- **`C:/tmp/smbm/RUN19_BRIEF.md`** — written (836 lines).
 - **`C:/tmp/smbm/RUN18_RESULTS.md`** — all nine reports verbatim (109 KB).
-- **Warm copies are NOT reset** — the main tree moved (7 files), so
-  `warm_reset_run19.sh` must be written and run before launching.
+- **All nine warm copies reset and re-gated GOLDEN from deleted objects**
+  (`warm_reset_run19.sh`, `fail=0`). Verified after: `tools` diff **0** and
+  `src` diff **0** for all nine, and `rel_gfscan.py` present in all nine.
+  Re-run only if the main tree moves again.
+- **Three tool fixes landed BEFORE the reset, so the copies have them:**
+  - `rel_sweep` — the `cp` hint now compares C-definition sets and **refuses**
+    when the variant would delete a banked conversion. **Top-ranked destructive
+    defect for three runs; closed.**
+  - `rel_ablind` — `--module` accepted anywhere, `--tree`/stray options are hard
+    errors instead of a silent no-score, and both measured limits are in the
+    docstring.
+  - **`rel_gfscan.py` promoted** — plain/`F`/`G`/`GF` over a real link in one
+    pass. Reproduces mini_race's `E1CC` figures exactly (18 in 9 / 4 in 2 /
+    14 in 7 / 0 in 0).
+- **mini_race's two unsplit asm rows are SPLIT** (commit `c1914be`), so
+  `lbl_00003A90`, `lbl_0000BB60` and `lbl_0000BC58` have their own `.s` files
+  and stubs. Verified: module gates GOLDEN at the unchanged sha1 from 159
+  deleted objects, `rel_structcheck` CLEAN with stubs 55→58 and C definitions
+  unchanged, census unchanged at 58/8,959, and all four labels now resolve to an
+  owner. **`lbl_00003474` (391) is addressable for the first time.**
 - **Every module stored `nearmiss/run18/` drafts regenerated against its
   END-OF-RUN owner**, so none can roll back banked work. Conventions still
-  differ: mini_golf and mini_bowling use `.c.txt` fragments, everyone else
-  whole-file `.c`. mini_billiards needs its own `preamble18.h`.
+  differ and the brief says so: mini_golf and mini_bowling use `.c.txt`
+  fragments, everyone else whole-file `.c`; mini_billiards needs its own
+  `preamble18.h`; line endings are mixed **within** some modules.
+- **Still open for run 19's orchestrator**: `pragmafix.py` into `rel_merge_tu`
+  (which still writes LF into a CRLF tree); `_harvest_run17/inject.py`'s
+  after-the-brace pragma accumulation (46 stale lines in run 18); `rel_census`
+  re-derivation; `_harvest_run16/pd.py`'s hex-vs-decimal radix.
 - **ONE AGENT PER MODULE, NO WORKERS** — sixth consecutive run, zero stranding.
 
 ---
