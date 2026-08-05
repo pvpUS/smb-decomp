@@ -12,9 +12,17 @@ sweep can spend a whole run pushing on the wrong axis. Running all four blinds
 per variant answers that in one pass:
 
     plain   every difference
-    F       GPRs blinded  -> what remains is the FPR/structural residual
-    G       FPRs blinded  -> what remains is the GPR/structural residual
+    F       FPRs blinded  -> what remains is the GPR/structural residual
+    G       GPRs blinded  -> what remains is the FPR/structural residual
     GF      both blinded  -> what remains is genuinely structural
+
+RUN 19: these two lines were BACKWARDS from this tool's promotion until now.
+rel_pcmp.py is the authority (see PCMP_REGBLIND, rel_pcmp.py:206): F blinds the
+FPR file (f0..f31), G blinds the GPR file (r0, r3..r31). The letters are passed
+straight through, so the CODE was always right and only this legend was wrong --
+but a reader following it swept the wrong register file. sel_ngc caught it:
+lbl_00009868's residual is two KNOWN GPR transpositions (r4/r7, r10/r11) and it
+is the G column that collapses to 1 in 1.
 
 mini_race read "11 diffs, all FPR" and "4 diffs, all GPR" off this table and
 stopped sweeping the wrong axis on each; that is what converted lbl_00007800

@@ -393,9 +393,16 @@ def main():
             got = parse_obj(r.stdout + r.stderr, fn)
             if got:
                 break
-            # a non-zero exit is a real compile failure; a clean exit with no
-            # instructions just means this object defines no such function.
-            why = 'FAIL(compile)' if r.returncode else 'FAIL(no func %s)' % fn
+            # RUN 19: this used to read `if r.returncode`, and the comment
+            # claimed a non-zero exit meant a real compile failure. It did NOT.
+            # rel_probe exited 1 both for COMPILE FAILED and for "compiled fine,
+            # no .text matching --func", so with --func the FAIL(no func) branch
+            # was UNREACHABLE and every sibling file in a probe directory read
+            # as broken. Two modules reported it independently this run, and it
+            # is the mechanism behind the "this draft does not compile" claim
+            # that is 0-for-9. rel_probe now exits 2 for the second case.
+            why = ('FAIL(no func %s)' % fn if r.returncode == 2
+                   else 'FAIL(compile)')
         name = os.path.basename(f)[:-2]
         if not got:
             rows.append((9999, 0, 0, 0, name, 0, why))

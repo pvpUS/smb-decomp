@@ -180,7 +180,14 @@ def main():
         if not blocks:
             print('%-28s no .text%s' % (name,
                                         ' matching --func' if a.func else ''))
-            rc = 1
+            # RUN 19: exit 2, NOT 1. This file COMPILED -- it just defines no
+            # such function. Sharing exit 1 with the real COMPILE FAILED above
+            # made rel_pcmp print FAIL(compile) for every sibling file in a
+            # probe directory, which is a mechanical manufacturer of the "this
+            # draft does not compile" claim that is 0-for-9 across three runs.
+            # A real compile failure anywhere in the run still wins.
+            if rc == 0:
+                rc = 2
             continue
         if a.frame:
             for fn, body in blocks.items():

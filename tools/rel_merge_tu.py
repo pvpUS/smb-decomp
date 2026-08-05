@@ -78,9 +78,20 @@ def read(p):
 
 
 def write(p, s):
-    # Converted files must be written CRLF to match the tree, or an installed
-    # winner shows up as a whole-file diff.
-    open(p, 'w', encoding='utf-8', newline='\r\n').write(s)
+    # Preserve the file's OWN line ending. This used to force CRLF
+    # unconditionally "to match the tree" -- but the tree is NOT uniform:
+    # src/*.c measures 819 pure-CRLF, 87 pure-LF, 0 mixed, and every one of the
+    # 87 belongs to a REL module that gets merged (62 of them mini_fight's, 11
+    # mini_race's). Forcing CRLF on those rewrote every line and produced
+    # exactly the whole-file diff this function exists to avoid.
+    # (HANDOFF sections 0.23/0.24 assert the opposite -- that this wrote LF into
+    # a CRLF tree. That was backwards; measured in run 19.)
+    try:
+        with open(p, 'rb') as fh:
+            nl = '\r\n' if b'\r\n' in fh.read() else '\n'
+    except FileNotFoundError:
+        nl = '\r\n'                      # new file: follow the tree majority
+    open(p, 'w', encoding='utf-8', newline=nl).write(s)
 
 
 def sources_header(mod):
