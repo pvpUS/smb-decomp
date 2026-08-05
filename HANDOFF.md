@@ -296,22 +296,29 @@ all four**; mini_golf and option got zero in run 19. mini_fight confirms it
    exact-count draft's blinds (`G` == plain, 4 FPR + 19 structural) and work the
    **FPR schedule**, which nobody has touched.
 
-### RUN-21 PREP — NOT DONE. The next session must do it.
+### RUN-21 PREP — COMPLETE. The next session launches nine agents directly.
 
-- **`C:/tmp/smbm/RUN20_RESULTS.md`** — written (101 KB), all nine sections,
+- **`C:/tmp/smbm/RUN21_BRIEF.md`** — written (1,203 lines). Assembled by
+  **`C:/tmp/smbm/_brief21/assemble.py`**, which locates sections by heading text
+  (not line number), asserts all 14 appear **exactly once and in order**, and
+  hard-fails on a stale `nearmiss/run19` path. §0, §1, §5, §7's new-idiom block,
+  §11 and §12 are rewritten; §2, §3, §4, §6, §8, §9, §10 carried verbatim, plus
+  a new §3 block on run 20's three shell-level CRLF traps. **Both stale items
+  run 20 caught are fixed** (`EDB0`'s `f64` axis is now marked DEAD; the
+  line-ending figure is corrected to 92 CRLF / 63 LF), **§12's near-miss path is
+  `nearmiss/run21/`**, and the superseded run-19 statement of "run 18's idiom 1
+  is narrower" is dropped so it cannot disagree with the run-20 one.
+- **`C:/tmp/smbm/RUN20_RESULTS.md`** — all nine sections verbatim (101 KB),
   ordered by instructions gained. **test_mode's section is the orchestrator's
   recovery, not an agent report, and is marked as such.**
-- **`RUN21_BRIEF.md` does NOT exist yet.** Build it from `RUN20_BRIEF.md`:
-  carry the stable sections, rewrite §1, §5, §7 and §11. **Fix the two stale
-  items run 20 caught** (`EDB0`'s `f64`; mini_fight's line-ending figure), and
-  **update §12's near-miss path to `nearmiss/run21/`** — it said `run19/` this
-  run and would have overwritten stored drafts.
-- **Warm copies are NOT reset.** The main tree moved (three commits), so
-  `warm_reset_run21.sh` must run before run 21 and the `tools`/`src`/`asm`
-  diffs re-verified for all nine.
+- **All nine warm copies reset and re-gated GOLDEN from deleted objects**
+  (`warm_reset_run21.sh`, `fail=0`). Verified after: `tools`, `src`, `asm` diffs
+  all **0** for all nine, `Makefile` identical, **both carves' new `.s` files
+  present**, and both run-20 tool fixes present in every copy.
 - **Object counts are now 946 under `src/`+`asm/` and 1,116 tree-wide** — the
   two carves added three `.s` files. Any other number next run means something
   moved that should not have.
+- **Pushed** to `fork/wip/rel-drafts-and-dol-matches`.
 - **Still open**: the real `rel_reach`/`rel_census` `magic_labels()` fix (read
   the `.map`, not the asm blob); promoting `install20.py`+`dump.py`
   (mini_billiards), `xbare.py`+`reg.py` (option), `one.py`+`lostcheck.py`
