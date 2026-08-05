@@ -358,6 +358,37 @@ tampering. **A new standing rule now forbids it.**
   `install778.py` (sel_ngc).
 - `pragmafix.py` into `rel_merge_tu`; `_harvest_run16/pd.py`'s display radix.
 
+### RUN-22 PREP — COMPLETE. Nine agents launched.
+
+- **`C:/tmp/smbm/RUN22_BRIEF.md`** — written (1,581 lines, 98 KB). Assembled by
+  **`C:/tmp/smbm/_brief22/assemble.py`**, which locates sections by heading text
+  (not line number) and asserts all 14 appear exactly once and in order, that
+  the run-21 idiom block sits above run 20's, and that **two specific falsified
+  claims cannot survive the splice**. Rewritten this run: header/Goal/§0, §1,
+  §5, §6, §7's new-idiom block, §8, §9, §10, §11, §12, plus a new §2 block on
+  the `.data` carve and the merge-vs-carve pricing. Carried verbatim: §2's body,
+  §3, §4, and §7 from the run-20 block down.
+  - **★ §6 had to be REWRITTEN, not carried.** Every previous brief asserted
+    *".data switch jump tables remain structurally unreachable"* — the claim run
+    21 falsified. The assembler now hard-fails if that sentence reappears.
+  - **★ §8 had to be rewritten too.** Four mini_bowling labels and three option
+    labels were on "do not restart" **and all seven were wrong**; four functions
+    on the structural list are now MATCHED. A carried §8 would have re-retired
+    them.
+- **`C:/tmp/smbm/RUN21_RESULTS.md`** — all nine sections verbatim (102 KB),
+  ordered by instructions gained.
+- **All nine warm copies reset and re-gated GOLDEN from deleted objects**
+  (`warm_reset_run22.sh`). Verified after, independently of the script: each
+  copy's built `.rel` hashed against `supermonkeyball.sha1` — **all nine match**
+  — and `tools`, `src`, `asm` diffs all **0** for all nine with `Makefile`
+  identical.
+- **Object counts are 946 under `src/`+`asm/` and 1,116 tree-wide** —
+  **unchanged** from run 21, since +3 carve `.s` cancels −3 `.c` absorbed by
+  mini_pilot's TU merge. Any other number next run means something moved.
+- **`tools/` is FROZEN for the duration** (the new standing rule). The
+  `rel_carve.py` `.data` work below is being done in scratch and lands only
+  after the last agent closes out.
+
 ---
 
 ## 0.26 — RUN 20 DONE (2026-08-05): +1,869 insn, 37.80% -> 38.79%. Superseded by §0.27.
