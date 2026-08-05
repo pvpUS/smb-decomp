@@ -427,6 +427,7 @@ SOURCES := \
 	src/sel_ngc_rel_26.c \
 	src/sel_ngc_rel_27.c \
 	src/sel_ngc_rel_28.c \
+	asm/sel_ngc_rel_d2a.s \
 	src/sel_ngc_rel_29.c \
 	asm/sel_ngc_rel_d1.s \
 	src/sel_ngc_rel_52.c \
@@ -959,11 +960,9 @@ SOURCES := \
 	src/mini_pilot_48.c \
 	src/mini_pilot_49.c \
 	src/mini_pilot_50.c \
+	asm/mini_pilot_d3.s \
 	src/mini_pilot_50b.c \
-	src/mini_pilot_50c.c \
-	src/mini_pilot_50d.c \
-	src/mini_pilot_50e.c \
-	asm/mini_pilot_d3.s
+	asm/mini_pilot_d4.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
 mkbe.rel_mini_pilot.plf: $(O_FILES)
@@ -1183,6 +1182,7 @@ SOURCES := \
 	src/test_mode_66.c \
 	src/test_mode_67.c \
 	src/test_mode_68.c \
+	asm/test_mode_d0.s \
 	src/test_mode_69.c \
 	src/test_mode_70.c \
 	asm/test_mode_d1.s \

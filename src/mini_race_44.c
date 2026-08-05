@@ -34,6 +34,29 @@
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_race.s) or imported.  Declared so mwcc accepts `@ha/@l`.
+// INVENTED, UNVERIFIED -- the 64-byte effective-vertex record this
+// module walks (avdisp.h's GMAEffVtx is 0x34; the stride here is 0x40).
+// INVENTED, UNVERIFIED -- just enough of the GMA to reach
+// minigameGma->modelEntries[21].model without pulling in avdisp.h,
+// whose prototypes collide with this file's K&R avdisp externs.
+struct RaceGmaEnt
+{
+    /*0x00*/ void *model;
+    void *unk4;
+};
+
+struct RaceGma
+{
+    u8 filler0[8];
+    /*0x08*/ struct RaceGmaEnt *modelEntries;
+};
+
+struct RaceEffVtx
+{
+    /*0x00*/ Vec pos;
+    u8 filler0C[0x40 - 0x0C];
+};
+
 extern u8 lbl_00013680[];
 extern u8 lbl_000136A4[];
 extern u8 lbl_000136C0[];
@@ -182,7 +205,7 @@ extern void raycast_stage_down();
 extern void vibration_control();
 extern void func_800246F4();
 extern void mot_ape_set_quat_from_vec();
-extern void avdisp_get_eff_vertices();
+extern struct RaceEffVtx *avdisp_get_eff_vertices();
 extern void item_create();
 extern void avdisp_draw_model_unculled_sort_translucent();
 extern void avdisp_draw_model_culled_sort_translucent();
@@ -195,7 +218,7 @@ extern void func_8002BB20();
 extern void fade_color_base_default();
 extern void func_800AB6F8();
 extern void stcoli_sub33();
-extern void avdisp_get_eff_vtxinfo();
+extern u32 *avdisp_get_eff_vtxinfo();
 extern void lens_flare_draw();
 extern void avdisp_set_bound_sphere_scale();
 extern void avdisp_set_post_mult_color();
@@ -283,7 +306,7 @@ void lbl_00007800(void);
 void lbl_00007900(void);
 void lbl_00007950(void);
 void lbl_000079B8(void);
-void lbl_00007A9C(void);
+void lbl_00007A9C(struct Ball *ball);
 void lbl_00007D4C(void);
 void lbl_00007F88(void);
 void lbl_00008160(void);
@@ -375,7 +398,7 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_00007A9C(void)
+asm void lbl_00007A9C(struct Ball *ball)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_00007A9C.s"

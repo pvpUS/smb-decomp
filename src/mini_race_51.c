@@ -254,8 +254,8 @@ void lbl_00002FA4(void);
 void lbl_00003094(void);
 void lbl_000030DC(void);
 void lbl_00003120(void);
-void lbl_000031C0(void);
-void lbl_00003238(void);
+void lbl_000031C0();
+f32 lbl_00003238(f32);
 void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
@@ -294,7 +294,7 @@ void lbl_00008A10(void);
 void lbl_00008B60(void);
 void lbl_00008C4C(void);
 void lbl_0000A364(void);
-static void lbl_0000A4DC(void);
+static void lbl_0000A4DC(struct Camera *cam, struct Ball *ball);
 void lbl_0000A9C4(void);
 void lbl_0000A9EC(void);
 void lbl_0000AC30(void);
@@ -375,16 +375,117 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
-static void lbl_0000A6D4(void);
+static void lbl_0000A6D4(struct Camera *cam, struct Ball *ball);
 #pragma force_active on
-static asm void lbl_0000A4DC(void)
+// mwcc propagates `cfg + 0x118` and `cfg + 0xD8` into callee-saved registers
+// across the two halves; golden re-derives both displacements off r27 each
+// time.  `opt_propagation off` is the only lever found that removes exactly
+// those two hoists (73 aligned -> 17), and the 17 that remain are purely the
+// 8 bytes of dead frame below `vB` that `pad` supplies.  Both are UNVERIFIED
+// reconstructions: f64, two f32, two int and two pointers all give byte-
+// identical output, and a USED f32 pair does not (register-resident locals get
+// no slot).
+#pragma peephole on
+#pragma opt_propagation off
+static void lbl_0000A4DC(struct Camera *cam, struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000A4DC.s"
+    u8 *cfg = lbl_00013AA0;
+    u8 *base = lbl_10000028;
+    struct DecodedStageLzPtr_child5 *path;
+    Vec vA;
+    Vec vB;
+    f64 pad;
+
+    path = decodedStageLzPtr->unk78;
+    cam->lookAt = vA = *(Vec *)(cfg + 0x118);
+    cam->eye = cam->lookAt;
+    cam->lookAt = ballInfo[*(s16 *)lbl_10000046 - 1].pos;
+    lbl_000031C0(path, cam,
+                 lbl_00003238(*(f64 *)(cfg + 0xC8) *
+                              (*(f64 *)(cfg + 0xD0) / *(f32 *)(base + 8))));
+    cam->eye.y = cam->eye.y + *(f32 *)(cfg + 0xD8);
+    cam->flags &= ~4;
+    cam->flags |= 8;
+    cam->subState = 6;
+
+    path = decodedStageLzPtr->unk78;
+    cam->lookAt = vB = *(Vec *)(cfg + 0x118);
+    cam->eye = cam->lookAt;
+    cam->lookAt = ballInfo[*(s16 *)lbl_10000046 - 1].pos;
+    lbl_000031C0(path, cam,
+                 lbl_00003238(*(f64 *)(cfg + 0xC8) *
+                              (*(f64 *)(cfg + 0xD0) / *(f32 *)(base + 8))));
+    cam->eye.y = cam->eye.y + *(f32 *)(cfg + 0xD8);
+    cam->flags &= ~4;
+    cam->flags |= 8;
+    cam->subState = 6;
+    lbl_0000A4DC(cam, ball);
 }
-static asm void lbl_0000A6D4(void)
+#pragma opt_propagation reset
+#pragma peephole on
+static void lbl_0000A6D4(struct Camera *cam, struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000A6D4.s"
+    u8 *cfg = lbl_00013AA0;
+    Vec v;
+    Vec d;
+    Vec t;
+    Vec *p;
+    f32 len;
+
+    if (debugFlags & 0xA)
+        return;
+
+    cam->sub28.fov = (*(s16 **)lbl_10001B24)[1];
+
+    d.x = ball->pos.x - cam->lookAt.x;
+    d.y = ball->pos.y - cam->lookAt.y;
+    d.z = ball->pos.z - cam->lookAt.z;
+    len = mathutil_vec_len(&d);
+    if (len > *(f32 *)(cfg + 0x9C))
+    {
+        len = len / *(f64 *)(cfg + 0xE0);
+        if (len > *(f64 *)(cfg + 0xE8))
+            len = *(f32 *)(cfg + 0xF0);
+        d.x *= len;
+        d.y *= len;
+        d.z *= len;
+        cam->lookAt.x += d.x;
+        cam->lookAt.y += d.y;
+        cam->lookAt.z += d.z;
+    }
+
+    t = *(Vec *)(cfg + 0x124);
+    p = &t;
+    v = *p;
+    mathutil_mtxA_from_quat(&ball->ape->unk60);
+    mathutil_mtxA_tf_vec(&v, &v);
+    v.x += ball->pos.x;
+    v.y += ball->pos.y;
+    v.z += ball->pos.z;
+    v.y += *(f32 *)(cfg + 0x68);
+
+    d.x = v.x - cam->eye.x;
+    d.y = v.y - cam->eye.y;
+    d.z = v.z - cam->eye.z;
+    len = mathutil_vec_len(&d);
+    if (len > *(f32 *)(cfg + 0x9C))
+    {
+        len = len / *(f64 *)(cfg + 0xE0);
+        if (len > *(f64 *)(cfg + 0xE8))
+            len = *(f32 *)(cfg + 0xF0);
+        d.x *= len;
+        d.y *= len;
+        d.z *= len;
+        cam->eye.x += d.x;
+        cam->eye.y += d.y;
+        cam->eye.z += d.z;
+    }
+
+    d.x = cam->lookAt.x - cam->eye.x;
+    d.y = cam->lookAt.y - cam->eye.y;
+    d.z = cam->lookAt.z - cam->eye.z;
+    cam->rotY = mathutil_atan2(d.x, d.z) - 32768;
+    cam->rotX = mathutil_atan2(d.y, mathutil_sqrt(mathutil_sum_of_sq_2(d.x, d.z)));
+    cam->rotZ = 0;
 }
 #pragma force_active reset

@@ -242,13 +242,52 @@ void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
-void lbl_0000EC38(void);
+int lbl_0000EC38(Vec *, f32);
 void lbl_0000EDB0(void);
 
 #pragma force_active on
-asm void lbl_0000EC38(void)
+int lbl_0000EC38(Vec *p, f32 r)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000EC38.s"
+    u8 *t = lbl_00014E10;
+
+    if (p->y < *(f64 *)(t + 0x70))
+        return 0xe;
+
+    if (p->z > *(f64 *)(t + 0x78))
+        return 0xe;
+    if (p->z > *(f64 *)(t + 0x60)) {
+        if (p->x < *(f64 *)(t + 0x18)) {
+            if ((*(f32 *)((u8 *)p + 4)) > *(f64 *)(t + 0x10)) {
+                if (p->x > -(*(f64 *)(t + 0x20) + r))
+                    return 3;
+            }
+            return 0x10;
+        }
+        if (p->x > ((f64 *)t)[4]) {
+            if (p->y > *(f64 *)(t + 0x10)) {
+                if (p->x < *(f64 *)(t + 0x20) + r)
+                    return 4;
+            }
+            return 0x11;
+        }
+        return 2;
+    }
+    if (p->y - r > *(f64 *)(t + 0x80))
+        return 6;
+    if (p->z < *(f64 *)(t + 0x40))
+        return 7;
+    if (p->x - r < *(f64 *)(t + 0x50))
+        return 8;
+    if (p->x + r > *(f64 *)(t + 0x88))
+        return 9;
+    if (p->z - r < ((f64 *)t)[5])
+        return 0xf;
+    if (p->z < *(f64 *)(t + 0x28))
+        return 5;
+    if (p->x < *(f64 *)(t + 0x18))
+        return 0;
+    if (p->x > *(f64 *)(t + 0x20))
+        return 1;
+    return 2;
 }
 #pragma force_active reset

@@ -18,7 +18,6 @@
 .global lbl_00010078
 .global lbl_00010080
 .global lbl_000100A8
-.global lbl_000100D8
 # exported so the split-out .text (now in the .c) can link against these:
 # offset: 0x00000000	length: 0x00000000	flags: 0
 # offset: 0x000000D0	length: 0x0000FD9C	flags: 1
@@ -210,17 +209,3 @@ lbl_00010080:
     .4byte 0x47C35000
     .4byte 0x43800000
 lbl_000100A8:
-    # 0x100A8
-    .4byte 0x43300000
-    .4byte 0x00000000
-    .4byte 0xFFFFFFFF
-    .4byte 0x3F8E38E4
-    .4byte 0xBD638E40
-    .4byte 0xBF000000
-    .4byte 0x3F000000
-    .4byte 0x3D000000
-    .4byte 0x3E000000
-    .4byte 0x437F0000
-    .4byte 0x3D800000
-    .4byte 0x3D924925
-lbl_000100D8:

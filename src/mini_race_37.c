@@ -160,7 +160,7 @@ extern u8 lbl_10001068[];
 extern u8 lbl_1000106C[];
 extern u8 lbl_10001070[];
 extern u8 lbl_10001AE0[];
-extern u8 lbl_10001AF0[];
+extern Vec lbl_10001AF0[];
 extern u8 lbl_10001B18[];
 extern u8 lbl_10001B1C[];
 extern u8 lbl_10001B24[];
@@ -274,7 +274,7 @@ void lbl_000062F8(void);
 void lbl_000065A0(void);
 void lbl_000068E8(void);
 void lbl_000069D0(void);
-void lbl_00006CF0(void);
+Vec *lbl_00006CF0(struct Ball *ball);
 void lbl_00006FF4(void);
 void lbl_000070FC(void);
 void lbl_00007688(void);
@@ -291,7 +291,7 @@ void lbl_00008324(void);
 void lbl_000084A0(void);
 void lbl_000085D8(void);
 void lbl_00008A10(void);
-void lbl_00008B60(void);
+void lbl_00008B60();
 void lbl_00008C4C(void);
 void lbl_0000A364(void);
 void lbl_0000A9C4(void);
@@ -380,7 +380,7 @@ asm void lbl_000069D0(void)
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_000069D0.s"
 }
-asm void lbl_00006CF0(void)
+asm Vec *lbl_00006CF0(struct Ball *ball)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_00006CF0.s"

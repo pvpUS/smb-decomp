@@ -137,7 +137,28 @@ extern u8 lbl_10000000[];
 extern u8 lbl_1000008C[];
 extern u8 lbl_10000118[];
 extern u8 lbl_10017518[];
-extern u8 lbl_10017520[];
+struct FightSub
+{
+    s32 unk0;
+    s16 unk4;
+    u8 unk6[0xA];
+    s16 unk10;
+    u16 unk12;
+    u8 unk14[4];
+};
+struct FightWork
+{
+    u8 unk0[0x146];
+    u16 unk146;
+    u8 unk148[4];
+    struct FightSub unk14C[8];
+};
+extern struct FightWork lbl_10017520;
+struct FightRank
+{
+    s32 score;
+    s32 idx;
+};
 extern u8 lbl_10017578[];
 extern u8 lbl_10017664[];
 extern u8 lbl_10017DC8[];
@@ -172,7 +193,7 @@ extern void func_8006AD3C();
 extern void func_8006B3E8();
 extern void item_create();
 extern void item_replace_type_funcs();
-extern void mathutil_atan2();
+int mathutil_atan2();
 extern void mathutil_mtxA_from_rotate_y();
 extern void mathutil_mtxA_from_translate();
 extern void mathutil_mtxA_pop();
@@ -256,14 +277,14 @@ extern void mathutil_mtxA_from_mtxB_translate_xyz();
 extern void set_bg_ambient();
 extern void u_avdisp_set_some_func_1();
 extern void GXSetTevColorOp_cached();
-extern void alloc_pool_light();
+void *alloc_pool_light(int, int);
 extern void avdisp_draw_model_culled_sort_none();
 extern void func_8009CD5C();
 extern void mathutil_mtxA_scale_xyz();
 extern void ord_tbl_set_depth_offset();
 extern void GXSetTevColorIn_cached();
 extern void draw_monkey();
-extern void func_8009C5E4();
+void func_8009C5E4(s8 *, s8 *);
 extern void mathutil_mtxA_sq_from_mtx();
 extern void mathutil_mtxA_to_euler_yxz();
 extern void rend_efc_draw();
@@ -401,13 +422,147 @@ void lbl_0000C2C8(void);
 void lbl_0000C5FC(void);
 void lbl_0000C8A8(void);
 void lbl_0000C924(void);
-void lbl_0000C928(void);
+void lbl_0000C928(s32, s32, s32);
 void lbl_0000CD30(void);
 #pragma force_active on
-asm void lbl_0000C928(void)
+void lbl_0000C928(s32 arg0, s32 arg1, s32 arg2)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000C928.s"
+    struct FightWork *w = &lbl_10017520;
+    f32 *k = (f32 *)lbl_0001C238;
+    s32 pad0;
+    s8 a[4];
+    s8 b[4];
+    s32 pad2;
+    struct FightRank list[4];
+    struct FightRank tmp;
+    Vec v;
+    OSHeapHandle oldHeap;
+    void *lt;
+    u8 *t;
+    struct FightSub *s;
+    struct FightSub *e;
+    struct FightRank *p;
+    int i;
+    int j;
+    int m;
+    int idx;
+    int rank;
+    int prev;
+
+    w->unk146 = 0xF;
+    modeCtrl.submodeTimer = 216000;
+    start_screen_fade(0x100, 0, 0x1E);
+    event_finish_all();
+    func_80044920();
+    load_stage(currStageId);
+    event_start(1);
+    event_start(4);
+    event_start(5);
+    event_start(0xF);
+    event_start(0x10);
+    event_start(0x12);
+    event_start(0xD);
+    event_start(0x14);
+    event_start(0x13);
+    event_start(9);
+    event_start(0xB);
+    light_init(currStageId);
+    rend_efc_mirror_enable();
+    s = w->unk14C;
+    p = list;
+    for (i = 0; i < g_poolInfo.playerPool.count; i++, s++, p++)
+    {
+        p->score = s->unk4;
+        p->idx = i;
+    }
+    for (j = 0; j < g_poolInfo.playerPool.count - 1; j++)
+    {
+        p = list;
+        for (m = 0; m < g_poolInfo.playerPool.count - 1 - j;
+             m++, p++)
+        {
+            if (p[1].score > p[0].score)
+            {
+                tmp = p[1];
+                p[1] = p[0];
+                p[0] = tmp;
+            }
+        }
+    }
+    camera_set_state_all(0x46);
+    a[0] = -1;
+    a[1] = -1;
+    a[2] = -1;
+    a[3] = -1;
+    prev = list[0].score;
+    rank = 0;
+    p = list;
+    for (i = 0; i < g_poolInfo.playerPool.count; i++, p++)
+    {
+        idx = p->idx;
+        e = (struct FightSub *)((t = (u8 *)w + idx * 0x18) + 0x14C);
+        if (g_poolInfo.playerPool.statusList[idx] == 0)
+        {
+            a[idx] = -1;
+        }
+        else
+        {
+            a[idx] = playerCharacterSelection[idx];
+            if (e->unk12 & 1)
+                a[idx] |= 0x40;
+            if (prev != p->score)
+            {
+                prev = p->score;
+                rank++;
+            }
+            if (rank == 0)
+                b[idx] = 0;
+            else
+                b[idx] = 3;
+        }
+    }
+    oldHeap = OSSetCurrentHeap(stageHeap);
+    func_8009C5E4(a, b);
+    OSSetCurrentHeap(oldHeap);
+    *(u32 *)lbl_10018CFC |= 1;
+    if ((u16)(currStageId - 0x8F) <= 1)
+    {
+        lt = alloc_pool_light(1, 0);
+        if (lt != NULL)
+        {
+            if (currStageId == 0x8F)
+            {
+                *(s16 *)((u8 *)lt + 0x24) = 0x1080;
+                *(s16 *)((u8 *)lt + 0x26) = 0x5C00;
+            }
+            else if (currStageId == 0x90)
+            {
+                *(s16 *)((u8 *)lt + 0x24) = 0x1F00;
+                *(s16 *)((u8 *)lt + 0x26) = 0x4500;
+                set_bg_ambient(k[17], k[18], k[7]);
+            }
+        }
+    }
+    switch (*(s16 *)backgroundInfo)
+    {
+    case 0xD:
+        mathutil_mtxA_from_translate_xyz(k[19], k[20], k[21]);
+        mathutil_mtxA_rotate_y(0x4000);
+        break;
+    case 0x11:
+        mathutil_mtxA_from_translate_xyz(k[22], k[20], k[6]);
+        mathutil_mtxA_rotate_y(0xC000);
+        break;
+    default:
+        mathutil_mtxA_from_rotate_y(*(s16 *)(g_bgLightInfo + 0x42));
+        mathutil_mtxA_rotate_x(*(s16 *)(g_bgLightInfo + 0x40));
+        mathutil_mtxA_tf_vec_xyz(&v, k[3], k[3], k[16]);
+        mathutil_mtxA_from_rotate_y(mathutil_atan2(v.x, v.z) - 0xA000);
+        mathutil_mtxA_translate_xyz(k[3], k[23], k[16]);
+        break;
+    }
+    func_8009DB40(*(void **)&mathutilData);
+    lbl_0001824C();
 }
 
 #pragma force_active reset

@@ -149,7 +149,6 @@ extern void func_800AB444();
 extern void func_800AB6F8();
 extern void func_800AC43C();
 extern void func_800AC5E0();
-extern void gxutil_draw_line_multicolor();
 extern void item_create();
 extern void mini_commend_free_data();
 extern void qsort();
@@ -227,17 +226,163 @@ void lbl_0000AD6C(void);
 void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
-void lbl_0000B000(void);
-void lbl_0000B130(void);
-void lbl_0000B454(void);
+struct PilotB000;
+struct PilotSpray;
+void lbl_0000B000(struct PilotB000 *p);
+void lbl_0000B130(Vec *pos, Vec *vel, struct PilotSpray *e);
 void lbl_0000B624(void);
 void lbl_0000BACC(void);
 
+struct PilotB000
+{
+    /*0x00*/ f32 x;
+    /*0x04*/ f32 y;
+    /*0x08*/ f32 z;
+    /*0x0C*/ f32 vx;
+    /*0x10*/ f32 vy;
+    /*0x14*/ f32 vz;
+    /*0x18*/ f32 scale;
+    /*0x1C*/ f32 unk1C;
+    /*0x20*/ f32 unk20;
+    /*0x24*/ u32 flags;
+};
+
+struct PilotSpray
+{
+    /*0x00*/ u32 count;
+    /*0x04*/ u32 unk4;
+    /*0x08*/ f32 unk8;
+    /*0x0C*/ struct PilotB000 parts[1];
+};
+
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+struct PilotSmoke
+{
+    /*0x00*/ Vec pos;
+    /*0x0C*/ Vec vel;
+    /*0x18*/ f32 scale;
+    /*0x1C*/ f32 unk1C;
+    /*0x20*/ f32 unk20;
+};
+void gxutil_draw_line_multicolor(struct PointWithColor *start, struct PointWithColor *end);
+void lbl_0000B454(struct PilotSmoke *p);
+
 #pragma force_active on
-asm void lbl_0000B130(void)
+void lbl_0000B130(Vec *pos, Vec *vel, struct PilotSpray *e)
+{
+    u8 *k = (u8 *)lbl_0000C690;
+    struct PilotB000 *p;
+    struct PilotB000 *parts = e->parts;
+    u32 i;
+    struct GMAModel *model;
+    f32 t;
+    f32 sc;
+    f32 u;
+    f32 r;
+
+    model = minigameGma->modelEntries[137].model;
+
+    if (pos->y > *(f32 *)(k + 0))
+    {
+        t = *(f32 *)(k + 0);
+    }
+    else
+    {
+        u = (*(f32 *)(k + 0x24) + pos->y) / *(f32 *)(k + 0x24);
+        t = u;
+        if (u < *(f32 *)(k + 0))
+            t = *(f32 *)(k + 0);
+    }
+
+    if (!(debugFlags & 0xA))
+        e->unk8 += *(f32 *)(k + 0x28) * t;
+
+    sc = *(f32 *)(k + 0x2C) * t;
+
+    p = parts;
+    for (i = 0; i < e->count; p++, i++)
+    {
+        if (p->unk20 > *(f32 *)(k + 0))
+        {
+            lbl_0000B000(p);
+            avdisp_set_alpha(p->unk1C);
+            gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+            avdisp_draw_model_unculled_sort_none(model);
+        }
+        else if (!(debugFlags & 0xA) && e->unk8 > *(f32 *)(k + 0x20))
+        {
+            p->unk20 = *(f32 *)(k + 0x18) + *(f32 *)(k + 0x30) * (((f32 *)k)[6] * (rand() / *(f32 *)(k + 0x34)));
+            p->scale = sc * (*(f32 *)(k + 0x38) + (rand() / *(f32 *)(k + 0x34)));
+            p->flags = 0;
+            if ((rand() / *(f32 *)(k + 0x34)) < *(f32 *)(k + 0x3C))
+            {
+                if ((rand() / *(f32 *)(k + 0x34)) < *(f32 *)(k + 0x40))
+                    p->flags |= 1;
+                else
+                    p->flags |= 2;
+            }
+            *(Vec *)p = *pos;
+            p->vx = *(f32 *)(k + 0x44) * vel->x;
+            p->vy = vel->y;
+            p->vz = *(f32 *)(k + 0x44) * vel->z;
+            p->vx += *(f32 *)(k + 0x38) * ((rand() / *(f32 *)(k + 0x34)) - *(f32 *)(k + 0x40));
+            p->vz += *(f32 *)(k + 0x38) * ((rand() / *(f32 *)(k + 0x34)) - *(f32 *)(k + 0x40));
+            p->unk1C = *(f32 *)(k + 0x20);
+            e->unk8 -= *(f32 *)(k + 0x20);
+        }
+    }
+}
+
+void lbl_0000B454(struct PilotSmoke *p)
+{
+    Vec *g = (Vec *)lbl_100000B8;
+    u8 *k = (u8 *)lbl_0000C690;
+    f32 *kf;
+    struct PointWithColor start;
+    struct PointWithColor end;
+    Vec v;
+
+    if (!(debugFlags & 0xa))
+    {
+        p->pos.x += p->vel.x + *(f32 *)(k + 0x3C) * g->x;
+        p->pos.y += p->vel.y + *(f32 *)(k + 0x3C) * g->y;
+        p->pos.z += p->vel.z + *(f32 *)(k + 0x3C) * g->z;
+    }
+    start.color.r = start.color.g = start.color.b = 0xFF;
+    start.color.a = *(f32 *)(k + 0x50) * p->unk1C;
+    start.pos = p->pos;
+    end.color.r = end.color.g = end.color.b = 0xFF;
+    end.color.a = 0;
+    mathutil_vec_set_len(&p->vel, &v, *(f32 *)(k + 0x2C));
+    end.pos.x = p->pos.x - v.x;
+    end.pos.y = p->pos.y - v.y;
+    end.pos.z = p->pos.z - v.z;
+    if (!(debugFlags & 0xa))
+    {
+        p->vel.x *= *(f32 *)(k + 0x54);
+        p->vel.z *= *(f32 *)(k + 0x54);
+        p->vel.y -= *(f32 *)(k + 0x58);
+        p->unk1C *= *(f32 *)(k + 0x44);
+        kf = (f32 *)k;
+        if (p->pos.y < *kf)
+            p->unk20 = *kf;
+        else
+            p->unk20 -= kf[8];
+    }
+    mathutil_mtxA_from_mtxB();
+    gxutil_draw_line_multicolor(&start, &end);
+}
+asm void lbl_0000B624(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_0000B130.s"
+#include "../asm/nonmatchings/mini_pilot/lbl_0000B624.s"
+}
+
+asm void lbl_0000BACC(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_0000BACC.s"
 }
 
 #pragma force_active reset

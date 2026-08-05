@@ -330,7 +330,7 @@ void lbl_0000EF8C(void);
 void lbl_0000EF90(void);
 void lbl_0000F078(void);
 void lbl_0000F2C4(void);
-void lbl_0000F2C8(void);
+void lbl_0000F2C8(int);
 void lbl_0000F38C(void);
 void lbl_0000F4C8(void);
 void lbl_0000F628(void);
@@ -392,9 +392,50 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_0000EF90(void)
+struct FightCell
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000EF90.s"
+    /*0x00*/ u8 unk0;
+    /*0x01*/ u8 unk1;
+    /*0x02*/ s16 unk2;
+    /*0x04*/ u8 pad4[2];
+    /*0x06*/ s16 unk6;
+    /*0x08*/ u8 pad8[0x2c - 8];
+    /*0x2C*/ struct GMAModel *unk2C;
+    /*0x30*/ struct AnimGroupInfo *unk30;
+};
+
+void lbl_0000EF90(void)
+{
+    struct FightCell *base = *(struct FightCell **)(lbl_100188E8 + 0x14);
+    int n;
+    int i;
+    struct FightCell *cell;
+    int g;
+    struct Struct8020A348_child *q;
+    struct Struct8020A348 *ag;
+    int cnt;
+    int j;
+    memset(base, 0, 0x9F4);
+    n = decodedStageLzPtr->animGroupCount;
+    n--;
+    cell = base;
+    for (i = 0; i < 0x31; i++, cell++)
+    {
+        cell->unk0 = i;
+        g = i % n + 1;
+        cell->unk6 = (s16)g;
+        cell->unk30 = &animGroups[g];
+        cell->unk2C = NULL;
+        ag = &lbl_8020AB88[g];
+        cnt = ag->unk4;
+        q = ag->unk0;
+        for (j = 0; j < cnt; j++, q++)
+        {
+            if (q->flags == 1)
+                cell->unk2C = q->model;
+        }
+    }
+
+    lbl_0000F2C8(0);
 }
 #pragma force_active reset

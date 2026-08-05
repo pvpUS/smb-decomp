@@ -54,6 +54,21 @@
 #include "perf.h"
 #include "course.h"
 
+/* INVENTED, UNVERIFIED -- 0x9C-byte entry of the lbl_10000E00 array; the
+ * caller lbl_00009998 steps p += 0x9C.  Field names are guesses; the offsets
+ * are read off the asm.
+ */
+struct TestCam
+{
+    /*0x00*/ u8 filler0[0x24];
+    /*0x24*/ float nearZ;
+    /*0x28*/ float depth;
+    /*0x2C*/ Mtx mtx;
+    /*0x5C*/ float tanFov;
+    /*0x60*/ u8 filler60[0x70 - 0x60];
+    /*0x70*/ GXTexObj tex;
+};
+
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/test_mode.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000FE78[];
@@ -224,7 +239,7 @@ void lbl_000094C0(void);
 void lbl_00009560(void);
 void lbl_000095F8(void);
 void lbl_00009998(void);
-void lbl_00009A0C(void);
+void lbl_00009A0C(struct TestCam *o);
 void lbl_0000A304(void);
 void lbl_0000A440(void);
 void lbl_0000A78C(void);
@@ -277,10 +292,288 @@ void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
-#pragma force_active on
-asm void lbl_00009A0C(void)
+/* The 0x158-byte block below the two GXColor argument copies at
+ * 0x188/0x184.  mwcc fills the argument-copy temp pool DOWNWARD in
+ * creation order, so this later, larger copy sits underneath them and
+ * lifts them to golden's offsets.  Size is read off the frame; the type
+ * is INVENTED and UNVERIFIED.
+ */
+struct Big158
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00009A0C.s"
+    u8 b[0x158];
+};
+
+#pragma force_active on
+static inline void nop_f(f32 a)
+{
+}
+
+static inline void nop_big(struct Big158 a)
+{
+}
+
+void lbl_00009A0C(struct TestCam *o)
+{
+    float *k = (float *)lbl_00010080;
+    struct TestCam *p = o;
+    GXColor c = *(GXColor *)&k[12];
+    Vec pad8[8];
+    Mtx m;
+    float nz;
+    float fz;
+    float nx;
+    float fx;
+    float nnx;
+    float nfx;
+    float t;
+    int i;
+
+    c.r = 0xFF;
+    c.g = 0xFF;
+    c.b = 0xFF;
+    c.a = 0xFF;
+    GXSetChanMatColor(GX_COLOR0A0, c);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    nop_f(k[0]);
+    GXSetChanCtrl(GX_COLOR0A0, 0, 0, 0, 0, 2, 1);
+    GXSetNumChans(1);
+    GXSetTevOrder_cached(GX_TEVSTAGE0, 0xFF, 0xFF, GX_COLOR0A0);
+    GXSetTevDirect(GX_TEVSTAGE0);
+    GXSetTevOp_cached(GX_TEVSTAGE0, 4);
+    GXSetNumTevStages_cached(1);
+    GXSetNumTexGens(0);
+    GXSetNumIndStages(0);
+    GXSetBlendMode_cached(1, 1, 0, 0);
+    GXSetZMode_cached(1, 1, 1);
+    fog_gx_set();
+    gxutil_set_vtx_attrs(0x200);
+    GXSetVtxAttrFmt(6, 9, 1, 4, 0);
+    nz = -p->nearZ;
+    fz = -(p->nearZ + p->depth);
+    nfx = -(fx = p->tanFov * (p->nearZ + p->depth));
+    nnx = -(nx = p->tanFov * p->nearZ);
+    PSMTXInverse(p->mtx, mathutilData->mtxA);
+    PSMTXConcat(mathutilData->mtxB, mathutilData->mtxA, mathutilData->mtxA);
+    GXLoadPosMtxImm(mathutilData->mtxA, 0);
+    if (gxCache->lineWidth != 6 || gxCache->texOffsets != 0)
+    {
+        GXSetLineWidth(6, 0);
+        gxCache->lineWidth = 6;
+        gxCache->texOffsets = 0;
+    }
+    GXBegin(0xA8, 6, 8);
+    GXPosition3f32(k[0], k[0], k[0]);
+    GXPosition3f32(nx, nx, nz);
+    GXPosition3f32(k[0], k[0], k[0]);
+    GXPosition3f32(nnx, nx, nz);
+    GXPosition3f32(k[0], k[0], k[0]);
+    GXPosition3f32(nnx, nnx, nz);
+    GXPosition3f32(k[0], k[0], k[0]);
+    GXPosition3f32(nx, nnx, nz);
+    GXEnd();
+    if (gxCache->lineWidth != 0x12 || gxCache->texOffsets != 0)
+    {
+        GXSetLineWidth(0x12, 0);
+        gxCache->lineWidth = 0x12;
+        gxCache->texOffsets = 0;
+    }
+    GXBegin(0xA8, 6, 8);
+    GXPosition3f32(nx, nx, nz);
+    GXPosition3f32(fx, fx, fz);
+    GXPosition3f32(nnx, nx, nz);
+    GXPosition3f32(nfx, fx, fz);
+    GXPosition3f32(nnx, nnx, nz);
+    GXPosition3f32(nfx, nfx, fz);
+    GXPosition3f32(nx, nnx, nz);
+    GXPosition3f32(fx, nfx, fz);
+    GXEnd();
+    GXBegin(0xB0, 6, 5);
+    GXPosition3f32(nx, nx, nz);
+    GXPosition3f32(nnx, nx, nz);
+    GXPosition3f32(nnx, nnx, nz);
+    GXPosition3f32(nx, nnx, nz);
+    GXPosition3f32(nx, nx, nz);
+    GXEnd();
+    GXBegin(0xB0, 6, 5);
+    GXPosition3f32(fx, fx, fz);
+    GXPosition3f32(nfx, fx, fz);
+    GXPosition3f32(nfx, nfx, fz);
+    GXPosition3f32(fx, nfx, fz);
+    GXPosition3f32(fx, fx, fz);
+    GXEnd();
+    c.r = 0xFF;
+    c.g = 0xC0;
+    c.b = 0x60;
+    c.a = 0xFF;
+    GXSetChanMatColor(GX_COLOR0A0, c);
+    GXSetChanCtrl(GX_COLOR0A0, 0, 0, 0, 0, 2, 1);
+    GXSetNumChans(1);
+    GXLoadTexObj_cached(&p->tex, GX_TEXMAP0);
+    GXLoadTexObj_cached((GXTexObj *)lbl_10000F38, GX_TEXMAP1);
+    GXSetTexCoordGen2(0, 1, 4, 0x3C, 0, 0x7D);
+    GXSetTevOrder_cached(0, 0, 0, GX_COLOR0A0);
+    GXSetTevDirect(0);
+    GXSetTevOp_cached(0, 3);
+    GXSetTexCoordGen2(1, 0, 4, 0x1E, 0, 0x7D);
+    C_MTXScale(m, k[0], k[0], k[0]);
+    m[0][0] = k[13];
+    m[0][3] = k[14];
+    m[1][1] = k[13];
+    m[1][3] = k[14];
+    m[2][3] = k[3];
+    GXLoadTexMtxImm(m, 0x1E, 0);
+    GXSetTevOrder_cached(1, 1, 0, GX_COLOR0A0);
+    GXSetTevDirect(1);
+    GXSetTevOp_cached(1, 3);
+    GXSetTevColorIn_cached(1, 8, 0xF, 0xF, 0);
+    GXSetTevColorOp_cached(1, 1, 0, 0, 1, 0);
+    GXSetTexCoordGen2(2, 0, 0, 0x21, 0, 0x7D);
+    C_MTXScale(m, k[0], k[0], k[0]);
+    m[2][3] = k[3];
+    m[0][2] = k[15] / p->depth;
+    m[0][3] = k[16] + k[15] * p->nearZ / p->depth;
+    GXLoadTexMtxImm(m, 0x21, 0);
+    GXSetTevOrder_cached(2, 2, 1, GX_COLOR0A0);
+    GXSetTevDirect(2);
+    GXSetTevOp_cached(2, 4);
+    GXSetTevColorIn_cached(2, 0xF, 0, 8, 0xF);
+    GXSetTevColorOp_cached(2, 0, 0, 0, 1, 0);
+    GXSetTevOrder_cached(3, 0xFF, 0xFF, GX_COLOR0A0);
+    GXSetTevDirect(3);
+    GXSetTevOp_cached(3, 4);
+    GXSetTevColorIn_cached(3, 0xF, 0xA, 0, 0xF);
+    GXSetTevColorOp_cached(3, 0, 0, 0, 1, 0);
+    GXSetNumTevStages_cached(4);
+    GXSetNumTexGens(3);
+    GXSetNumIndStages(0);
+    GXSetBlendMode_cached(1, 1, 1, 0);
+    GXSetZMode_cached(1, 1, 0);
+    fog_gx_set();
+    gxutil_set_vtx_attrs(0x2200);
+    GXSetVtxAttrFmt(6, 9, 1, 4, 0);
+    GXSetVtxAttrFmt(6, 0xD, 1, 1, 0);
+    PSMTXInverse(p->mtx, mathutilData->mtxA);
+    PSMTXConcat(mathutilData->mtxB, mathutilData->mtxA, mathutilData->mtxA);
+    GXLoadPosMtxImm(mathutilData->mtxA, 0);
+    GXBegin(0x80, 6, 0x40);
+    nz = (powerOnTimer & 0x1F) * k[17];
+    t = nz * k[18];
+    for (i = 8; i > 0; i--)
+    {
+        float x = t * (p->tanFov * (p->nearZ + p->depth));
+        float z = -t * (p->nearZ + p->depth);
+
+        GXPosition3f32(x, x, z);
+        GXWGFifo.u8 = 1;
+        GXWGFifo.u8 = 0;
+        GXPosition3f32(-x, x, z);
+        GXWGFifo.u8 = 0;
+        GXWGFifo.u8 = 0;
+        GXPosition3f32(-x, -x, z);
+        GXWGFifo.u8 = 0;
+        GXWGFifo.u8 = 1;
+        GXPosition3f32(x, -x, z);
+        GXWGFifo.u8 = 1;
+        GXWGFifo.u8 = 1;
+        GXPosition3f32(-x, x, z);
+        GXWGFifo.u8 = 0;
+        GXWGFifo.u8 = 0;
+        GXPosition3f32(x, x, z);
+        GXWGFifo.u8 = 1;
+        GXWGFifo.u8 = 0;
+        GXPosition3f32(x, -x, z);
+        GXWGFifo.u8 = 1;
+        GXWGFifo.u8 = 1;
+        GXPosition3f32(-x, -x, z);
+        GXWGFifo.u8 = 0;
+        GXWGFifo.u8 = 1;
+        t += k[18];
+    }
+    GXEnd();
+    nop_big(*(struct Big158 *)lbl_00010080);
 }
 #pragma force_active reset

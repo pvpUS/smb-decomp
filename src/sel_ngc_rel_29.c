@@ -198,7 +198,7 @@ void lbl_000118E4(void);
 // tools/rel_merge_tu.py -- these are what the tool used to drop).
 void lbl_0000AFB0(struct Sprite *sprite);
 void lbl_0000B0FC(s8 *alive, struct Sprite *sprite);
-static void lbl_0000C518(void);
+static void lbl_0000C518(int a, u8 *p);
 void lbl_0000D39C(s8 *alive, struct Sprite *sprite);
 struct SelNgcSlotPos
 {
@@ -654,10 +654,151 @@ void lbl_0000BEE8(struct Sprite *sprite)
     }
 }
 #pragma peephole on
-static asm void lbl_0000C518(void)
+char lbl_00016818[] = "%3s";
+
+static void lbl_0000C518(int a, u8 *p)
 {
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_0000C518.s"
+    struct S3
+    {
+        char *e[3];
+    };
+    struct S5
+    {
+        char *e[5];
+    };
+    struct SA
+    {
+        u8 filler0[0x31];
+        u8 unk31;
+    };
+    char *s = (char *)lbl_00012730;
+    u8 *q1;
+    struct Struct801EED88 *q2;
+    struct Struct801EED88 *q3;
+    u8 *q4;
+    struct Struct802F1BF4 *q6;
+    struct Struct802F1BFC *q8;
+    struct Struct802F1BE8 *q5;
+    u8 *r;
+    struct S3 t3;
+    struct S5 t5;
+
+    switch (*(s32 *)(p + 0x48))
+    {
+    case 1:
+        q1 = lbl_801EED50;
+        switch (a)
+        {
+        case 0:
+        case 1:
+        case 2:
+            r = q1 + a;
+            sprintf((char *)(p + 0x8C), s + 0x40DC, (s8)((struct SA *)r)->unk31);
+            break;
+        case 3:
+            sprintf((char *)(p + 0x8C), s + 0x40E8,
+                    (*(u32 *)(q1 + 0x2C) & 0x800) ? s + 0x40E0 : s + 0x40E4);
+            break;
+        case 4:
+            sprintf((char *)(p + 0x8C), s + 0x40E8,
+                    (*(u32 *)(q1 + 0x2C) & 0x1000) ? s + 0x40E0 : s + 0x40E4);
+            break;
+        }
+        break;
+    case 2:
+        q2 = &lbl_801EED88;
+        switch (a)
+        {
+        case 0:
+            sprintf((char *)(p + 0x8C), s + 0x40DC, (s8)q2->unk1[(s8)q2->unk0]);
+            break;
+        case 1:
+            sprintf((char *)(p + 0x8C), s + 0x40E8,
+                    (q2->unk8 & 1) ? s + 0x40E0 : s + 0x40E4);
+            break;
+        case 2:
+            sprintf((char *)(p + 0x8C), s + 0x40E8,
+                    (q2->unk8 & 2) ? s + 0x40E0 : s + 0x40E4);
+            break;
+        case 3:
+            sprintf((char *)(p + 0x8C), s + 0x40E8,
+                    (q2->unk8 & 4) ? s + 0x40E0 : s + 0x40E4);
+            break;
+        }
+        break;
+    case 3:
+        q3 = &lbl_801EED88;
+        switch (a)
+        {
+        case 0:
+            sprintf((char *)(p + 0x8C), s + 0x40E8,
+                    (q3->unk8 & 1) ? s + 0x40E0 : s + 0x40E4);
+            break;
+        case 1:
+            sprintf((char *)(p + 0x8C), s + 0x40E8,
+                    (q3->unk8 & 2) ? s + 0x40E0 : s + 0x40E4);
+            break;
+        case 2:
+            sprintf((char *)(p + 0x8C), s + 0x40E8,
+                    (q3->unk8 & 4) ? s + 0x40E0 : s + 0x40E4);
+            break;
+        }
+        break;
+    case 4:
+        q4 = lbl_801EED98;
+        switch (a)
+        {
+        case 0:
+            sprintf((char *)(p + 0x8C), s + 0x40E8,
+                    (*(u32 *)q4 & 1) ? s + 0x40E0 : s + 0x40E4);
+            break;
+        }
+        break;
+    case 5:
+        q5 = &lbl_802F1BE8;
+        t3 = *(struct S3 *)lbl_00011E70;
+        switch (a)
+        {
+        case 0:
+            sprintf((char *)(p + 0x8C), s + 0x40E8, t3.e[(s8)q5->unk4]);
+            break;
+        }
+        break;
+    case 6:
+    case 7:
+        q6 = &lbl_802F1BF4;
+        switch (a)
+        {
+        case 0:
+            sprintf((char *)(p + 0x8C), s + 0x40DC, (s8)q6->unk0);
+            break;
+        case 1:
+            if (modeCtrl.playerCount == 1)
+            {
+                t5 = *(struct S5 *)lbl_00011E7C;
+                sprintf((char *)(p + 0x8C), s + 0x40E8, t5.e[(s8)q6->unk1]);
+            }
+            break;
+        }
+        break;
+    case 8:
+        q8 = &lbl_802F1BFC;
+        switch (a)
+        {
+        case 0:
+            sprintf((char *)(p + 0x8C), s + 0x40DC, (s8)q8->unk0);
+            break;
+        case 1:
+            sprintf((char *)(p + 0x8C), s + 0x40E8,
+                    (q8->unk4 & 8) ? s + 0x40E0 : s + 0x40E4);
+            break;
+        case 2:
+            sprintf((char *)(p + 0x8C), s + 0x40E8,
+                    (q8->unk4 & 0x10) ? s + 0x40E0 : s + 0x40E4);
+            break;
+        }
+        break;
+    }
 }
 #pragma peephole on
 asm void lbl_0000C970(void)
