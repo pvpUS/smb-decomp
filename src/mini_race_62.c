@@ -107,7 +107,7 @@ extern u8 lbl_00015B08[];
 extern u8 lbl_00015B38[];
 extern u8 lbl_00015BC8[];
 extern u8 lbl_00015C08[];
-extern u8 lbl_00015C18[];
+extern void (*lbl_00015C18[])(void);
 extern u8 lbl_00015C28[];
 extern u8 lbl_00015C38[];
 extern u8 lbl_00015C58[];
@@ -315,7 +315,7 @@ static void lbl_0000C03C();
 void lbl_0000C134();
 void lbl_0000C230();
 void lbl_0000C2B4(void);
-void lbl_0000C438(void);
+void lbl_0000C438();
 void lbl_0000C590(void);
 void lbl_0000C5EC(void);
 void lbl_0000C668();
@@ -324,7 +324,7 @@ void lbl_0000C7E4();
 void lbl_0000C93C(void);
 void lbl_0000C9B0(void);
 void lbl_0000CA24(void);
-void lbl_0000CA9C(void);
+void lbl_0000CA9C();
 void lbl_0000CB3C(void);
 void lbl_0000CE24(void);
 void lbl_0000CF44();
@@ -359,7 +359,7 @@ void lbl_0000FDD8(void);
 void lbl_0000FE90(void);
 void lbl_0000FEF8(void);
 void lbl_000100B4(void);
-void lbl_00010130(void);
+void lbl_00010130();
 void lbl_00010218(void);
 void lbl_000102FC(void);
 void lbl_00010484(void);
@@ -385,15 +385,36 @@ asm void lbl_0000B948(void)
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_0000B948.s"
 }
-asm void lbl_0000BB0C(void)
+#pragma peephole on
+void lbl_0000BB0C(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000BB0C.s"
+    if (modeCtrl.unk30 >= 1 && modeCtrl.unk30 <= 4)
+        lbl_00015C18[modeCtrl.unk30 - 1]();
 }
-asm void lbl_0000BB60(void)
+#pragma peephole on
+void lbl_0000BB60(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000BB60.s"
+    u8 *cfg = lbl_00013C48;
+    u8 *base = lbl_10000028;
+
+    if (!(*(u16 *)(base + 2) & 0x20))
+        lbl_0000C438(*(f32 *)(cfg + 0x0), *(f32 *)(cfg + 0x30));
+    lbl_0000D880();
+    lbl_0000C668(0, *(f32 *)(cfg + 0x34), *(f32 *)(cfg + 0x38));
+    lbl_0000CA9C(0, *(f32 *)(cfg + 0x3c), *(f32 *)(cfg + 0x40));
+    lbl_0000CF44(0, *(f32 *)(cfg + 0x44), *(f32 *)(cfg + 0x48));
+    lbl_0000D41C(0, *(f32 *)(cfg + 0x4c), *(f32 *)(cfg + 0x50));
+    lbl_0000DE5C(0, *(f32 *)(cfg + 0x0), *(f32 *)(cfg + 0x54));
+    lbl_0000E11C(0, *(f32 *)(cfg + 0x0), *(f32 *)(cfg + 0x54));
+    if (*(u16 *)(base + 2) & 0x10)
+    {
+        lbl_00010130(0, *(f32 *)(cfg + 0x58), *(f32 *)(cfg + 0x5c));
+    }
+    else
+    {
+        lbl_0000D0FC(0, *(f32 *)(cfg + 0x60), *(f32 *)(cfg + 0x64));
+        lbl_0000D20C(0, *(f32 *)(cfg + 0x68), *(f32 *)(cfg + 0x64));
+    }
 }
 asm void lbl_0000BC58(void)
 {

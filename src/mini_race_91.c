@@ -366,11 +366,11 @@ void lbl_00012D50(void);
 // Carried over from the heads of the absorbed files (merged by
 // tools/rel_merge_tu.py -- these are what the tool used to drop).
 void lbl_0000E7AC(s8 *str, struct Sprite *sprite);
-static void lbl_0000E9D4(void);
+static void lbl_0000E9D4(struct Sprite *sprite);
 void lbl_0000F084(s8 *arg0, struct Sprite *sprite);
 void lbl_0000F118(s8 *status, struct Sprite *sprite);
-void lbl_0000F90C(void);
-static void lbl_0000F9F4(void);
+void lbl_0000F90C(s8 *arg0, struct Sprite *sprite);
+static void lbl_0000F9F4(struct Sprite *sprite);
 static void lbl_0000FBA4(s8 *arg0, struct Sprite *sprite);
 void lbl_0000FC8C(u8 *arg0, struct RaceState *obj);
 struct RaceState
@@ -398,10 +398,26 @@ void lbl_000108E8(s8 *str, struct Sprite *sprite);
 // Ball_child does not name yet.
 struct RaceBallSub
 {
-    u8 filler0[0x22];
+    u8 filler0[0x1E];
+    u16 unk1E;
+    u8 filler20[0x22 - 0x20];
     s16 unk22;
     u8 filler24[0x1D2 - 0x24];
     s16 unk1D2;
+};
+
+// UNVERIFIED invented struct: the 4-entry UV table at lbl_00013C48 + 0x244.
+struct RaceUV
+{
+    f32 u0;
+    f32 v0;
+    f32 u1;
+    f32 v1;
+};
+
+struct RaceUVTbl
+{
+    struct RaceUV e[4];
 };
 
 #pragma force_active on
@@ -547,10 +563,67 @@ void lbl_0000E900(void)
         sprite->userVar = i;
     }
 }
-static asm void lbl_0000E9D4(void)
+#pragma peephole on
+static void lbl_0000E9D4(struct Sprite *sprite)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000E9D4.s"
+    NLsprarg params;
+    u8 *str = lbl_00015C08;
+    u8 *rec = ((u8 **)lbl_10000054)[sprite->userVar];
+    u8 *cfg = lbl_00013C48;
+    u8 *base = lbl_10000028;
+    f32 y;
+
+    reset_text_draw_settings();
+    func_80071B50(0x200000);
+    y = sprite->y;
+    params.zm_x = *(f32 *)(cfg + 0x8);
+    params.zm_y = *(f32 *)(cfg + 0x8);
+    params.u0 = params.v0 = *(f32 *)(cfg + 0x18);
+    params.u1 = params.v1 = *(f32 *)(cfg + 0x8);
+    params.ang = 0;
+    params.listType = -1;
+    params.attr = 5;
+    params.trnsl = *(f32 *)(cfg + 0x8);
+    params.base_color = 0xFFFFFF;
+    params.offset_color = 0;
+    params.base_color = 0xFFFF0000;
+    params.sprno = 0x717;
+    params.x = sprite->x;
+    params.y = y;
+    params.z = sprite->depth;
+    nlSprPut(&params);
+    func_80071B1C(sprite->depth - *(f32 *)(cfg + 0xEC));
+    set_text_font(0x48);
+    set_text_pos(*(f32 *)(cfg + 0xE4) + sprite->x, *(f32 *)(cfg + 0xE4) + y);
+    sprite_printf((char *)(str + 0xA0), *(u16 *)(rec + 0x1E));
+    set_text_font(0x45);
+    y = *(f32 *)(cfg + 0x1C) + y;
+    set_text_pos(*(f32 *)(cfg + 0xF0) + sprite->x, y);
+    if (*(u32 *)(rec + 0x14) & 0x20)
+    {
+        sprite_printf((char *)(str + 0x118), *(u16 *)rec + 1);
+    }
+    else
+    {
+        set_text_mul_color(((u32 *)str)[*(u16 *)rec]);
+        sprite_printf((char *)(str + 0x120), *(u16 *)rec + 1);
+    }
+    set_text_font(0x45);
+    set_text_pos(*(f32 *)(cfg + 0x1EC) + (*(f32 *)(cfg + 0xF0) + sprite->x), y);
+    if (*(u16 *)(base + 2) & 8)
+    {
+        sprite_printf((char *)(str + 0x12C), ((s16 *)lbl_10000048)[*(u16 *)rec]);
+        if (((s16 *)lbl_10000048)[*(u16 *)rec] != 1)
+            sprite_printf((char *)(str + 0x138));
+    }
+    else if (*(u32 *)(rec + 0x14) & 2)
+    {
+        sprite_printf((char *)(str + 0xB0), rec[0x1C8], rec[0x1C9], rec[0x1CA]);
+    }
+    else
+    {
+        sprite_printf((char *)(str + 0x13C));
+    }
 }
 #pragma peephole on
 void lbl_0000EC20(s16 idx)
@@ -728,15 +801,70 @@ asm void lbl_0000F3D4(void)
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_0000F3D4.s"
 }
-asm void lbl_0000F90C(void)
+#pragma peephole on
+void lbl_0000F90C(s8 *arg0, struct Sprite *sprite)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000F90C.s"
+    u8 *cfg = lbl_00013C48;
+    struct RaceBallSub *st =
+        (struct RaceBallSub *)ballInfo[sprite->userVar].unk144;
+    f32 scx;
+    f32 scy;
+    f32 v;
+
+    if (sprite->counter > 0)
+        sprite->counter--;
+    switch (modeCtrl.unk30)
+    {
+    case 1:
+        scx = scy = *(f32 *)(cfg + 8);
+        break;
+    case 2:
+    case 3:
+    case 4:
+        scx = scy = *(f32 *)(cfg + 0x224);
+        break;
+    }
+    v = sprite->counter / *(f32 *)(cfg + 0xAC);
+    sprite->opacity = *(f64 *)(cfg + 0x1D8) - v;
+    v = *(f32 *)(cfg + 8) + *(f32 *)(cfg + 0xE8) * v;
+    sprite->scaleX = scx * v;
+    sprite->scaleY = scy * v;
+    if (st->unk1E == 1)
+        sprite->rotation = sprite->counter * sprite->counter * 0x96;
 }
-static asm void lbl_0000F9F4(void)
+#pragma peephole on
+static void lbl_0000F9F4(struct Sprite *sprite)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000F9F4.s"
+    f32 *cfg = (f32 *)lbl_00013C48;
+    NLsprarg params;
+    struct RaceBallSub *st =
+        (struct RaceBallSub *)ballInfo[sprite->userVar].unk144;
+    struct RaceUVTbl tbl = *(struct RaceUVTbl *)((u8 *)cfg + 0x244);
+    struct RaceUV *e = &tbl.e[st->unk1E - 1];
+
+    params.zm_x = sprite->scaleX;
+    params.zm_y = sprite->scaleY;
+    params.u0 = params.v0 = cfg[6];
+    params.u1 = params.v1 = cfg[2];
+    params.ang = 0;
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = NLSPR_DISP_LT;
+    params.trnsl = sprite->opacity;
+    params.base_color = 0xFFFFFF;
+    params.offset_color = 0;
+    params.attr = NLSPR_DISP_CC;
+    params.u0 = e->u0;
+    params.v0 = e->v0;
+    params.u1 = e->u1;
+    params.v1 = e->v1;
+    params.zm_x = sprite->scaleX * (params.u1 - params.u0);
+    params.zm_y = sprite->scaleY * (params.v1 - params.v0);
+    params.ang = sprite->rotation;
+    params.sprno = 0x72F;
+    params.x = sprite->x;
+    params.y = sprite->y;
+    params.z = sprite->depth;
+    nlSprPut(&params);
 }
 #pragma peephole on
 void lbl_0000FBA4(s8 *arg0, struct Sprite *sprite)

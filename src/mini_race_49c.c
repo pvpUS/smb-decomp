@@ -254,8 +254,8 @@ void lbl_00002FA4(void);
 void lbl_00003094(void);
 void lbl_000030DC(void);
 void lbl_00003120(void);
-void lbl_000031C0(void);
-void lbl_00003238(void);
+void lbl_000031C0();
+f32 lbl_00003238(f32);
 void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
@@ -293,8 +293,8 @@ void lbl_000085D8(void);
 void lbl_00008A10(void);
 void lbl_00008B60(void);
 void lbl_00008C4C(u8 *, struct Ball *);
-static void lbl_00009A08(void);
-static void lbl_00009D3C(void);
+static void lbl_00009A08(struct Camera *cam, int a1);
+static void lbl_00009D3C();
 void lbl_0000A364(u8 *, struct Ball *);
 void lbl_0000A9C4(void);
 void lbl_0000A9EC(void);
@@ -376,7 +376,7 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
-static void lbl_00009BF8(void);
+static void lbl_00009BF8(struct Camera *cam, int arg, int a2);
 static void lbl_00008CC8(void);
 static void lbl_00008EC8(void);
 static void lbl_0000933C(void);
@@ -408,16 +408,64 @@ static asm void lbl_000098A8(void)
 #include "../asm/nonmatchings/mini_race/lbl_000098A8.s"
 }
 
-static asm void lbl_00009A08(void)
+#pragma peephole on
+static void lbl_00009A08(struct Camera *cam, int a1)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00009A08.s"
+    u8 *rec = ((u8 **)lbl_10000054)[0];
+    struct Ball *ball = &ballInfo[*(u16 *)rec];
+    u8 *tbl;
+    Vec v;
+    s16 i;
+
+    v.x = ball->pos.x - cam->lookAt.x;
+    v.y = ball->pos.y - cam->lookAt.y;
+    v.z = ball->pos.z - cam->lookAt.z;
+    if (mathutil_vec_len(&v) > *(f64 *)lbl_00013B50)
+    {
+        mathutil_vec_set_len(&v, &v, *(f32 *)lbl_00013B58);
+        cam->lookAt.x = cam->lookAt.x + v.x;
+        cam->lookAt.y = cam->lookAt.y + v.y;
+        cam->lookAt.z = cam->lookAt.z + v.z;
+    }
+    else
+    {
+        cam->lookAt = ball->pos;
+    }
+    tbl = lbl_00015B38;
+    for (i = 0; i < 7U; i++, tbl += 0x14)
+    {
+        if (*(f32 *)tbl <= *(f32 *)(rec + 0x1D4) &&
+            *(f32 *)(rec + 0x1D4) <= *(f32 *)(tbl + 4))
+            cam->eye = *(Vec *)(tbl + 8);
+    }
+    v.x = cam->lookAt.x - cam->eye.x;
+    v.y = cam->lookAt.y - cam->eye.y;
+    v.z = cam->lookAt.z - cam->eye.z;
+    cam->rotY = mathutil_atan2(v.x, v.z) - 0x8000;
+    cam->rotX = mathutil_atan2(v.y, mathutil_sqrt(mathutil_sum_of_sq_2(v.x, v.z)));
+    cam->rotZ = 0;
 }
 
-static asm void lbl_00009BF8(void)
+#pragma peephole on
+static void lbl_00009BF8(struct Camera *cam, int arg, int a2)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00009BF8.s"
+    u8 *cfg = lbl_00013AA0;
+    struct DecodedStageLzPtr_child5 *path = decodedStageLzPtr->unk78;
+    u8 *base = lbl_10000028;
+    Vec v;
+
+    v = *(volatile Vec *)(cfg + 0xBC);
+    cam->lookAt = v;
+    cam->eye = cam->lookAt;
+    cam->lookAt = ballInfo[*(s16 *)lbl_10000046 - 1].pos;
+    lbl_000031C0(path, cam,
+                 lbl_00003238(*(f64 *)(cfg + 0xC8) *
+                              (*(f64 *)(cfg + 0xD0) / *(f32 *)(base + 8))));
+    cam->eye.y = cam->eye.y + *(f32 *)(cfg + 0xD8);
+    cam->flags &= ~4;
+    cam->flags |= 8;
+    cam->subState = 6;
+    lbl_00009D3C(cam, arg);
 }
 
 static asm void lbl_00009D3C(void)

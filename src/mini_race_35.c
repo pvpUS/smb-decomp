@@ -270,7 +270,7 @@ void lbl_00005FC4(void);
 void lbl_0000612C(void);
 void lbl_000061D0(void);
 void lbl_00006248(void);
-void lbl_000062F8(void);
+void lbl_000062F8(struct Ball *ball, int a1, int a2);
 void lbl_000065A0(void);
 void lbl_000068E8(void);
 void lbl_000069D0(void);
@@ -280,7 +280,7 @@ void lbl_000070FC(void);
 void lbl_00007688(void);
 void lbl_00007710(void);
 void lbl_00007800(void);
-void lbl_00007900(void);
+void lbl_00007900();
 void lbl_00007950(void);
 void lbl_000079B8(void);
 void lbl_00007A9C(void);
@@ -374,11 +374,76 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
-#pragma force_active on
-asm void lbl_000062F8(void)
+// INVENTED (UNVERIFIED) -- fields of ballInfo[].unk144 used by lbl_000062F8.
+struct RaceSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000062F8.s"
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+    u8 filler18[0x263 - 0x18];
+    /*0x263*/ u8 unk263;
+    u8 filler264[0x26C - 0x264];
+    /*0x26C*/ s16 unk26C;
+    u8 filler26E[0x270 - 0x26E];
+    /*0x270*/ f32 unk270;
+};
+
+#pragma force_active on
+void lbl_000062F8(struct Ball *ball, int a1, int a2)
+{
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+    u8 *cfg = lbl_00013740;
+    Vec v;
+    struct Effect effect;
+    Vec a;
+    Vec b;
+
+    u_play_sound_0(0x281C);
+    if (!(st->unk14 & 0x20))
+        vibration_control(playerControllerIDs[ball->playerId], 1, 0x1E);
+    switch (st->unk263)
+    {
+    case 2:
+        u_play_sound_0(0xD7);
+        st->unk14 |= 0x140000;
+        st->unk26C = 0x3C;
+        break;
+    case 9:
+        memset(&effect, 0, sizeof(effect));
+        effect.type = 0x26;
+        effect.playerId = ball->playerId;
+        effect.pos = ball->pos;
+        a = *(volatile Vec *)(cfg + 0x1DC);
+        effect.scale = a;
+        spawn_effect(&effect);
+        u_play_sound_0(0x290B);
+        b = *(volatile Vec *)(cfg + 0x1E8);
+        b.y = *(f32 *)(cfg + 0x1F4) * ball->accel;
+        v = b;
+        mathutil_mtxA_from_rotate_y(0);
+        mathutil_mtxA_rotate_x((rand() & 0x7FFF) % 0x800);
+        mathutil_mtxA_rotate_z((rand() & 0x7FFF) % 0x800);
+        mathutil_mtxA_tf_vec(&v, &v);
+        ball->vel.x = ball->vel.x + v.x;
+        ball->vel.y = ball->vel.y + v.y;
+        ball->vel.z = ball->vel.z + v.z;
+        st->unk26C = 0x12C;
+        break;
+    case 6:
+        u_play_sound_0(0xD9);
+        st->unk26C = 0x1A4;
+        st->unk270 = *(f32 *)(cfg + 0x1F8);
+        st->unk14 |= 0x88000;
+        ball->ape->flags |= 0x20000;
+        ball->vel.y = ball->vel.y + *(f32 *)(cfg + 0x1FC) * ball->accel;
+        lbl_00007900(ball);
+        break;
+    case 5:
+        u_play_sound_0(0xD9);
+        st->unk26C = 0x1E0;
+        st->unk14 |= 0x8000;
+        ball->vel.y = ball->vel.y + *(f32 *)(cfg + 0x200) * ball->accel;
+        break;
+    }
 }
 asm void lbl_000065A0(void)
 {

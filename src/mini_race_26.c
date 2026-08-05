@@ -254,42 +254,42 @@ void lbl_00002FA4(void);
 void lbl_00003094(void);
 void lbl_000030DC(void);
 void lbl_00003120(void);
-void lbl_000031C0(void);
-void lbl_00003238(void);
+void lbl_000031C0();
+f32 lbl_00003238();
 void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
 void lbl_00003A90(void);
-void lbl_000040C0(void);
-void lbl_00004284(void);
-void lbl_000044AC(void);
+void lbl_000040C0(struct Ball *ball);
+void lbl_00004284(struct Ball *ball, int a1, int a2, int a3);
+void lbl_000044AC();
 void lbl_00004634(void);
-void lbl_00005CEC(void);
+void lbl_00005CEC();
 void lbl_00005DDC(void);
 void lbl_00005FC4(void);
 void lbl_0000612C(void);
 void lbl_000061D0(void);
-void lbl_00006248(void);
+void lbl_00006248();
 void lbl_000062F8(void);
 void lbl_000065A0(void);
 void lbl_000068E8(void);
-void lbl_000069D0(void);
-void lbl_00006CF0(void);
+void lbl_000069D0();
+int lbl_00006CF0();
 void lbl_00006FF4(void);
-void lbl_000070FC(void);
-void lbl_00007688(void);
-void lbl_00007710(void);
-void lbl_00007800(void);
+int lbl_000070FC();
+int lbl_00007688();
+void lbl_00007710();
+void lbl_00007800();
 void lbl_00007900(void);
 void lbl_00007950(void);
 void lbl_000079B8(void);
 void lbl_00007A9C(void);
-void lbl_00007D4C(void);
-void lbl_00007F88(void);
-void lbl_00008160(void);
-void lbl_00008324(void);
-void lbl_000084A0(void);
+void lbl_00007D4C();
+void lbl_00007F88();
+void lbl_00008160();
+void lbl_00008324();
+void lbl_000084A0();
 void lbl_000085D8(void);
 void lbl_00008A10(void);
 void lbl_00008B60(void);
@@ -375,6 +375,25 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
+// INVENTED (UNVERIFIED) -- fields of ballInfo[].unk144 used by lbl_000040C0.
+struct RaceBallSub
+{
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+    u8 filler18[0x1C - 0x18];
+    /*0x1C*/ s16 unk1C;
+    u8 filler1E[0x1D4 - 0x1E];
+    /*0x1D4*/ f32 unk1D4;
+    /*0x1D8*/ f32 unk1D8;
+    /*0x1DC*/ f32 unk1DC;
+    /*0x1E0*/ f32 unk1E0;
+    u8 filler1E4[0x1E8 - 0x1E4];
+    /*0x1E8*/ f32 unk1E8;
+    /*0x1EC*/ f32 unk1EC;
+    /*0x1F0*/ f32 unk1F0;
+    /*0x1F4*/ f32 unk1F4;
+};
+
 #pragma force_active on
 asm void lbl_00003474(void)
 {
@@ -386,14 +405,88 @@ asm void lbl_00003A90(void)
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_00003A90.s"
 }
-asm void lbl_000040C0(void)
+#pragma peephole on
+void lbl_000040C0(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000040C0.s"
+    struct RaceBallSub *st = (struct RaceBallSub *)ball->unk144;
+
+    ball->prevPos = ball->pos;
+    ball->speed = mathutil_vec_len(&ball->vel);
+    ball->flags &= ~0x20;
+    lbl_00007800(ball);
+    lbl_00005CEC(ball);
+    if (ball->unk120 & 1)
+    {
+        lbl_00007D4C(ball);
+        lbl_00008160(ball);
+        lbl_00008324(ball);
+        lbl_000084A0(ball);
+    }
+    lbl_00007F88(ball);
+    lbl_00006248(ball);
+    if (st->unk14 & 0x20)
+        lbl_000069D0(ball, lbl_000070FC(ball));
+    else
+        lbl_000069D0(ball, lbl_00006CF0(ball));
+    ball->pos.x = ball->pos.x + ball->vel.x;
+    ball->pos.y = ball->pos.y + ball->vel.y;
+    ball->pos.z = ball->pos.z + ball->vel.z;
+    if (lbl_00007688(ball))
+    {
+        u_play_sound_0(0x1D);
+        u_play_sound_0(0x15);
+        st->unk1E8 = st->unk1D4;
+        st->unk1EC = st->unk1D8;
+        st->unk1F0 = st->unk1DC;
+        st->unk1F4 = st->unk1E0;
+        ball->unk148 = 8;
+        if (!(st->unk14 & 0x20))
+            cameraInfo[ball->playerId].subState = 7;
+        st->unk1C = 0x3C;
+    }
+    else if (st->unk14 & 2)
+    {
+        ball->unk148 = 0xB;
+    }
 }
-asm void lbl_00004284(void)
+#pragma peephole on
+void lbl_00004284(struct Ball *ball, int a1, int a2, int a3)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00004284.s"
+    u8 *cfg = lbl_00013740;
+    struct RaceBallSub *st = (struct RaceBallSub *)ball->unk144;
+    u8 *base = lbl_10000028;
+    Vec a;
+    Vec b;
+    Vec v;
+    Quaternion q;
+    f32 d;
+
+    u_play_sound_0(0x281E);
+    if (!(st->unk14 & 0x20))
+        cameraInfo[ball->playerId].subState = 2;
+    ball->speed = ball->unkC4 = *(f32 *)(cfg + 8);
+    v = *(volatile Vec *)(cfg + 0x80);
+    ball->unkB8 = v;
+    q = *(volatile Quaternion *)(cfg + 0x8C);
+    ball->unkA8 = q;
+    ball->unk98 = ball->unkA8;
+    mathutil_mtxA_to_quat(&ball->unkA8);
+    ball->ape->flags &= 0x20000;
+    lbl_00007710(ball);
+    if (!(st->unk14 & 0x20))
+    {
+        d = *(f32 *)(cfg + 0x68) * (*(f32 *)(cfg + 0x9C) / *(f32 *)(base + 8));
+        lbl_000031C0(decodedStageLzPtr->unk78, &a, st->unk1D4);
+        lbl_000031C0(decodedStageLzPtr->unk78, &b,
+                     lbl_00003238(st->unk1D4 + d));
+        a.x = b.x - a.x;
+        a.y = b.y - a.y;
+        a.z = b.z - a.z;
+        cameraInfo[ball->playerId].rotY = mathutil_atan2(a.x, a.z) - 0x8000;
+    }
+    st->unk14 |= 0x10000;
+    st->unk14 &= ~1;
+    ball->unk148 = 3;
+    lbl_000044AC(ball);
 }
 #pragma force_active reset

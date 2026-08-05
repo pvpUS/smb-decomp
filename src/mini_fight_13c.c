@@ -32,6 +32,11 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "mathutil.h"
+#include "stobj.h"
+#include "stcoli.h"
+#include "variables.h"
+#include "types.h"
 #include "../data/common.nlobj.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
@@ -154,17 +159,14 @@ extern u8 lbl_10018FD4[];
 extern u8 lbl_10019040[];
 extern u8 backgroundInfo[];
 extern u8 g_bgLightInfo[];
-extern u8 g_stobjInfo[];
 extern u8 infoWork[];
 extern u8 lbl_801EED98[];
-extern u8 lbl_8028C0B0[];
 extern u8 pauseMenuState[];
 extern u8 polyDisp[];
 extern u8 worldInfo[];
 
 // Imported functions the code calls that no included header declares.
 extern void ape_face_dir();
-extern void collide_ball_with_stage();
 extern void fade_color_base_default();
 extern void func_8000D5B8();
 extern void func_80047518();
@@ -172,24 +174,7 @@ extern void func_8006AD3C();
 extern void func_8006B3E8();
 extern void item_create();
 extern void item_replace_type_funcs();
-extern void mathutil_atan2();
-extern void mathutil_mtxA_from_rotate_y();
-extern void mathutil_mtxA_from_translate();
-extern void mathutil_mtxA_pop();
-extern void mathutil_mtxA_rotate_y();
-extern void mathutil_mtxA_tf_point();
-extern void mathutil_mtxA_tf_vec();
-extern void mathutil_mtxA_tf_vec_xyz();
-extern void mathutil_mtxA_to_mtx();
-extern void mathutil_mtxA_to_quat();
-extern void mathutil_mtxA_translate_xyz();
-extern void mathutil_sin();
-extern void mathutil_tan();
-extern void mathutil_vec_normalize_len();
-extern void mathutil_vec_set_len();
 extern void mini_commend_free_data();
-extern void spawn_stobj();
-extern void u_math_unk15();
 extern void ape_skel_anim_main();
 extern void avdisp_draw_model_culled_sort_all();
 extern void avdisp_draw_model_culled_sort_translucent();
@@ -199,18 +184,6 @@ extern void func_8006AAEC();
 extern void func_8009D794();
 extern void func_8009D8A4();
 extern void lens_flare_draw();
-extern void mathutil_mtxA_from_identity();
-extern void mathutil_mtxA_from_quat();
-extern void mathutil_mtxA_from_rotate_x();
-extern void mathutil_mtxA_push();
-extern void mathutil_mtxA_rigid_inv_tf_vec();
-extern void mathutil_mtxA_rotate_x();
-extern void mathutil_mtxA_rotate_z();
-extern void mathutil_mtxA_to_euler();
-extern void mathutil_mtxA_translate();
-extern void mathutil_sqrt();
-extern void mathutil_vec_to_euler();
-extern void mathutil_vec_to_euler_xy();
 extern void new_ape_stat_motion();
 extern void u_load_minigame_graphics();
 extern void unref_func_8003938C();
@@ -222,15 +195,7 @@ extern void avdisp_set_bound_sphere_scale();
 extern void avdisp_set_post_add_color();
 extern void avdisp_set_z_mode();
 extern void func_8009DB40();
-extern void mathutil_atan();
-extern void mathutil_mtxA_from_mtx();
-extern void mathutil_mtxA_from_mtxB_translate();
-extern void mathutil_mtxA_mult_left();
-extern void mathutil_mtxA_normalize_basis();
-extern void mathutil_mtxA_rigid_inv_tf_point();
-extern void mathutil_mtxA_scale_s();
 extern void ord_tbl_draw_nodes();
-extern void raycast_stage_down();
 extern void set_ape_model_lod();
 extern void thread_create();
 extern void unref_func_80039320();
@@ -238,34 +203,22 @@ extern void unref_func_800393F8();
 extern void GXSetTevAlphaOp_cached();
 extern void ape_destroy();
 extern void avdisp_draw_model_unculled_sort_none();
-extern void mathutil_mtxA_from_mtxB();
-extern void mathutil_mtxA_from_translate_xyz();
-extern void mathutil_mtxA_rigid_inv_tf_tl();
-extern void mathutil_mtxA_sq_from_identity();
-extern void mathutil_mtxA_tf_point_xyz();
-extern void mathutil_mtxA_translate_neg();
-extern void mathutil_vec_dot_normalized_safe();
 extern void rend_efc_mirror_enable();
-extern void stobj_draw();
 extern void u_ball_init_1();
 extern void GXSetTevAlphaIn_cached();
 extern void avdisp_set_alpha();
 extern void background_draw();
 extern void light_init();
-extern void mathutil_mtxA_from_mtxB_translate_xyz();
 extern void set_bg_ambient();
 extern void u_avdisp_set_some_func_1();
 extern void GXSetTevColorOp_cached();
 extern void alloc_pool_light();
 extern void avdisp_draw_model_culled_sort_none();
 extern void func_8009CD5C();
-extern void mathutil_mtxA_scale_xyz();
 extern void ord_tbl_set_depth_offset();
 extern void GXSetTevColorIn_cached();
 extern void draw_monkey();
 extern void func_8009C5E4();
-extern void mathutil_mtxA_sq_from_mtx();
-extern void mathutil_mtxA_to_euler_yxz();
 extern void rend_efc_draw();
 extern void GXSetTevKAlphaSel_cached();
 extern void background_light_assign();
@@ -399,9 +352,136 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_00006F44(void)
+struct FightStobjExtra
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00006F44.s"
+    u8 filler0[8];  // 0x00
+    s8 unk8[8];     // 0x08
+};
+
+// dot(normal, stobj->unk64 - ball->vel).  mwcc 1.1 at -O4,p -fp hard does NOT
+// contract `x*y + z` into fmadds AT ALL (probe: `return a*b + c;` gives
+// fmuls;fadds), so every fmadds in the original game came from an asm block --
+// and an asm block is also a scheduling barrier, which is why the following
+// `lfs f0, K(rPool)` is not hoisted into the middle of it.  Same family as
+// mathutil_vec_sq_distance in mathutil.h.
+// NOTE: mwcc allocates `register float` in REVERSE declaration order (last
+// declared gets f0), hence the r5..r0 ordering below.
+static inline float u_fight_coli_dot(register Vec *a, register struct Stobj *s,
+                                     register struct PhysicsBall *p)
+{
+    register float r5, r4, r3, r2, r1, r0;
+
+    asm
+    {
+        lfs r1, s->unk64.z
+        lfs r0, p->vel.z
+        lfs r3, s->unk64.y
+        lfs r2, p->vel.y
+        fsubs r5, r1, r0
+        lfs r1, s->unk64.x
+        lfs r0, p->vel.x
+        fsubs r4, r3, r2
+        lfs r2, a->z
+        fsubs r3, r1, r0
+        lfs r0, a->y
+        lfs r1, a->x
+        fmuls r1, r1, r3
+        fmadds r1, r0, r4, r1
+        fmadds r1, r2, r5, r1
+    }
+    return r1;
+}
+
+void lbl_00006F44(struct Stobj *stobj, struct PhysicsBall *ball)
+{
+    u8 *k = lbl_0001C068;
+    struct FightStobjExtra *extra = stobj->extraData;
+    struct Ball *b = currentBall;
+    Vec sp58;
+    Vec sp4C;
+    Vec sp40;
+    Vec sp34;
+    Vec sp28;
+    Quaternion q;
+    S16Vec rot;
+    float f31;
+    float t;
+
+    if (extra->unk8[b->playerId] > 0)
+    {
+        sp4C.x = stobj->pos.x - ball->pos.x;
+        sp4C.y = stobj->pos.y - ball->pos.y;
+        sp4C.z = stobj->pos.z - ball->pos.z;
+        f31 = ball->radius + stobj->boundSphereRadius;
+        if (mathutil_vec_len(&sp4C) < f31)
+        {
+            sp40 = sp4C;
+            mathutil_vec_set_len(&sp40, &sp40, f31);
+            sp58.x = ball->pos.x + sp40.x;
+            sp58.y = ball->pos.y + sp40.y;
+            sp58.z = ball->pos.z + sp40.z;
+            stobj->localPos.x += sp58.x - stobj->pos.x;
+            stobj->localPos.y += sp58.y - stobj->pos.y;
+            stobj->localPos.z += sp58.z - stobj->pos.z;
+            stobj->pos.x = sp58.x;
+            stobj->pos.y = sp58.y;
+            stobj->pos.z = sp58.z;
+        }
+        return;
+    }
+
+    sp58 = stobj->pos;
+    func_8006AAEC(&ball->prevPos, &ball->pos, &stobj->prevPos, &sp58,
+                  ball->radius, stobj->boundSphereRadius);
+    stobj->localPos.x += sp58.x - stobj->pos.x;
+    stobj->localPos.y += sp58.y - stobj->pos.y;
+    stobj->localPos.z += sp58.z - stobj->pos.z;
+    stobj->pos = sp58;
+    sp4C.x = ball->pos.x - sp58.x;
+    sp4C.y = ball->pos.y - sp58.y;
+    sp4C.z = ball->pos.z - sp58.z;
+    mathutil_vec_normalize_len(&sp4C);
+    mathutil_mtxA_from_rotate_y(stobj->rotY);
+    mathutil_mtxA_rotate_x(stobj->rotX);
+    mathutil_mtxA_rotate_z(stobj->rotZ);
+    mathutil_mtxA_rigid_inv_tf_vec(&sp4C, &sp34);
+    sp28.x = ball->vel.x - stobj->unk64.x;
+    sp28.y = ball->vel.y - stobj->unk64.y;
+    sp28.z = ball->vel.z - stobj->unk64.z;
+    mathutil_mtxA_rigid_inv_tf_vec(&sp28, &sp28);
+    t = mathutil_vec_dot_prod(&sp34, &sp28);
+    sp28.x -= t * sp34.x;
+    sp28.y -= t * sp34.y;
+    sp28.z -= t * sp34.z;
+    mathutil_vec_cross_prod(&sp34, &sp28, &sp40);
+    rot.x = mathutil_atan(*(f32 *)(k + 8) / stobj->boundSphereRadius
+                          * mathutil_vec_len(&sp28)) >> 1;
+    q.w = mathutil_cos(rot.x);
+    mathutil_vec_set_len(&sp40, &sp40, mathutil_sin(rot.x));
+    q.x = sp40.x;
+    q.y = sp40.y;
+    q.z = sp40.z;
+    mathutil_mtxA_from_quat(&q);
+    mathutil_mtxA_to_euler(&rot);
+    stobj->unk76 += rot.x;
+    stobj->unk78 += rot.y;
+    (&stobj->unk76)[2] += rot.z;
+    b->flags |= 0x20;
+    t = __fabs(u_fight_coli_dot(&sp4C, stobj, ball));
+    if (t > *(f32 *)(k + 0x94))
+    {
+        int snd = t / *(f32 *)(k + 0x1C);
+
+        if (snd > 2)
+            snd = 2;
+        snd = *(u32 *)(lbl_0001CB30 + snd * 4);
+        lbl_802F1DFC = b->ape->charaId;
+        u_somePlayerId = b->playerId;
+        u_play_sound_0(snd);
+    }
+    func_8006AD3C(&sp4C, &stobj->unk64, &ball->vel, *(f32 *)(k + 8),
+                  (*(f32 *)(k + 0x98) * b->currRadius)
+                  * (*(f32 *)(k + 0x98) * b->currRadius));
+    extra->unk8[b->playerId] = 4;
 }
 #pragma force_active reset

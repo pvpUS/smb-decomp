@@ -255,11 +255,99 @@ struct BowlSpark
 };
 void lbl_0000A610(int kind, Vec *pos);
 
-#pragma force_active on
-asm void lbl_000097B4(void)
+// ---- lbl_00009D18 support declarations ------------------------------------
+// UNVERIFIED types: neither struct below is confirmed against a symbol file.
+// BowlSparkCol is inferred purely from the load displacements 0x00/0x04/0x08
+// and 0x0c/0x10/0x14 off a base stepped by `mulli rN,rKind,0x18`, and
+// BowlSparkPal from the 21-iteration 8-byte `lwzu/stwu` copy loop (168 bytes)
+// out of lbl_00011490 + 0x3238.
+struct BowlSparkCol
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_000097B4.s"
+    Vec a;  // 0x00
+    Vec b;  // 0x0C
+};
+struct BowlSparkPal
+{
+    struct BowlSparkCol c[7];  // 7 * 0x18 == 0xA8 == the 21 x 8 bytes copied
+};
+#pragma force_active on
+// lbl_000097B4 (0x97B4): reset the whole particle bank and both spark banks,
+// then compile five stages of a 40x64 ASCII pin bitmap at lbl_00011490 into
+// per-stage x/y float arrays plus a live count.
+// Four things this needed, each measured against the original in run 19:
+//   - tp: a SECOND symbol-valued local seeding the modified walker rowsrc.
+//     Without it mwcc stages lbl_00011490 through r0 and the function is one
+//     instruction long.
+//   - the declaration order src,out,rowbase,q,rowsrc,stage -- it decides which
+//     of r6/r7 and r10/r11 carries the inner and the outer walker pair.
+//   - f64 y, not f32 y: as f32 the whole volatile FPR pool rotates one slot
+//     and n++ schedules two instructions early inside the 4x unrolled loop.
+//   - src++ BEFORE col++ in the for-increment: the last unrolled copy emits
+//     the two addi in source order.
+struct BwlPart { u8 pad[0x18]; s16 timer; u8 pad2[2]; };
+
+void lbl_000097B4(void)
+{
+    u8 *tp;
+    u8 *t;
+    u8 *work = lbl_100004E0;
+    s8 *src;
+    f32 *out;
+    s8 *rowbase;
+    f32 *q;
+    s8 *rowsrc;
+    f32 *stage;
+    long i;
+    int k;
+    int row;
+    int s;
+    int col;
+    int n;
+    f64 y;
+
+    tp = lbl_00011490;
+    t = lbl_00011490;
+    *(s16 *)(work + 0x11c6c) = 0;
+    *(s16 *)(work + 0x11cac) = 0;
+    *(s16 *)(work + 0x11c7c) = 0;
+    *(s16 *)(work + 0x11cbc) = 0;
+    *(s16 *)(work + 0x11c8c) = 0;
+    *(s16 *)(work + 0x11ccc) = 0;
+    *(s16 *)(work + 0x11c9c) = 0;
+    *(s16 *)(work + 0x11cdc) = 0;
+    for (i = 0; i < 0xa28; i++)
+        ((struct BwlPart *)work)[i].timer = 0;
+    *(s32 *)(work + 0x11ce0) = 0;
+
+    rowsrc = (s8 *)tp;
+    stage = (f32 *)(work + 0x11ce4);
+    for (s = 0; s < 5; s++)
+    {
+        rowbase = rowsrc;
+        q = stage;
+        n = 0;
+        for (row = 0; row < 0x28; row++)
+        {
+            y = *(f64 *)(t + 0x3200) - row;
+            src = rowbase;
+            out = q;
+            for (col = 0; col < 64; src++, col++)
+            {
+                if (*src == 0x30)
+                {
+                    out[0] = -(*(f64 *)(t + 0x3208) - col);
+                    out[635] = y;
+                    out++;
+                    q++;
+                    n++;
+                }
+            }
+            rowbase += 0x40;
+        }
+        *(s32 *)&stage[1270] = n;
+        rowsrc += 0xa00;
+        stage += 1271;
+    }
 }
 #pragma peephole on
 void lbl_00009AA8(void)
@@ -332,11 +420,83 @@ void lbl_00009AA8(void)
             n++;
     }
 }
-asm void lbl_00009D18(void)
+// lbl_00009D18 (0x9D18): draw every live particle in the 0xA28-slot bank --
+// the render half of lbl_00009AA8's update.  Each particle fades its scale in
+// over the first 60 ticks and out over the last 30, and particles of kind 0..6
+// additionally get a post-multiply colour lerped between two palette rows by
+// the square of the remaining lifetime.
+//
+// The pre-loop count guard and the in-loop count test read the same address,
+// work + 0x11ce0.  The original computes work + 0x10000 ONCE (addis r31,r6,1)
+// and uses a 0x1ce0 displacement off it for both.  With propagation on, mwcc
+// rewrites the guard's `work` back to the bare symbol and re-materialises it,
+// costing three instructions; no source spelling found in runs 15-19 prevents
+// that.  The pragma pair below is the fix and is balanced with a reset.
+#pragma peephole on
+#pragma opt_propagation off
+void lbl_00009D18(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00009D18.s"
+    u8 *t = lbl_00011490;
+    u8 *pp = lbl_100004E0;
+    u8 *work = lbl_100004E0;
+    struct BowlSparkPal pal = *(struct BowlSparkPal *)(t + 0x3238);
+    int i;
+    u8 *p;
+    int n;
+    s16 tim;
+    s16 tv;
+    s8 kind;
+    f32 scale;
+    f32 s;
+    f32 s2;
+    f32 inv;
+
+    n = 0;
+    if (!(*(s32 *)(work + 0x11ce0) > 0))
+        return;
+
+    p = pp;
+    for (i = 0; i < 0xa28; i++, p += 0x1c)
+    {
+        if (n >= *(s32 *)(work + 0x11ce0))
+            return;
+        tim = *(s16 *)(p + 0x18);
+        if (tim <= 0)
+            continue;
+        n++;
+        if (*(s8 *)(p + 0x1a) != 6 && tim < 0x3f
+            && *(s16 *)(p + 0x18) < (rand() & 0x3f))
+            continue;
+
+        tv = *(s16 *)(p + 0x18);
+        if (tv < 0x3c)
+            scale = (f32)(*(f64 *)(t + 0x32e0) * (*(f64 *)(t + 0x32e8) * tv));
+        else if (tv > 0x5a)
+            scale = (f32)(*(f64 *)(t + 0x32f0)
+                          * (*(f64 *)(t + 0x32e0) * (0x78 - tv)));
+        else
+            scale = *(f32 *)(t + 0x32f8);
+
+        kind = *(s8 *)(p + 0x1a);
+        if (kind > -1 && kind < 7)
+        {
+            s = *(f32 *)(t + 0x3220) * tv;
+            s2 = s * s;
+            inv = (f32)(*(f64 *)(t + 0x3218) - s2);
+            avdisp_set_post_mult_color(s2 * pal.c[kind].a.x + inv * pal.c[kind].b.x,
+                                       s2 * pal.c[kind].a.y + inv * pal.c[kind].b.y,
+                                       s2 * pal.c[kind].a.z + inv * pal.c[kind].b.z,
+                                       *(f32 *)(t + 0x32fc));
+        }
+        mathutil_mtxA_from_mtxB_translate((Vec *)p);
+        mathutil_mtxA_sq_from_identity();
+        mathutil_mtxA_scale_xyz(scale, scale, *(f32 *)(t + 0x32fc));
+        GXLoadPosMtxImm(mathutilData->mtxA, 0);
+        GXLoadNrmMtxImm(mathutilData->mtxA, 0);
+        avdisp_draw_model_culled_sort_translucent(commonGma->modelEntries[0x1b].model);
+    }
 }
+#pragma opt_propagation reset
 // lbl_00009F60 (0x9F60): spawn one "spark" of the given kind in the first free
 // slot of the four-slot bank, then fire its one-shot sound with a randomised
 // volume and pitch.  Kinds 0..3 take a fixed offset from the parameter table;

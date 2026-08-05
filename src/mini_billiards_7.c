@@ -240,11 +240,156 @@ struct Work7D18 {
     struct Rec7D18 recs[64];
 };
 
+struct BB7974 {
+    s8 state;            /* +0x00 */
+    u8 filler1[0xF];
+    f32 x;               /* +0x10 */
+    f32 y;               /* +0x14 */
+    f32 z;               /* +0x18 */
+    u8 filler1C[0x38];
+    f32 unk54;           /* +0x54 */
+    f32 unk58;
+    f32 unk5C;
+    f32 unk60;
+    u8 filler64[4];
+};                       /* 0x68 */
+struct BB800 {
+    s32 w[0x1a];
+};                       /* 0x68 */
+struct BQ800 {
+    u8 filler0[0x44];
+    Quaternion q44;      /* +0x44 */
+    Quaternion q54;      /* +0x54 */
+    u8 filler64[4];
+};                       /* 0x68 */
 #pragma force_active on
-asm void lbl_00000800(void)
+/* lbl_00007974 slot -- run 19 draft a for lbl_00000800, decoded from a blank
+   page.  Reachable TODAY: src/mini_billiards_7.c.o emits the SIGNED magic and
+   the link map puts it at 0x1CBD0, the address this function loads.
+   Byte-offset addressing style copied from the MATCHED sibling lbl_00005654.  */
+void lbl_00000800(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00000800.s"
+    u8 *p = lbl_0001C2B8;
+    u8 *b = lbl_10000000;
+    int i;
+    int j;
+    int a;
+    int e;
+    f32 d;
+    s8 retry;
+    Vec axis;
+    struct BB800 tmp;
+
+    axis = *(Vec *)(p + 0x8c4);
+
+    for (i = 0; i < 10; i++) {
+        *(s8 *)&((u8 *)(b + 0x9878))[i * 0x68] = 1;
+        *(f32 *)&((u8 *)(b + 0x9880))[i * 0x68] = *(f32 *)(p + 0x8b4);
+        *(f32 *)&((u8 *)(b + 0x9884))[i * 0x68] = *(f32 *)(p + 0x8b4);
+        *(s8 *)&((u8 *)(b + 0x987a))[i * 0x68] = 0;
+        *(s8 *)&((u8 *)(b + 0x987c))[i * 0x68] = -1;
+        *(s8 *)&((u8 *)(b + 0x987d))[i * 0x68] = -1;
+        *(s8 *)&((u8 *)(b + 0x987e))[i * 0x68] = -1;
+        *(s8 *)&((u8 *)(b + 0x987b))[i * 0x68] = 0;
+        do {
+            retry = 0;
+            *(f32 *)&((u8 *)(b + 0x9888))[i * 0x68] =
+                *(f32 *)(p + 0x8d0)
+                    * (*(f32 *)(p + 0x8d4)
+                       * ((f32)rand() / *(f32 *)(p + 0x8d8)))
+                - *(f32 *)(p + 0x8dc) - *(f32 *)(p + 0x8c0);
+            *(f32 *)&((u8 *)(b + 0x988c))[i * 0x68] = *(f32 *)(p + 0x8c0);
+            *(f32 *)&((u8 *)(b + 0x9890))[i * 0x68] =
+                *(f32 *)(p + 0x8d0)
+                    * (*(f32 *)(p + 0x8e0)
+                       * ((f32)rand() / *(f32 *)(p + 0x8d8)))
+                - *(f32 *)(p + 0x8e4) - *(f32 *)(p + 0x8c0);
+            for (j = 0; j < i; j++) {
+                if (mathutil_sum_of_sq_2(
+                        *(f32 *)&((u8 *)(b + 0x9888))[i * 0x68]
+                            - *(f32 *)&((u8 *)(b + 0x9888))[j * 0x68],
+                        *(f32 *)&((u8 *)(b + 0x9890))[i * 0x68]
+                            - *(f32 *)&((u8 *)(b + 0x9890))[j * 0x68])
+                    < *(f32 *)(p + 0x8b8)) {
+                    retry = 1;
+                    break;
+                }
+            }
+        } while (retry == 1);
+        *(f32 *)&((u8 *)(b + 0x9894))[i * 0x68] =
+            *(f32 *)&((u8 *)(b + 0x9888))[i * 0x68];
+        *(f32 *)&((u8 *)(b + 0x9898))[i * 0x68] =
+            *(f32 *)&((u8 *)(b + 0x988c))[i * 0x68];
+        *(f32 *)&((u8 *)(b + 0x989c))[i * 0x68] =
+            *(f32 *)&((u8 *)(b + 0x9890))[i * 0x68];
+        *(f32 *)&((u8 *)(b + 0x98ac))[i * 0x68] =
+            *(f32 *)&((u8 *)(b + 0x98b0))[i * 0x68] =
+                *(f32 *)&((u8 *)(b + 0x98b4))[i * 0x68] = *(f32 *)(p + 0x8b4);
+        mathutil_quat_from_axis_angle(
+            &((struct BQ800 *)(b + 0x9878))[i].q44, &axis, 0);
+        mathutil_quat_from_axis_angle(
+            &((struct BQ800 *)(b + 0x9878))[i].q54, &axis, 0);
+    }
+
+    *(f32 *)(b + 0x98ac) = *(f32 *)(p + 0x8e8);
+    *(f32 *)(b + 0x98b4) = *(f32 *)(p + 0x8b4);
+    mathutil_quat_from_axis_angle(&((struct BQ800 *)(b + 0x9878))[0].q54, &axis, 0);
+    *(f32 *)(b + 0x9888) = *(f32 *)(p + 0x8ec);
+    *(f32 *)(b + 0x9890) = *(f32 *)(p + 0x8b4);
+
+    *(f32 *)(b + 0x98f0) =
+        *(f64 *)(p + 0x8f0)
+        + *(f32 *)(p + 0x8f8) * ((f32)rand() / *(f32 *)(p + 0x8d8))
+        - *(f64 *)(p + 0x900);
+    *(f32 *)(b + 0x98f8) =
+        *(f32 *)(p + 0x8f8) * ((f32)rand() / *(f32 *)(p + 0x8d8))
+        - *(f32 *)(p + 0x908);
+
+    d = *(f32 *)(p + 0x90c)
+        + *(f32 *)(p + 0x908) * ((f32)rand() / *(f32 *)(p + 0x8d8));
+
+    *(f32 *)(b + 0x9b00) = *(f32 *)(b + 0x98f8) + *(f32 *)(p + 0x910) * d;
+    *(f32 *)(b + 0x9af8) = *(f32 *)(b + 0x98f0) + *(f32 *)(p + 0x914) * d;
+    *(f32 *)(b + 0x9a98) = *(f32 *)(b + 0x98f8) - *(f32 *)(p + 0x910) * d;
+    *(f32 *)(b + 0x9a90) = *(f32 *)(b + 0x98f0) + *(f32 *)(p + 0x914) * d;
+    *(f32 *)(b + 0x9a30) = *(f32 *)(b + 0x9b00) + *(f32 *)(p + 0x910) * d;
+    *(f32 *)(b + 0x9a28) = *(f32 *)(b + 0x9af8) + *(f32 *)(p + 0x914) * d;
+    *(f32 *)(b + 0x9c38) = *(f32 *)(b + 0x9b00) - *(f32 *)(p + 0x910) * d;
+    *(f32 *)(b + 0x9c30) = *(f32 *)(b + 0x9af8) + *(f32 *)(p + 0x914) * d;
+    *(f32 *)(b + 0x9960) = *(f32 *)(b + 0x9a98) - *(f32 *)(p + 0x910) * d;
+    *(f32 *)(b + 0x9958) = *(f32 *)(b + 0x9a90) + *(f32 *)(p + 0x914) * d;
+    *(f32 *)(b + 0x9bd0) = *(f32 *)(b + 0x9a30) - *(f32 *)(p + 0x910) * d;
+    *(f32 *)(b + 0x9bc8) = *(f32 *)(b + 0x9a28) + *(f32 *)(p + 0x914) * d;
+    *(f32 *)(b + 0x9b68) = *(f32 *)(b + 0x9c38) - *(f32 *)(p + 0x910) * d;
+    *(f32 *)(b + 0x9b60) = *(f32 *)(b + 0x9c30) + *(f32 *)(p + 0x914) * d;
+    *(f32 *)(b + 0x99c8) = *(f32 *)(b + 0x9bd0) - *(f32 *)(p + 0x910) * d;
+    *(f32 *)(b + 0x99c0) = *(f32 *)(b + 0x9bc8) + *(f32 *)(p + 0x914) * d;
+
+    for (j = 0; j < 10; j++) {
+        *(f32 *)&((u8 *)(b + 0x9894))[j * 0x68] =
+            *(f32 *)&((u8 *)(b + 0x9888))[j * 0x68]
+            - *(f32 *)&((u8 *)(b + 0x98ac))[j * 0x68];
+        *(f32 *)&((u8 *)(b + 0x9898))[j * 0x68] =
+            *(f32 *)&((u8 *)(b + 0x988c))[j * 0x68]
+            - *(f32 *)&((u8 *)(b + 0x98b0))[j * 0x68];
+        *(f32 *)&((u8 *)(b + 0x989c))[j * 0x68] =
+            *(f32 *)&((u8 *)(b + 0x9890))[j * 0x68]
+            - *(f32 *)&((u8 *)(b + 0x98b4))[j * 0x68];
+    }
+
+    *(s32 *)(b + 0x28) = 0;
+    *(s32 *)(b + 0x30) = 0;
+    for (i = 0; i < 100; i++) {
+        a = (rand() & 0x7fff) % 7 + 2;
+        e = (rand() & 0x7fff) % 7 + 2;
+        tmp = ((struct BB800 *)(b + 0x9878))[a];
+        ((struct BB800 *)(b + 0x9878))[a] = ((struct BB800 *)(b + 0x9878))[e];
+        ((struct BB800 *)(b + 0x9878))[e] = tmp;
+    }
+    *(s16 *)(b + 0x1a) = 0;
+    *(s16 *)(b + 0x1c) = 0;
+    *(s8 *)(b + 0x48) = 1;
+    lbl_00000E68();
 }
 #pragma peephole on
 void lbl_00000E68(void)
@@ -724,10 +869,102 @@ void lbl_000077D8(void)
         }
     }
 }
-asm void lbl_00007974(void)
+/* lbl_00007974 -- run 19 draft a, decoded from a blank page.
+   Reachable TODAY: src/mini_billiards_7.c.o already emits the SIGNED magic and
+   the link map places it at 0x1CBD0, which is the address this function loads.
+   No carve, no merge.  */
+void lbl_00007974(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00007974.s"
+    u8 *b = lbl_10000000;
+    u8 *c = lbl_0001C2B8;
+    int ang;
+    struct BB7974 *w;
+    int i;
+
+    if (*(s32 *)(b + 0x20) == 1) {
+        lbl_802F1DFC = 0;
+        u_somePlayerId = 0;
+        switch (*(s8 *)(b + 0x1e)) {
+        case 1:
+            u_play_sound_0(0x16f);
+            break;
+        case 2:
+            SoundRevID(u_play_sound_1_dupe(0x170), 0x20);
+            break;
+        case 3:
+            SoundRevID(u_play_sound_1_dupe(0x171), 0x40);
+            break;
+        case 4:
+            if (*(s8 *)(b + 4) != 0)
+                SoundRevID(u_play_sound_1_dupe(0x182), 0x7f);
+            else
+                SoundRevID(u_play_sound_1_dupe(0x178), 0x60);
+            break;
+        }
+    }
+
+    if (*(s32 *)(b + 0x20) == 4) {
+        lbl_802F1DFC = 0;
+        u_somePlayerId = 0;
+        switch (*(s8 *)(b + 0x1e)) {
+        case 4:
+            if (*(s8 *)(b + 4) != 0)
+                SoundRevID(u_play_sound_1_dupe(0x182), 0x7f);
+            else
+                SoundRevID(u_play_sound_1_dupe(0x178), 0x60);
+            break;
+        }
+    }
+
+    *(f32 *)(b + 0x9888) = *(f32 *)(c + 0xa18);
+    *(f32 *)(b + 0x988c) = *(f32 *)(c + 0x8c0);
+    *(f32 *)(b + 0x9890) = *(f32 *)(c + 0x8b4);
+    *(f32 *)(b + 0x98f0) = *(f32 *)(c + 0x8b8);
+    *(f32 *)(b + 0x98f4) = *(f32 *)(c + 0x8c0);
+    *(f32 *)(b + 0x98f8) = *(f32 *)(c + 0x8b4);
+    *(f32 *)(b + 0x9880) = *(f32 *)(c + 0x8b8);
+    *(f32 *)(b + 0x9884) = *(f32 *)(c + 0x8b4);
+    *(f32 *)(b + 0x98e8) = *(f32 *)(c + 0x8b8);
+    *(f32 *)(b + 0x98ec) = *(f32 *)(c + 0x8b4);
+    *(f32 *)(b + 0x98cc) = *(f32 *)(c + 0x8b4);
+    *(f32 *)(b + 0x98d0) = *(f32 *)(c + 0x8b4);
+    *(f32 *)(b + 0x98d4) = *(f32 *)(c + 0x8b4);
+    *(f32 *)(b + 0x98d8) = *(f32 *)(c + 0x8b8);
+    *(f32 *)(b + 0x9934) = *(f32 *)(c + 0x8b4);
+    *(f32 *)(b + 0x9938) = *(f32 *)(c + 0x8b4);
+    *(f32 *)(b + 0x993c) = *(f32 *)(c + 0x8b4);
+    *(f32 *)(b + 0x9940) = *(f32 *)(c + 0x8b8);
+
+    if (*(s8 *)(b + 4) != 0) {
+        w = (struct BB7974 *)(b + 0x9878);
+        for (i = 0, ang = 0x6000; i < 7; i++) {
+            func_80007214((s16)ang, &((struct BB7974 *)(b + 0x9878))[i + 2].x,
+                          &((struct BB7974 *)(b + 0x9878))[i + 2].z);
+            w[2].x *= *(f32 *)(c + 0xaec);
+            w[2].z *= *(f32 *)(c + 0xaec);
+            w[2].y = *(f32 *)(c + 0x8c0);
+            w[2].state = 1;
+            w[2].unk54 = *(f32 *)(c + 0x8b4);
+            w[2].unk58 = *(f32 *)(c + 0x8b4);
+            w[2].unk5C = *(f32 *)(c + 0x8b4);
+            w[2].unk60 = *(f32 *)(c + 0x8b8);
+            w++;
+            ang += 0xaaa;
+        }
+    }
+
+    cameraInfo[0].eye.x =
+        *(f32 *)(c + 0x908) * (f32)(0x78 - *(s32 *)(b + 0x20));
+    cameraInfo[0].eye.y = *(f32 *)(c + 0x8c0);
+    cameraInfo[0].eye.z = *(f32 *)(c + 0x95c);
+
+    if (*(s32 *)(b + 0x20) > 0x78 || lbl_0000939C(0) != 0) {
+        *(s8 *)(b + 0xb) = *(s8 *)(b + 0xa);
+        *(s32 *)(b + 0x20) = 0;
+        *(s8 *)(b + 0xa) = 8;
+        lbl_00002B4C();
+        lbl_00003CC8();
+    }
 }
 #pragma peephole on
 void lbl_00007C74(void)

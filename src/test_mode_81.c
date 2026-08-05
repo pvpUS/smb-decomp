@@ -54,6 +54,12 @@
 #include "perf.h"
 #include "course.h"
 
+struct TestModeVecKey
+{
+    /*0x00*/ Vec pos;
+    /*0x0C*/ float f;
+};
+
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/test_mode.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0000FE78[];
@@ -237,7 +243,7 @@ void lbl_0000ADEC(void);
 void lbl_0000ADF0(void);
 void lbl_0000AE7C(void);
 void lbl_0000AEB8(void);
-void lbl_0000AEDC(void);
+void lbl_0000AEDC(struct TestModeVecKey *o, u32 f);
 void lbl_0000B364(void);
 void lbl_0000B44C(void);
 void lbl_0000B4A0(void);
@@ -278,9 +284,100 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_0000AEDC(void)
+void lbl_0000AEDC(struct TestModeVecKey *o, u32 f)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000AEDC.s"
+    Vec *v = (Vec *)lbl_10000E00;
+    u8 *w = lbl_10000E00;
+    struct TestModeVecKey *p = o;
+    float *k = (float *)lbl_00010080;
+    Mtx m;
+    GXColor c = *(GXColor *)&k[32];
+    GXLightObj lo;
+    Vec pt;
+    int i;
+
+    if (f != 0)
+    {
+        GXSetNumChans(1);
+        c.r = 0xFF;
+        c.g = 0xFF;
+        c.b = 0xFF;
+        c.a = 0xFF;
+        GXSetChanMatColor(GX_COLOR0A0, c);
+        c.r = 0;
+        c.g = 0;
+        c.b = 0;
+        c.a = 0;
+        GXSetChanAmbColor(GX_COLOR0A0, c);
+        GXSetChanCtrl(GX_COLOR0A0, 0, 0, 0, 1, 2, 1);
+        GXSetTevOrder_cached(GX_TEVSTAGE0, 0xFF, 0xFF, GX_COLOR0A0);
+        GXSetTevOp_cached(GX_TEVSTAGE0, 4);
+        GXSetNumTexGens(0);
+        GXSetNumTevStages_cached(1);
+        GXSetBlendMode_cached(1, 1, 0, 0);
+        GXSetZMode_cached(1, 1, 0);
+        fog_gx_set();
+    }
+    else
+    {
+        mathutil_mtxA_from_mtxB();
+        GXInitLightSpot(&lo, k[25], 0);
+        GXInitLightDistAttn(&lo, k[0], k[0], 0);
+        c.r = 0xFF;
+        c.g = 0xFF;
+        c.b = 0xFF;
+        c.a = 0xFF;
+        GXInitLightColor(&lo, c);
+        mathutil_mtxA_tf_point(v, &pt);
+        GXInitLightPos(&lo, pt.x, pt.y, pt.z);
+        GXLoadLightObjImm(&lo, GX_LIGHT0);
+        GXSetNumChans(1);
+        c.r = 0xFF;
+        c.g = 0xFF;
+        c.b = 0xFF;
+        c.a = 0xFF;
+        GXSetChanMatColor(GX_COLOR0A0, c);
+        c.r = k[33] + k[34] * (k[3] + mathutil_sin(powerOnTimer << 8));
+        c.g = 0x20;
+        c.b = 0x40;
+        c.a = 0xFF;
+        GXSetChanAmbColor(GX_COLOR0A0, c);
+        GXSetChanCtrl(GX_COLOR0A0, 1, 0, 0, 1, 2, 1);
+        GXSetTevOrder_cached(GX_TEVSTAGE0, 0xFF, 0xFF, GX_COLOR0A0);
+        GXSetTevOp_cached(GX_TEVSTAGE0, 4);
+        GXSetNumTexGens(0);
+        GXSetNumTevStages_cached(1);
+        GXSetBlendMode_cached(1, 1, 0, 0);
+        GXSetZMode_cached(1, 1, 1);
+        fog_gx_set();
+    }
+
+    mathutil_mtxA_from_identity();
+    mathutil_mtxA_translate(&p->pos);
+    C_MTXScale(m, k[35] * p->f, k[35] * p->f, k[35] * p->f);
+    PSMTXConcat(mathutilData->mtxA, m, mathutilData->mtxA);
+    PSMTXConcat(mathutilData->mtxB, mathutilData->mtxA, mathutilData->mtxA);
+    GXLoadPosMtxImm(mathutilData->mtxA, 0);
+    GXLoadNrmMtxImm(mathutilData->mtxA, 0);
+    GXDrawSphere(8, 8);
+    mathutil_mtxA_from_identity();
+    mathutil_mtxA_translate(&p->pos);
+    mathutil_mtxA_rotate_y(*(int *)(w + 0x15C) << 7);
+    mathutil_mtxA_rotate_x(*(int *)(w + 0x15C) << 6);
+    mathutil_mtxA_rotate_z(*(int *)(w + 0x15C) << 5);
+    for (i = 16; i > 0; i--)
+    {
+        mathutil_mtxA_push();
+        mathutil_mtxA_rotate_y((i << 16) >> 4);
+        mathutil_mtxA_translate_xyz(k[0], k[0], k[15] * p->f);
+        C_MTXScale(m, k[36] * p->f, k[36] * p->f, k[35] * p->f);
+        PSMTXConcat(mathutilData->mtxA, m, mathutilData->mtxA);
+        PSMTXConcat(mathutilData->mtxB, mathutilData->mtxA, mathutilData->mtxA);
+        GXLoadPosMtxImm(mathutilData->mtxA, 0);
+        GXLoadNrmMtxImm(mathutilData->mtxA, 0);
+        GXDrawCylinder(8);
+        mathutil_mtxA_pop();
+    }
 }
+
 #pragma force_active reset

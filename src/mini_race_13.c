@@ -246,7 +246,7 @@ void lbl_000020A4(void);
 void lbl_000021C8(void);
 void lbl_000024A0(void);
 void lbl_000025E4(void);
-void lbl_00002968(void);
+void lbl_00002968(struct Ball *ball);
 void lbl_00002B54(void);
 void lbl_00002BBC(void);
 void lbl_00002E04(void);
@@ -256,7 +256,7 @@ void lbl_000030DC(void);
 void lbl_00003120(void);
 void lbl_000031C0(void);
 void lbl_00003238(void);
-void lbl_0000326C(void);
+void lbl_0000326C(s32 *, void *);
 void lbl_00003398(void);
 void lbl_0000340C(void);
 void lbl_00003474(void);
@@ -374,15 +374,116 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
+// INVENTED (UNVERIFIED) -- the per-racer slot pointed at by ball->unk144.
+// Same object as mini_race_11b.c's struct RaceRacer; fields below 0x1E8 are
+// new this run and are inferred from lbl_00002968's asm alone.
+struct RaceEnt
+{
+    /*0x00*/ s32 unk0;
+    /*0x04*/ f32 unk4;
+};
+
+struct RaceRacer
+{
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+    u8 filler18[0x22 - 0x18];
+    /*0x22*/ s16 unk22;
+    /*0x24*/ s16 unk24;
+    u8 filler26[0x28 - 0x26];
+    /*0x28*/ struct RaceEnt ent[51];
+    /*0x1C0*/ s32 unk1C0;
+    /*0x1C4*/ f32 unk1C4;
+    /*0x1C8*/ f32 unk1C8;
+    /*0x1CC*/ s16 unk1CC;
+    u8 filler1CE[0x1D4 - 0x1CE];
+    /*0x1D4*/ f32 unk1D4;
+    /*0x1D8*/ f32 unk1D8;
+    /*0x1DC*/ f32 unk1DC;
+    /*0x1E0*/ f32 unk1E0;
+    u8 filler1E4[0x1E8 - 0x1E4];
+    /*0x1E8*/ f32 unk1E8;
+    /*0x1EC*/ f32 unk1EC;
+    /*0x1F0*/ f32 unk1F0;
+};
+
 #pragma force_active on
 asm void lbl_000025E4(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_000025E4.s"
 }
-asm void lbl_00002968(void)
+#pragma peephole on
+void lbl_00002968(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00002968.s"
+    struct RaceRacer *p = (struct RaceRacer *)ball->unk144;
+    f32 *cfg = (f32 *)lbl_00013680;
+    struct RaceEnt *a;
+    struct RaceEnt *b;
+    f32 d;
+    f32 s;
+    f32 q;
+
+    p->unk24 = p->unk22;
+    a = &p->ent[p->unk24];
+    b = &p->ent[p->unk22];
+    if (__fabs(p->unk1F0) >= *(f64 *)((u8 *)cfg + 0x50))
+    {
+        p->unk22 = p->unk22 + 1;
+        p->unk14 |= 0x2000000;
+        p->unk1CC = 0x78;
+        if (p->unk1F0 >= *(f32 *)((u8 *)cfg + 0x40))
+        {
+            if (p->unk1E8 <= p->unk1EC)
+            {
+            d = cfg[16] - p->unk1EC;
+            s = p->unk1E8 + d;
+            q = p->unk1E8 / s;
+            a->unk4 = a->unk4 + d / s;
+            b->unk4 = b->unk4 + q;
+            }
+            else
+            {
+                b->unk0++;
+            }
+            p->unk1F0 = p->unk1F0 - cfg[16];
+            p->unk14 &= ~1;
+        }
+        else
+        {
+            if (p->unk1E8 >= p->unk1EC)
+            {
+            d = cfg[16] - p->unk1E8;
+            s = d + p->unk1EC;
+            q = p->unk1EC / s;
+            a->unk4 = a->unk4 + d / s;
+            b->unk4 = b->unk4 + q;
+            }
+            else
+            {
+                b->unk0++;
+            }
+            p->unk1F0 = p->unk1F0 + cfg[16];
+            p->unk14 |= 1;
+        }
+        p->unk1D4 = p->unk1E8;
+        p->unk1D8 = p->unk1E8;
+        p->unk1DC = p->unk1F0;
+        p->unk1E0 = p->unk1F0;
+    }
+    else
+    {
+        b->unk0++;
+    }
+    if (p->unk22 == *(u16 *)(lbl_10000028 + 4))
+    {
+        p->unk1C4 = p->ent[p->unk22 - 1].unk4;
+        p->unk14 |= 2;
+        lbl_0000326C(&p->unk1C0, &p->unk1C8);
+    }
+    else
+    {
+        p->unk1C0++;
+    }
 }
 #pragma force_active reset

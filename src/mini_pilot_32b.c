@@ -126,7 +126,16 @@ extern u8 neutralFaceTable[];
 extern u8 smileFaceTable[];
 extern u8 lbl_80285A58[];
 extern u8 lbl_80285A68[];
-extern u8 lbl_80285A80[];
+struct PilotTgtRow
+{
+    s16 unk0;
+    s16 unk2;
+    s16 unk4;
+    s16 unk6;
+    s16 unk8;
+    s16 unkA;
+};
+extern struct PilotTgtRow lbl_80285A80[];
 extern u8 lbl_802F1F10[];
 extern u8 lbl_802F1FD0[];
 extern u8 lbl_802F1FD8[];
@@ -205,7 +214,7 @@ void lbl_00007EF8(void);
 void lbl_00008134(void);
 void lbl_000082C0(void);
 void lbl_00008568(void);
-void lbl_000085B4(void);
+void lbl_000085B4(struct Sprite *sprite, int d1, int d2, int d3);
 void lbl_000089F8(struct Sprite *sprite);
 void lbl_00008C40(struct Sprite *sprite, int d1);
 void lbl_00009440(struct Sprite *sprite);
@@ -372,10 +381,76 @@ void lbl_00008568(void)
         sprite->drawFunc = (void (*)(struct Sprite *))lbl_000085B4;
     }
 }
-asm void lbl_000085B4(void)
+#pragma peephole on
+void lbl_000085B4(struct Sprite *sprite, int d1, int d2, int d3)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_000085B4.s"
+    u8 *k = (u8 *)lbl_0000C360;
+    NLsprarg params;
+    f32 sc;
+    int total;
+    int nrows = 1;
+    int sprno;
+    int ix;
+    int iy;
+    int digits;
+    int v;
+    f32 x = sprite->x;
+    f32 y = sprite->y;
+
+    reset_text_draw_settings();
+    set_text_font(9);
+    if (lbl_80285A80[modeCtrl.currPlayer].unkA != 0)
+        nrows = 3;
+    else if (lbl_80285A80[modeCtrl.currPlayer].unk6 != 0)
+        nrows = 2;
+    if ((total = *(s32 *)lbl_10000074 * nrows) <= 1)
+        sprno = 0xB37;
+    else
+        sprno = 0xB36;
+
+    if (nrows > 1)
+    {
+        ix = *(f64 *)(k + 0x70) + x;
+        iy = y;
+        set_text_scale(*(f32 *)(k + 0x18), *(f32 *)(k + 0x18));
+        set_text_mul_color(0x00FFFF00);
+        v = *(s32 *)lbl_10000074;
+        for (digits = 1; v >= 10; digits++)
+            v /= 10;
+        ix -= *(f32 *)(k + 0x18) * (*(f64 *)(k + 0x78) * (f32)(digits - 2));
+        set_text_pos(ix, iy - *(f64 *)(k + 0x80));
+        sprite_printf((char *)lbl_0000D314, *(s32 *)lbl_10000074, nrows);
+    }
+
+    sc = *(f32 *)(k + 0x54);
+    set_text_scale(sc, *(f32 *)(k + 0x54));
+    set_text_mul_color(0x00FFFFFF);
+    v = *(s32 *)lbl_10000074;
+    for (digits = 1; v >= 10; digits++)
+        v /= 10;
+    x -= *(f32 *)(k + 0x54) * (*(f64 *)(k + 0x78) * (f32)(digits - 2));
+    set_text_pos(x, y);
+    sprite_printf((char *)lbl_0000D320, total);
+
+    v = total;
+    for (digits = 1; v >= 10; digits++)
+        v /= 10;
+    x += *(f64 *)(k + 0x88) + *(f64 *)(k + 0x90) * ((f32 *)k)[0x15] * (f32)(v = digits);
+    params.zm_x = *(f32 *)(k + 0x54);
+    params.zm_y = *(f32 *)(k + 0x54);
+    params.u0 = params.v0 = *(f32 *)(k + 0x98);
+    params.u1 = params.v1 = *(f32 *)(k + 0x54);
+    params.ang = 0;
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = 5;
+    params.trnsl = *(f32 *)(k + 0x54);
+    params.base_color = 0x00FFFFFF;
+    params.offset_color = 0;
+    params.sprno = sprno;
+    params.x = x;
+    params.y = *(f64 *)(k + 0x70) + y;
+    params.z = *(f32 *)(k + 0x9C);
+    nlSprPut(&params);
 }
 #pragma peephole on
 void lbl_0000893C(struct Sprite *sprite)
