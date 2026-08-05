@@ -34,6 +34,25 @@ ORDERING RULE: objects contribute .rodata in SOURCES order and SOURCES follows
 in .text order.  Emitting it from a later file reorders the bytes -- same bytes,
 wrong places, no match.  `--into` is checked against that and refuses by default.
 
+.data (RUN 22)
+--------------
+Until run 22 this tool split `.rodata` ONLY and dumped `.data`/`.bss` wholesale
+into the last segment.  That was a limitation of THIS FILE, not of the build --
+and run 8 read it as proof that sel_ngc's six `.section .data` switch jump
+tables were "not source-reachable", retiring 8,824 instructions on it.  Run 21
+disproved that with a hand-built carve that gated GOLDEN.  Three facts, each
+build-verified there:
+
+  * mwcc emits a C `switch` jump table into .data, after that TU's own
+    initialised file-scope globals.  A jump table IS source-expressible.
+  * A data-only segment (zero .text, and in that case zero .rodata too)
+    relocates freely, exactly like a rodata-only one.
+  * ** A mwcc object's .data has alignment 2**3, so a .data hole must start
+    8-ALIGNED. **  sel_ngc's table at .data 0x469C (4 mod 8) built NOT GOLDEN;
+    moving the boundary 4 bytes earlier to 0x4698 -- the preceding "%3s\0"
+    literal becoming `char lbl_00016818[] = "%3s";` in the C file -- built
+    GOLDEN.  `--data-hole` REFUSES a misaligned start and prints that remedy.
+
 Usage
 -----
   # what can be carved, and who must own each constant
@@ -45,8 +64,15 @@ Usage
   # a partial label (first N bytes of a run)
   python tools/rel_carve.py <module> --hole lbl_0000C3C8:8 --into src/mini_pilot_19.c
 
+  # a .data hole -- a switch jump table the owning C file will re-emit
+  python tools/rel_carve.py <module> --data-hole lbl_0001681C --into src/sel_ngc_rel_29.c
+
   # restore the monolithic blob and the plain SOURCES order
   python tools/rel_carve.py <module> --undo
+
+--into is positional against the hole flags, in this order: every --hole, then
+every --hole-range, then every --data-hole, then every --data-range.  The
+resolved pairing is PRINTED before anything is written -- read it.
 
 Each run restores the pristine data blob from git first, so it is idempotent:
 pass every hole you want on the one command line.  Run it AFTER rel_rematch.py
@@ -121,11 +147,70 @@ def split_sections(lines):
     return pre, secs, order
 
 
-def parse_rodata(body):
-    """-> [(label|None, addr|None, [lines], nbytes)] in order."""
-    ents, cur = [], None
+def entry_width(s, addr, used):
+    """Bytes one directive line emits, `used` bytes into an entry at `addr`.
+
+    ONE implementation, used both to size an entry and to split one -- a second
+    copy is how a prefix carve starts disagreeing with the address arithmetic.
+    Verified exactly: over all 46 data blobs in the tree, addr(e) + width(e)
+    == addr(next e) for all 2,199 consecutive labelled entries.
+    """
+    if not s:
+        return 0
+    d = s.split()[0]
+    # These take an OPERAND LIST -- `.byte 0x03, 0x00, 0x00` is three bytes, not
+    # one.  Counting it as one put option_d2.s's .data out by 2 from
+    # lbl_0000C6A5 onwards; it was the single mismatch in the 2,199 checks.
+    w = {'.4byte': 4, '.2byte': 2, '.byte': 1}.get(d)
+    if w:
+        rest = s.split(None, 1)
+        return w * (rest[1].count(',') + 1 if len(rest) > 1 else 1)
+    if d == '.skip':
+        return int(s.split()[1], 0)
+    if d == '.asciz':
+        # .data carries strings; .rodata in this tree essentially does not.
+        # Count the NUL, and count a backslash escape as one byte.
+        lit = s[len('.asciz'):].strip()
+        if len(lit) >= 2 and lit[0] == '"' and lit[-1] == '"':
+            inner, n, i = lit[1:-1], 1, 0
+            while i < len(inner):
+                n += 1
+                i += 2 if inner[i] == '\\' else 1
+            return n
+        return 0
+    if d == '.balign':
+        k = int(s.split()[1], 0)
+        # only meaningful once we know where we are
+        return -(addr + used) % k if (addr is not None and k) else 0
+    return 0
+
+
+def parse_entries(body):
+    """-> [{label|None, addr|None, lines, bytes}] in order.
+
+    Section-agnostic: run 22 uses it for `.data` as well as `.rodata`.
+    """
+    ents, cur, dead = [], None, 0
     for l in body:
         s = l.strip()
+        # `.if 0 ... .endif` wraps a label a carve has already emptied (the
+        # zero-size alias case, and hole.py's "kept for reference").  Its bytes
+        # are NOT in the image, so counting them puts every later address out --
+        # and a label inside it must not start an entry of its own.
+        if s.startswith('.if'):
+            dead += 1
+            if cur is not None:
+                cur['lines'].append(l)
+            continue
+        if s.startswith('.endif'):
+            dead = max(0, dead - 1)
+            if cur is not None:
+                cur['lines'].append(l)
+            continue
+        if dead:
+            if cur is not None:
+                cur['lines'].append(l)
+            continue
         m = DEF.match(s)
         if m:
             cur = {'label': m.group(1), 'addr': None, 'lines': [l], 'bytes': 0}
@@ -139,15 +224,11 @@ def parse_rodata(body):
         if m and cur['addr'] is None:
             cur['addr'] = int(m.group(1), 16)
             continue
-        if s.startswith('.4byte'):
-            cur['bytes'] += 4
-        elif s.startswith('.2byte'):
-            cur['bytes'] += 2
-        elif s.startswith('.byte'):
-            cur['bytes'] += 1
-        elif s.startswith('.skip'):
-            cur['bytes'] += int(s.split()[1], 0)
+        cur['bytes'] += entry_width(s, cur['addr'], cur['bytes'])
     return ents
+
+
+parse_rodata = parse_entries          # pre-run-22 name, kept for callers
 
 
 # --------------------------------------------------------------------------- #
@@ -211,23 +292,55 @@ def promote_globals(blocks, declared):
 
 
 def write_segments(mod, pre, secs, order, segments, keep_labels):
-    """segments = [[rodata lines], ...]; segment 0 gets .ctors/.dtors, last gets .data/.bss."""
+    """segments = [{section: [lines]}, ...], one dict per output object.
+
+    Segment 0 additionally gets .ctors/.dtors; the LAST segment gets every
+    section that was not carved at all (.data and .bss when there is no
+    --data-hole, .sdata, ...).
+
+    A section that IS carved appears only in the segments its own slices were
+    assigned to, so an object may legitimately carry .data and no .rodata --
+    that is exactly the shape sel_ngc's verified .data carve produced.
+
+    `.rodata` is emitted unconditionally, even when its slice is empty, so that
+    a carve with no --data-hole is byte-identical to what every landed carve in
+    the tree was generated with.  Other sections are skipped when empty.
+    """
     declared = {m.group(1) for l in pre for m in [GLOBAL.match(l.strip())] if m}
     pre_clean = [l for l in pre if not GLOBAL.match(l.strip())]
 
+    # `.rodata` is ALWAYS sliced, even when nothing carved it, because the head
+    # segment is FIRST in SOURCES and that is what keeps every converted C
+    # object's own .rodata behind the original blob's.  Letting it fall through
+    # to the "uncarved sections go last" rule below would put the whole blob's
+    # .rodata AFTER every C object -- a silent, total layout inversion.  Every
+    # other section keeps its pre-run-22 home in the last segment unless a
+    # --data-hole explicitly slices it.
+    carved = sorted({s for seg in segments for s in seg} | {'.rodata'})
     bodies = []
     n = len(segments)
-    for k, ro in enumerate(segments):
+    for k, seg in enumerate(segments):
         body = []
         if k == 0:
             for s in order:
                 if s in ('.ctors', '.dtors'):
                     body += ['.section %s' % s] + secs[s]
-        body += ['', '.section .rodata', '.balign 8'] + ro
+        for s in order:
+            if s not in carved:
+                continue
+            lines = seg.get(s, [])
+            if s == '.rodata':
+                body += ['', '.section .rodata', '.balign 8'] + lines
+            elif lines:
+                body += ['', '.section %s' % s] + lines
         if k == n - 1:
             for s in order:
-                if s not in ('.ctors', '.dtors', '.rodata'):
+                if s not in ('.ctors', '.dtors') and s not in carved:
                     body += ['', '.section %s' % s] + secs[s]
+        if not [l for l in body if l.strip()]:
+            sys.exit('segment %d would be an EMPTY object -- two holes are '
+                     'adjacent with nothing between them.  Merge them into one '
+                     'hole.' % k)
         bodies.append(body)
 
     gl = promote_globals(bodies, declared)
@@ -239,8 +352,10 @@ def write_segments(mod, pre, secs, order, segments, keep_labels):
                         if l.strip().startswith('.include')), len(head) - 1) + 1
             head = head[:ins] + ['.global %s' % s for s in gl[k]] + head[ins:]
         else:
-            head = ['# %s data segment %d -- rodata continuation after a carved hole'
-                    % (mod, k), '.include "macros.inc"'] + \
+            what = ', '.join(s for s in order
+                             if s in segments[k] and segments[k][s]) or 'rodata'
+            head = ['# %s data segment %d -- %s continuation after a carved hole'
+                    % (mod, k, what.replace('.', '')), '.include "macros.inc"'] + \
                    ['.global %s' % s for s in gl[k]]
         name = 'asm/%s.s' % mod if k == 0 else 'asm/%s_d%d.s' % (mod, k)
         open(os.path.join(REPO, name), 'w', newline='\n').write(
@@ -295,18 +410,34 @@ def write_sources(mod, items):
 # --------------------------------------------------------------------------- #
 
 def do_list(mod, ref='HEAD'):
-    ents = parse_rodata(split_sections(pristine(mod, ref))[1]['.rodata'])
+    secs = split_sections(pristine(mod, ref))[1]
     fu = first_users(mod)
-    print('%s: %d rodata entries\n' % (mod, len([e for e in ents if e['label']])))
-    print('%-20s %-10s %6s  %-18s %s' % ('label', 'addr', 'bytes', 'first user', 'owning .c (if C)'))
-    for e in ents:
-        if not e['label']:
+    for sec in ('.rodata', '.data'):
+        if sec not in secs:
             continue
-        u = fu.get(e['label'])
-        f = defining_file(mod, u) if u else None
-        magic = ' MAGIC' if any('0x43300000' in l for l in e['lines'][:3]) else ''
-        print('%-20s 0x%-8X %6d  %-18s %s%s'
-              % (e['label'], e['addr'] or 0, e['bytes'], u or '-', f or '-', magic))
+        ents = parse_entries(secs[sec])
+        print('\n%s: %d %s entries\n'
+              % (mod, len([e for e in ents if e['label']]), sec.lstrip('.')))
+        print('%-20s %-10s %6s  %-18s %s'
+              % ('label', 'addr', 'bytes', 'first user', 'owning .c (if C)'))
+        for e in ents:
+            if not e['label']:
+                continue
+            u = fu.get(e['label'])
+            f = defining_file(mod, u) if u else None
+            note = ''
+            if sec == '.rodata' and any('0x43300000' in l for l in e['lines'][:3]):
+                note = ' MAGIC'
+            if sec == '.data':
+                # A jump table is a run of `.4byte _prolog + 0x...` relocations.
+                if sum(1 for l in e['lines'] if '_prolog +' in l) >= 3:
+                    note += ' JUMPTBL'
+                # The 8-alignment rule is the whole difference between GOLDEN and
+                # not, so surface it here rather than only at carve time.
+                if e['addr'] is not None and e['addr'] % 8:
+                    note += ' NOT-8-ALIGNED'
+            print('%-20s 0x%-8X %6d  %-18s %s%s'
+                  % (e['label'], e['addr'] or 0, e['bytes'], u or '-', f or '-', note))
 
 
 def main():
@@ -321,9 +452,21 @@ def main():
                     help='carve a whole TU constant pool (all labels FIRST..LAST) as '
                          'one hole -- the normal case when a complete TU becomes one '
                          '.c file, since mwcc regenerates the pool itself')
+    ap.add_argument('--data-hole', action='append', default=[], dest='data_hole',
+                    metavar='LABEL[:BYTES]',
+                    help='.data to carve out -- normally a switch jump table the '
+                         'owning C file re-emits. The hole START must be 8-ALIGNED '
+                         '(a mwcc object .data has alignment 2**3); a misaligned '
+                         'start is extended BACKWARDS and the absorbed bytes are '
+                         'printed for you to write into the .c file')
+    ap.add_argument('--data-range', action='append', default=[], dest='data_range',
+                    metavar='FIRST:LAST',
+                    help='carve a run of .data labels as one hole')
     ap.add_argument('--into', action='append', default=[], metavar='SRC',
-                    help='the .c file that emits the matching hole; give all --hole '
-                         '--into pairs first, then all --hole-range --into pairs')
+                    help='the .c file that emits the matching hole; --into is '
+                         'positional against the hole flags, in the order --hole, '
+                         '--hole-range, --data-hole, --data-range. The resolved '
+                         'pairing is printed before anything is written')
     ap.add_argument('--undo', action='store_true',
                     help='restore the monolithic blob and plain SOURCES order')
     ap.add_argument('--list', action='store_true',
@@ -373,13 +516,25 @@ def main():
         print('%s: restored monolithic data blob and plain SOURCES order' % mod)
         return
 
-    if len(a.hole) + len(a.hole_range) != len(a.into):
-        sys.exit('each --hole/--hole-range needs exactly one --into')
-    if not a.hole and not a.hole_range:
-        sys.exit('nothing to do: pass --hole or --hole-range with --into, --list or --undo')
+    nspec = len(a.hole) + len(a.hole_range) + len(a.data_hole) + len(a.data_range)
+    if nspec != len(a.into):
+        sys.exit('each --hole/--hole-range/--data-hole/--data-range needs exactly '
+                 'one --into (%d hole specs, %d --into)' % (nspec, len(a.into)))
+    if not nspec:
+        sys.exit('nothing to do: pass a hole flag with --into, or --list or --undo')
+    if (a.data_hole or a.data_range) and '.data' not in secs:
+        sys.exit('%s has no .section .data to carve' % mod)
 
-    ents = parse_rodata(secs['.rodata'])
-    by_label = {e['label']: i for i, e in enumerate(ents) if e['label']}
+    # Sections are carved independently: each contributes its own bytes at its
+    # own object's SOURCES position, so `.rodata` and `.data` holes interleave
+    # without interacting.  Only sections that actually get a hole are sliced;
+    # everything else still goes wholesale into the last segment.
+    ENT = {'.rodata': parse_entries(secs['.rodata'])}
+    if a.data_hole or a.data_range:
+        ENT['.data'] = parse_entries(secs['.data'])
+    BY = {s: {e['label']: i for i, e in enumerate(v) if e['label']}
+          for s, v in ENT.items()}
+    ents, by_label = ENT['.rodata'], BY['.rodata']
     fu = first_users(mod)
 
     holes = []
@@ -422,7 +577,8 @@ def main():
                   'from %s is fine while no earlier object emits .rodata, but '
                   'converting %s later may force a re-carve.'
                   % (lbl, owner, dest, owner))
-        holes.append({'idx': i, 'end': i, 'label': lbl, 'bytes': want, 'into': dest})
+        holes.append({'sec': '.rodata', 'idx': i, 'end': i, 'label': lbl,
+                      'bytes': want, 'back': 0, 'into': dest})
 
     # --hole-range FIRST:LAST -- carve a whole TU pool (several labels) as one hole
     for spec, dest in zip(a.hole_range, a.into[len(a.hole):]):
@@ -433,25 +589,150 @@ def main():
         i, j = by_label[first], by_label[last]
         if j < i:
             sys.exit('--hole-range %s: %s comes before %s in .rodata' % (spec, last, first))
-        holes.append({'idx': i, 'end': j, 'label': first, 'bytes': None,
+        holes.append({'sec': '.rodata', 'idx': i, 'end': j, 'label': first,
+                      'bytes': None, 'back': 0, 'into': dest.replace('\\', '/')})
+
+    # ----- .data (run 22) ---------------------------------------------------
+    #
+    # Same machinery, one extra rule: a mwcc object's .data has alignment 2**3,
+    # so the hole must START 8-aligned.  sel_ngc's table at .data 0x469C (4 mod
+    # 8) built NOT GOLDEN and the same table at 0x4698 built GOLDEN.  Rather
+    # than refuse, extend the hole BACKWARDS to the aligned address and print
+    # exactly which bytes the .c file now has to emit ahead of its table --
+    # that is the step a human had to work out by hand in run 21.
+    dbase = len(a.hole) + len(a.hole_range)
+    for k, (spec, dest) in enumerate(zip(a.data_hole + a.data_range,
+                                         a.into[dbase:])):
+        is_range = k >= len(a.data_hole)
+        d_by = BY['.data']
+        d_ent = ENT['.data']
+        if is_range:
+            first, _, last = spec.partition(':')
+            for x in (first, last):
+                if x not in d_by:
+                    sys.exit('%s is not a .data label of %s' % (x, mod))
+            i, j, want = d_by[first], d_by[last], None
+            if j < i:
+                sys.exit('--data-range %s: %s comes before %s in .data'
+                         % (spec, last, first))
+        else:
+            lbl, _, nb = spec.partition(':')
+            if lbl not in d_by:
+                sys.exit('%s is not a .data label of %s' % (lbl, mod))
+            i = j = d_by[lbl]
+            want = int(nb) if nb else None
+            if want is not None and want > d_ent[i]['bytes']:
+                sys.exit('--data-hole %s:%d asks for more bytes than the label\'s '
+                         'run (%d) -- that would eat the NEXT label\'s data.'
+                         % (lbl, want, d_ent[i]['bytes']))
+        start = d_ent[i]['addr']
+        if start is None:
+            sys.exit('%s has no `# 0xADDR` comment, so its alignment cannot be '
+                     'checked -- refusing rather than guessing.' % d_ent[i]['label'])
+        back = start % 8
+        if back:
+            if i == 0:
+                sys.exit('%s is at .data 0x%X (%d mod 8) and is the FIRST entry, '
+                         'so the hole cannot be extended backwards.\n'
+                         '  A mwcc object\'s .data has alignment 2**3; a '
+                         'misaligned hole builds NOT GOLDEN.' % (
+                             d_ent[i]['label'], start, back))
+            prev = d_ent[i - 1]
+            if prev['bytes'] < back:
+                sys.exit('%s is at .data 0x%X (%d mod 8) and the preceding entry '
+                         '%s is only %d bytes, so the hole cannot be 8-aligned '
+                         'without swallowing a third entry.'
+                         % (d_ent[i]['label'], start, back, prev['label'],
+                            prev['bytes']))
+        holes.append({'sec': '.data', 'idx': i, 'end': j, 'label': d_ent[i]['label'],
+                      'bytes': want, 'back': back, 'addr': start,
                       'into': dest.replace('\\', '/')})
 
-    holes.sort(key=lambda h: h['idx'])
-    for x, y in zip(holes, holes[1:]):
-        if y['idx'] <= x['end']:
-            sys.exit('holes overlap: %s and %s' % (x['label'], y['label']))
-    if len({h['into'] for h in holes}) != len(holes):
-        sys.exit('two holes owned by the same .c file are only valid if they are '
-                 'adjacent in .rodata -- merge them into one --hole with :BYTES')
-
-    # build segments, splitting entries when only a prefix is carved
-    segments, keep, cursor = [], set(), 0
+    # Order globally by the owning .c file's SOURCES position: that -- not the
+    # position within a section -- is what decides which object emits first.
+    _src_index = {}
     for h in holes:
-        i = h['idx']
-        seg = []
-        for e in ents[cursor:i]:
-            seg += e['lines']
+        if h['into'] not in items:
+            sys.exit('%s is not in the %s SOURCES list' % (h['into'], mod))
+        _src_index[h['into']] = items.index(h['into'])
+    holes.sort(key=lambda h: (_src_index[h['into']], h['sec'], h['idx']))
+
+    for sec in ENT:
+        hs = [h for h in holes if h['sec'] == sec]
+        for x, y in zip(hs, hs[1:]):
+            if y['idx'] <= x['end']:
+                sys.exit('%s holes overlap or are out of SOURCES order: %s and %s'
+                         % (sec, x['label'], y['label']))
+    # Two holes may share an owner ONLY if they are in different sections -- one
+    # segment then carries a slice of each, which is exactly a TU that emits
+    # both a magic and a jump table.
+    for dest in {h['into'] for h in holes}:
+        share = [h for h in holes if h['into'] == dest]
+        if len({h['sec'] for h in share}) != len(share):
+            sys.exit('two %s holes owned by the same .c file (%s) are only valid '
+                     'if they are adjacent -- merge them into one hole with '
+                     ':BYTES' % (share[0]['sec'], dest))
+
+    print('resolved pairing (read this -- --into is positional):')
+    for h in holes:
+        print('  %-8s %-20s %s%s' % (h['sec'], h['label'], h['into'],
+                                     '  [+%d bytes backwards for 8-alignment]'
+                                     % h['back'] if h['back'] else ''))
+
+    # any carved-away symbol still referenced by asm that stays as asm?
+    asm = '\n'.join(open(b, errors='ignore').read()
+                    for b in glob.glob(os.path.join(REPO, 'asm',
+                                                    'nonmatchings', mod, '*.s')))
+
+    # Build segments, splitting entries when only a prefix is carved.  One
+    # segment per hole (holding the bytes that precede it), plus a tail.  Each
+    # segment is a {section: lines} dict: a section with no hole at this cut
+    # contributes NOTHING here and waits for its own cut, which is what lets
+    # .rodata and .data be carved at different SOURCES positions.
+    segments, keep = [], set()
+    cursor = {s: 0 for s in ENT}
+    for h in holes:
+        sec = h['sec']
+        ents, i = ENT[sec], h['idx']
+        seg = {s: [] for s in ENT}
+        for e in ents[cursor[sec]:i]:
+            seg[sec] += e['lines']
         ent = ents[i]
+        if h['back']:
+            # 8-alignment: move the last `back` bytes of the PRECEDING entry
+            # into the hole, and tell the author what to write in the .c file.
+            prev = ents[i - 1]
+            head, tail_lines, used = [], [], 0
+            for l in prev['lines']:
+                s = l.strip()
+                if DEF.match(s) or ADDR.match(s):
+                    head.append(l)
+                    continue
+                w = entry_width(s, prev['addr'], used)
+                if used + w <= prev['bytes'] - h['back']:
+                    used += w
+                    head.append(l)
+                else:
+                    tail_lines.append(l)
+            got = prev['bytes'] - used
+            if got != h['back']:
+                sys.exit('cannot split %s on a %d-byte boundary: the nearest '
+                         'directive boundary leaves %d bytes.\n  Carve by hand, '
+                         'or pick a different table.'
+                         % (prev['label'], h['back'], got))
+            # the kept head replaces the previous entry in this same segment
+            if seg[sec][-len(prev['lines']):] == prev['lines']:
+                seg[sec][-len(prev['lines']):] = head
+            else:
+                sys.exit('internal: previous entry was not the tail of the segment')
+            print('\n  ** 8-ALIGNMENT: the hole starts at .data 0x%X (%d mod 8), so '
+                  'it has been\n     extended back to 0x%X.  %s must emit these '
+                  '%d byte(s) itself,\n     immediately before its jump table:\n'
+                  % (h['addr'], h['back'], h['addr'] - h['back'], h['into'],
+                     h['back']))
+            for l in tail_lines:
+                print('       %s' % l.strip())
+            print()
         # capture the labels being carved away BEFORE a prefix-carve rewrites
         # ents[i] into its remainder -- otherwise the original label vanishes
         # and never gets its zero-size alias.
@@ -463,22 +744,16 @@ def main():
                 s = l.strip()
                 if DEF.match(s) or ADDR.match(s):
                     continue
-                w = 4 if s.startswith('.4byte') else 2 if s.startswith('.2byte') \
-                    else 1 if s.startswith('.byte') else 0
                 if used < h['bytes']:
-                    used += w
+                    used += entry_width(s, ent['addr'], used)
                     continue
                 kept.append(l)
             tail_addr = (ent['addr'] or 0) + h['bytes']
             ents[i] = {'label': 'lbl_%08X' % tail_addr, 'addr': tail_addr,
                        'lines': ['lbl_%08X:' % tail_addr] + kept, 'bytes': 0}
-            cursor = i                       # remainder starts the next segment
+            cursor[sec] = i                  # remainder starts the next segment
         else:
-            cursor = h['end'] + 1            # whole label(s) carved away
-        # any carved-away symbol still referenced by asm that stays as asm?
-        asm = '\n'.join(open(b, errors='ignore').read()
-                        for b in glob.glob(os.path.join(REPO, 'asm',
-                                                        'nonmatchings', mod, '*.s')))
+            cursor[sec] = h['end'] + 1       # whole label(s) carved away
         aliases = [lb for lb in carved if lb in asm]
         if len(aliases) > 1:
             sys.exit('%s..%s: %d carved labels are still referenced by asm (%s).\n'
@@ -488,13 +763,41 @@ def main():
                      % (ents[i]['label'], ents[h['end']]['label'],
                         len(aliases), ', '.join(aliases)))
         for lb in aliases:
-            seg.append('%s:' % lb)                    # zero-size alias at the hole
+            seg[sec].append('%s:' % lb)               # zero-size alias at the hole
             keep.add(lb)
+        if sec == '.data':
+            # Only the hole START has an alignment rule -- it is the C object's
+            # own .data start, and a mwcc object's .data is 2**3-aligned.  The
+            # RESUMPTION point has none: the following asm segment's .data
+            # packs straight after whatever the C object emitted.
+            #
+            # RUN 22 measured this.  An earlier version of this tool warned when
+            # the carved size was not a multiple of 8; sel_ngc's conversion then
+            # built GOLDEN having emitted exactly 36 bytes (0x24) at 0xB8, with
+            # the next segment resuming at 0xDC -- 4 mod 8.  The warning was
+            # wrong and is gone.  What actually matters is the byte COUNT.
+            gone = h['back'] + sum(e['bytes'] for e in ents[i:h['end'] + 1])
+            print('  %s must emit EXACTLY %d bytes of .data at this point '
+                  '(0x%X..0x%X).\n    Check it with `objdump -h` on the built '
+                  'object before you gate.'
+                  % (h['into'], gone, (h.get('addr') or 0) - h['back'],
+                     (h.get('addr') or 0) - h['back'] + gone))
         segments.append(seg)
-    tail = []
-    for e in ents[cursor:]:
-        tail += e['lines']
+    tail = {s: [] for s in ENT}
+    for s in ENT:
+        for e in ENT[s][cursor[s]:]:
+            tail[s] += e['lines']
     segments.append(tail)
+
+    # A section with NO hole of its own has exactly one slice, and the loop
+    # above leaves it in the tail -- which is last in SOURCES.  For `.rodata`
+    # that inverts the whole layout: every converted C object's own .rodata
+    # would then come BEFORE the original blob's instead of after it.  The
+    # pre-run-22 tool always put .rodata in segment 0 (the head, first in
+    # SOURCES) and that is what must be preserved when only .data is carved.
+    if not any(h['sec'] == '.rodata' for h in holes) and len(segments) > 1:
+        segments[0]['.rodata'] = segments[-1]['.rodata']
+        segments[-1]['.rodata'] = []
 
     # Work out the SOURCES interleave BEFORE writing anything, so a rejected
     # request leaves the tree untouched rather than half-carved.
@@ -507,16 +810,16 @@ def main():
             sys.exit('%s is not in the %s SOURCES list' % (h['into'], mod))
         j = src.index(h['into'])
         if j < pos:
-            sys.exit('holes are not in .text order: %s owns a later .rodata hole '
-                     'but sits earlier in SOURCES.\n  .rodata follows SOURCES '
+            sys.exit('holes are not in .text order: %s owns a later %s hole '
+                     'but sits earlier in SOURCES.\n  A section follows SOURCES '
                      'order, so holes must be carved in the same order as their '
-                     'owning objects.' % h['into'])
+                     'owning objects.' % (h['into'], h['sec']))
         out += src[pos:j + 1]
         if k + 1 < len(paths) - 1:          # intermediate segment; last one goes at the end
             out.append(paths[k + 1])
         pos = j + 1
     out += src[pos:]
-    out.append(paths[-1])                   # final segment carries .data/.bss
+    out.append(paths[-1])                   # final segment carries the uncarved sections
 
     # Every check has passed; only now is it safe to drop the previous carve.
     commit_segments()
@@ -526,8 +829,11 @@ def main():
 
     print('%s: carved %d hole(s); %d data objects' % (mod, len(holes), len(paths)))
     for k, h in enumerate(holes):
-        print('  %s (%s bytes) -> emitted by %s'
-              % (h['label'], h['bytes'] if h['bytes'] is not None else 'all', h['into']))
+        print('  %-8s %s (%s bytes%s) -> emitted by %s'
+              % (h['sec'], h['label'],
+                 h['bytes'] if h['bytes'] is not None else 'all',
+                 ' + %d absorbed for 8-alignment' % h['back'] if h['back'] else '',
+                 h['into']))
     print('Now make the C in those files use real literals / int->float casts, '
           'rebuild, and gate on the golden sha1.')
 
