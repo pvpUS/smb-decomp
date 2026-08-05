@@ -47,7 +47,321 @@ reads the brief, so a rule that lives only here will not reach it.
 
 ---
 
-## 0.24 — RUN 18 DONE (2026-08-04): +1,180 insn, 35.65% -> 36.27%. START HERE.
+## 0.25 — RUN 19 DONE (2026-08-04): +2,914 insn, 36.27% -> 37.80%. START HERE.
+
+Nine parallel agents, one per module, **no workers — SEVENTH consecutive run
+under the standing rule, zero stranding again.** Six of nine gained. **This is
+the largest run in the project's history by a factor of 2.5**, and the largest
+single-module result ever (**mini_race +1,145 / +11 functions**).
+
+| module | still-asm | insn | % | gained |
+|---|---|---|---|---|
+| **mini_pilot** | 14 fns | 8784/12137 | **72.37%** | **+226 / +1** |
+| **mini_bowling** | 21 fns | 9555/15313 | **62.40%** | **+335 / +2** |
+| **mini_race** | 47 fns | 12003/19817 | **60.57%** | **+1145 / +11** |
+| **test_mode** | 28 fns | 9335/16231 | **57.51%** | **+290 / +1** |
+| sel_ngc | 13 fns | 5710/18084 | 31.57% | **0** |
+| **mini_fight** | 77 fns | 8061/28585 | **28.20%** | **+316 / +1** |
+| option | 18 fns | 3188/12375 | 25.76% | **0** |
+| **mini_billiards** | 24 fns | 7402/28793 | **25.71%** | **+602 / +2** |
+| mini_golf | 23 fns | 7886/38919 | 20.26% | **0** |
+| **TOTAL** | **265 fns** | **71924/190254** | **37.80%** | **+2914 / +18** |
+
+**Verified**: six trees moved, **11 modified `.c` files and NOTHING else** — no
+Makefile change, no `asm/` change, no file added or deleted, in any of the nine
+copies (`diff -rq` per module against the main tree, before merging). All six
+re-merged and rebuilt GOLDEN **in the main tree at the exact sha1 each agent
+reported**; **all nine pass `rel_structcheck` CLEAN with every C-definition and
+stub count matching its agent's figure**; **the main-tree census reproduces all
+nine agents' still-asm figures exactly**; a clean build from **0 objects** (all
+1,113 deleted) gives **943 under `src/`+`asm/` and 1,113 tree-wide — identical
+to runs 17 and 18**, as it must be with no SOURCES change; `sha1sum -c
+supermonkeyball.sha1` = **all 12 OK**. Diff scanned for game binaries first —
+clean. The three +0 modules were **source-identical** and were not merged.
+Reconciles in both dimensions: 190,254 − 118,330 = 71,924, and 283 − 265 = 18.
+
+### ★★ THE BIG RESULT: CLONE FROM A MATCHED SIBLING IN THE SAME FILE
+
+mini_race banked 1,145 in ~135 variants — **8.5 insn/variant against run 18's
+3.5** — and **four of its eleven conversions MATCHED ON THE FIRST COMPILE.**
+The method was not a sweep. It was: pick a never-opened function that has an
+already-matched near-clone in the same TU, and copy the clone's shape.
+
+> **This is the cross-reference lever, applied to whole functions instead of to
+> single idioms, and it is now the highest-yield method in the project.**
+> mini_billiards independently did the same thing (two blank-page MATCHes,
+> +602) after abandoning the brief's target. mini_bowling's +189 came from a
+> five-run-old stored draft plus a matched sibling's guard shape.
+
+**The corollary, stated by three modules unprompted: `stmw r15` is a
+stop sign.** mini_race read `lbl_00003474` (391), priced it at 17 callee-saved
+GPRs + 3 FPRs, and declined it **to bank 1,145 elsewhere**. mini_billiards
+profiled `lbl_0001A18C` (1,469) at `stmw r14` + `stfd f22..f31` and declined it
+for the same reason, taking 602. **Read the frame before you open anything.**
+
+### ★★ THE BRIEF'S TOP ITEM RETURNED ZERO FOR A THIRD RUN — AND THE MODULES THAT IGNORED IT TOOK THE RUN
+
+Run 18 observed it; run 19 confirms it and quantifies it. **Every module that
+gained ≥300 did so from something it chose itself:**
+
+- **mini_race**: declined the brief's `3474` outright. **+1,145.**
+- **mini_billiards**: spent ~25% of the run on the brief's `1B880` for **0**,
+  then re-derived reachability and found the census under-reports the module by
+  **3,985 instructions**. **+602 from two functions the brief never named.**
+- **mini_bowling**: the brief said `97B4` was "never opened"; its own run-15
+  `nearmiss/` README said otherwise and carried the draft that landed. **+189.**
+- Conversely **mini_pilot opened the brief's top item first and banked all 226
+  of it** — because it read the *diff regions* before writing a variant, and
+  three of its four idioms were hypotheses formed from that output.
+
+> **The rule is not "ignore the brief". It is "read your own stored READMEs and
+> re-derive your own reachability BEFORE opening anything", which is what the
+> brief has said for two runs and what four modules proved again.**
+
+### ★★ THE CENSUS IS WRONG IN THE SAME DIRECTION EVERY TIME: IT UNDER-REPORTS REACHABILITY
+
+Four modules re-derived it independently this run and every correction went the
+same way. `rel_census` calls functions `a-BLOCKED` that are **inside the
+magic-owning merged TU** and need nothing but a draft:
+
+- **mini_billiards: +3,985** (true 12 fns / 7,924, not 7 / 3,939). Proved with
+  `objdump -h` **plus the link map** — three C objects emit an 8-byte signed
+  magic and the map fixes where each lands. **Two functions it called blocked
+  were converted and gate GOLDEN.**
+- **mini_race: +699.** `E9D4` (147) and `F90C` (58) were called `a-BLOCKED` and
+  both converted; `F90C` *does* spend the magic and resolved to the TU's
+  existing one with **zero `.rodata` growth**.
+- **mini_bowling: +245**, now **proved** rather than argued — two functions
+  converted out of the TU the census said was blocked.
+- **option: +2,445** (3,602 = 39% reachable, not 1,157 = 13%), and **build-
+  confirmed this run**: installing `48F4` left `.rodata` at 8 bytes.
+
+> **`rel_census`'s `a-BLOCKED` column is not evidence. The evidence is
+> `objdump -h` on the TU's object plus the link map.** Six known defects, all
+> in the same direction. Run 20 should re-derive, never quote it.
+
+### ★★ A `.rodata` SECTION IS NOT NECESSARILY A MAGIC — AND IT COST A GATE
+
+mini_fight's winning body scored **MATCH** and the module was **NOT GOLDEN**.
+`#include "math.h"` had emitted 16 bytes of `.rodata`: `3fe0000000000000
+4008000000000000` — **0.5 and 3.0, the inline-sqrt Newton-Raphson constants**,
+not `43300000…`. Spelling the one `fabs()` as **`__fabs()`** and dropping the
+include removed the section, changed no instruction, and gated GOLDEN.
+
+> **16 bytes reads exactly like a signed+unsigned magic pair. The diagnostic is
+> the `.rodata` CONTENT (`objdump -s -j .rodata`), not its size.**
+
+### ★ THE IDIOM HAUL — the largest of any run
+
+1. **The DECLARED TYPE of a pool-base pointer LOCAL decides its volatile GPR.**
+   `u8 *cfg` = 56 in 13; `f32 *cfg` = **MATCH**, and the *read spelling is
+   inert* either way. **Negative on a zero-offset scalar read** (9 spellings
+   flat). (mini_race)
+2. **An index and the value fetched with it are ONE source local, not two.**
+   Merging them coalesces the address chain into r3. **This INVERTS the carried
+   rule "a local reused for two sequential purposes must be two locals"** —
+   that rule is about live ranges, this is about index→value. 7 of the first 14
+   variants MATCHED. (mini_fight)
+3. **`f64` vs `f32` on a local: 56 aligned, at an identical instruction count.**
+   The whole volatile FPR pool rotates one slot. **No count signature, and 15
+   statement orders were inert against it.** Nobody had swept the declared type
+   of a float local. (mini_bowling)
+4. **An embedded assignment to an EXISTING local forces a subexpression to be
+   evaluated before its sibling** — `(f32)(v = digits)` MATCHes where the
+   statement form is byte-identical to the control. (mini_pilot)
+5. **An explicit source copy of a parameter emits `addi rD,rS,0`; a compiler-
+   inserted parameter home emits `or rD,rS,rS`.** Source-visible, six variants
+   reach it. (test_mode)
+6. **A CALL between entry and a symbol local's first use forces its `@ha` into a
+   second parallel scratch.** Proved BOTH ways — it *breaks* an already-matched
+   function and *repairs* the draft. (mini_golf)
+7. **The parameter save area is a readable signature for the parameter count**
+   (locals start at `0x8 + nparams*4`) — worth ~90 diffs and one first-compile
+   MATCH. (mini_race)
+8. **A K&R (`f32 f();`) declaration silently drops the `frsp`** — default
+   argument promotion. Any draft passing a double-valued expression to a
+   K&R-declared float callee is one instruction short. (mini_race)
+9. **`(i << 2) * 6` and `i * 24` are the same arithmetic and different code** —
+   13 diffs and 225 instructions of span. Run-18 idiom 5 generalised: the
+   discriminator is **which factor is left as the multiply**. (sel_ngc)
+10. **Two source locals holding the same value defeat an FP CSE while sharing
+    one FPR**, with no new stack slot. (mini_race)
+11. **A float operand INSIDE vs OUTSIDE the parentheses of an int chain is a
+    live axis; the integer association inside them is not** — corrects run 16,
+    which was permuting inside the parentheses. (sel_ngc)
+12. **mwcc ranks callee-saved GPRs last-declared-lowest, and a compiler IV
+    occupies a rank slot** — the declaration slot of a walker was worth 15.
+    (mini_billiards)
+13. **A `s16` counter compared `cmplwi` wants an unsigned literal** (`i < 7U`).
+    (mini_race)
+14. **`mathutil_sum_of_sq_2` is the source of a 2-term `fmadds`**; argument
+    order matters. (mini_race)
+15. **Run-18 idiom 4 confirmed a FOURTH time** and worth 9→MATCH: exactly ONE of
+    three reads of the same lvalue must be spelled differently. (mini_race)
+16. **Run-18 idiom 1 extends to a FUNCTION-POINTER ARRAY** — but see the
+    correction below. (mini_race)
+
+### ⚠ RUN 18's IDIOM 1 IS NARROWER THAN IT WAS STATED, BY ITS OWN DISCOVERER
+
+mini_billiards (who co-found it) retyped two more multi-byte-element subscripted
+`extern` arrays and got **byte-identical output in all four configurations**.
+mini_golf and option each tested it in scope and got **zero**.
+
+> **The discriminator is NOT the element size. In run 18 the symbol that moved
+> was materialised in the ENTRY-BLOCK HOIST SLOT; these are not.** Amend the
+> idiom to that scope. It still works — it is just not a general retype lever.
+
+### ★ TOOL FIXES LANDED THIS RUN (commit `d096c8d`)
+
+1. **`rel_pcmp` reported a CLEAN COMPILE as `FAIL(compile)`.** `rel_probe`
+   exited **1** both for a real compile failure and for "compiled fine, no
+   `.text` matching `--func`", so with `--func` the `FAIL(no func X)` branch was
+   **unreachable** and every sibling file in a probe directory read as broken.
+   **This is the mechanism behind "this draft does not compile", now 0-for-9.**
+   Reported independently by test_mode and option. `rel_probe` now exits 2;
+   proved end to end.
+2. **`rel_gfscan` documented `F` and `G` BACKWARDS** — in the tool promoted
+   during run-19 prep. `rel_pcmp.py:206` is the authority: **`F` blinds FPRs,
+   `G` blinds GPRs.** Code was always right; the legend told readers to sweep
+   the wrong register file. Caught by sel_ngc. **All nine reports' conclusions
+   were checked against the true semantics before fixing — all correct, nothing
+   needed revising.**
+3. **`rel_merge_tu` forced CRLF unconditionally**, and **§0.24's claim that it
+   "writes LF into a CRLF tree" was BACKWARDS.** Measured: `src/*.c` is 819
+   pure-CRLF, **87 pure-LF**, 0 mixed, and all 87 belong to merged REL modules
+   (62 mini_fight, 11 mini_race). Now preserves each file's own ending.
+4. **`inject.py`'s trailing-pragma accumulation is FIXED** — by mini_golf, who
+   caused the run-18 incident, verified over an 18-variant sweep (owner ended at
+   the pristine count). Promoted to **`C:/tmp/smbm/_harvest_run19/inject.py`**.
+   Its version also exempts the *following* function's `peephole on`, which the
+   orchestrator's staged patch would have swallowed.
+
+### HAZARDS
+
+- **`rel_structcheck` rejects `--tree` and resolves its tree from the SCRIPT's
+  path** (`rel_structcheck.py:41`; the tree is a **positional** `[tree]`, per
+  line 36). Invoking the main tree's copy reports the MAIN tree's numbers —
+  mini_race saw its own converted functions listed as asm stubs. Harmless when
+  the brief's relative-path close-out is used from inside the warm tree.
+- **`rel_census --detail | head -N` SIGPIPE-truncates the listing** — mini_fight
+  lost 19 rows before noticing. Redirect to a file.
+- **`rel_pcmp` can inflate wildly on a pure uniform renaming** — mini_fight's
+  `4D14` q-first family read **387 compile-only against 101 over a real link**,
+  raw == aligned. Cross-check any "hundreds of diffs on a renaming" with
+  `rel_sweep --file`.
+- **`rel_ablind`/`rel_gfscan`'s relocation limit was hit HARDER than ever**:
+  option measured **74-against-a-true-5**, mini_bowling **36-against-4 at the
+  wrong count**, mini_golf **38-against-3** again. On a call-heavy function it
+  should not be quoted at all.
+- **The mixed-CRLF trap bit three more modules.** A `str.replace()` with
+  LF-embedded search text over a CRLF owner is a **silent no-op** — mini_race
+  read a stale score as a real result. `Edit` normalises; hand-written
+  `python -c` replaces do not.
+- **A `str.replace` generator can corrupt SIBLING functions** in the same TU and
+  produce bogus `FAIL(compile)` rows — sel_ngc's `mkv.py` exists to prevent it.
+
+### TOOLS — open, ranked for run 20
+
+1. **Promote the whole-function cloning workflow.** `_scratch_mini_race/run19/vs.py`
+   (CRLF-safe single-function splicer + scorer, `finally` restore — drove all
+   135 variants) and `_scratch_mini_billiards/run19/install7.py` + `score7.py`
+   (pristine-rebuild installer for a big mixed TU + real-link directory scorer).
+   **These are what produced 1,747 of the run's 2,914.**
+2. **`rel_census` re-derivation.** Six defects, all under-reporting. Promote
+   `objdump -h` + **link map** re-derivation (mini_billiards' method) and delete
+   the misleading columns.
+3. **`_scratch_option/run19/xscan2.py`** — classifies matched functions by
+   entry-block symbol materialisation *and* by DEF-in-TU vs UND cross-TU
+   (329/50/18). option says promote this **instead of** run-18's `scan_stmw.py`.
+4. **`_scratch_mini_golf/.../keep/xref_scratch.py`** — sequential vs parallel
+   two-symbol prologue over every built object (259/215). Found the matched
+   template after 75 flat variants.
+5. `_scratch_mini_bowling/.../gensub.py`, `gensub2.py` (anchor-asserting,
+   auto-detect line endings — closes the CRLF trap), `pragprobe.py`
+   (structurally balanced pragma pairs); `_scratch_sel_ngc/run19/mkv.py`
+   (edits only inside the target function's braces); `run18/sbs.py` (promote
+   as-is, sel_ngc used it for every diagnosis and it needed no change).
+6. `rel_structcheck --tree`; `pragmafix.py` into `rel_merge_tu`;
+   `_harvest_run16/pd.py`'s display radix (prints raw `exp`/`got`, so `0x18`
+   reads as a diff against `24` that the aligner never counted).
+
+### NEXT RUN — ranked
+
+1. **mini_race: `F174` (152), `F3D4` (334), `E1CC` (213) — 699 instructions in
+   `mini_race_91.c`, all `M`-marked, needing nothing but a draft**, in the file
+   with 28 matched templates and a 4-for-11 first-compile rate. `F174` has never
+   been opened. Then `6CF0` (193), **~60% decoded on paper and its signature
+   pinned by a function converted this run.** `3474` (391) LAST, and only with a
+   register plan.
+2. **mini_billiards: `5DD0` (1,020), `3F4C` (442), `367C` (403) are reachable
+   today and never opened** — 1,865 instructions, `367C` has a decode map.
+   **`1A18C` (1,469) should be formally retired, not re-listed** — its profile
+   is worse than `A054`'s, which run 10 retired.
+3. **mini_fight: `EF90` (58) is 12 in 8 with `G` and `GF` both 0 in 0 and a live
+   axis found this run** — cheapest thing in the module. Then `4D14` (438):
+   **stop trying to defeat the hoist; the register map is solved.** The question
+   is "what gives this function a SECOND competing loop-invariant address temp
+   at zero cost?" Run 10 idiom 3 is **falsified** — read the `ABE8` section.
+4. **option: the whole drawFunc family — `48F4` + `9454` + `8C40` + `9C3C` =
+   1,726 instructions — is ONE instruction, `GF` 1 in 1 span 8-8 in all four.**
+   `#pragma scheduling off` emits the exact count, proving it is a *scheduler*
+   decision. Read `src/view.c draw_stage_objects`, which contains both prologue
+   forms at once. Then `6C54` (719) — the second-local recipe has **not** been
+   tried on it.
+5. **mini_golf: `22610` (189)** — the mechanism is named and reproducible; the
+   bounded question is *what references a pointer local before the first call
+   while emitting zero instructions?* If nobody finds one, **draft `22904`
+   (274) instead** — same TU, same symbols, same carve, three matched templates.
+6. **test_mode: `9A0C` (574) + the `100A8:8` carve, landing together.**
+   Reconnoitred this run: 583 lines, 66 calls, only 9 branch labels — **the same
+   straight-line GX shape as the 290 that fell.** Then `F940` (154, 4 in 2).
+   **`E628` (419) is 76 variants / 14 axes burned — do not open it first.**
+7. **mini_bowling: `9D18`'s pragma-free shape provably exists** (`lbl_0000A610`
+   in the same file spells the identical guard) and 80 variants did not find it.
+   Then `A23C` (245, 4 in 3 / `GF` 1 in 1). **`EDB0` is two defects and both
+   configurations are 100% FPR — try the `f64` lever there.**
+8. **sel_ngc: `B1C0` (472) went 46 in 27 → 30 in 16, span 302 → 76 insn, and is
+   now pragma-free.** 388 of 472 are byte-identical; `GF` == plain, so it is a
+   source-shape problem, not numbering. `B920` (370) is one instruction short
+   and `case 3: default:` is the only spelling in ~50 that reaches 369.
+9. **mini_pilot: `A098` (385)** — FPRs already perfect, 8 GPR-rank + 5
+   structural, and both named families (narrowing spellings, declaration order)
+   are now exhausted. `B130` (201) is **100% FPR** — try mini_bowling's `f64`
+   lever. `3BDC` (274) and `011CC` (219) are **100% GPR**; do not f32-sweep them.
+
+### RUN-20 PREP — COMPLETE. The next session launches nine agents directly.
+
+- **`C:/tmp/smbm/RUN20_BRIEF.md`** — written (971 lines). Built from the run-19
+  brief by splicing: the stable sections (0, 2, 3, 4, 6, 8, 9, 10, 12) are
+  carried verbatim, and §1, §5, §7's new-idiom block and §11 are rewritten.
+  Workspace table now points at `RUN19_RESULTS.md` and `nearmiss/run19/`.
+- **`C:/tmp/smbm/RUN19_RESULTS.md`** — all nine reports verbatim (133 KB),
+  ordered by instructions gained, with the orchestrator's inline corrections
+  where an agent's column labels echoed the inverted `rel_gfscan` legend.
+- **All nine warm copies reset and re-gated GOLDEN from deleted objects**
+  (`warm_reset_run20.sh`, `fail=0`). Verified after: `tools`, `src` **and**
+  `asm` diffs all **0** for all nine, and `rel_gfscan.py` present in all nine.
+  Re-run only if the main tree moves again.
+- **Four tool fixes landed BEFORE the reset (commit `d096c8d`), so the copies
+  have them** — see the TOOL FIXES section above. The `rel_pcmp`/`rel_probe`
+  one is the important one: it was manufacturing the "does not compile" claim.
+- **`C:/tmp/smbm/_harvest_run19/`** created, holding mini_golf's fixed
+  `inject.py` (the only injector that cannot accumulate pragmas) and a README
+  pointing at the nine run-19 scratch artifacts worth reusing.
+- **No `asm/` change, no Makefile change, no SOURCES change this run** — so the
+  object counts must come back identical next run: **943 under `src/`+`asm/`,
+  1,113 tree-wide.** Any other number means something moved that should not
+  have.
+- **Still open for run 20's orchestrator**: `rel_census` re-derivation (six
+  defects, all under-reporting — promote mini_billiards' `objdump -h` + link-map
+  method); `rel_structcheck --tree`; promoting `vs.py` / `install7.py` /
+  `score7.py` / `xscan2.py` / `xref_scratch.py`; `pragmafix.py` into
+  `rel_merge_tu`; `_harvest_run16/pd.py`'s display radix.
+- **ONE AGENT PER MODULE, NO WORKERS** — seventh consecutive run, zero stranding.
+
+---
+
+## 0.24 — RUN 18 DONE (2026-08-04): +1,180 insn, 35.65% -> 36.27%. Superseded by §0.25.
 
 Nine parallel agents, one per module, **no workers — SIXTH consecutive run
 under the standing rule, zero stranding again.** Four of nine gained. The five
