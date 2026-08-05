@@ -352,11 +352,41 @@ mini_golf and option each tested it in scope and got **zero**.
   object counts must come back identical next run: **943 under `src/`+`asm/`,
   1,113 tree-wide.** Any other number means something moved that should not
   have.
-- **Still open for run 20's orchestrator**: `rel_census` re-derivation (six
-  defects, all under-reporting — promote mini_billiards' `objdump -h` + link-map
-  method); `rel_structcheck --tree`; promoting `vs.py` / `install7.py` /
-  `score7.py` / `xscan2.py` / `xref_scratch.py`; `pragmafix.py` into
-  `rel_merge_tu`; `_harvest_run16/pd.py`'s display radix.
+- **★★ `tools/rel_reach.py` is NEW and it closes the census's oldest defect.**
+  `rel_census`'s REACHABLE column calls every a-BLOCKED function unreachable;
+  a-BLOCKED only means "needs its object to emit a magic", and if the object
+  **already emits one** the function is free — mwcc emits one magic per object
+  and shares it. `rel_reach` derives this from the `.map`'s `.rodata section
+  layout` plus each object's `.rodata` **content** (not its size — run 19's
+  math.h incident proved 16 bytes can be 0.5 and 3.0, not a magic pair).
+  **It reproduces EIGHT of run 19's nine hand-derivations exactly, function
+  counts included**: mini_billiards 12/7,924, option 3,602, mini_fight 5,670,
+  mini_race 2,574, mini_bowling 2,439, mini_pilot 1,106, and test_mode 1,383 /
+  mini_golf 525 as the `+0` controls. **Project-wide reachable-today is 28,293,
+  not `rel_census`'s 16,726.**
+  > **⚠ sel_ngc is the one disagreement and it is worth 1,609 instructions.**
+  > `rel_reach` says 3,070; run 19's agent said 1,461, calling `lbl_00010438`
+  > (958) and `lbl_0000C970` (651) "DEAD — needs both magics". **Nothing
+  > distinguishes them from `lbl_0000B1C0` (472), which that agent calls LIVE**
+  > — same TU, same signed-only conversion, no magic label referenced, and
+  > `_29.c.o` already emits the signed magic. The agent's own report calls its
+  > method "unchanged from runs 14/16/17/18", so the DEAD verdict is
+  > **inherited, never re-derived.** Settle it by building a `C970` draft and
+  > watching `.rodata`. Do not trust either number until someone does.
+- **`tools/rel_vsplice.py` promoted** from `_scratch_mini_race/run19/vs.py` —
+  the tool that drove all 135 variants of the +1,145 run. Three hardcoded
+  constants became `--module`/`--tree`; nothing else changed. Tested end to end:
+  it scores a known-matching control at RAW 0 ALIGNED 0 and its `finally`
+  restores the owner byte-identically.
+- **`rel_structcheck` now accepts `--tree`**, and a tree with no `src/` is a
+  hard error instead of a silent wrong answer. It used to reject the flag and
+  resolve from the script's own path, so invoking the main tree's copy reported
+  the MAIN tree's numbers — mini_race saw its own converted functions listed as
+  asm stubs. The brief's close-out line is updated.
+- **Still open for run 20's orchestrator**: promoting `install7.py` /
+  `score7.py` / `xscan2.py` / `xref_scratch.py` (all four are described with
+  paths in the brief, so agents can use them from scratch meanwhile);
+  `pragmafix.py` into `rel_merge_tu`; `_harvest_run16/pd.py`'s display radix.
 - **ONE AGENT PER MODULE, NO WORKERS** — seventh consecutive run, zero stranding.
 
 ---

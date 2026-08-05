@@ -33,18 +33,41 @@ MODULES = {
     'test_mode':      ('test_mode',      'mkbe.test_mode.rel'),
 }
 
-# usage: rel_structcheck.py <module> [tree]        (tree defaults to this repo)
+# usage: rel_structcheck.py <module> [tree]        (tree defaults to THIS SCRIPT's repo)
+#    or: rel_structcheck.py <module> --tree <tree>
 #    or: rel_structcheck.py <tree> <stem> <target> (explicit, as in run 8)
-if len(sys.argv) >= 2 and sys.argv[1] in MODULES:
-    STEM, TARGET = MODULES[sys.argv[1]]
-    TREE = sys.argv[2] if len(sys.argv) > 2 else os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__)))
-elif len(sys.argv) >= 4:
-    TREE, STEM, TARGET = sys.argv[1], sys.argv[2], sys.argv[3]
+#
+# RUN 20: `--tree` is now accepted. It used to be rejected, and the default is
+# derived from `__file__` -- i.e. the repo the SCRIPT lives in, not the cwd.
+# So invoking the MAIN tree's copy while working in a warm copy silently
+# reported the main tree's numbers. mini_race lost time to that in run 19: it
+# saw its own already-converted functions listed as asm stubs. Every brief has
+# told agents this tool "rejects --tree"; now it does not.
+_argv = sys.argv[1:]
+_tree_opt = None
+if '--tree' in _argv:
+    _i = _argv.index('--tree')
+    if _i + 1 >= len(_argv):
+        sys.exit('--tree needs a path')
+    _tree_opt = _argv[_i + 1]
+    del _argv[_i:_i + 2]
+
+if len(_argv) >= 1 and _argv[0] in MODULES:
+    STEM, TARGET = MODULES[_argv[0]]
+    TREE = _tree_opt or (_argv[1] if len(_argv) > 1 else os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))))
+elif len(_argv) >= 3:
+    TREE, STEM, TARGET = _argv[0], _argv[1], _argv[2]
+    if _tree_opt:
+        TREE = _tree_opt
 else:
     sys.exit('usage: rel_structcheck.py <module> [tree]\n'
+             '   or: rel_structcheck.py <module> --tree <tree>\n'
              '   or: rel_structcheck.py <tree> <stem> <target>\n'
              'modules: ' + ', '.join(sorted(MODULES)))
+
+if not os.path.isdir(os.path.join(TREE, 'src')):
+    sys.exit('no src/ under %r -- wrong --tree?' % TREE)
 
 DEF = re.compile(r'^(?:static\s+)?(?:asm\s+)?[A-Za-z_][\w\s\*]*?\b'
                  r'(lbl_[0-9A-Fa-f]+|_prolog|_epilog|_unresolved)\s*\([^;{]*\)\s*$')

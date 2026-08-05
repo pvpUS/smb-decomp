@@ -328,10 +328,33 @@ def census(tree, stem, mod):
             cat = ('d-JUMPTBL' if has_bctr else
                    'a-BLOCKED' if inline_magic else
                    'b-POOL' if pool else 'c-FREE')
+            # RUN 20: keep the magic LABELS, not just their S/U kinds.
+            # rel_reach.py needs the label to ask "does this function's OWN TU
+            # already emit the magic at that address?", which is the question
+            # the REACHABLE column below gets wrong in every module.
+            reads_labels = sorted({m for m in magics
+                                   if re.search(r'\b%s\b' % m, args, re.I)})
+            # WHICH magic(s) an inline conversion needs -- a SET, because one
+            # function can do both a signed and an unsigned conversion and then
+            # needs BOTH, which no single 8-byte .rodata can serve.
+            # (mini_billiards' `4634` and `2C80` are exactly this: run 19 found
+            # by hand that they want a signed and an unsigned magic 0xB8 apart,
+            # so no TU's contiguous 16-byte block can ever cover them. A
+            # single-kind test promotes them wrongly.)
+            # Each signed conversion site carries `xoris rX,rY,0x8000`; each
+            # unsigned one does not. So compare the counts.
+            n_lis = len(re.findall(r'lis\s+r\d+,\s*0x4330', args))
+            n_sgn = len(re.findall(r'xoris\s+r\d+,\s*r\d+,\s*0x8000', args))
+            needs_kind = ''
+            if inline_magic:
+                needs_kind = ('s' if n_sgn else '') + ('u' if n_lis > n_sgn
+                                                       else '')
             table.append(dict(module=mod, row=row, fn=name, addr='%08X' % addr,
                               insn=len(body), cat=cat, owner=own[row],
                               leaf=is_leaf, settled=settled,
-                              reads_magic=''.join(reads)))
+                              reads_magic=''.join(reads),
+                              reads_labels=reads_labels,
+                              needs_kind=needs_kind))
     return table, (bias, hits, ntgt, runner), magics
 
 
