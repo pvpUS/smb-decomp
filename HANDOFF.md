@@ -364,8 +364,39 @@ instructions in 5 variants — the same method mini_golf used for 1,967 in run 2
   `verify22.py` (test_mode), `try.py` + `sig.py` + `scanpro2.py` (mini_race),
   `win.py` + `sdiff.py` + `hole3.py` (sel_ngc), `instg.py` (mini_pilot).
 - Fix `rel_merge_tu`'s duplicate-tag bug; `pragmafix.py` into `rel_merge_tu`.
-- **Run-23 prep is NOT done**: warm copies are still at their run-22 end state
-  and no `RUN23_BRIEF.md` exists.
+
+### RUN-23 PREP — COMPLETE. The next session launches nine agents directly.
+
+- **`C:/tmp/smbm/RUN23_BRIEF.md`** — written (1,769 lines, 107 KB). Assembled by
+  **`C:/tmp/smbm/_brief23/assemble.py`**, which locates sections by heading text,
+  asserts all 14 appear exactly once and in order, asserts the **idiom blocks are
+  newest-first** (22 → 21 → 20 → 19 → 18), and **hard-fails on two specific
+  claims run 22 falsified** plus any stale stored-draft path. Rewritten:
+  header/Goal/§0, §1, §5, §6, §7's new-idiom block, §8, §9, §10, §11, §12, plus a
+  new §2 block on the magic **address** rule and the `.data`-aware tool. Carried:
+  §2's body, §3, §4, and §7 from the run-21 block down.
+  - **★ §8 IS NOW REWRITTEN EVERY RUN, NOT CARRIED**, and the assembler says why:
+    two of its entries were carried unexamined into the run-22 brief and **both
+    were wrong**. The new §8 leads with *a retirement does not survive a TU
+    merge* and lists a fourth category — **"not near-misses at all: the wrong
+    LENGTH"** — after two inherited drafts died on that in run 22.
+  - The stale-path guard was **deliberately narrowed** to ignore `.py`
+    references: several carried idioms legitimately cite the script that found
+    them, and only an installable *draft* can roll work back.
+- **`C:/tmp/smbm/RUN22_RESULTS.md`** — all nine sections (59 KB), ordered by
+  instructions gained, with orchestrator cross-references marked as such.
+- **All nine warm copies reset and re-gated GOLDEN from deleted objects**
+  (`warm_reset_run23.sh`, `fail=0`). **Verified independently of the script's own
+  gate**: each copy's built `.rel` hashed against `supermonkeyball.sha1` — **all
+  nine match** — `tools`/`src`/`asm` diffs **0** for all nine, `Makefile`
+  identical, **887 `src/*.c` in every copy and in main** (so the 16 deletions
+  propagated), **all four new/changed tools present in all nine**, and
+  `sel_ngc_rel_d2b.s`'s load-bearing zero-size alias intact.
+- **Three object-count metrics, and the brief now names them** — 932 `.o` under
+  `src/`+`asm/`, 1,102 `.o` tree-wide, 935 `.c`+`.s` sources. Two run-22 agents
+  chased the old ambiguous figure.
+- **Pushed** to `fork/wip/rel-drafts-and-dol-matches`.
+- **ONE AGENT PER MODULE, NO WORKERS** — tenth consecutive run.
 
 ---
 
