@@ -85,26 +85,32 @@ The two `+0`s are not failures: mini_golf re-derived its whole table by a second
 method and found `rel_census` already correct, and test_mode's figure was
 likewise already right.  The tool agreeing there is the control.
 
-THE ONE DISAGREEMENT -- sel_ngc, 1,609 instructions, WORTH SETTLING
--------------------------------------------------------------------
-This tool says sel_ngc has 7 fns / 3,070 reachable.  Its run-19 agent said 5 fns
-/ 1,461, calling `lbl_00010438` (958) and `lbl_0000C970` (651) "DEAD -- needs
-both magics".
+sel_ngc, 1,609 INSTRUCTIONS -- SETTLED, AND THIS TOOL WAS THE ONE THAT WAS WRONG
+--------------------------------------------------------------------------------
+Through run 20 this tool said sel_ngc had 7 fns / 3,070 reachable and its agent
+said 5 / 1,461, calling `lbl_00010438` (958) and `lbl_0000C970` (651) DEAD.  The
+docstring here argued nothing distinguished those two from `lbl_0000B1C0` (472),
+which the same agent called LIVE, and asked for a measurement.
 
-**Nothing distinguishes those two from `lbl_0000B1C0` (472), which the same
-agent calls LIVE.** All three are a-BLOCKED, all three sit in `sel_ngc_rel_29.c`,
-all three show a signed-only conversion and reference no magic label, and
-`_29.c.o` already emits the signed magic at `lbl_00011D00`.
+**Run 20 measured it and the agent was right.** One unsigned conversion spliced
+into a matched function in `_29.c` took that object's `.rodata` from 8 to 16
+bytes and the gate to NOT GOLDEN.  The discriminator this file said did not
+exist does: `B1C0` references only the SIGNED magic, while `C970` and `10438`
+`lfd` from the UNSIGNED one -- and `rel_magicscan` confirms **0 contiguous S+U
+blocks** in the image, so no carve can ever create one.
 
-That agent's report describes its figure as "unchanged in method from runs
-14/16/17/18" -- so the DEAD verdict is INHERITED, not re-derived.  In this
-project inherited claims are 0-for-9.  It may still be right; this tool may be
-over-promoting on a signal it cannot see.
+The reason this tool could not see it: **both of those magic labels were
+invisible to `rel_census.magic_labels()`**, which scanned the asm blob, where
+`lbl_00011D00` and `lbl_00011EC8` survive only as zero-size aliases.  Run 21
+fixed that at the root -- the table is now read off the LINKED image -- and this
+tool now reproduces the hand-derived 1,461 mechanically, demoting exactly those
+two functions, with all eight other modules unchanged.
 
-**Do not trust either number for sel_ngc. Settle it by measurement** -- it is
-cheap: install a draft of `C970`, build, and check whether `sel_ngc_rel_29.c.o`
-`.rodata` stays at 8 bytes. If it does, 1,609 instructions have been written off
-for five runs on an assumption nobody tested.
+`C970` and `10438` are PROVED DEAD BY BUILD.  Do not re-open them.
+
+The standing lesson is the general one: when this tool and a hand derivation
+disagree, the hand derivation had a signal the tool did not.  Find out which,
+before believing either number.
 
 REQUIRES A BUILD.  The `.map` is a build output; run `make <TARGET>.plf` first.
 Without it this refuses rather than guessing -- an under-report that looks
@@ -121,18 +127,12 @@ import rel_census as C  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# `mini_bowling` -> `mkbe.rel_mini_bowling.rel`, `option` -> `mkbe.option.rel`
-TARGET = {
-    'mini_bowling':   'mkbe.rel_mini_bowling',
-    'mini_race':      'mkbe.rel_mini_race',
-    'mini_fight':     'mkbe.rel_mini_fight',
-    'mini_pilot':     'mkbe.rel_mini_pilot',
-    'mini_golf':      'mkbe.rel_mini_golf',
-    'mini_billiards': 'mkbe.rel_mini_billiards',
-    'sel_ngc':        'mkbe.sel_ngc',
-    'option':         'mkbe.option',
-    'test_mode':      'mkbe.test_mode',
-}
+# `mini_bowling` -> `mkbe.rel_mini_bowling.rel`, `option` -> `mkbe.option.rel`.
+# ONE copy, owned by rel_census, because that tool now needs it too (it reads
+# the `.plf` to classify magic labels off the link).  Two hand-maintained
+# copies of a nine-entry name map is exactly how this project acquires a silent
+# skew between two tools that are supposed to agree.
+TARGET = C.TARGETS
 
 # "  00000918 000008 00000918  1 .rodata 	mini_billiards_7.c.o"
 SEC_RE = re.compile(r'^\s*([0-9a-f]{8})\s+([0-9a-f]{6})\s+[0-9a-f]{8}\s+\d+\s+'
@@ -253,7 +253,7 @@ def main():
                                                                     OBJDUMP))
             continue
 
-        table, _bias, _magics = C.census(a.tree, stem, mod)
+        table, _bias, magics = C.census(a.tree, stem, mod)
 
         reach, blocked = [], []
         for t in table:
@@ -291,31 +291,31 @@ def main():
                 blocked.append((t, 'wants %s, own TU emits no magic'
                                 % ('+'.join(sorted(need)) or '?')))
 
-        # --- run 20: the reads_magic signal DIES SILENTLY in a carved module.
-        # rel_census.magic_labels() finds a magic by scanning the asm blob for
-        # `lbl_X:` followed by .4byte 0x43300000/0x80000000.  A carve replaces
-        # those bodies with ZERO-SIZE ALIASES, so the labels become invisible
-        # and reads_magic is empty for every row -- leaving only the
-        # `n_lis > n_sgn` site-count heuristic, which mwcc's loop-hoisting of
-        # the 0x4330 constant defeats.  sel_ngc proved this with a build in run
-        # 20: rel_reach said 3,070 reachable, the true figure is 1,461, and
-        # lbl_0000C970 / lbl_00010438 (1,609 insn) are genuinely DEAD -- they
-        # lfd from the UNSIGNED magic while their TU emits only the signed one.
-        # Measured across all nine modules that run: every other module has
-        # 4-40 a-BLOCKED rows carrying a reads_magic; sel_ngc had ZERO.
+        # --- run 20 found the reads_magic signal DYING SILENTLY here, and run
+        # 21 fixed it at the root: rel_census now classifies magic labels off
+        # the LINKED IMAGE, so a carved-away or already-converted magic is
+        # visible again (see that tool's docstring).  What remains is the case
+        # the fix cannot cover -- no `.plf`, or no objdump -- where the table
+        # falls back to the blind asm scan.  Say so instead of implying the
+        # figure is evidence.
         nblocked = sum(1 for t in table if t['cat'] == 'a-BLOCKED')
         nrm = sum(1 for t in table if t['cat'] == 'a-BLOCKED'
                   and (t.get('reads_magic') or ''))
-        if nblocked and not nrm:
-            print('%-16s !! reads_magic IS DEAD FOR THIS MODULE (0 of %d '
-                  'a-BLOCKED rows reference a visible magic label).'
-                  % (mod, nblocked))
-            print('%-16s    Its magics are CARVED, so rel_census cannot see '
-                  'them and only the site-count heuristic remains.' % '')
-            print('%-16s    The REACHABLE figure below is an UPPER BOUND, not '
-                  'evidence. Confirm any row by building a draft' % '')
-            print('%-16s    and watching .rodata before spending on it '
-                  '(sel_ngc, run 20: over-reported by 1,609).' % '')
+        if getattr(magics, 'src', 'blob') != 'linked':
+            print('%-16s !! MAGIC TABLE CAME FROM THE ASM BLOB, NOT THE LINK '
+                  '(no %s.plf, or objdump missing).' % (mod, TARGET[mod]))
+            print('%-16s    That scan cannot see a carved or already-converted '
+                  'magic, so reads_magic is under-reported and the' % '')
+            print('%-16s    REACHABLE figure below is an UPPER BOUND. Build '
+                  'first, or confirm a row by building a draft and' % '')
+            print('%-16s    watching .rodata (sel_ngc, run 20: over-reported '
+                  'by 1,609 insn exactly this way).' % '')
+        elif nblocked and not nrm:
+            print('%-16s -- note: 0 of %d a-BLOCKED rows reference a magic '
+                  'label, with a LINKED table. Genuine, but unusual;' % (mod,
+                                                                        nblocked))
+            print('%-16s    every module had 7-53 such rows in run 21. Sanity-'
+                  'check before spending on this module.' % '')
 
         ri = sum(t['insn'] for t, _ in reach)
         bi = sum(t['insn'] for t, _ in blocked)

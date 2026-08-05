@@ -87,12 +87,60 @@ thousands of instructions as a result.
 recon error in the project: it hid a third magic in mini_bowling, six-not-three
 in mini_billiards, two of four in option, five of sixteen in mini_fight, and
 produced a false "sel_ngc is capped at ~32%" verdict.
+
+------------------------------------------------------------------------------
+WHERE THE MAGIC TABLE COMES FROM -- read the LINKED IMAGE, not the asm blob
+------------------------------------------------------------------------------
+
+`magic_labels()` classifies a label by scanning the asm blob for `lbl_X:`
+followed by `.4byte 0x43300000` + `.4byte 0x8000_0000`/`0x0000_0000`.  **That
+scan goes blind the moment a magic's bytes stop living in the asm** -- which is
+the normal end state, not an edge case.  Two independent mechanisms cause it:
+
+  * a CARVE leaves the label behind as a ZERO-SIZE ALIAS at the end of a
+    segment file (`asm/sel_ngc_rel.s` ends with a bare `lbl_00011D00:`), and
+  * once the functions that owned a magic are CONVERTED, mwcc emits those bytes
+    into the TU's own `.rodata` and no asm file describes them at all.
+
+Either way the label is still REFERENCED by every still-asm function that does
+`lfd f2, lbl_00011D00@l(r3)`, so `reads_magic` silently comes back empty and
+the classification falls through to the `n_lis > n_sgn` site-count heuristic --
+which mwcc's hoisting of the `0x4330` constant defeats.
+
+So the table is now derived from the LINKED IMAGE (`magic_labels_linked()`):
+resolve every `lbl_*` in `.rodata` from `objdump -t <target>.plf`, read the
+eight bytes at each address, and classify on CONTENT.  The blob scan is kept as
+the fallback for a tree with no build, and the two are unioned with the linked
+answer authoritative.
+
+MEASURED ACROSS ALL NINE MODULES (run 21).  The linked table is a strict
+SUPERSET of the blob scan -- **zero disagreements on any label both can see**,
+so the old scan was never wrong about what it saw, only blind:
+
+    mini_bowling    0s + 1u  ->  6s + 1u      mini_pilot     1s+1u -> 4s+1u
+    test_mode       1s + 3u  ->  5s + 4u      mini_golf      2s+3u -> 5s+4u
+    sel_ngc         1s + 0u  ->  2s + 1u      mini_billiards 3s+3u -> 6s+3u
+    mini_fight     11s + 5u  -> 13s + 6u      mini_race      7s+1u -> 8s+1u
+    option          1s + 2u  ->  2s + 2u
+
+mini_bowling's corrected `6s + 1u` is exactly the figure run 20 derived by hand
+against the linked REL after catching this tool reporting `0 + 1`.
+
+AND IT REPRODUCES THE ONE BUILD-PROVED CORRECTION, MECHANICALLY.  sel_ngc's
+`lbl_00011D00` (signed) and `lbl_00011EC8` (unsigned) are both invisible to the
+blob scan; with them the census sees that `lbl_0000B1C0` reads only the signed
+magic while `lbl_0000C970` / `lbl_00010438` `lfd` from the UNSIGNED one, whose
+TU does not emit it.  That is the discriminator run 20's sel_ngc agent found by
+hand and PROVED with a build -- `rel_reach` drops 3,070 -> 1,461 and demotes
+exactly those two functions (1,609 insn).  **All eight other modules' reach
+figures are byte-identical**, which is the control.
 """
 import argparse
 import glob
 import json
 import os
 import re
+import subprocess
 import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -103,6 +151,24 @@ MODULES = {
     'mini_golf': 'mini_golf', 'mini_billiards': 'mini_billiards',
     'sel_ngc': 'sel_ngc_rel', 'option': 'option', 'test_mode': 'test_mode',
 }
+
+# module -> LINK TARGET base (`<base>.plf` / `<base>.map`).  A third name for
+# each module, distinct from both the warm-dir name and the src/asm stem.
+# rel_reach.TARGET is an alias for this; keep the two identical.
+TARGETS = {
+    'mini_bowling':   'mkbe.rel_mini_bowling',
+    'mini_race':      'mkbe.rel_mini_race',
+    'mini_fight':     'mkbe.rel_mini_fight',
+    'mini_pilot':     'mkbe.rel_mini_pilot',
+    'mini_golf':      'mkbe.rel_mini_golf',
+    'mini_billiards': 'mkbe.rel_mini_billiards',
+    'sel_ngc':        'mkbe.sel_ngc',
+    'option':         'mkbe.option',
+    'test_mode':      'mkbe.test_mode',
+}
+
+OBJDUMP = os.environ.get(
+    'OBJDUMP', 'C:/devkitPro/devkitPPC/bin/powerpc-eabi-objdump.exe')
 
 INSN = re.compile(r'^/\* ([0-9A-F]{8}) ([0-9A-F]{8}) \*/[ \t]*(\S*)[ \t]*(.*)$')
 DEFN = re.compile(r'^(lbl_[0-9A-Fa-f]+):')
@@ -172,8 +238,79 @@ def prolog_bias(blob, deflabs):
     return b1, h1, len(tgts), h2
 
 
+class MagicTable(dict):
+    """A {label: 's'|'u'} table that also says WHERE it came from.
+
+    A plain dict, so every existing caller keeps working; `.src` is `'linked'`
+    when the authoritative linked-image derivation ran and `'blob'` when only
+    the blind asm scan was available.  A caller that reports reachability MUST
+    check it -- a `'blob'` table is an upper bound, not evidence (§ docstring).
+    """
+    src = 'blob'
+
+
+# "00000198 g       .rodata	00000000 lbl_00011D00"   (objdump -t on the .plf)
+PLF_SYM = re.compile(r'^([0-9a-f]{8})\s+\S+\s+\.rodata\s+[0-9a-f]{8}\s+'
+                     r'(lbl_[0-9A-Fa-f]+)\s*$')
+MAGIC_S_HEX = '4330000080000000'
+MAGIC_U_HEX = '4330000000000000'
+
+
+def magic_labels_linked(tree, mod):
+    """{label: 's'|'u'} read off the LINKED `.plf`, or None if unavailable.
+
+    This is the authoritative source; see the module docstring for why the asm
+    blob is not.  Best-effort by design -- a tree with no build, or no objdump,
+    gets None and the caller falls back to the blob scan rather than failing.
+
+    RESOLVE FROM `objdump -t`, NEVER from the address in the label's name.  The
+    `.plf` does NOT place things at their REL addresses (run 20 hazard): here
+    `lbl_00011D00` lives at 0x198, and reading 0x11D00 would silently classify
+    whatever happens to sit there.
+    """
+    if mod not in TARGETS:
+        return None
+    plf = os.path.join(tree, TARGETS[mod] + '.plf')
+    if not os.path.exists(plf):
+        return None
+    try:
+        syms = subprocess.run([OBJDUMP, '-t', plf], capture_output=True,
+                              text=True)
+        dump = subprocess.run([OBJDUMP, '-s', '-j', '.rodata', plf],
+                              capture_output=True, text=True)
+    except OSError:
+        return None
+
+    words = {}
+    for m in re.finditer(r'^\s*([0-9a-f]+)\s+((?:[0-9a-f]{8} ?){1,4})',
+                         dump.stdout, re.M):
+        base = int(m.group(1), 16)
+        for i, w in enumerate(m.group(2).split()):
+            words[base + 4 * i] = w
+
+    out = {}
+    for ln in syms.stdout.splitlines():
+        m = PLF_SYM.match(ln.strip())
+        if not m:
+            continue
+        addr = int(m.group(1), 16)
+        hi, lo = words.get(addr), words.get(addr + 4)
+        if hi is None or lo is None:
+            continue
+        if hi + lo == MAGIC_S_HEX:
+            out[m.group(2).lower()] = 's'
+        elif hi + lo == MAGIC_U_HEX:
+            out[m.group(2).lower()] = 'u'
+    return out
+
+
 def magic_labels(blob):
-    """{label: 's'|'u'} for every magic double in the blob, BOTH patterns."""
+    """{label: 's'|'u'} for every magic double in the blob, BOTH patterns.
+
+    FALLBACK ONLY -- blind to any magic whose bytes are not in the asm, which
+    is every carved and every already-converted one.  Prefer
+    `magic_labels_linked()`; `census()` unions them with that one winning.
+    """
     out, cur, words = {}, None, []
 
     def flush():
@@ -281,7 +418,17 @@ def census(tree, stem, mod):
         arms = {t + bias for t in
                 (int(h, 16) for h in
                  re.findall(r'\.4byte\s+_prolog\s*\+\s*(0x[0-9A-Fa-f]+)', blob))}
-    magics = magic_labels(blob)
+    # The asm blob is the FALLBACK; the linked image is authoritative where it
+    # is available.  Measured strict superset across all nine modules, zero
+    # disagreements -- so this can only ever ADD labels, never reclassify one.
+    # The asm blob is the FALLBACK; the linked image is authoritative where it
+    # is available.  Measured strict superset across all nine modules, zero
+    # disagreements -- so this can only ever ADD labels, never reclassify one.
+    magics = MagicTable(magic_labels(blob))
+    linked = magic_labels_linked(tree, mod)
+    if linked is not None:
+        magics.update(linked)
+        magics.src = 'linked'
     own = still_asm(tree, stem)
 
     # Where is each label DEFINED, and which are referenced from ELSEWHERE?
@@ -398,6 +545,16 @@ def main():
             biasnote += '  !! NOT 100% -- distrust d-JUMPTBL'
         print('=== %-15s %3d fns / %6d insn   magic: %d signed + %d unsigned   %s'
               % (mod, len(table), tot, ns, nu, biasnote))
+        if magics.src != 'linked':
+            # Run 20 caught this tool reporting `0 signed + 1 unsigned` for
+            # mini_bowling when the truth was 6 + 1.  An under-count here reads
+            # as authoritative and silently under-reports reads_magic, so never
+            # let it print without saying the link was not consulted.
+            print('      !! MAGIC COUNT IS FROM THE ASM BLOB -- no %s.plf, or '
+                  'objdump missing. It CANNOT see a carved or' % TARGETS[mod])
+            print('         already-converted magic and is a LOWER BOUND '
+                  '(mini_bowling read 0+1 this way; the truth is 6+1).')
+            print('         Build the module first for the real figure.')
         for cat in ('c-FREE', 'b-POOL', 'a-BLOCKED', 'd-JUMPTBL'):
             sel = by.get(cat, [])
             if sel:
