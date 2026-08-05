@@ -140,7 +140,21 @@ extern u8 lbl_10000118[];
 extern u8 lbl_10017518[];
 extern u8 lbl_10017520[];
 extern u8 lbl_10017578[];
-extern u8 lbl_10017664[];
+struct FightSub
+{
+    s32 unk0;      // 0x00
+    s16 unk4;      // 0x04
+    u8 unk6[0xA];  // 0x06
+    s16 unk10;     // 0x10
+    u16 unk12;     // 0x12
+    u8 unk14[4];   // 0x14
+};                 // 0x18
+struct FightGroup
+{
+    u8 unk0[8];              // 0x000
+    struct FightSub sub[8];  // 0x008
+};
+extern struct FightGroup lbl_10017664;
 extern u8 lbl_10017DC8[];
 extern u8 lbl_10017E98[];
 extern u8 lbl_100188E0[];
@@ -401,7 +415,7 @@ void lbl_0001BA8C(void);
 void lbl_00010870(struct Ball *);
 void lbl_0001090C(void);
 void lbl_00010A64(struct Ball *);
-void lbl_00010030(void);
+void lbl_00010030(struct Ball *);
 void lbl_000101C8(void);
 void lbl_00010434(void);
 #pragma force_active on
@@ -410,10 +424,29 @@ struct PhysicsBall
     u8 filler0[0x5C];
 };
 
-asm void lbl_00010030(void)
+void lbl_00010030(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00010030.s"
+    f32 *k = (f32 *)lbl_0001C348;
+    Vec v;
+    Quaternion q;
+    s32 pad0;
+    s32 pad1;
+
+    u_ball_init_1(ball);
+    ball->colorId = lbl_0001D724[ball->playerId];
+    ball->lives = 3;
+    if (lbl_10017664.sub[ball->playerId].unk12 & 1)
+        ball->flags |= 0x2000000;
+    apeThreadNo[ball->playerId] = thread_create(lbl_0001106C, ball->ape, 5);
+    ball->flags |= 0x10;
+    ball->ape->flags |= 0x20;
+    ball->state = 0x18;
+    ball->unk148 = 0;
+    ball->speed = ball->unkC4 = k[7];
+    ball->unkB8 = v = *(Vec *)k;
+    ball->ape->flags &= ~0x4000;
+    ball->unkA8 = q = *(Quaternion *)(k + 3);
+    ball->unk98 = ball->unkA8;
 }
 
 #pragma force_active reset

@@ -184,7 +184,7 @@ void lbl_000097D8(void);
 void lbl_00009800(void);
 void lbl_0000982C(void);
 void lbl_00009880(void);
-void lbl_00009968(void);
+u8 lbl_00009968(u8 a);
 void lbl_000099B4(void);
 void lbl_000099E0(void);
 void lbl_00009B68(void);
@@ -216,9 +216,9 @@ void lbl_000106B8(void);
 void lbl_00010808(void);
 void lbl_000109CC(void);
 void lbl_00010E68(void);
-void lbl_00010E74(void);
-void lbl_00011254(void);
-void lbl_000115F8(void);
+void lbl_00010E74(s32 idx, u8 mode, f32 x, f32 y);
+void lbl_00011254(s32 idx, u8 mode, f32 x, f32 y);
+void lbl_000115F8(s32 idx, u8 mode, f32 x, f32 y);
 void lbl_0001199C(void);
 void lbl_00011A6C(void);
 void lbl_00011DAC(void);
@@ -232,7 +232,7 @@ void lbl_00015520(void);
 void lbl_0001B5B8(void);
 void lbl_00022524(void);
 void lbl_00022610(void);
-void lbl_00022904(void);
+void lbl_00022904(s16 *p, f32 scale, f32 t);
 void lbl_00022D4C(void);
 void lbl_000230E4(void);
 void lbl_00023AB4(void);
@@ -311,11 +311,70 @@ asm void lbl_00022610(void)
     nofralloc
 #include "../asm/nonmatchings/mini_golf/lbl_00022610.s"
 }
-asm void lbl_00022904(void)
+#pragma opt_propagation off
+#pragma peephole on
+void lbl_00022904(s16 *p, f32 scale, f32 t)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_00022904.s"
+    NLsprarg params;
+    NLsprarg params2;
+    u8 *tbl = (u8 *)lbl_00026E28;
+    u8 *pool = (u8 *)lbl_00026550;
+    f32 dy;
+    s32 m;
+    s32 n;
+
+    params = *(NLsprarg *)(tbl + 0x2d0);
+    params.y = params.y + (dy = *(f32 *)(pool + 0x474) * t);
+    nlSprPut(&params);
+    params = *(NLsprarg *)tbl;
+    params.y = params.y + dy;
+    nlSprPut(&params);
+    params = ((NLsprarg *)(tbl + 0x370))[*p];
+    params.y = params.y + dy;
+    nlSprPut(&params);
+    params = ((NLsprarg *)(tbl + 0x190))[modeCtrl.currPlayer];
+    params.y = params.y + dy;
+    nlSprPut(&params);
+    m = modeCtrl.currPlayer;
+    if (lbl_00009968(m) == 0)
+        lbl_00010E74(ballInfo[m].ape->charaId, 1, *(f32 *)(pool + 0x454), *(f32 *)(pool + 0x468) + dy);
+    else if (lbl_00009968(m) == 1)
+        lbl_000115F8(ballInfo[m].ape->charaId, 1, *(f32 *)(pool + 0x454), *(f32 *)(pool + 0x468) + dy);
+    else if (lbl_00009968(m) == 2)
+        lbl_00011254(ballInfo[m].ape->charaId, 1, *(f32 *)(pool + 0x454), *(f32 *)(pool + 0x468) + dy);
+    params = ((NLsprarg *)(tbl + 0x50))[*p];
+    params.y = params.y + dy;
+    nlSprPut(&params);
+    params = ((NLsprarg *)(tbl + 0x2d00))[*p];
+    params.y = params.y + dy;
+    nlSprPut(&params);
+    if (*p == 0)
+        params2 = *(NLsprarg *)(tbl + 0x5a0);
+    else if (*p == 1)
+        params2 = *(NLsprarg *)(tbl + 0x550);
+    else if (*p == 2)
+        params2 = *(NLsprarg *)(tbl + 0x500);
+    else if (*p == 3)
+        params2 = *(NLsprarg *)(tbl + 0x4b0);
+    params2.zm_x = params2.u1 = scale;
+    params2.y = params2.y + dy;
+    nlSprPut(&params2);
+    n = *(f32 *)(pool + 0x46c) * scale;
+    params2 = *(NLsprarg *)(tbl + 0x320);
+    params2.y = params2.y + dy;
+    while (n >= 14)
+    {
+        nlSprPut(&params2);
+        params2.x = params2.x + *(f32 *)(pool + 0x470);
+        n -= 14;
+    }
+    if (n > 0)
+    {
+        params2.zm_x = params2.u1 = n / *(f32 *)(pool + 0x470);
+        nlSprPut(&params2);
+    }
 }
+#pragma opt_propagation reset
 asm void lbl_00022D4C(void)
 {
     nofralloc

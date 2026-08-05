@@ -103,7 +103,17 @@ extern u8 lbl_00015A84[];
 extern u8 lbl_00015AA0[];
 extern u8 lbl_00015AC8[];
 extern u8 lbl_00015AD8[];
-extern u8 lbl_00015B08[];
+// UNVERIFIED invented struct: the 12-byte per-mode camera table at
+// lbl_00015B08 (element size proved by the mulli 0xc).
+struct RaceCamCfg
+{
+    /*0x00*/ u16 unk0;
+    /*0x02*/ s16 unk2;
+    /*0x04*/ f32 unk4;
+    /*0x08*/ f32 unk8;
+};
+
+extern struct RaceCamCfg lbl_00015B08[];
 extern u8 lbl_00015B38[];
 extern u8 lbl_00015BC8[];
 extern u8 lbl_00015C08[];
@@ -294,7 +304,7 @@ void lbl_00008A10(void);
 void lbl_00008B60(void);
 void lbl_00008C4C(u8 *, struct Ball *);
 static void lbl_00009A08(struct Camera *cam, int a1);
-static void lbl_00009D3C();
+static void lbl_00009D3C(struct Camera *cam, int arg);
 void lbl_0000A364(u8 *, struct Ball *);
 void lbl_0000A9C4(void);
 void lbl_0000A9EC(void);
@@ -377,17 +387,51 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 static void lbl_00009BF8(struct Camera *cam, int arg, int a2);
-static void lbl_00008CC8(void);
+static void lbl_00008CC8(struct Camera *cam, struct Ball *ball);
 static void lbl_00008EC8(void);
 static void lbl_0000933C(void);
 static void lbl_000098A8(void);
 static void lbl_0000A088(void);
 void lbl_0000A31C(u8 *, struct Ball *);
 #pragma force_active on
-static asm void lbl_00008CC8(void)
+#pragma peephole on
+static void lbl_00008CC8(struct Camera *cam, struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00008CC8.s"
+    u8 *st = lbl_10001B18;
+    u8 *cfg = lbl_00013AA0;
+    Vec v;
+    Vec t1;
+    Vec t2;
+    Vec *p;
+    camera_clear(cam);
+    cam->lookAt.x = ball->pos.x;
+    cam->lookAt.y = *(f64 *)(cfg + 0x18) + ball->pos.y;
+    cam->lookAt.z = ball->pos.z;
+    mathutil_mtxA_from_translate(&cam->lookAt);
+    mathutil_mtxA_rotate_y(decodedStageLzPtr->startPos->yrot);
+    t1 = *(Vec *)(cfg + 0x0);
+    p = &t1;
+    v = *p;
+    mathutil_mtxA_tf_point(&v, &cam->eye);
+    t2 = *(Vec *)(cfg + 0xC);
+    p = &t2;
+    v = *p;
+    mathutil_mtxA_tf_point(&v, &cam->unkAC);
+    v.x = cam->lookAt.x - cam->eye.x;
+    v.y = cam->lookAt.y - cam->eye.y;
+    v.z = cam->lookAt.z - cam->eye.z;
+    cam->rotY = mathutil_atan2(v.x, v.z) - 0x8000;
+    cam->rotX = mathutil_atan2(v.y, mathutil_sqrt(mathutil_sum_of_sq_2(v.x, v.z)));
+    cam->rotZ = 0;
+    cam->unk26 = 0xC;
+    *(struct RaceCamCfg **)(st + 0xC) = &lbl_00015B08[modeCtrl.unk30 - 1];
+    *(u16 *)st = (*(struct RaceCamCfg **)(st + 0xC))->unk0;
+    cam->sub28.fov = (*(struct RaceCamCfg **)(st + 0xC))->unk2;
+    cam->sub28.unk28 = (*(struct RaceCamCfg **)(st + 0xC))->unk4;
+    cam->sub28.unk2C = (*(struct RaceCamCfg **)(st + 0xC))->unk8;
+    cam->flags &= ~4;
+    cam->flags |= 8;
+    cam->subState = 2;
 }
 
 static asm void lbl_00008EC8(void)
@@ -468,7 +512,7 @@ static void lbl_00009BF8(struct Camera *cam, int arg, int a2)
     lbl_00009D3C(cam, arg);
 }
 
-static asm void lbl_00009D3C(void)
+static asm void lbl_00009D3C(struct Camera *cam, int arg)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_00009D3C.s"

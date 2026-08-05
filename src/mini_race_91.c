@@ -92,7 +92,7 @@ extern u8 lbl_000140F8[];
 extern u8 lbl_00014108[];
 extern u8 lbl_00015768[];
 extern u8 lbl_00015918[];
-extern u8 lbl_00015934[];
+extern s16 lbl_00015934[];
 extern u8 lbl_0001593C[];
 extern u8 lbl_00015954[];
 extern u8 lbl_000159D8[];
@@ -343,8 +343,8 @@ void lbl_0000E520(s16 idx);
 void lbl_0000E7C4(struct Sprite *sprite);
 void lbl_0000E900(void);
 void lbl_0000EC20(s16 idx);
-void lbl_0000F174(void);
-void lbl_0000F3D4(void);
+void lbl_0000F174(struct Sprite *sprite);
+void lbl_0000F3D4(int);
 void lbl_0000FCC4(s8 *arg0, struct Sprite *sprite);
 void lbl_0000FD48(s8 *arg0, struct Sprite *sprite);
 void lbl_0000FDD8(void);
@@ -396,13 +396,23 @@ struct RaceCfgObj
 void lbl_000108E8(s8 *str, struct Sprite *sprite);
 // UNVERIFIED invented struct: fields of ballInfo[].unk144 that struct
 // Ball_child does not name yet.
+// UNVERIFIED invented struct: the 8-byte lap-record entry at +0x28 of the
+// object above.  Same object as mini_race_13.c's struct RaceEnt.
+struct RaceEnt
+{
+    /*0x00*/ s32 unk0;
+    /*0x04*/ f32 unk4;
+};
+
 struct RaceBallSub
 {
     u8 filler0[0x1E];
     u16 unk1E;
     u8 filler20[0x22 - 0x20];
     s16 unk22;
-    u8 filler24[0x1D2 - 0x24];
+    u8 filler24[0x28 - 0x24];
+    /*0x28*/ struct RaceEnt ent[51];
+    u8 filler1C0[0x1D2 - 0x1C0];
     s16 unk1D2;
 };
 
@@ -791,12 +801,58 @@ void lbl_0000F118(s8 *status, struct Sprite *sprite)
     else
         sprite->unk78 |= 1;
 }
-asm void lbl_0000F174(void)
+#pragma peephole on
+void lbl_0000F174(struct Sprite *sprite)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000F174.s"
+    NLsprarg params;
+    u8 *cfg = lbl_00013C48;
+    struct RaceBallSub *st =
+        (struct RaceBallSub *)ballInfo[sprite->userVar].unk144;
+
+    if (modeCtrl.unk30 == 1)
+    {
+        params.zm_x = *(f64 *)(cfg + 0x210) * sprite->scaleX;
+        params.zm_y = *(f64 *)(cfg + 0x210) * sprite->scaleY;
+        params.u0 = params.v0 = *(f32 *)(cfg + 0x18);
+        params.u1 = params.v1 = *(f32 *)(cfg + 0x8);
+        params.ang = 0;
+        params.listType = -1;
+        params.attr = 5;
+        params.trnsl = sprite->opacity;
+        params.base_color = 0xFFFFFF;
+        params.offset_color = 0;
+        params.attr = 0xA;
+        params.sprno = 0x730;
+        params.x = *(f32 *)cfg;
+        params.y = sprite->y;
+        params.z = sprite->depth;
+        nlSprPut(&params);
+    }
+    else
+    {
+        struct RaceEnt *e = &st->ent[st->unk22 - 1];
+        int min;
+        int sec;
+        int ms;
+        int t;
+
+        reset_text_draw_settings();
+        func_80071B50(0x200000);
+        set_text_font(0x45);
+        t = e->unk0;
+        sec = t / 60;
+        min = sec / 60;
+        sec %= 60;
+        ms = *(f32 *)(cfg + 0xF4) * ((t % 60) + e->unk4) / *(f32 *)(cfg + 0x30);
+        sec += ms / 1000;
+        ms %= 1000;
+        set_text_pos(sprite->x - *(f32 *)(cfg + 0x218), sprite->y);
+        sprite_printf((char *)lbl_00015D58);
+        set_text_pos(sprite->x, *(f32 *)(cfg + 0x21C) + sprite->y);
+        sprite_printf((char *)lbl_00015CB8, min, sec, ms / 10);
+    }
 }
-asm void lbl_0000F3D4(void)
+asm void lbl_0000F3D4(int idx)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_0000F3D4.s"

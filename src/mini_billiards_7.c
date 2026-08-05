@@ -262,6 +262,11 @@ struct BQ800 {
     Quaternion q54;      /* +0x54 */
     u8 filler64[4];
 };                       /* 0x68 */
+struct BilliardsPlayerA {
+    s8 unk0;
+    s8 chara;
+    u8 filler2[4];
+};
 #pragma force_active on
 /* lbl_00007974 slot -- run 19 draft a for lbl_00000800, decoded from a blank
    page.  Reachable TODAY: src/mini_billiards_7.c.o emits the SIGNED magic and
@@ -539,10 +544,160 @@ void lbl_0000341C(void)
         u_play_sound_0(0x175);
     }
 }
-asm void lbl_0000367C(void)
+/* lbl_0000367C -- run 20 draft a.  Cloned from the MATCHED sibling
+   lbl_0000341C in the same TU (same stick-read / btn-mask / D330-D0A4 shape).  */
+void lbl_0000367C(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_0000367C.s"
+    u8 *q = lbl_10000000;
+    u8 *p = lbl_0001C2B8;
+    u8 *t = lbl_00020DA0;
+    int i;
+    int k;
+    s8 flag;
+    f32 e;
+    Vec v;
+    f32 sc[2];
+    Vec d;
+
+    if (__fabs(*(f32 *)(q + 0x988c) - *(f32 *)(p + 0x8c0)) < *(f64 *)(p + 0x9e0))
+        *(Vec *)(t + 0x110) = *(Vec *)(q + 0x9888);
+
+    mathutil_sin_cos_v(*(s16 *)(q + 0x4c) + *(s16 *)(q + 0x4e), sc);
+
+    v.x = *(f32 *)(p + 0x8c0)
+          * (*(f32 *)(p + 0x8c0)
+             * (*(f32 *)(p + 0x968) * (f32)((s8 *)*(void **)(q + 0x9c88))[2]));
+    v.y = *(f32 *)(p + 0x8b4);
+    v.z = -(*(f32 *)(p + 0x8c0)
+            * (*(f32 *)(p + 0x8c0)
+               * (*(f32 *)(p + 0x968) * (f32)((s8 *)*(void **)(q + 0x9c88))[3])));
+
+    if (**(u16 **)(q + 0x9c88) & 2)
+        v.x = *(f32 *)(p + 0x948);
+    else if (**(u16 **)(q + 0x9c88) & 1)
+        v.x = *(f32 *)(p + 0x9d8);
+
+    if (**(u16 **)(q + 0x9c88) & 4)
+        v.z = *(f32 *)(p + 0x948);
+    else if (**(u16 **)(q + 0x9c88) & 8)
+        v.z = *(f32 *)(p + 0x9d8);
+
+    if (mathutil_vec_sq_len(&v) < *(f32 *)(p + 0x944)) {
+        v.x = *(f32 *)(t + 0x110) - *(f32 *)(q + 0x9888);
+        v.z = *(f32 *)(t + 0x118) - *(f32 *)(q + 0x9890);
+        e = v.x * v.x + v.z * v.z;
+        if (e > *(f32 *)(p + 0x9e8)) {
+            e = *(f32 *)(p + 0x9ec) * mathutil_rsqrt(e);
+            v.x = v.x * e;
+            v.z = v.z * e;
+        }
+        *(f32 *)(q + 0x9888) = *(f32 *)(q + 0x9888) + v.x;
+        *(f32 *)(q + 0x9890) = *(f32 *)(q + 0x9890) + v.z;
+    } else {
+        *(f32 *)(q + 0x9888) =
+            *(f32 *)(q + 0x9888) + (v.x * sc[1] + v.z * sc[0]);
+        *(f32 *)(q + 0x9890) =
+            *(f32 *)(q + 0x9890) + (v.z * sc[1] - v.x * sc[0]);
+    }
+
+    i = 0;
+    do {
+        flag = 0;
+        d.x = *(f32 *)(q + 0x9888)
+              - *(f32 *)&((u8 *)(q + 0x9888))[*(s8 *)(q + 0x49) * 0x68];
+        d.y = *(f32 *)(p + 0x8b4);
+        d.z = *(f32 *)(q + 0x9890)
+              - *(f32 *)&((u8 *)(q + 0x9890))[*(s8 *)(q + 0x49) * 0x68];
+        e = d.x * d.x + d.z * d.z;
+        if (e < *(f32 *)(p + 0x9f0)) {
+            e = *(f32 *)(p + 0x9f4) * mathutil_rsqrt(e);
+            flag = 1;
+            *(f32 *)(q + 0x9888) =
+                *(f32 *)&((u8 *)(q + 0x9888))[*(s8 *)(q + 0x49) * 0x68]
+                + d.x * e;
+            *(f32 *)(q + 0x9890) =
+                *(f32 *)&((u8 *)(q + 0x9890))[*(s8 *)(q + 0x49) * 0x68]
+                + d.z * e;
+        }
+        if (*(f32 *)(q + 0x9890) > *(f32 *)(p + 0x95c)) {
+            *(f32 *)(q + 0x9890) = *(f32 *)(p + 0x95c);
+            flag |= 2;
+        } else if (*(f32 *)(q + 0x9890) < *(f32 *)(p + 0x9dc)) {
+            flag |= 2;
+            *(f32 *)(q + 0x9890) = *(f32 *)(p + 0x9dc);
+        }
+        if (*(f32 *)(q + 0x9888) > *(f32 *)(p + 0x9f8)) {
+            *(f32 *)(q + 0x9888) = *(f32 *)(p + 0x9f8);
+            flag |= 2;
+        } else if (*(f32 *)(q + 0x9888) < *(f32 *)(p + 0x9fc)) {
+            flag |= 2;
+            *(f32 *)(q + 0x9888) = *(f32 *)(p + 0x9fc);
+        }
+        i++;
+    } while (flag >= 2 && i <= 1000);
+
+    if (i > 1000)
+        *(Vec *)(q + 0x9888) = *(Vec *)(t + 0x110);
+
+    *(f32 *)(q + 0x988c) = *(f32 *)(p + 0x8c0);
+    for (k = *(s8 *)(q + 0x49) + 1; k < 10; k++) {
+        if (*(s8 *)&((u8 *)(q + 0x9878))[k * 0x68] == 1) {
+            d.x = *(f32 *)(q + 0x9888)
+                  - *(f32 *)&((u8 *)(q + 0x9888))[k * 0x68];
+            d.y = *(f32 *)(q + 0x988c)
+                  - *(f32 *)&((u8 *)(q + 0x988c))[k * 0x68];
+            d.z = *(f32 *)(q + 0x9890)
+                  - *(f32 *)&((u8 *)(q + 0x9890))[k * 0x68];
+            if (d.x * d.x + d.y * d.y + d.z * d.z < *(f32 *)(p + 0x9f0))
+                *(f32 *)(q + 0x988c) =
+                    *(f32 *)(p + 0x8c0)
+                    + mathutil_sqrt(*(f32 *)(p + 0x9f0) - d.x * d.x
+                                    - d.z * d.z);
+        }
+    }
+
+    *(f32 *)(q + 0x98ac) =
+        *(f32 *)&((u8 *)(q + 0x9888))[*(s8 *)(q + 0x49) * 0x68]
+        - *(f32 *)(q + 0x9888);
+    *(f32 *)(q + 0x98b4) =
+        *(f32 *)&((u8 *)(q + 0x9890))[*(s8 *)(q + 0x49) * 0x68]
+        - *(f32 *)(q + 0x9890);
+    mathutil_vec_normalize_len((Vec *)&((u8 *)(q + 0x9878))[0x34]);
+    *(f32 *)(q + 0x98ac) = *(f32 *)(q + 0x98ac) * *(f32 *)(p + 0x8e8);
+    *(f32 *)(q + 0x98b4) = *(f32 *)(q + 0x98b4) * *(f32 *)(p + 0x8e8);
+
+    if (*(s8 *)(q + 0x10) == 1) {
+        if (lbl_0000D330()) {
+            *(s8 *)(q + 0x10) = 0;
+            *(s32 *)(q + 0x20) = 0;
+        }
+    } else if (lbl_0000D0A4()) {
+        *(s8 *)(q + 0x10) = 1;
+        *(s32 *)(q + 0x20) = 0;
+    }
+
+    *(Vec *)(q + 0x9894) = *(Vec *)(q + 0x9888);
+    *(f32 *)(q + 0x98bc) = *(f32 *)(p + 0x8b4);
+    *(f32 *)(q + 0x98c0) = *(f32 *)(p + 0x8b4);
+    *(f32 *)(q + 0x98c4) = *(f32 *)(p + 0x8b4);
+    *(f32 *)(q + 0x98c8) = *(f32 *)(p + 0x8b8);
+    *(f32 *)(q + 0x98cc) = *(f32 *)(p + 0x8b4);
+    *(f32 *)(q + 0x98d0) = *(f32 *)(p + 0x8b4);
+    *(f32 *)(q + 0x98d4) = *(f32 *)(p + 0x8b4);
+    *(f32 *)(q + 0x98d8) = *(f32 *)(p + 0x8b8);
+
+    if ((**(u16 **)(q + 0x9c88) & 0x100) && *(s8 *)(q + 0xc) == 0) {
+        lbl_802F1DFC = ((struct BilliardsPlayerA *)(q + 0xa64))[lbl_802F1C32].chara;
+        u_somePlayerId = lbl_802F1C32;
+        u_play_sound_0(0x1e);
+        *(Vec *)(q + 0x9888) = *(Vec *)(t + 0x110);
+        *(s8 *)(q + 0xc) = 1;
+        *(s32 *)(q + 0x20) = 0;
+        *(s8 *)(q + 0xb) = *(s8 *)(q + 0xa);
+        lbl_00003F4C();
+        *(s8 *)(q + 0xa) = 0xe;
+        *(s32 *)(q + 0x2c) = 0;
+    }
 }
 #pragma peephole on
 struct BilliardsPlayer
@@ -621,10 +776,183 @@ void lbl_00003CC8(void)
     }
     *(u8 *)(q + 0x1F) = 1;
 }
-asm void lbl_00003F4C(void)
+/* lbl_00003F4C -- run 20 draft a.  Same TU, same idioms as the MATCHED
+   lbl_00002B4C (unrolled 3-store loop), lbl_00000800 (sum_of_sq_2 collision
+   test) and this run's lbl_0000367C (normalize_len argument spelling).  */
+void lbl_00003F4C(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00003F4C.s"
+    u8 *q = lbl_10000000;
+    u8 *p = lbl_0001C2B8;
+    u8 *t = lbl_00020DA0;
+    int j;
+    int i;
+    int n;
+    s8 flag;
+    f32 e;
+    f32 hx;
+    f32 hz;
+    Vec d;
+
+    if (dipSwitches & 1)
+        u_clear_buffers_2_and_5();
+    lbl_00003CC8();
+
+    for (i = 0; i < 10; i++) {
+        *(f32 *)&((u8 *)(q + 0x9880))[i * 0x68] = *(f32 *)(p + 0x8b4);
+        *(f32 *)&((u8 *)(q + 0x9884))[i * 0x68] = *(f32 *)(p + 0x8b4);
+        *(s8 *)&((u8 *)(q + 0x987b))[i * 0x68] = 0;
+    }
+    lbl_00009788();
+
+    if (*(s8 *)(q + 0x9878) != 1) {
+        *(s8 *)(q + 0x9878) = 1;
+        do {
+            *(f32 *)(q + 0x9888) =
+                *(f32 *)(p + 0x8d0)
+                    * (*(f32 *)(p + 0x8d4)
+                       * ((f32)rand() / *(f32 *)(p + 0x8d8)))
+                - *(f32 *)(p + 0x8dc) - *(f32 *)(p + 0x8c0);
+            *(f32 *)(q + 0x9890) =
+                *(f32 *)(p + 0x8d0)
+                    * (*(f32 *)(p + 0x8e0)
+                       * ((f32)rand() / *(f32 *)(p + 0x8d8)))
+                - *(f32 *)(p + 0x8e4) - *(f32 *)(p + 0x8c0);
+            for (j = 1; j < 10; j++) {
+                if (*(s8 *)&((u8 *)(q + 0x9878))[j * 0x68] == 1) {
+                    if (mathutil_sum_of_sq_2(
+                            *(f32 *)(q + 0x9888)
+                                - *(f32 *)&((u8 *)(q + 0x9888))[j * 0x68],
+                            *(f32 *)(q + 0x9890)
+                                - *(f32 *)&((u8 *)(q + 0x9890))[j * 0x68])
+                        < *(f32 *)(p + 0x8b8))
+                        break;
+                }
+            }
+        } while (j < 10);
+    }
+
+    n = 0;
+    do {
+        flag = 0;
+        for (i = 0; i < 9; i++) {
+            if (*(s8 *)&((u8 *)(q + 0x9878))[i * 0x68] != 1)
+                continue;
+            for (j = i + 1; j < 10; j++) {
+                if (*(s8 *)&((u8 *)(q + 0x9878))[j * 0x68] != 1)
+                    continue;
+                d.x = *(f32 *)&((u8 *)(q + 0x9888))[i * 0x68]
+                      - *(f32 *)&((u8 *)(q + 0x9888))[j * 0x68];
+                d.y = *(f32 *)(p + 0x8b4);
+                d.z = *(f32 *)&((u8 *)(q + 0x9890))[i * 0x68]
+                      - *(f32 *)&((u8 *)(q + 0x9890))[j * 0x68];
+                e = d.x * d.x + d.z * d.z;
+                if (e < *(f32 *)(p + 0xa00)) {
+                    e = *(f32 *)(p + 0xa04) * mathutil_rsqrt(e);
+                    flag |= 1;
+                    hx = *(f32 *)(p + 0x8c0)
+                         * (*(f32 *)&((u8 *)(q + 0x9888))[j * 0x68]
+                            + *(f32 *)&((u8 *)(q + 0x9888))[i * 0x68]);
+                    hz = *(f32 *)(p + 0x8c0)
+                         * (*(f32 *)&((u8 *)(q + 0x9890))[j * 0x68]
+                            + *(f32 *)&((u8 *)(q + 0x9890))[i * 0x68]);
+                    *(f32 *)&((u8 *)(q + 0x9888))[i * 0x68] = hx + d.x * e;
+                    *(f32 *)&((u8 *)(q + 0x9890))[i * 0x68] = hz + d.z * e;
+                    *(f32 *)&((u8 *)(q + 0x9888))[j * 0x68] = hx - d.x * e;
+                    *(f32 *)&((u8 *)(q + 0x9890))[j * 0x68] = hz - d.z * e;
+
+                    if (*(f32 *)&((u8 *)(q + 0x9890))[i * 0x68]
+                        > *(f32 *)(p + 0x95c)) {
+                        *(f32 *)&((u8 *)(q + 0x9890))[i * 0x68] =
+                            *(f32 *)(p + 0x95c);
+                        flag |= 2;
+                    } else if (*(f32 *)&((u8 *)(q + 0x9890))[i * 0x68]
+                               < *(f32 *)(p + 0x9dc)) {
+                        flag |= 2;
+                        *(f32 *)&((u8 *)(q + 0x9890))[i * 0x68] =
+                            *(f32 *)(p + 0x9dc);
+                    }
+                    if (*(f32 *)&((u8 *)(q + 0x9888))[i * 0x68]
+                        > *(f32 *)(p + 0x9f8)) {
+                        *(f32 *)&((u8 *)(q + 0x9888))[i * 0x68] =
+                            *(f32 *)(p + 0x9f8);
+                        flag |= 2;
+                    } else if (*(f32 *)&((u8 *)(q + 0x9888))[i * 0x68]
+                               < *(f32 *)(p + 0x9fc)) {
+                        flag |= 2;
+                        *(f32 *)&((u8 *)(q + 0x9888))[i * 0x68] =
+                            *(f32 *)(p + 0x9fc);
+                    }
+                    if (*(f32 *)&((u8 *)(q + 0x9890))[j * 0x68]
+                        > *(f32 *)(p + 0x95c)) {
+                        *(f32 *)&((u8 *)(q + 0x9890))[j * 0x68] =
+                            *(f32 *)(p + 0x95c);
+                        flag |= 2;
+                    } else if (*(f32 *)&((u8 *)(q + 0x9890))[j * 0x68]
+                               < *(f32 *)(p + 0x9dc)) {
+                        flag |= 2;
+                        *(f32 *)&((u8 *)(q + 0x9890))[j * 0x68] =
+                            *(f32 *)(p + 0x9dc);
+                    }
+                    if (*(f32 *)&((u8 *)(q + 0x9888))[j * 0x68]
+                        > *(f32 *)(p + 0x9f8)) {
+                        *(f32 *)&((u8 *)(q + 0x9888))[j * 0x68] =
+                            *(f32 *)(p + 0x9f8);
+                        flag |= 2;
+                    } else if (*(f32 *)&((u8 *)(q + 0x9888))[j * 0x68]
+                               < *(f32 *)(p + 0x9fc)) {
+                        flag |= 2;
+                        *(f32 *)&((u8 *)(q + 0x9888))[j * 0x68] =
+                            *(f32 *)(p + 0x9fc);
+                    }
+                }
+            }
+        }
+        n++;
+    } while (flag >= 1 && n <= 1000);
+
+    for (j = 1; j < 10; j++) {
+        if (*(s8 *)&((u8 *)(q + 0x9878))[j * 0x68] == 1)
+            break;
+        *(s8 *)&((u8 *)(q + 0x9878))[j * 0x68] = 0;
+    }
+
+    if (j == 10) {
+        *(s8 *)(q + 0x49) = 0;
+        lbl_00000800();
+        lbl_00003F4C();
+    } else {
+        *(s8 *)(q + 0x49) = (s8)j;
+        *(f32 *)(q + 0x98ac) =
+            *(f32 *)&((u8 *)(q + 0x9888))[j * 0x68] - *(f32 *)(q + 0x9888);
+        *(f32 *)(q + 0x98b4) =
+            *(f32 *)&((u8 *)(q + 0x9890))[j * 0x68] - *(f32 *)(q + 0x9890);
+        mathutil_vec_normalize_len((Vec *)&((u8 *)(q + 0x9878))[0x34]);
+        *(f32 *)(q + 0x98ac) = *(f32 *)(q + 0x98ac) * *(f32 *)(p + 0x8e8);
+        *(f32 *)(q + 0x98b4) = *(f32 *)(q + 0x98b4) * *(f32 *)(p + 0x8e8);
+
+        *(f32 *)&((u8 *)(q + 0x9880))[*(s8 *)(q + 0x49) * 0x68] =
+            *(f32 *)(p + 0x8b8);
+        *(f32 *)&((u8 *)(q + 0x9884))[*(s8 *)(q + 0x49) * 0x68] =
+            *(f32 *)(p + 0x8b4);
+
+        *(Vec *)(q + 0x9ca0) = *(Vec *)(q + 0x9888);
+        *(Vec *)(q + 0x9cac) = *(Vec *)(q + 0x9888);
+
+        *(f32 *)(q + 0x38) = *(f32 *)(p + 0x8b4);
+        *(f32 *)(q + 0x40) = *(f32 *)(p + 0xa08);
+        *(f32 *)(q + 0x58) = *(f32 *)(q + 0x5c) = *(f32 *)(p + 0x8b4);
+
+        *(f32 *)(t + 0x0) = *(f32 *)(q + 0x9888);
+        *(f32 *)(t + 0x4) = *(f32 *)(p + 0x8b8) + *(f32 *)(q + 0x988c);
+        *(f32 *)(t + 0x8) = *(f32 *)(q + 0x9890);
+
+        *(s16 *)(q + 0x4c) = mathutil_atan2(-*(f32 *)(q + 0x98ac),
+                                            -*(f32 *)(q + 0x98b4));
+        *(s16 *)(q + 0x4e) = 0;
+        *(s16 *)(q + 0x4a) = -2048;
+        *(f32 *)(q + 0x50) = *(f32 *)(p + 0x9c8);
+        lbl_00007C74();
+    }
 }
 #pragma peephole on
 asm void lbl_00004634(void)

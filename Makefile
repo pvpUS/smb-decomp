@@ -1028,6 +1028,7 @@ SOURCES := \
 	src/mini_golf_56.c \
 	src/mini_golf_57.c \
 	src/mini_golf_58.c \
+	asm/mini_golf_d5.s \
 	src/mini_golf_63.c \
 	src/mini_golf_64.c \
 	src/mini_golf_65.c \
@@ -1249,6 +1250,7 @@ ALL_RELS += mkbe.test_mode.rel
 # mkbe.option.rel sources
 SOURCES := \
 	asm/option.s \
+	asm/option_d2.s \
 	src/option.c \
 	src/option_2.c \
 	src/option_3.c \
@@ -1285,7 +1287,8 @@ SOURCES := \
 	src/option_28.c \
 	src/option_29.c \
 	src/option_30.c \
-	asm/option_d1.s
+	asm/option_d1.s \
+	asm/option_d3.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
 mkbe.option.plf: $(O_FILES)

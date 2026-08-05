@@ -74,7 +74,6 @@ extern u8 lbl_0000C850[];
 extern u8 lbl_0000C868[];
 extern u8 lbl_0000C884[];
 extern u8 lbl_0000C8C4[];
-extern u8 lbl_0000C8F0[];
 extern u8 lbl_0000CA30[];
 extern u8 lbl_0000CC6C[];
 extern u8 lbl_0000CF10[];
@@ -115,6 +114,36 @@ void lbl_000038A8(void);
 void lbl_00003B90(void);
 void lbl_00003F10(void);
 s8 *lbl_00003F6C(int);
+/* 0xC8F0: four NLsprarg, carved out of asm/option_d1.s in run 20
+ * so that mwcc DEFINES this symbol in the TU.  That is what lets
+ * the drawFunc family materialise it in the entry block and pass
+ * it bare; as an undefined extern the shape costs +1 instruction
+ * and no source spelling avoids it.  Bytes are byte-for-byte the
+ * ones the asm blob used to supply.
+ */
+u8 lbl_0000C8F0[0x140] = {
+    0x00, 0x00, 0x04, 0x0D,  0x43, 0xA0, 0x00, 0x00,  0x42, 0x70, 0x00, 0x00,  0x40, 0xA0, 0x00, 0x00,
+    0x3F, 0x80, 0x00, 0x00,  0x3F, 0x80, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+    0x3F, 0x80, 0x00, 0x00,  0x3F, 0x80, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,  0x3F, 0x80, 0x00, 0x00,
+    0xFF, 0xFF, 0xFF, 0xFF,  0x00, 0x00, 0x00, 0x0A,  0xFF, 0xFF, 0xFF, 0xFF,  0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x0F,  0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,  0x3F, 0x80, 0x00, 0x00,
+    0x3F, 0x00, 0x00, 0x00,  0x3E, 0xA8, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+    0x3F, 0x80, 0x00, 0x00,  0x3F, 0x80, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,  0x3F, 0x80, 0x00, 0x00,
+    0xFF, 0xFF, 0xFF, 0xFF,  0x00, 0x00, 0x00, 0x0A,  0xFF, 0xFF, 0xFF, 0xFF,  0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x04, 0x17,  0x43, 0xA0, 0x00, 0x00,  0x43, 0x64, 0x00, 0x00,  0x40, 0xA0, 0x00, 0x00,
+    0x3F, 0x80, 0x00, 0x00,  0x3F, 0xC0, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+    0x3F, 0x80, 0x00, 0x00,  0x3F, 0x80, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,  0x3F, 0x80, 0x00, 0x00,
+    0xFF, 0xFF, 0xFF, 0xFF,  0x00, 0x00, 0x00, 0x0A,  0xFF, 0xFF, 0xFF, 0xFF,  0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x04, 0x16,  0x43, 0xA0, 0x00, 0x00,  0x43, 0xCC, 0x00, 0x00,  0x40, 0xA0, 0x00, 0x00,
+    0x3F, 0x80, 0x00, 0x00,  0x3F, 0x80, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+    0x3F, 0x80, 0x00, 0x00,  0x3F, 0x80, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,  0x3F, 0x80, 0x00, 0x00,
+    0xFF, 0xFF, 0xFF, 0xFF,  0x00, 0x00, 0x00, 0x0A,  0xFF, 0xFF, 0xFF, 0xFF,  0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00,
+};
+
 void lbl_00003FF0(s8 *arg0, struct Sprite *sprite);
 void lbl_00004204(int arg0);
 void lbl_00004260(int arg0);
@@ -155,7 +184,7 @@ void lbl_0000C148(void);
 
 // Carried over from the heads of the absorbed files (merged by
 // tools/rel_merge_tu.py -- these are what the tool used to drop).
-void lbl_000048F4(void);
+void lbl_000048F4(struct Sprite *sprite, int unused);
 
 // Carried over from the heads of the absorbed files (merged by
 // tools/rel_merge_tu.py -- these are what the tool used to drop).
@@ -372,10 +401,132 @@ void lbl_00004858(s8 *arg0, struct Sprite *sprite)
     lbl_00003FF0(arg0, sprite);
     *(f32 *)(lbl_10000000 + 0x48) = *(f32 *)(lbl_10000000 + 0x48) + c[11] * ((c[14] + (c[15] + c[16] * (f64)*(s32 *)(w + 0x14))) - *(f32 *)(lbl_10000000 + 0x48));
 }
-asm void lbl_000048F4(void)
+struct OptItem
 {
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_000048F4.s"
+    char *text;
+    s32 unk4;
+};
+
+struct OptPage
+{
+    struct OptItem *items;
+    s32 count;
+};
+
+
+static inline void u_txt_setup(struct Sprite *sp)
+{
+    reset_text_draw_settings();
+    set_text_font(sp->fontId);
+    set_text_scale(sp->scaleX, sp->scaleY);
+    func_80071B50(sp->flags);
+}
+
+static inline void u_txt_shadow(struct Sprite *sp, u8 *c)
+{
+    u_txt_setup(sp);
+    func_80071B1C(*(f64 *)(c + 0x28) + sp->depth);
+    set_text_mul_color(0);
+    set_text_add_color(RGBA(sp->addR, sp->addG, sp->addB, 0));
+    set_text_pos(*(f64 *)(c + 0x30) + sp->x, *(f64 *)(c + 0x30) + sp->y);
+    sprite_puts(sp->text);
+    func_80071B1C(sp->depth);
+    set_text_mul_color(RGBA(sp->mulR, sp->mulG, sp->mulB, 0));
+    set_text_add_color(RGBA(sp->addR, sp->addG, sp->addB, 0));
+    set_text_pos(sp->x, sp->y);
+    sprite_puts(sp->text);
+}
+
+void lbl_000048F4(struct Sprite *sprite, int unused)
+{
+    u8 *c = lbl_0000C370;
+    int i;
+    struct OptPage *t;
+    u8 *w = *(u8 **)&sprite->filler12[0x2C - 0x12];
+    struct Sprite sp;
+    s8 *p;
+    f32 tw;
+
+    p = lbl_00003F6C(sprite->tag);
+    if (p != NULL)
+    {
+        mathutil_mtxA_from_translate_xyz(*(f32 *)(p + 4) + *(f32 *)(p + 8),
+                                         *(f32 *)c, *(f32 *)c);
+        mathutil_mtxA_to_mtx((void *)(lbl_10000000 + 0x184));
+        GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+    }
+    nlSprPut((NLsprarg *)lbl_0000C8F0);
+    nlSprPut((NLsprarg *)(lbl_0000C8F0 + 0xF0));
+
+    sp.depth = *(f32 *)(c + 0x88);
+    sp.scaleX = *(f32 *)(c + 0x60);
+    sp.scaleY = *(f32 *)(c + 0x60);
+    sp.fontId = 0xB3;
+    sp.mulR = 0xFF;
+    sp.mulG = 0xFF;
+    sp.mulB = 0;
+    sp.addR = 0;
+    sp.addG = 0;
+    sp.addB = 0;
+    sp.flags = 0x200000;
+    sp.x = *(f32 *)(c + 0x8C);
+    sp.y = *(f32 *)(c + 0x90);
+    strcpy(sp.text, (char *)(lbl_0000C8F0 + 0x370));
+    u_txt_shadow(&sp, c);
+
+    lbl_000042BC((NLsprarg *)(lbl_0000C8F0 + 0xA0), *(f32 *)(c + 0x94), *(f32 *)(c + 0x98));
+    ((NLsprarg *)(lbl_0000C8F0 + 0x50))->x = *(f32 *)(c + 0x9C);
+    ((NLsprarg *)(lbl_0000C8F0 + 0x50))->y = *(f32 *)(lbl_10000000 + 0x48);
+    nlSprPut((NLsprarg *)(lbl_0000C8F0 + 0x50));
+
+    for (i = 0; (u32)i < 7; i++)
+    {
+        sp.x = *(f32 *)(c + 0xA0);
+        sp.y = *(f64 *)(c + 0x78) + *(f64 *)(c + 0x80) * (f64)i;
+        sp.addR = 0;
+        sp.addG = 0;
+        sp.addB = 0;
+        if (*(s32 *)(w + 0x14) == i)
+        {
+            sp.mulR = 0xFF;
+            sp.mulG = 0xFF;
+            sp.mulB = 0;
+        }
+        else
+        {
+            sp.mulR = 0x8F;
+            sp.mulG = 0x8F;
+            sp.mulB = 0;
+        }
+        strcpy(sp.text, ((char **)(lbl_0000C8F0 + 0x1A0))[i]);
+        u_txt_shadow(&sp, c);
+    }
+
+    sp.mulR = 0xFF;
+    sp.mulG = 0xFF;
+    sp.mulB = 0;
+    sp.addR = 0;
+    sp.addG = 0;
+    sp.addB = 0;
+    sp.scaleX = *(f32 *)(c + 0xA4);
+    t = &((struct OptPage *)(lbl_0000C8F0 + 0x338))[*(s32 *)(w + 0x14)];
+    for (i = 0; i < t->count; i++)
+    {
+        strcpy(sp.text, t->items[i].text);
+        u_txt_setup(&sp);
+        func_80071B1C(sp.depth);
+        set_text_mul_color(RGBA(sp.mulR, sp.mulG, sp.mulB, 0));
+        set_text_add_color(RGBA(sp.addR, sp.addG, sp.addB, 0));
+        tw = u_get_text_width(sp.text);
+        sp.x = *(f64 *)(c + 0xA8) - *(f64 *)(c + 0x58) * tw;
+        sp.y = (*(f64 *)(c + 0xB0)
+                - *(f64 *)(c + 0xB8) * (f64)(t->count - 1))
+               + (f64)(i * 32);
+        u_txt_shadow(&sp, c);
+    }
+
+    mathutil_mtxA_from_identity();
+    GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
 }
 #pragma peephole on
 
