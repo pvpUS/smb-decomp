@@ -105,7 +105,7 @@ extern u8 lbl_10000034[];
 extern u8 lbl_10000038[];
 extern u8 lbl_1000003C[];
 extern u8 lbl_10000040[];
-extern u8 lbl_10000044[];
+extern s32 lbl_10000044[];
 extern u8 lbl_10000054[];
 extern u8 lbl_1000005C[];
 extern u8 lbl_10000064[];
@@ -134,7 +134,7 @@ extern u8 lbl_802F1FDC[];
 extern u8 lbl_802F1FE0[];
 extern u8 lbl_802F1FE4[];
 extern u8 lbl_802F1FEC[];
-extern u8 lbl_802F1FF4[];
+extern s16 lbl_802F1FF4;
 
 // Imported functions the code calls that no included header declares.
 extern void ball_8003BBF4();
@@ -252,10 +252,66 @@ void lbl_00003860(void);
 void lbl_000038D4(void);
 void lbl_00003AD0(void);
 #pragma force_active on
-asm void lbl_000035B8(void)
+void lbl_000035B8(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_000035B8.s"
+    u8 *k = (u8 *)lbl_0000BE80;
+    s8 spC[4];
+    s8 sp8[4];
+    int i;
+    int j;
+    int rank;
+
+    u_free_minigame_graphics();
+    lbl_802F1FD4 = NULL;
+    event_finish_all();
+    event_start(1);
+    event_start(4);
+    event_start(0x14);
+    event_start(0x13);
+    event_start(0x12);
+    event_start(0xf);
+    event_start(0xd);
+    event_start(0x10);
+    if (modeCtrl.playerCount == 1)
+    {
+        spC[0] = playerCharacterSelection[0];
+        spC[1] = -1;
+        spC[2] = -1;
+        spC[3] = -1;
+        sp8[0] = *(u8 *)lbl_10000034;
+    }
+    else
+    {
+        for (i = 0; i < 4; i++)
+        {
+            if (g_poolInfo.playerPool.statusList[i] == 0)
+            {
+                spC[i] = -1;
+            }
+            else
+            {
+                rank = 0;
+                for (j = 0; j < 4; j++)
+                {
+                    if (i != j && g_poolInfo.playerPool.statusList[j] != 0
+                     && lbl_10000044[j] > lbl_10000044[i])
+                        rank++;
+                }
+                spC[i] = playerCharacterSelection[i];
+                sp8[i] = rank;
+            }
+        }
+    }
+    func_8009C5E4(spC, sp8);
+    *(s32 *)lbl_802F1FD0 |= 4;
+    camera_set_state_all(0x46);
+    mathutil_mtxA_from_translate_xyz(*(f32 *)(k + 0x30), *(f32 *)(k + 0x1b8), *(f32 *)(k + 0x1bc));
+    mathutil_mtxA_rotate_y(0x8000);
+    func_8009DB40(mathutilData->mtxA);
+    lbl_802F1FF0 = 0;
+    lbl_802F1FF6 = 0x1a;
+    lbl_802F1FF4 = -1;
+    ((void (**)(void))lbl_0000C748)[26]();
 }
 
 #pragma force_active reset

@@ -279,7 +279,7 @@ void lbl_00006FF4(void);
 void lbl_000070FC(void);
 void lbl_00007688(void);
 void lbl_00007710(void);
-void lbl_00007800(void);
+void lbl_00007800(struct Ball *ball);
 void lbl_00007900(void);
 void lbl_00007950(void);
 void lbl_000079B8(void);
@@ -373,12 +373,59 @@ void lbl_0001157C(void);
 void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
+// INVENTED -- per-racer state off struct Ball::unk144.  UNVERIFIED.
+struct RaceSub2
+{
+    u8 filler0[0x14];
+    u32 unk14;
+    u8 filler18[0x1E - 0x18];
+    u16 unk1E;
+    u8 filler20[0x1DC - 0x20];
+    f32 unk1DC;
+    u8 filler1E0[0x1E4 - 0x1E0];
+    f32 unk1E4;
+    u8 filler1E8[0x1F8 - 0x1E8];
+    f32 unk1F8;
+};
 
 #pragma force_active on
-asm void lbl_00007800(void)
+#pragma peephole on
+void lbl_00007800(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00007800.s"
+    struct RaceSub2 *st = (struct RaceSub2 *)ball->unk144;
+    u8 *cfg = lbl_00013740;
+    struct RaceSub2 *other;
+    f32 k;
+
+    st->unk1F8 = *(f32 *)(cfg + 0x6C);
+    if (!(*(u16 *)(lbl_10000028 + 2) & 2))
+        return;
+    if (st->unk14 & 0x20)
+        return;
+    if (st->unk14 & 1)
+        return;
+    if (st->unk1DC < *(f32 *)(cfg + 8))
+        return;
+    if (st->unk1E <= 1 && (other = ((struct RaceSub2 **)lbl_10000054)[1]) != NULL)
+    {
+        if (st->unk1E4 - other->unk1E4 > *(f32 *)(cfg + 0x64))
+        {
+            k = *(f32 *)(cfg + 0x20);
+            st->unk1F8 = st->unk1F8 + *(f32 *)(cfg + 0x2CC);
+        }
+        else
+            k = (st->unk1E4 - other->unk1E4) / ((f32 *)cfg)[0x19];
+        st->unk1F8 = st->unk1F8 + *(f32 *)(cfg + 0x2CC) * k;
+    }
+    else
+    {
+        other = ((struct RaceSub2 **)lbl_10000054)[0];
+        if (other->unk1E4 - st->unk1E4 > *(f32 *)(cfg + 0x64))
+            k = *(f32 *)(cfg + 0x20);
+        else
+            k = (other->unk1E4 - *(f32 *)((u8 *)st + 0x1E4)) / ((f32 *)cfg)[0x19];
+        st->unk1F8 = st->unk1F8 + *(f32 *)(cfg + 0x2D0) * k;
+    }
 }
 
 #pragma force_active reset

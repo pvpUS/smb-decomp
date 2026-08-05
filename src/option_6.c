@@ -117,7 +117,8 @@ void lbl_00003B90(void);
 void lbl_00003F10(void);
 void lbl_00003F6C(void);
 void lbl_00003FF0(void);
-void lbl_00004204(void);
+//@SUB void lbl_00004204(void);|void lbl_00004204(int);
+void lbl_00004204(int);
 void lbl_00004260(void);
 void lbl_000042BC(void);
 void lbl_000047D0(void);
@@ -151,9 +152,83 @@ void lbl_0000B218(void);
 void lbl_0000C148(void);
 
 #pragma force_active on
-static asm void lbl_00000360(void)
+struct OptEntry
 {
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00000360.s"
+    s32 kind;
+    s32 unk4;
+    s32 submode;
+};
+
+static void lbl_00000360(void)
+{
+    u8 *w;
+    s32 v;
+    struct OptEntry *tbl;
+    s8 sel;
+    struct OptEntry *e;
+    if (!(modeCtrl.courseFlags & (1 << 2)))
+    {
+        w = lbl_10000000 + 0x3C;
+        sel = *(s32 *)(w + 0x14);
+        if ((g_currPlayerButtons[4] & 4) || (g_currPlayerAnalogButtons[4] & 4))
+        {
+            if ((u32)++sel >= 7)
+                sel = 0;
+        }
+        if ((g_currPlayerButtons[4] & 8) || (g_currPlayerAnalogButtons[4] & 8))
+        {
+            if (--sel < 0)
+                sel = 6;
+        }
+        v = sel;
+        if (v != *(s32 *)(w + 0x14))
+        {
+            u_play_sound_0(0x6C);
+            *(s32 *)(w + 0x14) = v;
+        }
+        tbl = (struct OptEntry *)lbl_0000C7A4;
+        switch (tbl[*(s32 *)(w + 0x14)].kind)
+        {
+        case 0:
+            if (g_currPlayerButtons[2] & 0x100)
+            {
+                u_play_sound_0(0x6A);
+                lbl_00004204(0x58);
+                modeCtrl.submodeTimer = 30;
+                gameSubmodeRequest = tbl[*(s32 *)(w + 0x14)].submode;
+                return;
+            }
+            break;
+        }
+
+        if (g_currPlayerButtons[2] & 0x200)
+        {
+            if (eventInfo[EVENT_MEMCARD].state != EV_STATE_INACTIVE)
+                return;
+            u_play_sound_0(0x6B);
+            if (func_8009F4C4() == 1)
+            {
+                gameSubmodeRequest = 0xBA;
+            }
+            else
+            {
+                modeCtrl.submodeTimer = 30;
+                start_screen_fade(FADE_OUT|FADE_ABOVE_SPRITES,
+                                  RGBA(0, 0, 0, 0), modeCtrl.submodeTimer);
+                u_play_music(modeCtrl.submodeTimer, 2);
+                modeCtrl.courseFlags |= (1 << 2);
+            }
+        }
+    }
+    else
+    {
+        if (--modeCtrl.submodeTimer > 0)
+            return;
+        modeCtrl.submodeTimer = 0;
+        modeCtrl.menuSel = 3;
+        modeCtrl.unk10 = 1;
+        gameModeRequest = 0;
+        gameSubmodeRequest = 0x15;
+    }
 }
 #pragma force_active reset

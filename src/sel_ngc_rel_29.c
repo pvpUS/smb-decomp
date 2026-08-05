@@ -109,7 +109,7 @@ extern u8 u_isCompetitionModeCourse[];
 extern void __cvt_fp2unsigned();
 extern void are_all_continues_unlocked();
 extern void course_first();
-extern void course_floor_count();
+extern int course_floor_count(int, u32);
 extern void effect_draw();
 extern void empty_file_cache();
 extern void empty_load_queue();
@@ -117,7 +117,7 @@ extern void file_preload();
 extern void floor_to_stage_id();
 extern void func_8009F4C4();
 extern void func_80067310();
-extern void is_floor_visited();
+extern int is_floor_visited(int, int, u32);
 extern void is_minigame_unlocked();
 extern void item_draw();
 extern void lens_flare_draw();
@@ -169,11 +169,11 @@ void lbl_0000A6C8(void);
 void lbl_0000A7B0(void);
 void lbl_0000A7D4(void);
 void lbl_0000A840(void);
-void lbl_0000A870(void);
+void lbl_0000A870();
 void lbl_0000A950(void);
 void lbl_0000B1C0(void);
 void lbl_0000B920(void);
-void lbl_0000BEE8(void);
+void lbl_0000BEE8(struct Sprite *);
 void lbl_0000C970(void);
 void lbl_0000D82C(struct Sprite *sprite);
 void lbl_0000DCA4(s8 *alive, struct Sprite *sprite);
@@ -504,10 +504,154 @@ asm void lbl_0000B920(void)
 #include "../asm/nonmatchings/sel_ngc_rel/lbl_0000B920.s"
 }
 #pragma peephole on
-asm void lbl_0000BEE8(void)
+void lbl_0000BEE8(struct Sprite *sprite)
 {
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_0000BEE8.s"
+    NLsprarg sp;
+    u8 *k = lbl_00011CB0;
+    int i;
+    int slot;
+    int color;
+    int sel;
+    int shade;
+    int floors;
+    int hit;
+    f32 px;
+    f32 py;
+    u8 *rec2;
+
+    i = *(s32 *)lbl_802F1FAC < *(s32 *)lbl_802F1FB0 - 1 ? *(s32 *)lbl_802F1FAC : *(s32 *)lbl_802F1FB0 - 1;
+    *(u8 **)lbl_802F1FB4 = lbl_8027CE24 + i * 8;
+    lbl_0000A870(sprite);
+
+    sp.zm_x = sprite->scaleX;
+    sp.zm_y = sprite->scaleY;
+    sp.u0 = *(f32 *)(k + 8);
+    sp.v0 = *(f32 *)(k + 8);
+    sp.u1 = *(f32 *)(k + 0xC);
+    sp.v1 = *(f32 *)(k + 0xC);
+    sp.ang = sprite->rotation;
+    sp.trnsl = sprite->opacity;
+    sp.listType = -1;
+    sp.attr = (sprite->flags & ~0xF) | 0xA;
+
+    for (i = 0; i <= 2; i++)
+    {
+        u32 rf = *(u32 *)(*(u8 **)lbl_802F1FB4 + 4);
+
+        slot = i;
+        if (rf & 8)
+            slot += 3;
+        if (rf & 0x10)
+            slot = 6;
+        if (sprite->userVar == 1 || i != *(s16 *)(*(u8 **)lbl_802F1FB4 + 2))
+        {
+            color = 0xC0C0C0;
+            sel = -1;
+        }
+        else
+        {
+            color = 0xFFFFFF;
+            sel = *(s16 *)(*(u8 **)lbl_802F1FB4 + 2);
+        }
+        sp.sprno = ((s32 *)(k + 0x100))[slot];
+        sp.x = (sprite->x - *(f32 *)(k + 0x16C)) + *(f32 *)(k + slot * 8 + 0xB8);
+        sp.y = (sprite->y - *(f32 *)(k + 0x170)) + *(f32 *)(k + slot * 8 + 0xBC);
+        sp.z = sprite->depth
+             + (sel == i ? *(f64 *)(k + 0x178) : *(f64 *)(k + 0x180));
+        sp.base_color =
+            ((s32)(*(f32 *)(k + 0x10) * sprite->opacity) << 24) | (color | color);
+        sp.offset_color = 0;
+        nlSprPut(&sp);
+
+        if (sprite->userVar == 1
+            || i != *(s16 *)(*(u8 **)lbl_802F1FB4 + 2))
+            color = 0x404040;
+        else
+            color = 0xFFFFFF;
+        sp.sprno = ((s32 *)(k + 0x148))[slot];
+        sp.x = sp.x + *(f32 *)(k + 0x188);
+        if (i == 0 || i == 2 || slot >= 6)
+            sp.y = sp.y - *(f32 *)(k + 0x188);
+        else
+            sp.y = sp.y + *(f32 *)(k + 0x188);
+        sp.z = sp.z - *(f64 *)(k + 0x190);
+        sp.base_color =
+            ((s32)(*(f32 *)(k + 0x10) * sprite->opacity) << 24) | (color | color);
+        if (sprite->userVar == 2 && *(s32 *)lbl_802F1FA8 == 0
+            && i == *(s16 *)(*(u8 **)lbl_802F1FB4 + 2))
+            shade = (s32)(*(f64 *)(k + 0x198)
+                          * (*(f64 *)(k + 0x30)
+                             - __fabs(mathutil_sin(globalAnimTimer << 9))));
+        else
+            shade = 0;
+        sp.offset_color = shade | ((shade << 16) | (shade << 8));
+        nlSprPut(&sp);
+    }
+
+    *(u32 *)((u8 *)&modeCtrl + 8) &= ~0x18;
+    rec2 = *(u8 **)lbl_802F1FB4;
+    *(u32 *)((u8 *)&modeCtrl + 8) |= ((u32 *)rec2)[1];
+    floors = course_floor_count(*(s16 *)(rec2 + 2), ((u32 *)rec2)[1]);
+    *(u32 *)((u8 *)&modeCtrl + 8) &= ~*(u32 *)(*(u8 **)lbl_802F1FB4 + 4);
+
+    reset_text_draw_settings();
+    set_text_font(sprite->fontId);
+    func_80071B1C(sprite->depth - *(f64 *)(k + 0x58));
+
+    for (slot = 0; slot < 50; slot++)
+    {
+        hit = 0;
+        if (sprite->userVar == 1 || slot > floors - 1
+            || !is_floor_visited(*(s16 *)(*(u8 **)lbl_802F1FB4 + 2), slot + 1,
+                                 *(s32 *)(*(u8 **)lbl_802F1FB4 + 4)))
+        {
+            set_text_mul_color(0x808000);
+            set_text_opacity(*(f32 *)(k + 0x1A0));
+        }
+        else
+        {
+            set_text_mul_color(0xC0C000);
+            set_text_opacity(*(f32 *)(k + 0xC));
+        }
+
+        if (sprite->userVar == 2 && *(s32 *)lbl_802F1FA8 == 2
+            && slot == *(s16 *)(*(u8 **)lbl_802F1FB4) - 1)
+        {
+            shade = (s32)(*(f64 *)(k + 0xB0)
+                          * __fabs(mathutil_sin(globalAnimTimer << 9)));
+            hit = 1;
+        }
+        else
+            shade = 0;
+        set_text_add_color(shade | ((shade << 16) | (shade << 8)));
+
+        px = *(f32 *)(k + 0x1A4) + (sprite->x - *(f32 *)(k + 0x16C))
+           + (slot % 10) * 32;
+        py = *(f32 *)(k + 0x1A4) + (sprite->y - *(f32 *)(k + 0x170))
+           + (slot / 10) * 32;
+        set_text_pos(px, py);
+        sprite_printf((char *)lbl_00016484, slot + 1);
+        set_text_add_color(0);
+        set_text_mul_color(0x202000);
+        set_text_pos(*(f32 *)(k + 0x70) + px, *(f32 *)(k + 0x70) + py);
+        sprite_printf((char *)lbl_00016484, slot + 1);
+
+        if (hit)
+        {
+            sp.sprno = 0x408;
+            sp.x = *(f32 *)(k + 0x1A8) + px;
+            sp.y = *(f32 *)(k + 0x1AC) + py;
+            sp.z = sprite->depth - *(f64 *)(k + 0x1B0);
+            sp.zm_x = *(f32 *)(k + 0x1B8);
+            sp.zm_y = *(f32 *)(k + 0x1BC);
+            sp.trnsl = sprite->opacity;
+            sp.base_color =
+                (((s32)(*(f32 *)(k + 0x10) * sprite->opacity) << 24) | 0xFF00FF)
+                | ((shade >> 1) + 0x80) * 256;
+            sp.offset_color = 0;
+            nlSprPut(&sp);
+        }
+    }
 }
 #pragma peephole on
 static asm void lbl_0000C518(void)

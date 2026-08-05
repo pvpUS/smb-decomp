@@ -125,7 +125,13 @@ extern u8 lbl_100000B8[];
 extern u8 neutralFaceTable[];
 extern u8 smileFaceTable[];
 extern u8 lbl_80285A58[];
-extern u8 lbl_80285A68[];
+// UNVERIFIED: 6-byte per-player record at lbl_80285A68 (a DOL global);
+// three s16 counters indexed by the difficulty/floor byte.
+struct PilotPlayRec
+{
+    s16 s[3];
+};
+extern struct PilotPlayRec lbl_80285A68[];
 extern u8 lbl_80285A80[];
 extern u8 lbl_802F1F10[];
 extern u8 lbl_802F1FD0[];
@@ -251,18 +257,27 @@ void lbl_000035B8(void);
 void lbl_00003860(void);
 void lbl_000038D4(void);
 void lbl_00003AD0(void);
-// UNVERIFIED: 6-byte per-player record at lbl_80285A68 (a DOL global);
-// three s16 counters indexed by the difficulty/floor byte.
-struct PilotPlayRec
-{
-    s16 s[3];
-};
-
 #pragma force_active on
-asm void lbl_000022D8(void)
+void lbl_000022D8(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_000022D8.s"
+    s16 *c;
+    struct PilotPlayRec *rec;
+
+    rec = &lbl_80285A68[modeCtrl.currPlayer];
+    c = &rec->s[((s8 *)lbl_10000078)[*(s8 *)lbl_10000090]];
+    *c = *c + 1;
+    if (rec->s[2] != 0)
+    {
+        u_play_sound_0(0x1b1);
+        lbl_00000A30();
+    }
+    if (lbl_80285A68[modeCtrl.currPlayer].s[1] != 0)
+    {
+        u_play_sound_0(0x1aa);
+        lbl_000008AC();
+    }
+    if (lbl_80285A68[modeCtrl.currPlayer].s[0] != 0)
+        u_play_sound_0(0x1b3);
 }
 
 #pragma force_active reset

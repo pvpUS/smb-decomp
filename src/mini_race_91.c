@@ -338,11 +338,11 @@ void lbl_0000D8EC(void);
 void lbl_0000DE5C(void);
 void lbl_0000DF6C(void);
 void lbl_0000E11C(void);
-void lbl_0000E1CC(void);
+void lbl_0000E1CC(struct Sprite *sprite);
 void lbl_0000E520(s16 idx);
 void lbl_0000E7C4(struct Sprite *sprite);
 void lbl_0000E900(void);
-void lbl_0000EC20(void);
+void lbl_0000EC20(s16 idx);
 void lbl_0000F174(void);
 void lbl_0000F3D4(void);
 void lbl_0000FCC4(s8 *arg0, struct Sprite *sprite);
@@ -394,13 +394,24 @@ struct RaceCfgObj
     f32 unk6c;
 };
 void lbl_000108E8(s8 *str, struct Sprite *sprite);
+// UNVERIFIED invented struct: fields of ballInfo[].unk144 that struct
+// Ball_child does not name yet.
+struct RaceBallSub
+{
+    u8 filler0[0x22];
+    s16 unk22;
+    u8 filler24[0x1D2 - 0x24];
+    s16 unk1D2;
+};
 
 #pragma force_active on
-asm void lbl_0000E1CC(void)
+#pragma peephole on
+asm void lbl_0000E1CC(struct Sprite *sprite)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_0000E1CC.s"
 }
+
 #pragma peephole on
 void lbl_0000E520(s16 idx)
 {
@@ -541,10 +552,134 @@ static asm void lbl_0000E9D4(void)
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_0000E9D4.s"
 }
-asm void lbl_0000EC20(void)
+#pragma peephole on
+void lbl_0000EC20(s16 idx)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000EC20.s"
+    struct Ball *ball = &ballInfo[idx];
+    u8 *cfg = lbl_00013C48;
+    u8 *base = lbl_10000028;
+    struct RaceBallSub *bc = (struct RaceBallSub *)ball->unk144;
+    struct Sprite *sprite;
+    f32 x;
+    f32 y;
+
+    if (*(u16 *)(base + 4) == bc->unk22 + 1)
+        u_play_sound_0(0x1E4);
+    else if (modeCtrl.unk30 == 1)
+        u_play_sound_0(0x1E6);
+    else
+        u_play_sound_0(0x1E1);
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    sprite->tag = idx + 0x67;
+    switch (modeCtrl.unk30)
+    {
+    case 1:
+        x = *(f32 *)(cfg + 0x1F0);
+        y = *(f32 *)(cfg + 0x1F4);
+        break;
+    case 2:
+        x = *(f32 *)(cfg + 0x1F8);
+        y = *(f32 *)(cfg + 0xCC) + *(f32 *)(cfg + 0x4) * idx;
+        break;
+    case 3:
+        if (modeCtrl.splitscreenMode != 3)
+        {
+            if (idx == modeCtrl.splitscreenMode)
+            {
+                x = *(f32 *)(cfg + 0x1F8);
+                y = *(f32 *)(cfg + 0xCC);
+                if (modeCtrl.splitscreenMode == 2)
+                    sprite->y += *(f32 *)(cfg + 0x4);
+            }
+            else
+            {
+                x = *(f32 *)(cfg + 0x174);
+                y = *(f32 *)(cfg + 0x1FC);
+                if (idx != 0 && (modeCtrl.splitscreenMode != 0 || idx != 1))
+                    x += *(f32 *)(cfg + 0x0);
+                if (modeCtrl.splitscreenMode != 2)
+                    y += *(f32 *)(cfg + 0x4);
+            }
+            break;
+        }
+        /* fall through */
+    case 4:
+        x = *(f32 *)(cfg + 0x174) + *(f32 *)(cfg + 0x0) * (idx % 2);
+        y = *(f32 *)(cfg + 0x1FC) + *(f32 *)(cfg + 0x4) * (idx / 2);
+        break;
+    }
+    sprite->x = x;
+    sprite->y = y;
+    sprite->textAlign = 4;
+    sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000F084;
+    sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000F174;
+    sprite->counter = 0x78;
+    sprite->userVar = idx;
+    if (*(u16 *)(base + 4) == bc->unk22 + 1)
+    {
+        sprite = create_sprite();
+        if (sprite == NULL)
+            return;
+        switch (modeCtrl.unk30)
+        {
+        case 1:
+            x = *(f32 *)(cfg + 0x0);
+            y = *(f32 *)(cfg + 0x200);
+            break;
+        case 2:
+            x = *(f32 *)(cfg + 0x0);
+            y = *(f32 *)(cfg + 0x204) + *(f32 *)(cfg + 0x4) * idx;
+            break;
+        case 3:
+            if (modeCtrl.splitscreenMode != 3)
+            {
+                if (idx == modeCtrl.splitscreenMode)
+                {
+                    x = *(f32 *)(cfg + 0x0);
+                    y = *(f32 *)(cfg + 0x204);
+                    if (modeCtrl.splitscreenMode == 2)
+                        y += *(f32 *)(cfg + 0x4);
+                }
+                else
+                {
+                    x = *(f32 *)(cfg + 0x54);
+                    y = *(f32 *)(cfg + 0x208);
+                    if (idx != 0 && (modeCtrl.splitscreenMode != 0 || idx != 1))
+                        x += *(f32 *)(cfg + 0x0);
+                    if (modeCtrl.splitscreenMode != 2)
+                        y += *(f32 *)(cfg + 0x4);
+                }
+                break;
+            }
+            /* fall through */
+        case 4:
+            x = *(f32 *)(cfg + 0x54) + *(f32 *)(cfg + 0x0) * (idx % 2);
+            y = *(f32 *)(cfg + 0x208) + *(f32 *)(cfg + 0x4) * (idx / 2);
+            break;
+        }
+        if (modeCtrl.unk30 == 1)
+        {
+            sprite->fontId = 9;
+            sprite->scaleX = *(f32 *)(cfg + 0x1C8);
+            sprite->scaleY = *(f32 *)(cfg + 0x1C8);
+            sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000F084;
+        }
+        else
+        {
+            sprite->fontId = 0x45;
+            sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000F118;
+        }
+        sprite->type = 0;
+        sprite->x = x;
+        sprite->y = y;
+        sprite->depth = *(f32 *)(cfg + 0xD8);
+        sprite->textAlign = 4;
+        sprite->flags = 0x200000;
+        sprite->counter = 0x78;
+        sprintf(sprite->text, (char *)lbl_00015D4C);
+    }
 }
 #pragma peephole on
 void lbl_0000F084(s8 *arg0, struct Sprite *sprite)

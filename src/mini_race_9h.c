@@ -388,11 +388,61 @@ void lbl_00001E14(void);
 void lbl_00001ED0(void);
 void lbl_00001F94(void);
 void lbl_00001FDC(void);
-#pragma force_active on
-asm void lbl_000016F8(void)
+// INVENTED -- 16-byte sub-block at lbl_10000000 + 0x28.  UNVERIFIED.
+struct RaceModeSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000016F8.s"
+    /*0x00*/ u16 unk0;
+    /*0x02*/ u16 unk2;
+    u8 filler4[0x10 - 4];
+};
+// INVENTED -- per-racer state off struct Ball::unk144.  UNVERIFIED.
+struct RaceSub
+{
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+    u8 filler18[0x1E - 0x18];
+    /*0x1E*/ u16 unk1E;
+};
+#pragma force_active on
+#pragma peephole on
+void lbl_000016F8(void)
+{
+    u8 *w = lbl_10000000;
+    struct RaceModeSub *s = (struct RaceModeSub *)(w + 0x28);
+    struct Ball *ball;
+    s16 i;
+    struct RaceSub *st;
+
+    for (i = 0, ball = ballInfo; i < 4; i++, ball++)
+    {
+        if ((s8)ball->unk0 != 2)
+            continue;
+        st = (struct RaceSub *)ball->unk144;
+        if (st->unk14 & 0x40)
+            continue;
+        if (!(st->unk14 & 2))
+            lbl_0000340C(ball, 0x11);
+        if (!(s->unk2 & 8))
+            continue;
+        if (!(st->unk14 & 0x20))
+            continue;
+        if (st->unk14 & 2)
+            continue;
+        ((s16 *)(w + 0x48))[ball->playerId] += ((s16 *)lbl_00015934)[st->unk1E - 1];
+    }
+    if (s->unk2 & 8)
+    {
+        lbl_00002E04(0);
+        if (*(s16 *)(w + 0x50) >= 0)
+            *(s32 *)(w + 0x3C) = 0x1E0;
+        else
+            *(s32 *)(w + 0x3C) = 0x12C;
+    }
+    else
+        *(s32 *)(w + 0x3C) = 0x12C;
+    *(s16 *)(w + 0x44) = *(s16 *)(w + 0x38);
+    *(s16 *)(w + 0x38) = 8;
+    *(s32 *)w = 0;
 }
 
 #pragma force_active reset
