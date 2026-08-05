@@ -133,11 +133,20 @@ def main():
     orig = open(path, newline="").read()
     pre, body, post = find_def(orig, label)
     crlf = "\r\n" in orig
+    # Accept .c as well as .txt.  Until run 20 this filter was .txt-only while
+    # the usage text promised only "the complete text of one function
+    # definition", so a directory of .c fragments scored NOTHING -- a bare
+    # "=== ranked ===" and exit 0, no diagnostic.  mini_pilot lost every
+    # real-link figure of run 20 to it and the orchestrator hit it again
+    # recovering test_mode.  Zero candidates is now a hard error, not silence.
+    names = [n for n in sorted(os.listdir(vdir))
+             if n.endswith((".txt", ".c", ".frag"))]
+    if not names:
+        sys.exit("no variant files in %s -- expected *.txt, *.c or *.frag "
+                 "(found %d other file(s))" % (vdir, len(os.listdir(vdir))))
     results = []
     try:
-        for name in sorted(os.listdir(vdir)):
-            if not name.endswith(".txt"):
-                continue
+        for name in names:
             v = open(os.path.join(vdir, name), newline="").read()
             v = v.replace("\r\n", "\n")
             if crlf:

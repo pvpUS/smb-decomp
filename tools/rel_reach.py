@@ -291,6 +291,32 @@ def main():
                 blocked.append((t, 'wants %s, own TU emits no magic'
                                 % ('+'.join(sorted(need)) or '?')))
 
+        # --- run 20: the reads_magic signal DIES SILENTLY in a carved module.
+        # rel_census.magic_labels() finds a magic by scanning the asm blob for
+        # `lbl_X:` followed by .4byte 0x43300000/0x80000000.  A carve replaces
+        # those bodies with ZERO-SIZE ALIASES, so the labels become invisible
+        # and reads_magic is empty for every row -- leaving only the
+        # `n_lis > n_sgn` site-count heuristic, which mwcc's loop-hoisting of
+        # the 0x4330 constant defeats.  sel_ngc proved this with a build in run
+        # 20: rel_reach said 3,070 reachable, the true figure is 1,461, and
+        # lbl_0000C970 / lbl_00010438 (1,609 insn) are genuinely DEAD -- they
+        # lfd from the UNSIGNED magic while their TU emits only the signed one.
+        # Measured across all nine modules that run: every other module has
+        # 4-40 a-BLOCKED rows carrying a reads_magic; sel_ngc had ZERO.
+        nblocked = sum(1 for t in table if t['cat'] == 'a-BLOCKED')
+        nrm = sum(1 for t in table if t['cat'] == 'a-BLOCKED'
+                  and (t.get('reads_magic') or ''))
+        if nblocked and not nrm:
+            print('%-16s !! reads_magic IS DEAD FOR THIS MODULE (0 of %d '
+                  'a-BLOCKED rows reference a visible magic label).'
+                  % (mod, nblocked))
+            print('%-16s    Its magics are CARVED, so rel_census cannot see '
+                  'them and only the site-count heuristic remains.' % '')
+            print('%-16s    The REACHABLE figure below is an UPPER BOUND, not '
+                  'evidence. Confirm any row by building a draft' % '')
+            print('%-16s    and watching .rodata before spending on it '
+                  '(sel_ngc, run 20: over-reported by 1,609).' % '')
+
         ri = sum(t['insn'] for t, _ in reach)
         bi = sum(t['insn'] for t, _ in blocked)
         gtot['reach'] += ri
