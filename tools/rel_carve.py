@@ -804,21 +804,66 @@ def main():
     paths = ['asm/%s.s' % mod] + \
             ['asm/%s_d%d.s' % (mod, k) for k in range(1, len(segments))]
     src = [i for i in items if not i.startswith('asm/')]
-    out, pos = [paths[0]], 0
-    for k, h in enumerate(holes):
+    for h in holes:
         if h['into'] not in src:
             sys.exit('%s is not in the %s SOURCES list' % (h['into'], mod))
-        j = src.index(h['into'])
-        if j < pos:
-            sys.exit('holes are not in .text order: %s owns a later %s hole '
-                     'but sits earlier in SOURCES.\n  A section follows SOURCES '
-                     'order, so holes must be carved in the same order as their '
-                     'owning objects.' % (h['into'], h['sec']))
-        out += src[pos:j + 1]
-        if k + 1 < len(paths) - 1:          # intermediate segment; last one goes at the end
-            out.append(paths[k + 1])
-        pos = j + 1
-    out += src[pos:]
+
+    # RUN 23: the interleave is a PER-SECTION constraint, not one global
+    # "every hole must be in SOURCES order" rule.  The old loop placed segment
+    # k+1 immediately after hole k's owner and bailed out whenever two
+    # CONSECUTIVE holes shared an owner -- which is exactly the case the
+    # docstring above advertises as supported, "one TU can own both a magic
+    # hole and a jump-table hole".  mini_billiards' src/mini_billiards_34.c
+    # owns the .rodata magic at lbl_0001CF50 AND lbl_0000D330's .data jump
+    # table at lbl_00021080, and the tool exited with
+    #   holes are not in .text order: src/mini_billiards_34.c owns a later
+    #   .rodata hole but sits earlier in SOURCES
+    # having already printed a valid resolved pairing.  Nothing was written
+    # (the checks run before commit_segments), so it was a refusal, not damage.
+    #
+    # What each section actually requires is only that ITS OWN emitters appear
+    # in address order:  slice0, owner(that section's hole0), slice1,
+    # owner(hole1), ..., tail.  A segment carrying no bytes of a section is
+    # unconstrained by that section -- which is what lets a .data-only segment
+    # sit anywhere ahead of the .c file that fills its hole.
+    nseg = len(segments)
+    lo = [-1] * nseg                        # must sit AFTER this src index
+    hi = [len(src)] * nseg                  # must sit BEFORE this src index
+    for sec in ENT:
+        hs = [k for k, h in enumerate(holes) if h['sec'] == sec]
+        if not hs:
+            continue
+        for m, segi in enumerate(hs + [nseg - 1]):
+            if not segments[segi].get(sec):
+                continue                    # empty slice -- makes no claim
+            if m:
+                lo[segi] = max(lo[segi], src.index(holes[hs[m - 1]]['into']))
+            if m < len(hs):
+                hi[segi] = min(hi[segi], src.index(holes[hs[m]]['into']))
+    for k in range(nseg):
+        if lo[k] >= hi[k]:
+            sys.exit('holes are not in .text order: no SOURCES position exists '
+                     'for data segment %d -- it has to follow %s and precede '
+                     '%s.\n  A section follows SOURCES order, so the holes '
+                     'WITHIN ONE SECTION must be carved in the same order as '
+                     'their owning objects.'
+                     % (k, src[lo[k]],
+                        src[hi[k]] if hi[k] < len(src) else 'the end'))
+
+    # Segment 0 is always first and the tail always last.  Every intermediate
+    # segment goes as EARLY as its bounds allow, which reproduces the old
+    # placement byte-for-byte whenever there is at most one hole per owner --
+    # that is what keeps rel_carve_regress.py's 19 landed .rodata carves
+    # identical.
+    at = {}
+    for k in range(1, nseg - 1):
+        at.setdefault(lo[k] + 1, []).append(k)
+    out = [paths[0]]
+    for j in range(len(src) + 1):
+        for k in at.get(j, []):
+            out.append(paths[k])
+        if j < len(src):
+            out.append(src[j])
     out.append(paths[-1])                   # final segment carries the uncarved sections
 
     # Every check has passed; only now is it safe to drop the previous carve.

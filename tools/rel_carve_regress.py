@@ -28,12 +28,27 @@ NEW = os.path.join(HERE, 'rel_carve.py')
 # byte-identical .rodata carves?"
 BASE_REV = os.environ.get('CARVE_BASE_REV', '984524c')
 OLD = os.path.join(HERE, '_carve_baseline.py')
-_blob = subprocess.run(['git', 'show', '%s:tools/rel_carve.py' % BASE_REV],
-                       cwd=MAIN, capture_output=True)
-if _blob.returncode:
-    sys.exit('cannot read tools/rel_carve.py at %s -- pass CARVE_BASE_REV=<rev>'
-             % BASE_REV)
-open(OLD, 'wb').write(_blob.stdout)
+
+# CARVE_BASE_FILE names the baseline directly, bypassing git.  A warm copy's
+# HEAD is run-9 era, so `git show 984524c:` does NOT resolve there and this gate
+# was unusable in every one of them -- run 23 hit that in four modules
+# independently (mini_fight, mini_golf, mini_billiards, mini_race), and three of
+# them had to hand-copy the gate to get a baseline in.  Any file path works;
+# _orch_run<N>/rel_carve.PRE_RUN<N>.py is the natural one.
+_bf = os.environ.get('CARVE_BASE_FILE')
+if _bf:
+    if not os.path.exists(_bf):
+        sys.exit('CARVE_BASE_FILE does not exist: %s' % _bf)
+    open(OLD, 'wb').write(open(_bf, 'rb').read())
+else:
+    _blob = subprocess.run(['git', 'show', '%s:tools/rel_carve.py' % BASE_REV],
+                           cwd=MAIN, capture_output=True)
+    if _blob.returncode:
+        sys.exit('cannot read tools/rel_carve.py at %s -- pass CARVE_BASE_REV=<rev>,\n'
+                 '  or CARVE_BASE_FILE=<path> if you are in a warm copy (its HEAD\n'
+                 '  is run-9 era and will not resolve any recent rev).'
+                 % BASE_REV)
+    open(OLD, 'wb').write(_blob.stdout)
 
 # (module, [carve args])  -- .rodata only, the shapes the landed carves used.
 # Hand cases first, then one auto-derived pair per module (below) so the gate

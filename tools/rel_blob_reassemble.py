@@ -4,8 +4,41 @@ PRISTINE monolithic data blob for a module that is already carved.
 rel_carve.pristine() refuses a carved module -- `asm/<mod>.s` is then only the
 head segment and has no .data/.bss -- and its documented escape is "re-run
 rel_rematch.py", which is a whole re-split.  For TESTING we can do better: the
-segments are a partition of the original blob, so concatenating them back in
-SOURCES order, per section, reproduces the pristine blob exactly.
+segments are concatenated back in SOURCES order, per section.
+
+*** THE RESULT IS NOT BYTE-PRISTINE, AND RUN 23 PROVED IT FOUR TIMES. ***
+
+This file used to claim "the segments are a partition of the original blob, so
+concatenating them reproduces the pristine blob exactly".  They are not a
+partition: a carved hole's BYTES are gone from the blob entirely -- they now
+live in the .rodata/.data of the C object that filled the hole.  Only the old
+hand-written hole.py left `.if 0 ... .endif` reference copies, and this tool
+strips those.  So every already-carved label comes back ZERO-SIZE.  Symptoms
+four modules hit independently:
+
+  mini_fight      blob 24 bytes short; 3 labels reduced to zero-size
+  mini_golf       returns the blob MINUS every hole; rebuilt the real pristine
+                  blob from git (36fe55d, run 3) and proved it with a
+                  per-section difflib compare
+  mini_billiards  the 3 carved 8-byte magics return as zero-byte labels
+  test_mode       `--hole L:8` then dies with "asks for more bytes than the
+                  label's run (0)"
+
+TWO WAYS THROUGH, both verified with a GOLDEN build:
+
+  1. `--hole LABEL:0` re-specifies an already-landed hole.  A bare `--hole`
+     works too.  The segment is still cut in the right place and the zero-size
+     alias is re-emitted.  (mini_bowling; mini_race used the bare form.)  This
+     is the cheap route and it is enough to ADD a hole to a carved module --
+     mini_race carved a second hole this way for +885 instructions.
+  2. Reinsert each hole's bytes from the owning object's own section --
+     `objdump -s -j .rodata src/x.c.o` IS the hole content, by definition.
+     mini_fight's `mkpristine.py` does this and round-tripped to a GOLDEN
+     build.  Use it when you need the true pristine bytes, not just the cuts.
+
+Also note: running rel_carve inside a tree built by this script OVERWRITES that
+tree's `asm/<mod>.s` with the carved head, so a second trial needs the blob
+reassembled again (mini_bowling).
 
 Nothing here writes to the real repo.  It only reads it.
 
@@ -77,6 +110,13 @@ def reassemble(mod, dest):
     # Drop the `.balign 8` rel_carve itself writes at the head of each rodata
     # slice, and the `.if 0` reference copies a hole leaves behind: neither is
     # in the pristine blob.  Everything else is byte-for-byte original.
+    #
+    # RUN 23: the strip is `.rodata`-ONLY.  It used to run once per merged
+    # section, so it also ate `.data`'s leading `.balign 8` -- which rel_split
+    # wrote and the pristine blob really has.  mini_race caught it: the
+    # reassembled blob silently lost that directive, and re-carving from it
+    # would have shifted every .data address.  With this restriction the blob
+    # re-carves to content-identical output and gates GOLDEN.
     out = list(pre)
     ins = next((i for i, l in enumerate(out)
                 if l.strip().startswith('.include')), len(out) - 1) + 1
@@ -93,7 +133,7 @@ def reassemble(mod, dest):
                 continue
             if dead:
                 continue
-            if s == '.balign 8' and not body:
+            if s == '.balign 8' and not body and name == '.rodata':
                 continue
             body.append(l)
         out += ['', '.section %s' % name] + body
