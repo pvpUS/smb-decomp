@@ -69,10 +69,324 @@ the newer files in and re-ran everything deliberately. But:
 
 **Do tool work in scratch while agents are live; land it after the last one
 closes out.** Nothing was lost this time; that was luck, not process.
+**Run 23 observed this**: all five tool landings happened after the ninth agent
+closed, and eight of nine agents reported `diff -rq tools` empty at start *and*
+end. The one exception was self-inflicted and declared (see §0.29).
+
+### SNAPSHOT THE OWNER ONCE. RESTORE FROM THE SNAPSHOT, NEVER FROM DISK.
+
+**Every installer in this project has now been bitten by the same defect**, and
+it has cost real banked work two runs running. An installer that seeds its
+"pristine" copy from the owner file's CURRENT bytes will, the moment a
+conversion is banked, cache the *converted* file — or worse, a variant — and its
+next `finally` silently reverts your work.
+
+- **mini_pilot lost its banked conversion twice in run 23.** The second time,
+  because `rel_merge_tu` **deletes** absorbed `.c` files, the revert left a
+  Makefile referencing files that no longer existed and the build produced **NO
+  RESULT**. It was recovered only from a start-of-run `src/` snapshot the agent
+  had taken on its own initiative.
+- **sel_ngc scored six variants against a poisoned baseline** in run 23: one
+  `--keep` run made that variant the new pristine.
+- **mini_billiards** hit it once and shipped `keep/pristine/` to prevent it.
+- Run 22's stored-draft revert was the same family.
+
+**Take the snapshot at start of run, before anything is installed. Restore from
+it. `_scratch_<MOD>/run<N>/pristine/` is the convention.**
+`_harvest_run23/sel_ngc__inst.py` is the fixed shape.
 
 ---
 
-## 0.28 — RUN 22 DONE (2026-08-05): +3,029 insn, 41.55% -> 43.14%. START HERE.
+## 0.29 — RUN 23 DONE (2026-08-10): +2,811 insn, 43.14% -> 44.62%. START HERE.
+
+Nine parallel agents, one per module, **no workers — ELEVENTH consecutive run
+under the standing rule.** Seven of nine gained — the most in any run. **The
+run's structural result is that `rel_carve.py --data-hole` is now
+build-validated, and that THREE modules independently found and fixed the same
+tool bug that had kept it unexercised.**
+
+| module | still-asm | insn | % | gained |
+|---|---|---|---|---|
+| **mini_pilot** | 10 fns | 9587/12137 | **78.99%** | **+254 / +1** |
+| **mini_race** | 36 fns | 13780/19817 | **69.54%** | **+885 / +4** |
+| **test_mode** | 23 fns | 10756/16232 | **66.26%** | **+382 / +2** |
+| **mini_bowling** | 18 fns | 10035/15313 | **65.53%** | **+233 / +1** |
+| option | 13 fns | 5372/12375 | 43.41% | 0 |
+| sel_ngc | 11 fns | 7219/18084 | 39.92% | 0 |
+| **mini_fight** | 72 fns | 8921/28585 | **31.21%** | **+442 / +2** |
+| **mini_billiards** | 21 fns | 8549/28793 | **29.69%** | **+302 / +1** |
+| **mini_golf** | 18 fns | 10670/38919 | **27.42%** | **+313 / +2** |
+| **TOTAL** | **222 fns** | **84888/190254** | **44.62%** | **+2811 / +13** |
+
+**Verified**: `diff -rq` per module before merging — **every module's changed
+file list matched its own report exactly**; all 21 changed/new `.c`+`.s` scanned,
+**zero non-ASCII bytes**; **each of the seven changed modules rebuilt in the main
+tree to the EXACT sha1 its agent reported** with every stub count matching; all
+nine `rel_structcheck` **CLEAN** with every files/SOURCES/C-definition/stub
+figure reproducing its agent's number; clean build from **0 objects** → **12/12
+artifacts OK** and `sha1sum -c` all OK; the main-tree census reproduces all nine
+still-asm figures. Reconciles both ways: 190,254 − 105,366 = 84,888, and
+235 − 222 = 13. Object metrics **932→910 / 1,102→1,080 / 935→913** (−33 `.c`
+absorbed, +11 new `.s`), and −33+11 = −22 matches both `.o` deltas.
+
+### ★★★ `rel_carve.py --data-hole` IS BUILD-VALIDATED — AND ONE BUG BLOCKED IT ALL ALONG
+
+**Four modules produced a GOLDEN build through the tool** (mini_fight,
+mini_golf, mini_billiards, mini_bowling), and `lbl_00014CC0` (218, mini_fight)
+is the first conversion in the project banked behind a tool-cut `.data` carve.
+
+**Three of them independently hit, diagnosed and patched the SAME defect.** When
+one `.c` owns holes in two sections — a `.data` jump table plus the `.rodata`
+magic its reader needs, which is *the normal case and what the docstring
+advertises* — the SOURCES-interleave builder placed the second slice **behind**
+its owner. The old loop said "segment *k+1* goes immediately after hole *k*'s
+owner", which is only equivalent to the real rule while every hole has a
+different owner. mini_fight and test_mode got a hard refusal (`holes are not in
+.text order`); mini_golf got a silently wrong layout.
+
+**Landed: mini_billiards' patch**, the most general of the three — it replaces
+the global ordering rule with **per-section bounds** (each section's emitters
+must appear in address order; a segment carrying no bytes of a section makes no
+claim on it). It reproduces the old placement byte-for-byte whenever there is at
+most one hole per owner. Gated: `rel_carve_selftest.py` **59 files / 2,175
+checks / 0 mismatches**, `rel_carve_regress.py` **19/19 byte-identical**.
+> **⚠ NOT re-verified: that the landed tool reproduces mini_fight's and
+> mini_golf's own run-23 carve outputs byte-for-byte.** Those outputs are in the
+> tree and gate GOLDEN, so nothing is at risk today — **but diff before trusting
+> any REGENERATION of either carve.**
+
+### ★★★ `rel_blob_reassemble.py` DOES NOT PRODUCE A PRISTINE BLOB — FOUND FOUR TIMES
+
+Its docstring claimed the segments "are a partition of the original blob". They
+are not: **a carved hole's bytes are gone from the blob entirely** — they live
+in the `.rodata`/`.data` of the C object that filled the hole. Only the old
+hand-written `hole.py` left `.if 0` reference copies, and this tool strips them.
+So **every already-carved label comes back ZERO-SIZE.** mini_fight was 24 bytes
+short; mini_golf got the blob minus every hole and rebuilt the real one from git
+(`36fe55d`, run 3); mini_billiards saw its three magics return as zero-byte
+labels; test_mode died on `asks for more bytes than the label's run (0)`.
+
+**Two ways through, both with GOLDEN builds behind them** — docstring rewritten
+to say so:
+1. **`--hole LABEL:0`** (or a bare `--hole`) re-specifies an already-landed hole
+   and still cuts the segment correctly. This is enough to **ADD** a hole to a
+   carved module — **mini_race did exactly this for +885**, the run's largest
+   gain, and it is the first tool-driven carve of a second hole anywhere.
+2. **Reinsert each hole's bytes from the owning object** (`objdump -s -j .rodata
+   src/x.c.o` *is* the hole content). mini_fight's `mkpristine.py`, round-tripped
+   to GOLDEN.
+
+**Also fixed**: the `.balign 8` strip ran once per merged section, so it ate
+**`.data`'s ORIGINAL directive** (written by `rel_split`, not a carve artifact).
+Now `.rodata`-only. mini_race caught it; re-carving from the unfixed blob would
+have shifted every `.data` address.
+
+### ★★★ A THIRD FICTIONAL-MATCH MODE: N-in-N ON A BUILD WHOSE DATA LAYOUT IS WRONG
+
+mini_golf: run 22's `lbl_000109CC` "14 in 14" was measured on a build where
+`src/mini_golf_51.c.o` emits **0x14 bytes of stray `.rodata`** — byte-for-byte
+the pool it should have been *reading* — because the draft spelled the constants
+as literals. **Build sha1 not golden.**
+
+> **A per-function `rel_ascore` structurally cannot see this: every reference is
+> a relocation, so the instruction words are identical either way.**
+
+The fix cost nothing and *deleted* the precondition — reading the pool through a
+pointer local is still exactly 14 in 14 and the object then has **no `.rodata`
+at all**, so `109CC` needs no carve. **`_harvest_run23/mini_golf__probe51.py` is
+the detector; run it before quoting any near-miss.**
+
+### ★★ TWO MODULES CLOSED THE BOOKS ON WORK THE BRIEF HAD KEPT OPEN FOR FIVE RUNS
+
+- **sel_ngc costed the `_52.c` merge and it is STRUCTURALLY IMPOSSIBLE at any
+  price** — with a link map, not an inference. One object emits one contiguous
+  `.rodata`, so a merged TU puts the signed and unsigned magics adjacent where
+  golden needs them **456 bytes apart with `d1.s`'s 448 relocated bytes
+  between**; no SOURCES permutation fixes it. Splitting `_29.c` fails too:
+  **18 reference sites to the signed magic span the whole file**. That is
+  `10438` (958) + `C970` (651) + `F788` (417) = **2,026 insn strictly dead**,
+  plus `ECB0` (694) **re-classified** — the census filed it `d-JUMPTBL` when its
+  real blocker is the same S+U proof. **Confirmed live pool for the module is
+  1,461 insn in 5 functions.**
+- **mini_pilot falsified run 22's merge blocker with a build.** It was never the
+  `struct T[]`/`u8[]` conflict: retyping *both* named symbols leaves **118/118
+  functions byte-identical**, because 29 of the 31 absorbed files only
+  *declare* them. The real cause was three symbols whose absorbed spelling
+  silently changed meaning (`*(s32 *)X` on an `extern u32` is an int→pointer
+  cast of the VALUE). The merge now runs **two files further** than run 22
+  attempted — a 33-file TU — for **+1,005 insn of reachability**.
+
+### ★★ A MODULE ANSWERED ANOTHER MODULE'S NAMED OPEN QUESTION — TWICE
+
+- **sel_ngc answered option's pre-`stwu` prologue question**, which option spent
+  ~35% of its own run failing to find: **a pointer local at a NON-ZERO offset
+  from a symbol local** flips how many address computations mwcc packs into the
+  window. Zero instruction cost, proved with a build (insns 0-10 byte-identical).
+  It is run-17 idiom 11's trigger. **option's `5020` and `6AD0` are each +1.**
+- **option answered its own `cmplwi` question** with a 26-spelling probe against
+  the real mwcc line: an unsigned zero-compare mwcc will not fold comes from a
+  **pointer-cast** compare. `6C54` now builds **719 == 719**, the exact golden
+  count, after five runs stuck 2 short.
+
+### ★ THE IDIOM HAUL
+
+1. **★★ Run-18 idiom 4 closed a 218-instruction function, and the MIXING is what
+   matters, not the spelling.** Two reads of the same value spelled the *same*
+   are 5 in 3 across 10 rewrites; spell **either one** differently, in either
+   order, and it is RAW 0. Both-different also works. (mini_fight)
+2. **★★ Run-20 idiom 15 is the lever for EVERY stack→stack `Vec` copy** — `p =
+   &k; v = *p;` gives golden's load/store interleave. Scope is exact: symbol→
+   stack and stack→struct are unaffected. Worth 15 diffs on two functions; the
+   answer had been sitting in a matched sibling three functions up. (mini_race)
+3. **★★ `#pragma opt_unroll_loops off` is NOT a no-op in mwcc 1.1** — it moves
+   the *runtime unroll factor* x8 → x4, 211 insn → 130 on identical source. It
+   is the only lever anyone has on the factor. **Falsifies run 21's mini_fight
+   finding as stated.** (sel_ngc)
+4. **★★ `#pragma opt_common_subs off` is NOT universally catastrophic** — every
+   brief since run 6 said it was. Here it removes exactly one instruction and
+   flips a callee-saved FPR rank, 24 in 20 → 3 in 3. **But it is
+   function-specific**, inert or worse on all six of that module's other drafts.
+   (mini_billiards)
+5. **★★ Three switch-assigned floats are ONE AGGREGATE, not three scalars** —
+   scalars 304 insn, `Vec` 302 with golden's frame. **Diagnostic: 16 frame bytes
+   the code never touches is a register-allocated aggregate.** (mini_billiards)
+6. **★★ The ANONYMOUS row cast and the named local are a PAIR** — named-local
+   form 12 in 6, `&((u8 (*)[S])(base + K))[i][0]` MATCH. Joins run-16's row cast
+   to mini_fight's idiom 8. (test_mode)
+7. **★★ An `(s16)` cast on an `s32` local narrows ONCE, into the local's own
+   register; an `s16` local narrows at EVERY use — worth 3 instructions.**
+   Diagnostic: golden showing `extsh rLOCAL, rTEMP` (not in-place) means an
+   `s32` local with an explicit cast. Does **not** generalise to every scalar.
+   (mini_race)
+8. **★★ `f64` vs `f32` on a mixed-precision mul-add temp is an `frsp` in the
+   wrong place** — `f64` MATCH, `f32` 6 in 3. A *used* `f64` local costs no
+   stack slot. The un-split single statement is 15 in 3 in all nine spellings.
+   (mini_race)
+9. **★★ A float self-assignment keeps an otherwise-folded empty block alive,
+   worth exactly +1.** mwcc folds `{}`, `;`, `(void)0;`, `ka = ka;`, `kb = 0;`
+   and six more — **all 232**; `res = res;` with `res` an `f32` gives golden's
+   233. Not the peephole. (mini_bowling)
+10. **★★ mwcc puts a register VARIABLE in operand A of a commutative FP op and
+    an anonymous TEMP in operand B; two variables keep source order.** Binding
+    the subexpression to a named local fixed nine `fadd`s. Cross-checked in the
+    DOL. (mini_bowling)
+11. **★★ Statement order was worth 51 of 55 raw diffs on a 59-instruction
+    leaf**, and it reaches run-20 idiom 14's fused `lis ; lwz sym@l` shape —
+    which every declaration-initialiser route reaches at RAW 58-59. (mini_fight)
+12. **★★ A declaration retype is codegen-neutral in any file that does not USE
+    the symbol.** Price a merge conflict by *uses*, not declarations. Run-18
+    idiom 1 confirmed in both directions on one symbol; **all five use-site
+    spellings byte-identical**. (mini_pilot)
+13. **★★ The multiply operand order is worth 2 and only shows with a pool
+    read** — with a literal, either order works because mwcc loads the constant
+    first. (mini_golf)
+14. **★ mwcc ranks an aggregate's members by ORDER OF FIRST DEFINITION**, not
+    field offset — all six slot→field mappings identical. (mini_billiards)
+15. **★ The declaration slot of an `s16` accumulator is a THRESHOLD, not an
+    ordering** — slots 0-1 give r31, slots 2-7 all give golden's r27. (mini_race)
+16. **★ The SIXTH local costs 8 bytes of frame and the type is irrelevant** —
+    but retyping an *existing* local to `f64` costs nothing. (mini_bowling)
+17. **★ 8 bytes of dead local are readable straight off the frame**, and `f64
+    dead` / two `f32` / `s32 pad[2]` are byte-identical. (mini_race)
+18. **★ An embedded assignment inside a CALL ARGUMENT fixes a 2-instruction
+    scheduler transposition and the read is still folded back.** (test_mode)
+
+### ⚠ FALSIFIED / NARROWED THIS RUN
+
+- **"A retirement does not survive a TU merge" is a MAY, not a MUST.** §8 led
+  with it after run 22. mini_pilot moved three carried figures into a TU that
+  grew by 33 files and **every one scored identically at the same span**.
+  Re-measure — but do not assume the number moves.
+- **`#pragma peephole off` is INERT on a function with no asm block in scope**
+  (`scheduling off` on the same build is 81 in 39). The carried "peephole off is
+  catastrophic" claim needs the **asm-sibling** qualifier. (mini_race)
+- **`rel_carve --list`'s `JUMPTBL` flag has false positives** — test_mode's
+  `lbl_0000F940` has **no `bctr` at all**, and `lbl_000102B0` is a hand-written
+  function-pointer table already read from C. **Check for `bctr` before
+  believing the flag.** Its `.data` row is **2,614, not 2,768**.
+- **`rel_census` reports only the FIRST stop sign** — sel_ngc's `ECB0` is filed
+  `d-JUMPTBL` when its real blocker is S+U, so "7,315 behind a jump table" is
+  misleading by 694.
+- **mini_billiards `23B0` is the WRONG LENGTH** (126 against 128), not the
+  "cheapest 8-in-4 draft" the brief listed; `1E0` builds 270 against 269. **Both
+  facts were in run 22's README and did not reach §11 — my error.**
+- **`rel_carve` refuses on an already-carved module** (option, test_mode,
+  mini_race all hit it). That is what `rel_blob_reassemble` is for; option never
+  got past it and could not report on `--data-hole` at all.
+- **"This draft does not compile" is now 0-for-14.** Two new harness causes: a
+  K&R `extern void f();` block colliding with a real header prototype (fix: drop
+  every `extern … ();` the header prototypes), and retyping a prototype without
+  also retyping the `static asm void f(void)` stub declarator.
+
+### HAZARDS
+
+- **`rel_carve_regress.py` was unusable in every warm copy** — it resolves its
+  baseline with `git show 984524c:` and a warm `HEAD` is run-9 era. Four modules
+  hit it; three hand-copied the gate. **Fixed: `CARVE_BASE_FILE=<path>` escape.**
+- **`_scratch_mini_pilot/run22/batchg.py` resolves `INST` against its OWN
+  directory**, so a run-23 caller silently got run 22's pristine cache and wrote
+  a **pre-merge** owner over the tree 15 times, every variant reporting `FAIL`
+  with an empty reason because stderr was dropped.
+- **`rel_vsplice` still reports a bare `FAIL(compile)` on any signature change**
+  — swap prototype and definition together.
+- **A `.c` can own only ONE hole per SOURCES position.** mini_billiards' `_7.c`
+  owns three separate `.data` jump tables (1,104 + 311 + 1,301) and therefore
+  needs a **SPLIT**, not a bigger hole. Nobody has priced that.
+
+### NEXT RUN — ranked
+
+1. **mini_race: the second carve is priced, verified THIS run, cost 0, gain 621,
+   NO merge** — `lbl_000137B8` is 8-aligned and its three still-asm users
+   (`70FC` 355, `69D0` 200, `6FF4` 66) are **all in `src/mini_race_37.c`**.
+   Mechanically identical to the +885 that just landed. Then `9D3C` (211) at 18
+   in 9, whose residual is now **one hoisted `li 0`** and needs a fresh
+   hypothesis (both obvious pragmas are dead).
+2. **mini_fight: `lbl_00016CC8` (268) needs NO carve at all** — frame 0x30, no
+   `stmw`, no `stfd`, and its TU already emits the magic at **the exact address**
+   it references. Shape already decoded. Then `13C6C` (985), same `.data` shape
+   one table earlier, also no `stmw`. `DCA0` (191) got zero time this run.
+3. **test_mode: `2A30` (482) is the cheapest big target in the module** —
+   8-aligned table, **zero magic refs**, no `stmw`, 3 saved GPRs, frame 0x18.
+   Then `31B8` (367), now genuinely reachable (`_27.c` emits `0xFED0` at the
+   proven address).
+4. **mini_pilot: `lbl_00005824` (576)** — never opened, now the module's largest
+   reachable target, unlocked by the `_23`/`_24` merge that is banked and gates
+   GOLDEN at cost 0. Then `40EC` (217) at **40 in 23 at the exact count**.
+5. **option: `6AD0` (89) at 5 in 3 with ONE mechanism left — and sel_ngc just
+   named it** (non-zero-offset pointer local). The same fix is +1 on `5020`.
+   `6C54` (719) is at the exact count, residual one 4-group cyclic rotation.
+6. **mini_billiards: `23B0` needs 2 instructions in ONE region** and is fully
+   diagnosed — golden has *both* an updating base in the unrolled block and a
+   re-derivation in the preheader. Then holes A (1,104) and C (4,086), cheap on
+   the carve side now. **`5DD0` (1,020) moved 36 → 22.**
+7. **mini_bowling: the last two `.data` tables, cost 0, gain 74**, now
+   mechanical. Then `3A10` (197) at 11 in 8 — the untried shape is a local
+   holding `&g_poolInfo.playerPool`, since golden's `status` is a compiler IV.
+8. **mini_golf: `lbl_0000B8A8` (337) carve is priced, cost 0, ready to drop into
+   the 8-hole command.** Then `109CC` (295) at a **corrected** 14 in 14 needing
+   no carve. `15520` (6,182) still has run 21's untested `static inline`
+   hypothesis — **untested for the third run running**.
+9. **sel_ngc: `10214` (137) is ONE instruction from a match** — golden copies
+   the base into the IV register (`addi r12,r8,0`, no relocation) and reuses r8;
+   the source walker reproduces the copy but pays with `stfsu`. Then `B920` (370)
+   at 12 in 4 (dispatch-tree pivot only) and `B1C0`'s block B, **never opened**.
+
+### STILL OPEN (orchestrator)
+
+- **Verify the landed `rel_carve.py` reproduces mini_fight's and mini_golf's own
+  run-23 carve outputs** before either is ever regenerated.
+- **Let `rel_carve` ADD holes to an already-carved worktree directly**, instead
+  of requiring the `rel_blob_reassemble` + `--hole L:0` dance.
+- **Promote `probe51.py` and `align.py` into `tools/`** — both are generic and
+  both changed a module's decisions this run.
+- Fix `rel_merge_tu`'s duplicate-tag bug; fold `pragmafix.py` into it.
+- `rel_census` should report ALL stop signs, not the first.
+
+### RUN-24 PREP — see §0.29-PREP below once written.
+
+---
+
+## 0.28 — RUN 22 DONE (2026-08-05): +3,029 insn, 41.55% -> 43.14%. Superseded by §0.29.
 
 Nine parallel agents, one per module, **no workers — TENTH consecutive run under
 the standing rule.** Six of nine gained. **The run's structural result is that
