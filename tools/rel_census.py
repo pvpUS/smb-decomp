@@ -574,6 +574,33 @@ def main():
         print('      %-11s %3d fns / %6d insn  = %d%% of what remains'
               % ('REACHABLE', len(reach), sum(s['insn'] for s in reach),
                  round(100.0 * sum(s['insn'] for s in reach) / tot) if tot else 0))
+        # RUN 27: this column is a LOWER BOUND and it must say so.
+        #
+        # `reach` above is `cat in ('c-FREE','b-POOL')`, i.e. it calls EVERY
+        # a-BLOCKED function unreachable.  But a-BLOCKED only means "does an
+        # inline int->float conversion, so it needs its object to emit a magic
+        # double" -- it says nothing about whether that object ALREADY EMITS
+        # ONE.  Deciding that needs the .map's TU->.rodata ownership, which
+        # this tool does not read; tools/rel_reach.py does, and was written in
+        # run 20 for exactly this reason.
+        #
+        # It stayed a silent under-report for seven runs anyway, because target
+        # lists kept quoting THIS number.  In run 27 two modules re-derived the
+        # correction by hand, independently, and one of them (option's
+        # lbl_00006C54, 719 insn) had been written off as blocked for THREE
+        # runs while carrying a draft at 719 EXACT / 37 in 24.  mini_bowling's
+        # A23C (245) was the other -- and run 19 had already hand-derived that
+        # exact +245, which is recorded in rel_reach's own docstring.
+        #
+        # Printing the pointer costs one line and removes the whole failure
+        # mode.  It deliberately does NOT print a corrected figure: doing that
+        # needs the .map, and a census that silently needs a build is worse
+        # than one that says which tool to run.
+        print('      %-11s a LOWER BOUND -- a-BLOCKED counts as unreachable '
+              'even when the function\'s\n%s own TU already emits the magic it '
+              'needs.  Run tools/rel_reach.py for\n%s the real figure; it '
+              'prints the delta.  Do NOT build a target list on this line.'
+              % ('', ' ' * 18, ' ' * 18))
         if unsettled:
             print('      %-11s %3d fns / %6d insn  -- no prologue and nothing '
                   'settles them. READ THESE;\n%s all 7 of test_mode\'s were real '
