@@ -1,193 +1,106 @@
-# option data segment 1 -- rodata only; the .data half moved to
-# asm/option_d2.s / asm/option_d3.s so src/option_30.c can DEFINE
-# lbl_0000C8F0 (run 20 DEF carve).  This file keeps its SOURCES
-# position so option_30.c.o's 8-byte magic stays at .rodata 0x150.
+# option data segment 1 -- rodata continuation after a carved hole
 .include "macros.inc"
-.global lbl_0000C388
-.global lbl_0000C394
-.global lbl_0000C4B0
+.global lbl_0000C230
+.global lbl_0000C270
+.global lbl_0000C348
+.global lbl_0000C368
+.global lbl_0000C370
+.global lbl_0000C380
 
 .section .rodata
 .balign 8
-lbl_0000C388:
-    # 0xC388
+lbl_0000C230:
+    # 0xC230
+    .4byte 0x54000000
+    .4byte 0x3B3B0000
+    .4byte 0x00540000
+    .4byte 0xC53B0000
+    .4byte 0xAC000000
+    .4byte 0xC5C50000
+    .4byte 0x00AC0000
+    .4byte 0x3BC50000
     .4byte 0x00000000
     .4byte 0x00000000
-    .4byte 0xC4688000
-lbl_0000C394:
-    # 0xC394
-    .4byte 0x44688000
-    .4byte 0x3FB99999
-    .4byte 0x9999999A
-    .4byte 0x40000000
+    .4byte 0xC0000000
     .4byte 0x00000000
-    .4byte 0x40180000
     .4byte 0x00000000
-    .4byte 0x3FF00000
-    .4byte 0x00000000
-    .4byte 0x40280000
-    .4byte 0x00000000
-    .4byte 0x40080000
-    .4byte 0x00000000
+    .4byte 0xC0000000
+    .4byte 0x3FD9999A
+    .4byte 0x3C23D70A
+lbl_0000C270:
+    # 0xC270
+    .4byte 0x43300000
+    .4byte 0x80000000
     .4byte 0x3FE00000
     .4byte 0x00000000
-    .4byte 0x3F800000
+    .4byte 0xFF0000FF
+    .4byte 0x0000FFFF
+    .4byte 0xFFFF00FF
+    .4byte 0x00FF00FF
+    .4byte 0x000000FF
+    .4byte 0x42700000
+    .4byte 0x00000000
+    .4byte 0x00000000
+    .4byte 0x42700000
+    .4byte 0x42700000
+    .4byte 0x00000000
+    .4byte 0x00000000
+    .4byte 0x42700000
+    .4byte 0x00000000
+    .4byte 0xC2700000
+    .4byte 0x42700000
+    .4byte 0x00000000
+    .4byte 0xC2700000
+    .4byte 0x00000000
+    .4byte 0x00000000
+    .4byte 0xC2700000
+    .4byte 0xC2700000
+    .4byte 0x00000000
+    .4byte 0x00000000
+    .4byte 0xC2700000
+    .4byte 0x00000000
+    .4byte 0x42700000
+    .4byte 0xC2700000
+    .4byte 0x00000000
+    .4byte 0x42700000
+    .4byte 0x00000000
+    .4byte 0x00000000
+    .4byte 0x41C00000
     .4byte 0x43A00000
-    .4byte 0x4370199A
-    .4byte 0x461C4000
-    .4byte 0x40200000
+    .4byte 0x40E00000
+    .4byte 0x43160000
+    .4byte 0x40000000
     .4byte 0x00000000
-    .4byte 0x405E0000
-    .4byte 0x00000000
-    .4byte 0x40400000
-    .4byte 0x00000000
+    .4byte 0x43700000
+    .4byte 0x41000000
+    .4byte 0x3F800000
     .4byte 0x3DCCCCCD
-    .4byte 0x43820000
-    .4byte 0x42380000
-    .4byte 0x43A80000
-    .4byte 0x43300000
-    .4byte 0x43500000
-    .4byte 0x43810000
-    .4byte 0x3F4CCCCD
     .4byte 0x40740000
     .4byte 0x00000000
-    .4byte 0x4078A000
+    .4byte 0x40733EB8
+    .4byte 0x51EB851F
+    .4byte 0x40380000
     .4byte 0x00000000
-    .4byte 0x40300000
+    .4byte 0x406E0000
     .4byte 0x00000000
-    .4byte 0x40600000
+lbl_0000C348:
+    # 0xC348
     .4byte 0x00000000
-    .4byte 0x43640000
-    .4byte 0x44430000
-    .4byte 0x435C0000
-    .4byte 0x43F80000
-    .4byte 0x44610000
-    .4byte 0x43D80000
-    .4byte 0x40400000
-    .4byte 0x00000000
-    .4byte 0x4057C000
-    .4byte 0x00000000
-    .4byte 0x40754000
-    .4byte 0x00000000
-    .4byte 0x40550000
-    .4byte 0x00000000
-    .4byte 0x405E8000
-    .4byte 0x00000000
-    .4byte 0x40240000
-    .4byte 0x00000000
-    .4byte 0x40606000
-    .4byte 0x00000000
-    .4byte 0x4070E000
-    .4byte 0x00000000
-    .4byte 0x43BD0000
-    .4byte 0x43CF0000
-    .4byte 0x43660000
-    .4byte 0x43870000
-    .4byte 0x42CC0000
-    .4byte 0x43BB0000
-    .4byte 0x42C00000
-    .4byte 0x42880000
-lbl_0000C4B0:
-    # 0xC4B0
+    .4byte 0x4370199A
+    .4byte 0x461C4000
+    .4byte 0x3F000000
+    .4byte 0x3F4CCCCD
+    .4byte 0x42700000
+    .4byte 0x43FF0000
+    .4byte 0x43DC0000
+lbl_0000C368:
+    # 0xC368
     .4byte 0x43300000
     .4byte 0x00000000
-    .4byte 0x43D00000
-    .4byte 0x42A00000
-    .4byte 0x4060E000
+lbl_0000C370:
+    # 0xC370
     .4byte 0x00000000
-    .4byte 0x3F000000
-    .4byte 0x3F19999A
-    .4byte 0x43F40000
-    .4byte 0x43070000
-    .4byte 0x43270000
-    .4byte 0x43938000
-    .4byte 0x43E50000
-    .4byte 0x43960000
-    .4byte 0x3F28F5C3
     .4byte 0x00000000
-    .4byte 0x4064E000
-    .4byte 0x00000000
-    .4byte 0xC1A00000
-    .4byte 0x41A00000
-    .4byte 0x43C50000
-    .4byte 0x429C0000
-    .4byte 0x43580000
-    .4byte 0x43D50000
-    .4byte 0x43F60000
-    .4byte 0x40A00000
-    .4byte 0x3FAAAAAB
-    .4byte 0x43DE0000
-    .4byte 0x4062CCCC
+    .4byte 0x3FECCCCC
     .4byte 0xCCCCCCCD
-    .4byte 0x405C0000
-    .4byte 0x00000000
-    .4byte 0x3FC00000
-    .4byte 0x00000000
-    .4byte 0x3F400000
-    .4byte 0x43CD0000
-    .4byte 0x42200000
-    .4byte 0x3F99999A
-    .4byte 0x40678000
-    .4byte 0x00000000
-    .4byte 0x406AC000
-    .4byte 0x00000000
-    .4byte 0x40580000
-    .4byte 0x00000000
-    .4byte 0x4069C000
-    .4byte 0x00000000
-    .4byte 0x42DC0000
-    .4byte 0x43200000
-    .4byte 0x4068C000
-    .4byte 0x00000000
-    .4byte 0x434E0000
-    .4byte 0x00000000
-    .4byte 0x40660000
-    .4byte 0x00000000
-    .4byte 0x43240000
-    .4byte 0x43520000
-    .4byte 0x40650000
-    .4byte 0x00000000
-    .4byte 0x4065C000
-    .4byte 0x00000000
-    .4byte 0x43D70000
-    .4byte 0x43D10000
-    .4byte 0x43CC0000
-    .4byte 0x3FB5C28F
-    .4byte 0x43E48000
-    .4byte 0x00000000
-    .4byte 0x406FE000
-    .4byte 0x00000000
-    .4byte 0x403E0000
-    .4byte 0x00000000
-    .4byte 0x43808000
-    .4byte 0x43AC8000
-    .4byte 0x40638000
-    .4byte 0x00000000
-    .4byte 0x40931000
-    .4byte 0x00000000
-    .4byte 0x40628000
-    .4byte 0x00000000
-    .4byte 0x43C60000
-    .4byte 0x43540000
-    .4byte 0x43D20000
-    .4byte 0x43C40000
-    .4byte 0x3FB33333
-    .4byte 0x44080000
-    .4byte 0x42B00000
-    .4byte 0x3F23D70A
-    .4byte 0x4077A000
-    .4byte 0x00000000
-    .4byte 0x3F933333
-    .4byte 0x00000000
-    .4byte 0x4076C000
-    .4byte 0x00000000
-    .4byte 0x40701000
-    .4byte 0x00000000
-    .4byte 0x43CE0000
-    .4byte 0x00000000
-    .4byte 0x40759000
-    .4byte 0x00000000
-    .4byte 0x42F40000
-    .4byte 0x44988000
-
-# 5
+lbl_0000C380:

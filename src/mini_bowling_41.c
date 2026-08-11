@@ -181,20 +181,20 @@ void lbl_00007FE0(void);
 void lbl_000080E0(void);
 void lbl_000082E4(void);
 void lbl_000086E4(void);
-void lbl_0000871C(void);
+void lbl_0000871C(struct Camera *, struct Ball *);
 void lbl_000087CC(void);
-void lbl_000089FC(void);
-void lbl_00008B8C(void);
-void lbl_00008C68(void);
-void lbl_00008D2C(void);
-void lbl_00008DF0(void);
-void lbl_00008EC0(void);
-void lbl_00008FB0(void);
-void lbl_00009048(void);
-void lbl_000090CC(void);
-void lbl_00009134(void);
-void lbl_0000919C(void);
-void lbl_00009230(void);
+void lbl_000089FC(struct Camera *, struct Ball *);
+void lbl_00008B8C(struct Camera *, struct Ball *);
+void lbl_00008C68(struct Camera *, struct Ball *);
+void lbl_00008D2C(struct Camera *, struct Ball *);
+void lbl_00008DF0(struct Camera *, struct Ball *);
+void lbl_00008EC0(struct Camera *, struct Ball *);
+void lbl_00008FB0(struct Camera *, struct Ball *);
+void lbl_00009048(struct Camera *, struct Ball *);
+void lbl_000090CC(struct Camera *, struct Ball *);
+void lbl_00009134(struct Camera *, struct Ball *);
+void lbl_0000919C(struct Camera *, struct Ball *);
+void lbl_00009230(struct Camera *, struct Ball *);
 void lbl_000096B4(void);
 void lbl_000097B4(void);
 void lbl_00009AA8(void);
@@ -245,9 +245,51 @@ void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
 #pragma force_active on
-asm void lbl_0000871C(void)
+u32 bowlPad153F0 = 0xC2C7812C;
+
+void lbl_0000871C(struct Camera *camera, struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000871C.s"
+    if (debugFlags & 0xa)
+        return;
+
+    switch (camera->subState)
+    {
+    case 0:
+        lbl_000089FC(camera, ball);
+        break;
+    case 1:
+        lbl_00008B8C(camera, ball);
+        break;
+    case 2:
+        lbl_00008C68(camera, ball);
+        break;
+    case 3:
+        lbl_00008D2C(camera, ball);
+        break;
+    case 4:
+        lbl_00008DF0(camera, ball);
+        break;
+    case 5:
+        lbl_00008EC0(camera, ball);
+        break;
+    case 6:
+        lbl_00008FB0(camera, ball);
+        break;
+    case 7:
+        lbl_00009048(camera, ball);
+        break;
+    case 8:
+        lbl_000090CC(camera, ball);
+        break;
+    case 9:
+        lbl_00009134(camera, ball);
+        break;
+    case 10:
+        lbl_0000919C(camera, ball);
+        break;
+    case 11:
+        lbl_00009230(camera, ball);
+        break;
+    }
 }
 #pragma force_active reset

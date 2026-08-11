@@ -23,6 +23,7 @@
 #include "game.h"
 #include "hud.h"
 #include "item.h"
+#include "light.h"
 #include "mathutil.h"
 #include "mode.h"
 #include "pool.h"
@@ -214,8 +215,7 @@ extern void func_8006AAEC();
 extern void draw_test_camera_target();
 extern void func_800AC43C();
 extern void stobj_draw();
-extern void add_light_to_pool();
-extern void alloc_pool_light();
+struct Light *alloc_pool_light(int, int);
 extern void background_draw();
 extern void background_light_assign();
 extern void draw_monkey();
@@ -249,7 +249,7 @@ void lbl_000025E4(void);
 void lbl_00002968(void);
 void lbl_00002B54(void);
 void lbl_00002BBC(void);
-void lbl_00002E04(void);
+void lbl_00002E04(int);
 void lbl_00002FA4(void);
 void lbl_00003094(void);
 void lbl_000030DC(void);
@@ -389,10 +389,152 @@ void lbl_00001ED0(void);
 void lbl_00001F94(void);
 void lbl_00001FDC(void);
 #pragma force_active on
-asm void lbl_000019AC(void)
+// INVENTED -- 16-byte sub-block at lbl_10000000 + 0x28.  UNVERIFIED.
+struct RaceModeSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000019AC.s"
+    /*0x00*/ u16 unk0;
+    /*0x02*/ u16 unk2;
+    /*0x04*/ u16 unk4;
+    /*0x06*/ s16 unk6;
+    u8 filler8[0x10 - 8];
+};
+
+// INVENTED -- per-racer state hanging off struct Ball::unk144.  UNVERIFIED.
+struct RaceSub
+{
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+    u8 filler18[0x1E - 0x18];
+    /*0x1E*/ u16 unk1E;
+};
+
+// INVENTED -- 0x48-byte per-course record at lbl_00015768.  UNVERIFIED.
+struct RaceCourseInfo5
+{
+    u8 filler0[0x38];
+    /*0x38*/ u16 unk38;
+    u8 filler3A[0x3C - 0x3A];
+    /*0x3C*/ Vec unk3C;
+};
+
+#pragma opt_propagation off
+void lbl_000019AC(void)
+{
+    u8 *w = lbl_10000000;
+    u8 *cfg = lbl_00013680;
+    struct RaceModeSub *s = (struct RaceModeSub *)(w + 0x28);
+    struct RaceCourseInfo5 *ent =
+        &((struct RaceCourseInfo5 *)lbl_00015768)[*(u16 *)(w + 0x28)];
+    s32 *pm;
+    s32 save;
+    struct Light *lt;
+    s8 *a;
+    s8 *b;
+    int chara;
+    struct RaceSub *st;
+    struct Ball *ball;
+    s16 i;
+    s8 sel[4];
+    s8 diff[4];
+    struct Light light;
+
+    if (*(u16 *)(w + 0x2A) & 8)
+    {
+        lbl_00002E04(1);
+    }
+    else if ((s->unk2 & 0x10) &&
+             (((struct RaceSub *)ballInfo->unk144)->unk14 & 2) &&
+             (((struct RaceSub *)ballInfo->unk144)->unk14 & 1))
+    {
+        *(u8 *)(w + 0x1F) |= 1;
+    }
+    a = sel;
+    b = diff;
+    chara = *(s32 *)(w + 0x1068);
+    ball = ballInfo;
+    for (i = 0; i < 4; a++, b++, i++, ball++)
+    {
+        *a = -1;
+        if ((s8)ball->unk0 == 2)
+        {
+            st = (struct RaceSub *)ball->unk144;
+            if (!(st->unk14 & 0x40))
+            {
+                *a = ball->ape->charaId;
+                if (st->unk14 & 0x20)
+                    *a |= 0x40;
+                if (s->unk2 & 0x10)
+                    *b = chara;
+                else if (s->unk2 & 8)
+                    *b = st->unk1E - 1;
+                else if (st->unk14 & 2)
+                    *b = st->unk1E - 1;
+                else
+                    *b = 3;
+            }
+        }
+    }
+    event_finish_all();
+    reset_camera_viewport();
+    event_start(0xF);
+    pm = &modeCtrl.unk30;
+    save = modeCtrl.unk30;
+    *pm = 1;
+    event_start(0x13);
+    *pm = save;
+    event_start(0xD);
+    event_start(1);
+    event_start(0x10);
+    event_start(0x12);
+    func_8009C5E4(sel, diff);
+    camera_set_state_all(0x46);
+    if (currStageId == 0x88 || currStageId == 0x85 || currStageId == 0x86 ||
+        currStageId == 0x8A)
+    {
+        lt = alloc_pool_light(1, 0);
+        if (lt != NULL)
+        {
+            if (currStageId == 0x85)
+            {
+                lt->rotX = 0x2600;
+                lt->rotY = -27648;
+            }
+            else if (currStageId == 0x88)
+            {
+                memset(&light, 0, sizeof(light));
+                light.u_id = 0;
+                light.u_inst = 0;
+                light.type = 1;
+                light.red = *(f32 *)(cfg + 0x64);
+                light.green = *(f32 *)(cfg + 0x64);
+                light.blue = *(f32 *)(cfg + 0x64);
+                light.pos.x = *(f32 *)(cfg + 0x68);
+                light.pos.y = *(f32 *)(cfg + 0x6C);
+                light.pos.z = *(f32 *)(cfg + 0x70);
+                light.refDist = *(f32 *)(cfg + 0x74);
+                light.k0 = *(f32 *)(cfg + 0x64);
+                light.k1 = *(f32 *)(cfg + 0x78);
+                light.k2 = *(f32 *)(cfg + 0x78);
+                add_light_to_pool(&light);
+            }
+            else if (currStageId == 0x8A)
+            {
+                lt->rotX = 0x6400;
+                lt->rotY = -28416;
+            }
+        }
+    }
+    mathutil_mtxA_from_translate(&ent->unk3C);
+    mathutil_mtxA_rotate_y(ent->unk38);
+    func_8009DB40(mathutilData->mtxA);
+    if (!(s->unk2 & 0x10))
+        lbl_0000E900();
+    start_screen_fade(0x100, 0, 0x1E);
+    *(s16 *)(w + 0x44) = *(s16 *)(w + 0x38);
+    *(s16 *)(w + 0x38) = 10;
+    *(s32 *)w = 0;
+    *(s32 *)(w + 0x3C) = 0xB4;
 }
+#pragma opt_propagation reset
 
 #pragma force_active reset

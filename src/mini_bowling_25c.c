@@ -162,7 +162,7 @@ void lbl_000051E0(void);
 void lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
-void lbl_0000664C(void);
+int lbl_0000664C(u8 *, s8);
 void lbl_000066C4(void);
 void lbl_000068C4(void);
 void lbl_00006E64(void);
@@ -246,10 +246,30 @@ void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
 #pragma force_active on
-asm void lbl_0000664C(void)
+int lbl_0000664C(u8 *p, s8 i8)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000664C.s"
+    u8 *q;
+    int i;
+
+    q = p + (i = i8);
+    switch (*(s8 *)(q + 0x35))
+    {
+    case 0:
+        return 0;
+    case 2:
+        return 11;
+    case 3:
+        return 10;
+    case 5:
+        return 13;
+    case 6:
+        return 14;
+    case 7:
+        return 12;
+    case 4:
+        return -q[0x20];
+    }
+    return p[i + 0x20];
 }
 
 #pragma force_active reset

@@ -170,7 +170,18 @@ extern u8 worldInfo[];
 extern u8 lbl_802F1F10[];
 extern u8 pauseMenuState[];
 extern u8 g_currPlayerButtons[];
-extern u8 controllerInfo[];
+// src/input.h's real type for this symbol, restated here because including
+// input.h would redeclare g_currPlayerButtons at a different type (mwcc 1.1
+// rejects that).  sizeof == 0x3C, which is the stride the code uses.
+struct ControllerInfo
+{
+    PADStatus held;
+    PADStatus prevHeld;
+    PADStatus pressed;
+    PADStatus released;
+    PADStatus repeat;
+};
+extern struct ControllerInfo controllerInfo[];
 extern u8 lbl_802F16BC[];
 extern u8 backgroundInfo[];
 
@@ -291,7 +302,7 @@ void lbl_00008324(void);
 void lbl_000084A0(void);
 void lbl_000085D8(void);
 void lbl_00008A10(void);
-void lbl_00008B60(void);
+void lbl_00008B60(struct Ball *ball, Vec *out);
 void lbl_00008C4C(u8 *, struct Ball *);
 void lbl_00009A08(void);
 void lbl_00009D3C(void);
@@ -384,10 +395,20 @@ void lbl_000098A8(void);
 void lbl_0000A088(void);
 void lbl_0000A31C(u8 *, struct Ball *);
 #pragma force_active on
-asm void lbl_00008B60(void)
+#pragma peephole on
+void lbl_00008B60(struct Ball *ball, Vec *out)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00008B60.s"
+    u8 *cfg = lbl_00013740;
+    s32 sx;
+    s32 sy;
+
+    sx = controllerInfo[playerControllerIDs[ball->playerId]].held.stickX;
+    sy = controllerInfo[playerControllerIDs[ball->playerId]].held.stickY;
+    out->x = (f32)sx / *(f32 *)(cfg + 0x298);
+    out->y = *(f32 *)(cfg + 8);
+    out->z = (f32)-sy / *(f32 *)(cfg + 0x298);
+    if (mathutil_vec_sq_len(out) > *(f32 *)(cfg + 0x20))
+        mathutil_vec_normalize_len(out);
 }
 // INVENTED -- per-racer state hanging off struct Ball::unk144.  UNVERIFIED.
 struct RaceSub49

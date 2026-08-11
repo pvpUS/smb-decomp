@@ -363,7 +363,7 @@ void lbl_00015300(void);
 void lbl_000154B0(int x, int y, int idx);
 void lbl_00015C8C(int a, u8 *p);
 void lbl_00015E00(void);
-void lbl_00016414(void);
+void lbl_00016414(s8 *, struct Sprite *);
 void lbl_000165B4(void);
 void lbl_00016B8C(void);
 void lbl_00017230(void);
@@ -428,13 +428,26 @@ struct FightGroup
     s32 unk74C;              // 0x74C
 };
 extern struct FightGroup lbl_10017664;
+struct FightEntSub
+{
+    /*0x00*/ f32 unk0;
+    /*0x04*/ f32 unk4;
+    /*0x08*/ f32 unk8;
+    /*0x0C*/ f32 unkC;
+    /*0x10*/ f32 unk10;
+    /*0x14*/ f32 unk14;
+    /*0x18*/ f32 unk18;
+    /*0x1C*/ u8 pad1C[4];
+};  /* 0x20 */
 struct FightEnt
 {
     u8 unk0[4];      // 0x00
     f32 unk4;        // 0x04
     f32 unk8;        // 0x08
     f32 unkC;        // 0x0C
-    u8 unk10[0xAC];  // 0x10
+    u8 unk10[8];     // 0x10
+    s32 unk18;       // 0x18
+    struct FightEntSub sub[5];  // 0x1C
 };                   // 0xBC
 struct FightHud
 {
@@ -702,10 +715,48 @@ asm void lbl_00015E00(void)
 #include "../asm/nonmatchings/mini_fight/lbl_00015E00.s"
 }
 #pragma peephole on
-asm void lbl_00016414(void)
+void lbl_00016414(s8 *unused, struct Sprite *sp)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00016414.s"
+    struct FightEnt *e;
+    struct FightEntSub *q;
+    u8 *k;
+    int j;
+    struct FightEntSub *p;
+    int n;
+    struct FightSub *s;
+    int i = sp->userVar;
+
+    e = &lbl_10018920.ent[i];
+    k = lbl_0001C628;
+    if (e->unk18 != (n = (s = &lbl_10017664.sub[i])->unk4))
+    {
+        if (n > 5)
+            n = 5;
+        e->unk18 = n;
+        p = e->sub;
+        for (j = e->unk18; j > 0; j--, p++)
+        {
+            if (*(f32 *)(k + 0x78) == p->unk8)
+            {
+                p->unk8 = *(f32 *)(k + 0x8C);
+                p->unk10 += *(f32 *)(k + 0x90)
+                          * ((f32)rand() / *(f32 *)(k + 0x94)
+                             - *(f32 *)(k + 0x74));
+                p->unk18 = *(f32 *)(k + 0x18);
+            }
+        }
+    }
+    q = e->sub;
+    for (i = 0; i < 5; i++, q++)
+    {
+        q->unk10 *= *(f32 *)(k + 0x98);
+        q->unk10 += *(f32 *)(k + 0x9C) * q->unkC;
+        q->unkC += q->unk10;
+        q->unk4 *= *(f32 *)(k + 0xA0);
+        q->unk4 += *(f32 *)(k + 0x6C) * (q->unk8 - q->unk0);
+        q->unk0 += q->unk4;
+        q->unk14 += *(f32 *)(k + 0xA4) * (q->unk18 - q->unk14);
+    }
 }
 #pragma peephole on
 asm void lbl_000165B4(void)

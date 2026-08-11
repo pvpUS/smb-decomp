@@ -278,10 +278,155 @@ void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
-#pragma force_active on
-static asm void lbl_00002A30(void)
+struct TestDipEntry
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00002A30.s"
+    /*0x00*/ int type;
+    /*0x04*/ int unk4;
+    /*0x08*/ void *ptr;
+};
+
+#define REPEAT_LOCAL(btn) (     ((rep & (btn)) || (analogInputs[0].repeat & (btn)))  || (         ((controllerInfo[0].held.button & (btn)) || (analogInputs[0].held & (btn)))      && (analogInputs[0].held & ANALOG_TRIGGER_RIGHT)     ) )
+
+#pragma force_active on
+static void lbl_00002A30(void)
+{
+    u8 *p = lbl_10000000;
+    u8 *k = lbl_0000FE78;
+    u8 *w = lbl_000102B0;
+    struct TestDipEntry *e;
+    s32 *ip;
+    s32 n;
+    u16 rep;
+
+    if (debugFlags & 0xA)
+        return;
+    if (controllerInfo[0].pressed.button & PAD_BUTTON_A)
+        *(s32 *)(p + 0xB0) ^= 1;
+    rep = controllerInfo[0].repeat.button;
+    if (REPEAT_LOCAL(PAD_BUTTON_UP))
+    {
+        ip = (s32 *)(p + 0x84);
+        if (--*ip < 0)
+        {
+            n = 0;
+            while (((struct TestDipEntry *)(w + 0x2894))[n].type != 0)
+                n++;
+            *ip = n - 1;
+        }
+    }
+    if (REPEAT_LOCAL(PAD_BUTTON_DOWN))
+    {
+        ip = (s32 *)(p + 0x84);
+        *ip += 1;
+        if (((struct TestDipEntry *)(w + 0x2894))[*ip].type == 0)
+            *ip = 0;
+    }
+    e = &((struct TestDipEntry *)(w + 0x2894))[*(s32 *)(p + 0x84)];
+    switch (e->type)
+    {
+    case 0:
+        break;
+    case 1:
+    {
+        s32 v = *(s32 *)e->ptr;
+
+        if (REPEAT_LOCAL(PAD_BUTTON_LEFT))
+        {
+            if (--v < 0)
+                v = 13;
+        }
+        if (REPEAT_LOCAL(PAD_BUTTON_RIGHT))
+        {
+            if (++v >= 14)
+                v = 0;
+        }
+        if (v != *(s32 *)(p + 0x7C))
+        {
+            if (*(s32 *)(p + 0x7C) != 0)
+                call_bitmap_free_group(*(s32 *)(p + 0x7C));
+            call_bitmap_load_group(v);
+            *(s32 *)e->ptr = v;
+            *(s32 *)(p + 0x80) = 0;
+        }
+        break;
+    }
+    case 2:
+    {
+        struct BitmapGroup *g = &bitmapGroups[*(s32 *)(p + 0x7C)];
+        s32 v = *(s32 *)e->ptr;
+
+        if (REPEAT_LOCAL(PAD_BUTTON_LEFT))
+        {
+            if (--v < 0)
+                v = (s16)(g->tpl->numTextures - 1);
+        }
+        if (REPEAT_LOCAL(PAD_BUTTON_RIGHT))
+        {
+            if (++v > g->tpl->numTextures - 1)
+                v = 0;
+        }
+        *(s32 *)e->ptr = v;
+        break;
+    }
+    case 4:
+    {
+        s32 step = (controllerInfo[0].held.button & PAD_TRIGGER_R) ? 10 : 1;
+        s32 v = *(u8 *)e->ptr;
+
+        if (REPEAT_LOCAL(PAD_BUTTON_RIGHT))
+            v += step;
+        if (REPEAT_LOCAL(PAD_BUTTON_LEFT))
+            v -= step;
+        *(u8 *)e->ptr = v < 0 ? 0 : (v > 255 ? 255 : v);
+        break;
+    }
+    case 5:
+    {
+        s32 v = *(s16 *)e->ptr;
+
+        if (REPEAT_LOCAL(PAD_BUTTON_RIGHT))
+            v += 128;
+        if (REPEAT_LOCAL(PAD_BUTTON_LEFT))
+            v -= 128;
+        *(s16 *)e->ptr = v;
+        break;
+    }
+    case 6:
+    {
+        f32 v = *(f32 *)e->ptr;
+
+        if (REPEAT_LOCAL(PAD_BUTTON_RIGHT))
+            v += *(f64 *)(k + 0xC0);
+        if (REPEAT_LOCAL(PAD_BUTTON_LEFT))
+            v -= *(f64 *)(k + 0xC0);
+        *(f32 *)e->ptr = v < *(f64 *)(k + 0xC8)
+                 ? *(f64 *)(k + 0xC8)
+                 : (v > *(f64 *)(k + 0xD0) ? *(f64 *)(k + 0xD0) : v);
+        break;
+    }
+    case 7:
+    {
+        f32 v = *(f32 *)e->ptr;
+
+        if (REPEAT_LOCAL(PAD_BUTTON_RIGHT))
+            v += *(f64 *)(k + 0xD8);
+        if (REPEAT_LOCAL(PAD_BUTTON_LEFT))
+            v -= *(f64 *)(k + 0xD8);
+        *(f32 *)e->ptr = v;
+        break;
+    }
+    case 8:
+    {
+        f32 v = *(f32 *)e->ptr;
+
+        if (REPEAT_LOCAL(PAD_BUTTON_RIGHT))
+            v += *(f32 *)(p + 0x9C);
+        if (REPEAT_LOCAL(PAD_BUTTON_LEFT))
+            v -= *(f32 *)(p + 0x9C);
+        *(f32 *)e->ptr = v;
+        break;
+    }
+    }
 }
 #pragma force_active reset
+#undef REPEAT_LOCAL

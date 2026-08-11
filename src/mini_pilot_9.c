@@ -2073,10 +2073,173 @@ void lbl_0000580C(void)
 {
     *(f32 *)lbl_802F1FDC = *(f32 *)lbl_0000BEB4;
 }
-asm void lbl_00005824(struct Ball *ball)
+void lbl_00005824(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00005824.s"
+    u8 *m = (u8 *)lbl_10000000;
+    u8 *k = (u8 *)lbl_0000BE80;
+    Vec a1;
+    Vec a2;
+    Vec a3;
+    Vec a4;
+    Vec acc;
+    Vec t4;
+    Vec vloc;
+    Vec t2;
+    Vec t1;
+    Vec dv;
+    Vec w;
+    Quaternion q;
+    Quaternion qt;
+    Vec cvec;
+    Vec dir;
+    Vec imp;
+    f32 sx;
+    f32 sy;
+    f32 len;
+    f32 tq;
+    f32 d;
+    s16 ang;
+    f32 dp;
+
+    a1 = *(Vec *)(k + 0x318);
+    a2 = *(Vec *)(k + 0x324);
+    a3 = *(Vec *)(k + 0x330);
+    a4 = *(Vec *)(k + 0x33C);
+    if (!(lbl_802F1FD0 & 0x20)
+     && *(f32 *)lbl_802F1FDC < *(f64 *)(k + 0x198))
+        *(f32 *)lbl_802F1FDC = *(f32 *)lbl_802F1FDC + *(f64 *)(k + 0x2A0);
+    mathutil_mtxA_from_mtx(ball->unk30);
+    mathutil_mtxA_tf_vec(&a4, &t4);
+    mathutil_mtxA_tf_vec(&a2, &t2);
+    mathutil_mtxA_tf_vec(&a1, &t1);
+    mathutil_mtxA_rigid_inv_tf_vec(&ball->vel, &vloc);
+    dv.x = ball->vel.x - *(f32 *)(m + 0x68);
+    dv.y = ball->vel.y - *(f32 *)(m + 0x6C);
+    dv.z = ball->vel.z - *(f32 *)(m + 0x70);
+    *(f32 *)(m + 4) = mathutil_vec_dot_prod(&dv, &t4);
+    len = mathutil_sqrt(*(f32 *)(m + 4));
+    if (lbl_802F1FD0 & 0x20)
+    {
+        sy = sx = *(f32 *)(k + 0x30);
+    }
+    else
+    {
+        sx = controllerInfo[playerControllerIDs[ball->playerId]].held.stickX;
+        sy = controllerInfo[playerControllerIDs[ball->playerId]].held.stickY;
+    }
+    sy = sy * len;
+    sx = sx * len;
+    mathutil_quat_from_axis_angle(&q, &a1, *(f64 *)(k + 0x358) * sy);
+    mathutil_quat_from_axis_angle(&qt, &a3, *(f64 *)(k + 0x360) * sx);
+    mathutil_quat_mult(&q, &q, &qt);
+    mathutil_quat_from_axis_angle(&qt, &a2, *(f64 *)(k + 0x368) * sx);
+    mathutil_quat_mult(&q, &q, &qt);
+    mathutil_mtxA_from_quat(&q);
+    mathutil_mtxA_mult_left(ball->unk30);
+    mathutil_mtxA_sq_to_mtx(ball->unk30);
+    if (*(f32 *)lbl_802F1FD8 > *(f64 *)(k + 0x1B0))
+    {
+        cvec = *(Vec *)(k + 0x348);
+        *(f32 *)lbl_802F1FD8 = *(f32 *)lbl_802F1FD8 * *(f64 *)(k + 0x370);
+        u_math_unk9_smth_w_quats(&q, &cvec, *(f32 *)lbl_802F1FD8);
+        mathutil_mtxA_from_quat(&q);
+        mathutil_mtxA_mult_left(ball->unk30);
+        mathutil_mtxA_sq_to_mtx(ball->unk30);
+    }
+    dp = mathutil_vec_dot_prod(&vloc, &a1);
+    dp = -dp;
+    mathutil_quat_from_axis_angle(&q, &a2,
+        *(f64 *)(k + 0x378) * dp);
+    dp = mathutil_vec_dot_prod(&vloc, &a2);
+    tq = dp
+       * (*(f64 *)(k + 0x230) * (*(f64 *)(k + 0x380) - *(f32 *)lbl_802F1FDC));
+    mathutil_quat_from_axis_angle(&qt, &a1, *(f64 *)(k + 0x388) * tq);
+    mathutil_quat_mult(&q, &q, &qt);
+    dp = mathutil_vec_dot_prod(&a2, &t1);
+    dp = -dp;
+    mathutil_quat_from_axis_angle(&qt, &a3,
+        *(f64 *)(k + 0x390) * dp);
+    mathutil_quat_mult(&q, &q, &qt);
+    dp = mathutil_vec_dot_prod(&a2, &t4);
+    dp = -dp;
+    mathutil_quat_from_axis_angle(&qt, &a1,
+        *(f64 *)(k + 0x398) * dp);
+    mathutil_quat_mult(&q, &q, &qt);
+    mathutil_mtxA_from_quat(&q);
+    mathutil_mtxA_mult_left(ball->unk30);
+    mathutil_mtxA_sq_to_mtx(ball->unk30);
+    mathutil_mtxA_from_mtx(ball->unk30);
+    mathutil_mtxA_rigid_inv_tf_vec(&dv, &w);
+    ang = mathutil_atan2(w.y, -w.z);
+    *(f32 *)m = -mathutil_sin(ang * 2);
+    if (ang > 0x4000 || ang < -0x4000)
+        *(f32 *)m = *(f32 *)m * *(f32 *)(k + 0x3A0);
+    *(f32 *)m = *(f64 *)(k + 0x3A8)
+              * ((*(f32 *)lbl_802F1FDC / *(f64 *)(k + 0x198))
+                 * (*(f32 *)m * (*(f32 *)(m + 4) * *(f32 *)(m + 4))));
+    t2.x = t2.x * *(f32 *)m;
+    t2.y = t2.y * *(f32 *)m;
+    t2.z = t2.z * *(f32 *)m;
+    ball->prevPos.x = ball->pos.x;
+    ball->prevPos.y = ball->pos.y;
+    ball->prevPos.z = ball->pos.z;
+    ball->speed = mathutil_vec_len(&ball->vel);
+    ball->flags &= ~0x20;
+    acc.x = *(f32 *)(k + 0x30);
+    acc.y = *(f32 *)(k + 0x3B0);
+    acc.z = *(f32 *)(k + 0x30);
+    if (ball->flags & 0x200)
+        acc.y = -acc.y;
+    else if (ball->flags & 0x100)
+        acc.y = *(f32 *)(k + 0x30);
+    if (!(lbl_802F1FD0 & 0x20))
+    {
+        w.x = *(f32 *)(m + 0x68) - ball->vel.x;
+        w.y = *(f32 *)(m + 0x6C) - ball->vel.y;
+        w.z = *(f32 *)(m + 0x70) - ball->vel.z;
+        mathutil_mtxA_from_mtx(ball->unk30);
+        mathutil_mtxA_rigid_inv_tf_vec(&w, &w);
+        w.y = w.y * *(f64 *)(k + 0x3B8);
+        w.z = w.z * *(f64 *)(k + 0x3B8);
+        mathutil_mtxA_tf_vec(&w, &w);
+        w.x = *(f64 *)(k + 0x3C0) * w.x;
+        w.y = *(f64 *)(k + 0x3C0) * w.y;
+        w.z = *(f64 *)(k + 0x3C0) * w.z;
+        acc.x = acc.x + w.x;
+        acc.y = acc.y + w.y;
+        acc.z = acc.z + w.z;
+        acc.x = acc.x + t2.x;
+        acc.y = acc.y + t2.y;
+        acc.z = acc.z + t2.z;
+    }
+    dir = ball->pos;
+    dir.y = *(f32 *)(k + 0x30);
+    d = mathutil_vec_len(&dir) - *(f64 *)(k + 0x3C8);
+    if (d > *(f64 *)(k + 0x1B0))
+    {
+        if (mathutil_vec_dot_prod(&ball->pos, &ball->vel) < *(f64 *)(k + 0x1B0))
+            d = d * *(f64 *)(k + 0x3D0);
+        mathutil_vec_normalize_len(&dir);
+        imp.x = dir.x * (*(f64 *)(k + 0x3D8) * -d);
+        imp.y = dir.y * (*(f64 *)(k + 0x3D8) * -d);
+        imp.z = dir.z * (*(f64 *)(k + 0x3D8) * -d);
+        ball->vel.x = ball->vel.x + imp.x;
+        ball->vel.y = ball->vel.y + imp.y;
+        ball->vel.z = ball->vel.z + imp.z;
+        *(f32 *)(m + 0x68) = dir.x * -*(f32 *)(m + 0x28);
+        *(f32 *)(m + 0x6C) = dir.y * -*(f32 *)(m + 0x28);
+        *(f32 *)(m + 0x70) = dir.z * -*(f32 *)(m + 0x28);
+        *(Vec *)lbl_100000B8 = *(Vec *)(m + 0x68);
+    }
+    if (lbl_802F1FD0 & 0x20)
+    {
+        ball->vel.x = ball->vel.x * *(f64 *)(k + 0x3E0);
+        ball->vel.z = ball->vel.z * *(f64 *)(k + 0x3E0);
+        acc.y = -ball->accel;
+    }
+    ball->vel.x = ball->vel.x + acc.x;
+    ball->vel.y = ball->vel.y + acc.y;
+    ball->vel.z = ball->vel.z + acc.z;
 }
 
 #pragma peephole on

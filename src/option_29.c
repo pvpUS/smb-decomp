@@ -115,7 +115,7 @@ void lbl_0000266C(void);
 void lbl_000038A8(void);
 void lbl_00003B90(void);
 void lbl_00003F10(void);
-void lbl_00003F6C(void);
+s8 *lbl_00003F6C(int);
 void lbl_00003FF0(void);
 void lbl_00004204(void);
 void lbl_00004260(void);
@@ -150,10 +150,30 @@ void lbl_0000B10C(void);
 void lbl_0000B218(void);
 void lbl_0000C148(void);
 
+/* [0xC8B8) the tail of lbl_0000C884's string pool -- carved out of
+   asm/option.s so that this object's .data starts 8-ALIGNED at 0xC8B8.
+   It must precede the function: mwcc lays a file-scope initialiser out
+   BEFORE the switch's jump table (verified with objdump -s).  */
+char optTimeFmt[12] = " TIME:%5.2f";
+
 #pragma force_active on
-asm void lbl_00003F6C(void)
+s8 *lbl_00003F6C(int tag)
 {
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_00003F6C.s"
+    u8 *w = lbl_10000000;
+
+    switch (tag)
+    {
+    case 0x58: return (s8 *)(w + 0x3C);
+    case 0x59: return (s8 *)(w + 0x5C);
+    case 0x5A: return (s8 *)(w + 0x7C);
+    case 0x5B: return (s8 *)(w + 0x9C);
+    case 0x5C: return (s8 *)(w + 0xBC);
+    case 0x5D: return (s8 *)(w + 0xDC);
+    case 0x5E: return (s8 *)(w + 0xFC);
+    case 0x5F: return (s8 *)(w + 0x11C);
+    case 0x60: return (s8 *)(w + 0x13C);
+    case 0x61: return (s8 *)(w + 0x15C);
+    }
+    return NULL;
 }
 #pragma force_active reset
