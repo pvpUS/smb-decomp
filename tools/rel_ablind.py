@@ -28,6 +28,10 @@ usage:
 env:
   PCMP_REGBLIND= / g / f / gf / G / F / GF   passed straight through
   ABLIND_SHOW=1   print the aligned residual, not just the count
+  ABLIND_POS=1    ALSO print `N of M words byte-identical in position` and
+                  every differing position.  Section 12 requires this number on
+                  a call-heavy function, where a blind is worthless.  Three
+                  modules wrote it by hand before it lived here.
 
 The module is inferred from the tree directory name (the warm copies are named
 after their module); --module overrides.  Build the .plf first -- and build it
@@ -156,6 +160,31 @@ def nz_at(w, i, n):
     return w & 0xFC000003
 
 
+def positional(lbl, exp, got, pe, pg, n):
+    """`N of M words byte-identical in position`, plus every position that is not.
+
+    RUN 24 added this because THREE modules wrote it by hand -- test_mode's
+    run-23 `align.py`, and mini_pilot's and mini_fight's own `align.py` -- and
+    because section 12 of the brief REQUIRES this number on a call-heavy
+    function, where a register blind is worthless and difflib's edit-region
+    view actively hides the shape.  mini_pilot: "the positional mode decomposed
+    5824's 88 diffs into one register swap + 4 clusters instantly".
+
+    Positional and aligned answer different questions and BOTH are worth having.
+    Aligned absorbs an insertion into a 1-region score; positional turns that
+    same insertion into a 60-line shift.  So: a positional count far worse than
+    the aligned count means a LENGTH or INSERTION problem, and the two agreeing
+    means the residual really is in place.  Quote the aligned score for
+    progress and the positional count for a call-heavy function.
+    """
+    same = sum(1 for i in range(n) if exp[i] == got[i])
+    print('   positional: %d of %d words byte-identical (%d differ)'
+          % (same, n, n - same))
+    for i in range(n):
+        if exp[i] != got[i]:
+            print('   %5d  %-38s | %s' % (i, pe[i], pg[i]))
+
+
 def disasm(words):
     """words -> ['mn ops', ...] through objdump, canonicalised by rel_pcmp."""
     fd, path = tempfile.mkstemp(suffix='.bin')
@@ -212,6 +241,8 @@ def main():
         hi = max([o[2] for o in ops], default=0)
         print('%-16s blind=%-5s %3d in %-3d span %d-%d of %d'
               % (lbl, blind, tot, len(ops), lo, hi, n))
+        if os.environ.get('ABLIND_POS'):
+            positional(lbl, exp, got, pe, pg, n)
         if show and ops:
             for tag, i1, i2, j1, j2 in ops:
                 print('   --- %s exp[%d:%d] got[%d:%d]' % (tag, i1, i2, j1, j2))
