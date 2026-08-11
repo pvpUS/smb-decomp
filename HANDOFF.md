@@ -103,7 +103,205 @@ it. `_scratch_<MOD>/run<N>/pristine/` is the convention.**
 
 ---
 
-## 0.30 — RUN 24 DONE (2026-08-11): +1,537 insn, 44.62% -> 45.43%. START HERE.
+## 0.31 — RUN 25 DONE (2026-08-11): +996 insn, 45.43% -> 45.95%. START HERE.
+
+Nine parallel agents, one per module, **no workers — THIRTEENTH consecutive run
+under the standing rule.** Three of nine gained. **The run's structural result is
+that re-measuring inherited material beat the target list in SIX of nine
+modules, and that a better ALIGNED score can sit on the WRONG register
+allocation.**
+
+| module | still-asm | insn | % | gained |
+|---|---|---|---|---|
+| **mini_pilot** | 8 fns | 10548/12137 | **86.91%** | **+385 / +1** |
+| **mini_race** | 32 fns | 14289/19817 | **72.11%** | **+241 / +2** |
+| test_mode | 22 fns | 11238/16232 | 69.23% | 0 |
+| mini_bowling | 16 fns | 10109/15313 | 66.02% | 0 |
+| option | 12 fns | 5405/12375 | 43.68% | 0 |
+| **sel_ngc** | 10 fns | 7589/18084 | **41.97%** | **+370 / +1** |
+| mini_fight | 71 fns | 9025/28585 | 31.57% | 0 |
+| mini_billiards | 21 fns | 8549/28793 | 29.69% | 0 |
+| mini_golf | 18 fns | 10670/38919 | 27.42% | 0 |
+| **TOTAL** | **210 fns** | **87421/190254** | **45.95%** | **+996 / +4** |
+
+**Verified in the main tree, not taken on report**: nine trees diffed before
+merging (**4 modified `.c` and nothing else** — no `asm/`, no `Makefile`, no
+`tools/`, and every changed-file list matched its own agent's report exactly);
+**zero non-ASCII bytes** in all four, each keeping the line-ending convention the
+main tree already had; every merged module rebuilt in the main tree to the
+**exact sha1 its agent reported**; a clean build from **0 objects** gives **913**
+objects under `src/`+`asm/`, **1,083** tree-wide, **916** source files;
+`sha1sum -c` is **12/12 OK including the DOL**; all nine `rel_structcheck`
+**CLEAN**; the census reproduces all nine still-asm figures. Reconciles both
+ways: 190,254 − 102,833 = 87,421, and 214 − 4 = 210.
+
+### ⚠ ONE ORCHESTRATOR FIX — THE EXACT DEFECT `rel_structcheck` EXISTS TO CATCH
+
+`mini_race_33.c` came back with **2 `#pragma force_active on` against 1
+`reset`**, and **its agent's report said `rel_structcheck` CLEAN.** It was not.
+`structcheck`'s own docstring cites run 8 shipping exactly this — *"a stray
+unmatched `#pragma force_active on` that gated GOLDEN and reported MATCH"*.
+Nothing followed the `reset`, so nothing was wrong today; the next function
+appended to that file inherits it. Removing the redundant second pragma leaves
+the module **GOLDEN at the identical sha1 `c600a0f4`**, proving it inert.
+
+> **Second run running where `--gate` GOLDEN plus a confident report was not
+> enough. The orchestrator must run structcheck itself on all nine, every run.**
+
+### ★★★ §11 WAS WRONG IN SIX OF NINE MODULES — a NINTH consecutive run
+
+- **mini_golf**: §11 says `B8A8` (337) is "the only cost-0 carve left". **It is
+  not.** `lbl_00026A60` → `src/mini_golf_68.c` is a **cost-0 carve worth 482
+  insn** that no target list has ever named — its two still-asm users are in the
+  **same TU**, so run 24's one-magic-per-TU rule does not bite. Its two drafts
+  had gone **unscored since run 11 (fourteen runs)**. Carve **written, applied,
+  built, reverted**: REL **214,992 vs golden 214,984 = +8 bytes, exactly the two
+  drafts' surplus instructions.** Layout byte-exact.
+- **option**: `lbl_00003240` (410) has been on the **"DECLINED ON THE FRAME"**
+  list since run 18. Its stored draft builds **410 == 410, frame 0x58 exact,
+  20 in 15, G 0 in 0, GF 0 in 0, 390/410 positional**, needing **no magic, no
+  carve, no merge.** The "does not compile" was one prototype.
+- **mini_pilot**: §11 said **"leave it"** about `A098` (385) — the module's
+  largest reachable body. Closed in 55 builds from an untouched run-20 draft.
+- **mini_fight**: `lbl_0000D9E0` (145) had **never been built by any run**;
+  **16 in 16 with every mnemonic correct** after one named change.
+- **mini_billiards**: `lbl_0000A054` (2,094), b-POOL, reachable today with no
+  carve and no merge, **never opened or named in 25 runs.**
+- **mini_bowling**: its carried best position has the wrong allocation (below).
+
+> **A carried figure with no BUILT INSTRUCTION COUNT next to it is not a figure.**
+> Run 24 said that about retirements. It is equally true of near-misses, of
+> "declined on the frame", and of "the only carve left".
+
+### ★★★ A BETTER ALIGNED SCORE ON THE WRONG REGISTER ALLOCATION
+
+mini_bowling's `lbl_000042A4`: the carried **"3 in 2, 86 of 91 words"** draft has
+**r4/r3 swapped** against golden. The variant run 24 discarded as *"4 in 3,
+worse"* reproduces golden's numbering. Under a GPR blind they are the *identical*
+2 in 2 — only the worse-scoring one also has the allocation. **This is the
+failure `rel_ascore`'s docstring warns about, caught in the wild.** The oracle
+was an **already-matched near-twin** (`lbl_00001908` in `mini_bowling_6.c`)
+disassembled from the golden `.plf`, and `src/ball.h` already carried the
+canonical `BALL_FOREACH` four matched functions use.
+
+### ★★★ THE CONSTANT-COPY RULE IS SOLVED — AND IT RETIRES 915 INSTRUCTIONS
+
+> **mwcc 1.1 copies a register to materialise a duplicate constant iff BOTH the
+> holding register AND the destination are members of a local AGGREGATE.** One
+> of each is not enough, either direction; the RHS spelling is irrelevant.
+
+Why run 24's ten spellings and sel_ngc's five found nothing: **all were
+scalars.** `int ab[2]` on the real `lbl_00006DC0` builds **646 == 646 and emits
+the copy.** But the aggregate reserves an 8-byte stack home even when fully
+register-allocated and golden's frame is exactly full, so **`6DC0` (646) is NOT
+source-reachable — retire it**; the same argument retires `1E0`'s defect.
+**915 insn move from "one unfound rule away" to "mechanism known,
+frame-incompatible".** Run 24's "15 constant-copy sites in matched C" is
+**13 false positives** — that scanner is control-flow blind.
+
+### ★★ TWO CARRIED RESIDUALS: TRUE IN BOTH HALVES, NEITHER HALF THE LEVER
+
+- **sel_ngc `B920` (370, banked)** — carried three runs as "only the dispatch
+  pivot; the arm swap costs exactly 1 — do not re-take it". **Both true; they
+  were the SAME defect.** Golden pivots the switch tree on the **LOW** case value
+  and keeps an explicit left subtree; every draft pivoted HIGH and folded it.
+- **mini_race `9D3C` (211, banked)** — **two locals that must be deleted
+  TOGETHER**: `f` alone → 14 in 7, `p` alone → **18 in 9, no change at all**,
+  both → **MATCH.** A one-at-a-time sweep scores `p` inert.
+
+### TOOLS LANDED (all after the ninth agent closed)
+
+- **`tools/rel_sdiff.py` (NEW, `4b946c6`)** — aligned golden-vs-built edit script
+  over the real 32-bit words, masking only branch displacements. **Four modules
+  wrote this independently in run 25 alone**; test_mode: *"nothing in `tools/`
+  prints this"*. It is the only readable view on a **wrong-length** draft, and it
+  found sel_ngc's 370. Gate: still-asm functions must return EXACT / ALIGNED
+  0 in 0 — verified on three modules at three lengths (472 / 391 / 367).
+- **`rel_carve.py` (`84afba4`)** — the `must emit EXACTLY N bytes` message summed
+  `ents[i:...]` *after* the prefix-carve branch replaced `ents[i]` with a
+  `bytes: 0` remainder, so it reported only the alignment extension. Gates:
+  selftest 62 files / 2,166 checks / 0 mismatches; regress **19/19
+  byte-identical**.
+- **`rel_census.py` (`84afba4`)** — reports **ALL** stop signs, not just the one
+  `cat`'s priority chain won with. `cat` untouched; all nine per-module figures
+  and all four category totals unchanged. sel_ngc's `ECB0` now reads
+  `d-JUMPTBL +BLOCKED+POOL`.
+
+### ⚠ HAZARDS
+
+- **`_scratch_test_mode/nearmiss/run24/keep/splitd5.py` IS UNSAFE.** Both
+  `apply()` and `revert()` read `run24/banked/Makefile`, which predates the other
+  eight modules' run-24 SOURCES changes — **running it in the merged tree reverts
+  mini_race's `d1/d2/d3` and mini_bowling's `d1..d9` renumbering** (20 lines,
+  confirmed by diff). Safe replacement: `_harvest_run25/test_mode__carve.py`.
+- **`go24.py --keep` leaves installs behind** — one made `rel_census` report
+  20 fns / 19,598 instead of 21 / 20,244. **The census is a free canary; run it
+  after any `--keep`.**
+- **Every fragment extractor in this project drops a `struct` that sits
+  immediately before `#pragma force_active on`** — that is why test_mode's
+  `AD30` looked like the one draft that would not compile. It compiles (46 vs 47).
+- **`rel_split`'s generated K&R block blocks any draft written before the
+  split** (51 K&R declarations + an `extern u8` whose header type is a struct).
+  That belief hid **583 instructions** of live position for fifteen runs.
+- **"This draft does not compile" is 0-for-17.**
+
+### STILL OPEN (orchestrator)
+
+- **Let `rel_carve` ADD holes to an already-carved worktree directly.** Now hit by
+  mini_golf (hand-split `d7`), test_mode and mini_fight — and mini_fight's own
+  carve is **still unverified for regeneration** because `--list` refuses in both
+  forms, so pricing it needs `rel_blob_reassemble` first.
+- **Do NOT promote the shape-scanner** — run 25 showed run 24's copy was 13/15
+  false positives (control-flow blind). Promote `mini_pilot__extract.py`
+  (probe-unit → fragment) and `mini_race__inst25.py`'s `--sub` instead.
+- Fix `rel_merge_tu`'s duplicate-tag bug; fold `pragmafix.py` into it.
+- `rel_objsect`'s stale-artifact guard fires correctly but the reason is not
+  obvious (`make …plf` does not refresh the `.rel` it hashes) — **document it in
+  §3 of the brief.**
+
+### RUN-26 PREP — COMPLETE. The next session launches nine agents directly.
+
+- **`C:/tmp/smbm/RUN26_BRIEF.md`** — written (**2,325 lines, 142 KB**) by
+  **`C:/tmp/smbm/_brief26/assemble.py`**, which locates sections by heading text,
+  asserts all 14 appear exactly once and in order, asserts the idiom blocks are
+  newest-first (**25 → 24 → 23 → 22 → 21 → 20 → 19 → 18**), and **hard-fails on
+  eleven claims run 25 falsified**. Every needle was **verified present in
+  RUN25_BRIEF.md before being installed** — a guard on a claim that appears
+  nowhere is dead weight, and four of my first drafts matched nothing and were
+  corrected rather than kept. **The guard is proven live in BOTH directions**:
+  an injected un-marked copy of "`B8A8` is the only cost-0 carve left" hard-fails
+  with the right message, the same claim inside a paragraph that marks it dead
+  passes, and the real assembly passes.
+  - The stale-draft-path guard now also rejects `nearmiss/run23/`, with a
+    **`pristine` exemption** — a `keep/pristine/` path is the snapshot that
+    *recovers* banked work, the opposite of a rollback hazard. It fired on §9's
+    own snapshot-discipline note, which is how the exemption got written.
+  - **★ §8 IS REWRITTEN EVERY RUN, NOT CARRIED**, and run 25 justified it a
+    fourth time: `6DC0` was retired in run 9, found at one diff in run 24, and
+    **proved unreachable in run 25** — three runs, three answers, each from a
+    real build.
+- **`C:/tmp/smbm/RUN25_RESULTS.md`** — all nine sections (215 KB, 3,743 lines),
+  ordered by instructions gained, with a one-page summary at the top and
+  orchestrator cross-references marked as such.
+- **`C:/tmp/smbm/_harvest_run25/`** — 15 scripts with a README indexing them by
+  purpose, including the four independent aligned-viewer implementations (one of
+  which is now `tools/rel_sdiff.py`), `mini_pilot__extract.py` (probe unit →
+  fragment; **this is what unlocked the run's 385**), and
+  **`test_mode__carve.py`, the SAFE replacement for the run-24 carve script that
+  would revert two other modules' SOURCES.**
+- **All nine warm copies reset and re-gated GOLDEN from deleted objects**
+  (`warm_reset_run26.sh`, `fail=0`). **Verified independently of the script's own
+  gate**: each copy's built `.rel` hashed against `supermonkeyball.sha1` — **all
+  nine MATCH** — `tools`/`src`/`asm` diffs **0** for all nine, `Makefile`
+  identical, **854 `src/*.c` and 62 `asm/*.s` in every copy**, `rel_sdiff.py`
+  present **9/9**, `asm/option_d3.s` still absent, and every load-bearing
+  zero-size alias plus both alignment pads (`golfPadFFFF`, `bowlPad153F0`)
+  intact — including `lbl_00021080` in mini_billiards' **`_d1.s`, not `_d4.s`**.
+- **ONE AGENT PER MODULE, NO WORKERS** — thirteenth consecutive run.
+
+---
+
+## 0.30 — RUN 24 DONE (2026-08-11): +1,537 insn, 44.62% -> 45.43%. Superseded by §0.31.
 
 Nine parallel agents, one per module, **no workers — TWELFTH consecutive run
 under the standing rule.** Six of nine gained. **The run's structural result is
