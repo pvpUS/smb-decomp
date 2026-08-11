@@ -69,6 +69,12 @@ the newer files in and re-ran everything deliberately. But:
 
 **Do tool work in scratch while agents are live; land it after the last one
 closes out.** Nothing was lost this time; that was luck, not process.
+**Run 26 is the FIFTH consecutive clean run**: both tool landings happened after
+the ninth agent closed and **all nine reported `diff -rq tools` empty at start
+and end**. Better still, **both bugs found this run (`rel_sdiff`, `rel_fnhash`)
+were diagnosed to the line and handed over with NO warm patch at all** — which
+is the behaviour to ask for, because a five-run-clean signal is only worth
+having if it stays clean.
 **Run 23 observed this**: all five tool landings happened after the ninth agent
 closed, and eight of nine agents reported `diff -rq tools` empty at start *and*
 end. The one exception was self-inflicted and declared (see §0.29).
@@ -103,7 +109,210 @@ it. `_scratch_<MOD>/run<N>/pristine/` is the convention.**
 
 ---
 
-## 0.31 — RUN 25 DONE (2026-08-11): +996 insn, 45.43% -> 45.95%. START HERE.
+## 0.32 — RUN 26 DONE (2026-08-11): +1,729 insn, 45.95% -> 46.86%. START HERE.
+
+Nine parallel agents, one per module, **no workers — FOURTEENTH consecutive run
+under the standing rule.** Four of nine gained. **The run's structural result is
+that a 985-instruction "single function behind a jump-table carve" was never one
+function, never all-or-nothing, and 767 instructions of it were never blocked by
+anything.**
+
+| module | still-asm | insn | % | gained |
+|---|---|---|---|---|
+| **mini_pilot** | 6 fns | 10999/12137 | **90.62%** | **+451 / +2** |
+| mini_race | 32 fns | 14289/19817 | 72.11% | 0 |
+| **test_mode** | 21 fns | 11285/16231 | **69.53%** | **+48 / +1** |
+| mini_bowling | 16 fns | 10109/15313 | 66.02% | 0 |
+| option | 12 fns | 5405/12375 | 43.68% | 0 |
+| sel_ngc | 10 fns | 7589/18084 | 41.97% | 0 |
+| **mini_billiards** | 20 fns | 9569/28793 | **33.23%** | **+1020 / +1** |
+| **mini_fight** | 75 fns | 9235/28585 | **32.31%** | **+210 / +5** |
+| mini_golf | 18 fns | 10670/38919 | 27.42% | 0 |
+| **TOTAL** | **210 fns** | **89150/190254** | **46.86%** | **+1729 / +9** |
+
+**Verified in the main tree, not taken on report**: nine trees diffed before
+merging (**5 modified `.c`, 1 modified `.s`, 9 NEW `.s`, and nothing else** — no
+`Makefile`, no SOURCES, no `tools/`, and every changed-file list matched its own
+agent's report exactly); **zero non-ASCII bytes** in all 15 and **100% CRLF**;
+every merged module rebuilt in the main tree to the **exact sha1 its agent
+reported**; a clean build from **0 objects** gives **913** objects under
+`src/`+`asm/`, **1,083** tree-wide, **916** source files; `sha1sum -c` is
+**12/12 OK including the DOL**; all nine `rel_structcheck` **CLEAN, run by the
+orchestrator**; the census reproduces all nine still-asm figures.
+Reconciles: 190,254 − 89,150 = **101,104**, exactly the census total.
+
+> **The function count stays 210 while 9 were converted**, because mini_fight's
+> row split turned one asm stub into ten. That module converted 5 and went
+> 71 → 75 stubs. Do not read 210 → 210 as "nothing moved".
+
+### ⚠ ONE CARRIED FIGURE CORRECTED — the run-25 table did not equal its own total
+
+Run 25's nine rows summed to **87,422 / 190,255** against a recorded total of
+**87,421 / 190,254** — off by one in *both* columns, and that total went into the
+brief and the project memory. Resolved from ground truth: **test_mode's
+denominator is 16,231, not 16,232.** Its `.text` is 16,231 words and a module's
+functions cannot total more than the section holding them, so 16,232 was
+impossible. With that fix every row reconciles against the census and **the
+recorded total was right all along**. Percentages unaffected.
+
+### ★★★ A `d-JUMPTBL` ROW MAY BE MOSTLY FREE — mini_fight, +210 / +5
+
+`lbl_00013C6C` (985) was priced by §11 as *"a contiguous row of ~10 behind the
+`.data` table, so the cheap carve buys an all-or-nothing 985-instruction
+reader"*. **All three parts were wrong.** It is **ten separate functions**; the
+`bctr` resolves **inside `lbl_00014478` (218) only**; and **767 instructions
+needed no carve at all.** Five were banked, three of them MATCH on the first
+compile, and one is an *empty function* (`void f(void){}`, one `blr`).
+
+- **Boundaries come from the function-pointer table `lbl_0001D790`** whose
+  entries are `_prolog + N` — **not from `blr`**, which does not delimit them (a
+  `blr` can be an early return, and the first attempt split one in the wrong
+  place).
+- **Do not use `rel_split --isolate`** — it regenerates the module and would
+  overwrite 155 converted `.c` files. Hand-split, and **the re-split alone gates
+  GOLDEN** before any C is written. `_harvest_run26/mini_fight__isolate_row.py`.
+- **Five row functions remain, decoded and unblocked**: `14478` (218), `13D50`
+  (160), `14958` (158), `1415C` (145), `147E0` (94) = **775, of which 557 need
+  no carve.** Cheapest remaining work in the project.
+
+### ★★★ A CALLEE'S ARITY IS READABLE OFF ITS OWN `.s` — mini_billiards, +1,020
+
+`lbl_00018608.s` reads **f1–f6 before writing them: six arguments**, where the
+draft said `(void)`. Golden must keep six subexpressions live across the call and
+is *forced* into f7/f0; the `(void)` draft recycles f0..f3 — **11 diffs,
+identical schedule, pure FPR numbering.** Six explicit arguments = **MATCH on the
+first compile.** The callee's body also gives the types (no entry `frsp` ⇒ f64
+params; `frsp f1,f1` before `blr` ⇒ f32 return), **superseding an unverified
+run-25 prototype sitting in the tree**.
+
+> **Before believing any register-numbering residual around a call, disassemble
+> the CALLEE.** Costs no builds.
+
+### ★★★ THE AGGREGATE STACK-HOME COST IS MEASURED, NEVER COMPUTED
+
+Three modules measured this independently, and it **corrects run-23 idiom 7's
+`roundup8(sizeof)` and run-25 idiom 1's flat-8 clause**: a frameless leaf pays
+**0**; **the same 12-byte aggregate cost +8 in mini_fight and +16 in test_mode**;
+and deleting a dead `u8 pad[8]` paid for sel_ngc's aggregate exactly. **Read the
+frame and pick the size that reproduces it.** Both frame *proofs* stand —
+mini_billiards' `6DC0` and test_mode's `F940` are not source-reachable because
+their frames are exactly full.
+
+### ★★ TWO SWEEP HELPERS SCORED SILENTLY WRONG — and the blast radius was measured
+
+Both caught only by the canary rule; neither in `tools/`.
+
+- **option**: the installer consumed header directives in a **fixed order**, so a
+  `//@WRAP` after a `//@PROTO` was **silently dropped** — a 13-pragma sweep read
+  "all inert", including `scheduling off`. Same file: **5 in 3 vs 36 in 23**.
+- **mini_race**: the score regex matched `edit regions` **plural only**, so every
+  `(1 edit region)` result read `FAIL`. It mis-scored the **2 in 1** that was
+  that module's entire product.
+
+> **⚠ mini_race's report claims every descendant of `sel_ngc__inst.py` has the
+> bug. IT DOES NOT.** Every regex in 34 harvested and scratch helpers was
+> extracted and **executed** against real `rel_sweep` output in both forms
+> (`_orch_run26/editregion_audit.py`): **exactly three carry it, all mini_race's
+> own lineage.** Two hand-greps gave false readings first. **Do not grep for a
+> spelling — run the regex.**
+
+### ★★ §11 WAS WRONG IN SIX OF NINE MODULES — a TENTH consecutive run
+
+Beyond mini_fight's row: mini_golf's "cost-0 carve worth 482, the highest-value
+position in the project" is **two WRONG-LENGTH drafts** (215/214, 269/268) and
+the module's real best is `109CC` (295), carve-free at **`G` 2 in 2**, carried as
+a bare "14 in 14" for three runs with **no register blind ever run on it**.
+mini_bowling's `5B0C` (720) is a **frame decline** (`stmw r14` + 5 `stfd` = 23
+callee-saved), not an open target. mini_billiards' `A054` (2,094), called "the
+module's best expected value", is on measurement its **hardest** body (frame
+0x250, 91 calls, 71 blocks) — its agent went elsewhere and banked 1,020.
+mini_pilot's `40EC` builds **217 == 217**, not the recorded 216, and §11's named
+lever was dead. test_mode's two live positions (`F940` 154, `2048` 48) **were not
+on the list at all**, and `2048` is what banked.
+
+### TOOLS LANDED (both after the ninth agent closed — commit `96b3287`)
+
+- **`rel_sdiff.py`** — **reported a SHORT build as LONG**, inverting its own
+  verdict on the one case its docstring promotes it for. The trim scanned for a
+  `blr` at or after golden's length, so a short body's own `blr` was skipped and
+  the scan ran into the **next function**. Length now comes from `objdump -t`.
+  Gates: 11 still-asm controls across nine modules, lengths 128-410, unchanged at
+  `EXACT / 0 in 0`; negative test on real `.plf` bytes reproduces the defect
+  exactly — old scan **`+64 LONG`**, symbol table **`−1`**.
+- **`rel_fnhash.py`** — no staleness guard, so a stale `.plf` gave a **false
+  `changed`** for an untouched function. Now warns on stderr and names the files.
+  Gates: warns when stale, silent when fresh, `--compare` identical either way.
+
+### ⚠ HAZARDS
+
+- **`_harvest_run25/mini_golf__split_d7.py` is a CROSS-MODULE hazard** — both
+  `apply()` and `revert()` work from a **cached Makefile**. It has not bitten
+  only because the cache still matches. **This is the second time the harvest has
+  shipped this defect** (run 24's `splitd5.py` was the first). Use
+  `_harvest_run26/mini_golf__split_d7_run26_SAFE.py`.
+- **Old-run installers restore PRE-CONVERSION owners**:
+  `_scratch_mini_billiards/run25/{inst25,go25,verify25}.py` un-bank 1,020;
+  `_scratch_test_mode/run25/keep/inst.py --restore test_mode_14.c` un-banks 48.
+- **An installer's stub replacement can swallow `#pragma force_active on`..
+  `reset` AND the `static` keyword** — and `rel_structcheck` was CLEAN both ways.
+- **`#pragma opt_unroll_instr_count 200` is a hard compile error.**
+- **"This draft does not compile" is now 0-for-25**, and run 26's cause was
+  self-inflicted: run 25 recorded prototype edits **in prose**. Record them as
+  data (`_harvest_run26/mini_pilot__inst_DEFAULT_PROTOS.py`).
+
+### STILL OPEN (orchestrator)
+
+- **Promote a prologue oracle into `tools/`.** option and mini_golf **each wrote
+  one independently this run** (`proscan.py`, `prologue_census.py`), and the
+  question they answer is carried by **three** modules (option `6AD0`/`5020`,
+  mini_golf `22610`, mini_pilot `97C8`). This is the "two independent
+  implementations" signal.
+- **Generalise a "scan the linked image" tool** — `mini_race__scanmul.py` is the
+  **fourth** of its kind (after run 24's three shape-scanners). Note run 25
+  showed the run-24 shape-scanner was 13/15 false positives because it is
+  control-flow blind; scan the *image*, not the source.
+- **Let `rel_carve` ADD holes to an already-carved worktree directly.** Still
+  open, now hit by mini_golf, test_mode and mini_fight.
+- **mini_fight's run-23 carve is STILL unverified for regeneration** —
+  `rel_carve --list` refuses in both forms. But run 26 made it **less urgent**:
+  the carve was only ever priced against the 985-row, and 767 of that row needs
+  no carve.
+- Fix `rel_merge_tu`'s duplicate-tag bug; fold `pragmafix.py` into it.
+
+### RUN-27 PREP — COMPLETE. The next session launches nine agents directly.
+
+- **`C:/tmp/smbm/RUN27_BRIEF.md`** — written (**2,567 lines, 156 KB**) by
+  **`C:/tmp/smbm/_brief27/assemble.py`**, which locates sections by heading text,
+  asserts all 14 appear exactly once and in order, asserts the idiom blocks are
+  newest-first (**26 → 25 → 24 → 23 → 22 → 21 → 20 → 19 → 18**), and
+  **hard-fails on ten claims run 26 falsified**. **Every needle was verified
+  present in RUN26_BRIEF.md before being installed** — the first draft had
+  **six of ten matching nothing** (line-wrapping broke them) and they were
+  corrected rather than kept, which is exactly the dead-weight failure the run-26
+  assembler warned about. **The guard is proven live in BOTH directions**: an
+  injected un-marked copy of "`5B0C`…1,581 reachable instructions" hard-fails
+  with the right message, the same claim inside a paragraph that marks it dead
+  passes, and the real assembly passes.
+  - A new guard: **`rel_sdiff` may not be promoted without its SHORT-build
+    defect stated**, so the tool's correction cannot be lost in a future splice.
+  - **★ §8 IS REWRITTEN EVERY RUN, NOT CARRIED**, and run 26 justified it a
+    fifth time — the *highest-value* item on run 26's target list turned out to
+    be two wrong-length drafts that were never near-misses.
+- **`C:/tmp/smbm/RUN26_RESULTS.md`** — all nine sections (117 KB, 1,175 lines),
+  ordered by instructions gained, with a one-page summary at the top and
+  **ORCHESTRATOR VERIFIED** lines marking every claim I checked against the tree.
+- **`C:/tmp/smbm/_harvest_run26/`** — 13 scripts with a README indexing them by
+  purpose, including **both installer fixes**, the row-splitter that unlocked the
+  run's 210, the two prologue oracles, and the **safe** replacement for the
+  run-25 carve script that reads a cached Makefile.
+- **`C:/tmp/smbm/_orch_run26/`** — `predmerge_diff.sh`, `postmerge_verify.sh`,
+  **`editregion_audit.py`** (the by-execution regex audit), and the nine
+  per-module reports.
+- **ONE AGENT PER MODULE, NO WORKERS** — fourteenth consecutive run.
+
+---
+
+## 0.31 — RUN 25 DONE (2026-08-11): +996 insn, 45.43% -> 45.95%. Superseded by §0.32.
 
 Nine parallel agents, one per module, **no workers — THIRTEENTH consecutive run
 under the standing rule.** Three of nine gained. **The run's structural result is
