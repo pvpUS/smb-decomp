@@ -193,7 +193,7 @@ void lbl_000022D8(void);
 void lbl_00003B6C(void);
 void lbl_00003BDC(void);
 void lbl_00004024(void);
-void lbl_000040EC(void);
+void lbl_000040EC(u8 *p);
 void lbl_00004450(void);
 void lbl_00004570(void);
 void lbl_000048C0(void);
@@ -1574,10 +1574,63 @@ void lbl_00004024(void)
         ord_tbl_insert_node(entry, &node->node);
     }
 }
-asm void lbl_000040EC(void)
+void lbl_000040EC(u8 *p)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_000040EC.s"
+    struct T10
+    {
+        s16 v[10];
+    };
+    s16 rot;
+    u8 *k = (u8 *)lbl_0000BE80;
+    struct T10 a = *(struct T10 *)(k + 0x1E0);
+    struct T10 b = *(struct T10 *)(k + 0x1F4);
+    struct T10 c = *(struct T10 *)(k + 0x208);
+    f32 t;
+    f32 sc2;
+    f32 sc = *(f32 *)lbl_802F1FDC;
+    struct Ball *ball = &ballInfo[*(s32 *)(p + 0xC)];
+    s16 ang;
+
+    load_light_group_cached(*(s32 *)(p + 8));
+    ang = *(f64 *)(k + 0x220) * *(f32 *)lbl_10000000;
+    if (ang > 0x600)
+        ang = 0x600;
+    else if (ang < -384)
+        ang = -384;
+    rot = *(f32 *)lbl_802F1FDC * (f64)(ang + 0x4A00) / ((f64 *)k)[0x33];
+    if (lbl_802F1FD0 & 0x20)
+        sc = *(f32 *)(k + 0x228);
+    t = *(f64 *)(k + 0x230) * (*(f32 *)lbl_802F1FDC / *(f64 *)(k + 0x198));
+    sc2 = ((f64 *)k)[13] - *(f64 *)(k + 0x238) * (sc / *(f64 *)(k + 0x198));
+    polydisp_set_some_color_based_on_curr_mode(
+        *(f64 *)(k + 0x68)
+      + *(f64 *)(k + 0x68) * ball->u_opacity[*(s32 *)((u8 *)currentCamera + 0x204)]);
+    avdisp_set_z_mode(1, 3, 0);
+    mathutil_mtxA_from_mtxB();
+    mathutil_mtxA_mult_right(ball->unk30);
+    mathutil_mtxA_translate_xyz(*(f32 *)(k + 0x30), sc2, *(f32 *)(k + 0x30));
+    mathutil_mtxA_push();
+    mathutil_mtxA_translate_xyz(-t, *(f32 *)(k + 0x30), *(f32 *)(k + 0x30));
+    mathutil_mtxA_rotate_z(-(s16)rot);
+    gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+    avdisp_draw_model_unculled_sort_none(minigameGma->modelEntries[0].model);
+    avdisp_draw_model_unculled_sort_none(minigameGma->modelEntries[1].model);
+    if (*(f32 *)lbl_802F1FDC > *(f64 *)(k + 0x1B0))
+    {
+        mathutil_mtxA_rotate_y(0x8000);
+        gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+        avdisp_draw_model_unculled_sort_none(minigameGma->modelEntries[0x1C].model);
+    }
+    mathutil_mtxA_pop();
+    mathutil_mtxA_translate_xyz(t, *(f32 *)(k + 0x30), *(f32 *)(k + 0x30));
+    mathutil_mtxA_rotate_z(rot);
+    gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+    avdisp_draw_model_unculled_sort_none(minigameGma->modelEntries[b.v[ball->colorId]].model);
+    avdisp_draw_model_unculled_sort_none(minigameGma->modelEntries[a.v[ball->colorId]].model);
+    if (*(f32 *)lbl_802F1FDC > *(f64 *)(k + 0x1B0))
+        avdisp_draw_model_unculled_sort_none(minigameGma->modelEntries[c.v[ball->colorId]].model);
+    fade_color_base_default();
+    avdisp_set_z_mode(1, 3, 1);
 }
 
 #pragma peephole on

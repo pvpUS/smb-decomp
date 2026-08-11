@@ -205,7 +205,7 @@ void lbl_00017408(void);
 void lbl_00017A00(void);
 void lbl_00018008(void);
 void lbl_00018474(void);
-void lbl_00018608(void);
+f32 lbl_00018608(f64, f64, f64, f64, f64, f64);
 void lbl_000186EC(void);
 void lbl_000189B4(void);
 void lbl_00018A98(void);
@@ -1138,10 +1138,373 @@ void lbl_000059A8(void)
     lbl_00003CC8();
     u_play_music(0x64, 8);
 }
-asm void lbl_00005DD0(void)
+struct BPart5DD0 {
+    s8 active;
+    u8 filler1[3];
+    Vec pos;
+    Vec vel;
+    s16 u1c;
+    s16 u1e;
+    s16 u20;
+    s16 u22;
+};
+struct BApe5DD0 {
+    s8 state;
+    u8 filler1[0x63];
+    struct Ape *ape;
+};
+/* lbl_00005DD0 -- run 20 draft a.  Confetti/particle update.  Byte-offset
+   addressing style copied from the MATCHED siblings lbl_00000800 and this
+   run's lbl_0000367C and lbl_00003F4C.  */
+void lbl_00005DD0(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00005DD0.s"
+    u8 *q = lbl_10000000;
+    u8 *p = lbl_0001C2B8;
+    int m3;
+    s8 c;
+    int n;
+    int m;
+    s8 st;
+    s8 ok;
+    s8 w8;
+    int w;
+    int i;
+    int k;
+    f32 e;
+    f32 s;
+    Vec v;
+    f32 ek;
+
+    st = 0;
+    ((struct BApe5DD0 *)(q + 0x9878))[0].ape->flags |= 0x80000;
+    for (i = 1; i < 9; i++) {
+        if (((struct BApe5DD0 *)(q + 0x9878))[i].state == 1)
+            ((struct BApe5DD0 *)(q + 0x9878))[i].ape->flags |= 0x80000;
+    }
+
+    if (*(s8 *)(q + 0x9c20) != 0) {
+        *(f32 *)(q + 0x9c34) =
+            *(f32 *)(q + 0x9c34) + *(f32 *)(q + 0x9c58);
+        *(f32 *)(q + 0x9c58) = *(f32 *)(q + 0x9c58) - *(f32 *)(p + 0xa80);
+        if (*(f32 *)(q + 0x9c58) < *(f32 *)(p + 0x8b4)) {
+            ok = 1;
+            for (i = 2; i < 9; i++) {
+                if (*(s8 *)&((u8 *)(q + 0x9878))[i * 0x68] == 1) {
+                    ok = 0;
+                    break;
+                }
+            }
+            if (*(s8 *)&((u8 *)(q + 0x9878))[1 * 0x68] != 1)
+                ok = 0;
+            *(s8 *)(q + 0x9c20) = 0;
+            for (n = 0; n < 0x40; n++) {
+                if (ok != 0) {
+                    *(s8 *)&((u8 *)(q + 0x9cbc))[n * 0x24] = 1;
+                    *(Vec *)&((u8 *)(q + 0x9cc0))[n * 0x24] =
+                        *(Vec *)(q + 0x9c30);
+                    mathutil_mtxA_from_identity();
+                    switch ((rand() & 0x7fff) % 5) {
+                    case 0:
+                        mathutil_mtxA_rotate_z_sin_cos(*(f32 *)(p + 0xa84),
+                                                       *(f32 *)(p + 0xa88));
+                        break;
+                    case 1:
+                        mathutil_mtxA_rotate_z_sin_cos(*(f32 *)(p + 0xa8c),
+                                                       *(f32 *)(p + 0xa90));
+                        break;
+                    case 2:
+                        mathutil_mtxA_rotate_z_sin_cos(*(f32 *)(p + 0x8b4),
+                                                       *(f32 *)(p + 0xa18));
+                        break;
+                    case 3:
+                        mathutil_mtxA_rotate_z_sin_cos(*(f32 *)(p + 0xa94),
+                                                       *(f32 *)(p + 0xa90));
+                        break;
+                    default:
+                        mathutil_mtxA_rotate_z_sin_cos(*(f32 *)(p + 0xa98),
+                                                       *(f32 *)(p + 0xa88));
+                        break;
+                    }
+                    mathutil_mtxA_translate_xyz(*(f32 *)(p + 0xa9c),
+                                                *(f32 *)(p + 0x8b4),
+                                                *(f32 *)(p + 0x8b4));
+                    *(f32 *)&((u8 *)(q + 0x9ccc))[n * 0x24] =
+                        *(f32 *)(p + 0x8b4);
+                    *(f32 *)&((u8 *)(q + 0x9cd0))[n * 0x24] =
+                        *(f32 *)(p + 0xaa0)
+                        * ((f32)rand() / *(f32 *)(p + 0x8d8)
+                           - *(f32 *)(p + 0x8c0));
+                    *(f32 *)&((u8 *)(q + 0x9cd4))[n * 0x24] =
+                        *(f32 *)(p + 0x8b4);
+                    mathutil_mtxA_tf_point(
+                        &((struct BPart5DD0 *)(q + 0x9cbc))[n].vel,
+                        &((struct BPart5DD0 *)(q + 0x9cbc))[n].vel);
+                } else if (*(s8 *)(q + 0x12) != 0) {
+                    *(s8 *)&((u8 *)(q + 0x9cbc))[n * 0x24] = 1;
+                    *(Vec *)&((u8 *)(q + 0x9cc0))[n * 0x24] =
+                        *(Vec *)(q + 0x9c30);
+                    *(f32 *)&((u8 *)(q + 0x9ccc))[n * 0x24] =
+                        (f32)rand() / *(f32 *)(p + 0x8d8) - *(f32 *)(p + 0x8c0);
+                    *(f32 *)&((u8 *)(q + 0x9cd0))[n * 0x24] =
+                        (f32)rand() / *(f32 *)(p + 0x8d8) - *(f32 *)(p + 0x8c0);
+                    *(f32 *)&((u8 *)(q + 0x9cd4))[n * 0x24] =
+                        *(f32 *)(p + 0x8b4);
+                    mathutil_vec_normalize_len(
+                        &((struct BPart5DD0 *)(q + 0x9cbc))[n].vel);
+                    *(f32 *)&((u8 *)(q + 0x9ccc))[n * 0x24] *= *(f32 *)(p + 0xaa4);
+                    *(f32 *)&((u8 *)(q + 0x9cd0))[n * 0x24] *= *(f32 *)(p + 0xaa4);
+                    *(f32 *)&((u8 *)(q + 0x9cd4))[n * 0x24] *= *(f32 *)(p + 0xaa4);
+                    *(f32 *)&((u8 *)(q + 0x9cd0))[n * 0x24] =
+                        *(f32 *)&((u8 *)(q + 0x9cd0))[n * 0x24]
+                        - *(f64 *)(p + 0xaa8)
+                              * (*(f64 *)(p + 0x998)
+                                 - __fabs(*(f32 *)&((u8 *)(q
+                                                           + 0x9ccc))[n * 0x24]));
+                } else if (*(s16 *)(q + 0x1c) == 1) {
+                    *(s8 *)&((u8 *)(q + 0x9cbc))[n * 0x24] = 1;
+                    *(Vec *)&((u8 *)(q + 0x9cc0))[n * 0x24] =
+                        *(Vec *)(q + 0x9c30);
+                    *(f32 *)&((u8 *)(q + 0x9ccc))[n * 0x24] =
+                        (f32)rand() / *(f32 *)(p + 0x8d8) - *(f32 *)(p + 0x8c0);
+                    *(f32 *)&((u8 *)(q + 0x9cd0))[n * 0x24] =
+                        (f32)rand() / *(f32 *)(p + 0x8d8) - *(f32 *)(p + 0x8c0);
+                    *(f32 *)&((u8 *)(q + 0x9cd4))[n * 0x24] =
+                        *(f32 *)(p + 0x8b4);
+                    mathutil_vec_normalize_len(
+                        &((struct BPart5DD0 *)(q + 0x9cbc))[n].vel);
+                    *(f32 *)&((u8 *)(q + 0x9ccc))[n * 0x24] *= *(f32 *)(p + 0xab0);
+                    *(f32 *)&((u8 *)(q + 0x9cd0))[n * 0x24] *= *(f32 *)(p + 0xab0);
+                    *(f32 *)&((u8 *)(q + 0x9cd4))[n * 0x24] *= *(f32 *)(p + 0xab0);
+                } else {
+                    w = 0;
+                    if (((struct BilliardsPlayerB *)(q + 0xa64))[0].unk4
+                            < *(s8 *)(q + 0x11) / 2 + 1
+                        && ((struct BilliardsPlayerB *)(q + 0xa64))[1].unk4
+                               < *(s8 *)(q + 0x11) / 2 + 1)
+                        w = 1;
+                    w8 = w;
+                    if (w8 != 0 && n > 9) {
+                        *(s8 *)&((u8 *)(q + 0x9cbc))[n * 0x24] = 0;
+                        continue;
+                    }
+                    *(s8 *)&((u8 *)(q + 0x9cbc))[n * 0x24] = 1;
+                    *(Vec *)&((u8 *)(q + 0x9cc0))[n * 0x24] =
+                        *(Vec *)(q + 0x9c30);
+                    *(f32 *)&((u8 *)(q + 0x9ccc))[n * 0x24] =
+                        (f32)rand() / *(f32 *)(p + 0x8d8) - *(f32 *)(p + 0x8c0);
+                    *(f32 *)&((u8 *)(q + 0x9cd0))[n * 0x24] =
+                        (f32)rand() / *(f32 *)(p + 0x8d8) - *(f32 *)(p + 0x8c0);
+                    *(f32 *)&((u8 *)(q + 0x9cd4))[n * 0x24] =
+                        (f32)rand() / *(f32 *)(p + 0x8d8) - *(f32 *)(p + 0x8c0);
+                    mathutil_vec_normalize_len(
+                        &((struct BPart5DD0 *)(q + 0x9cbc))[n].vel);
+                    if (w8 != 0)
+                        e = *(f32 *)(p + 0xa3c);
+                    else
+                        e = *(f32 *)(p + 0xab0);
+                    *(f32 *)&((u8 *)(q + 0x9ccc))[n * 0x24] *= e;
+                    *(f32 *)&((u8 *)(q + 0x9cd0))[n * 0x24] *= e;
+                    *(f32 *)&((u8 *)(q + 0x9cd4))[n * 0x24] *= e;
+                }
+                *(s16 *)&((u8 *)(q + 0x9cd8))[n * 0x24] = rand() & 0x7fff;
+                *(s16 *)&((u8 *)(q + 0x9cda))[n * 0x24] = rand() & 0x7fff;
+                *(s16 *)&((u8 *)(q + 0x9cdc))[n * 0x24] =
+                    (rand() & 0x7ff) + 0x800;
+                *(s16 *)&((u8 *)(q + 0x9cde))[n * 0x24] =
+                    (rand() & 0x7ff) + 0x800;
+                if (rand() & 1)
+                    *(s16 *)&((u8 *)(q + 0x9cdc))[n * 0x24] =
+                        -*(s16 *)&((u8 *)(q + 0x9cdc))[n * 0x24];
+                if (rand() & 1)
+                    *(s16 *)&((u8 *)(q + 0x9cde))[n * 0x24] =
+                        -*(s16 *)&((u8 *)(q + 0x9cde))[n * 0x24];
+            }
+            lbl_802F1DFC = 0;
+            u_somePlayerId = 0;
+            u_play_sound_0(0x14d);
+            *(s32 *)(q + 0x20) = 0;
+        } else {
+            for (n = 0; n < 0x40; n++)
+                *(s8 *)&((u8 *)(q + 0x9cbc))[n * 0x24] = 0;
+        }
+    } else if (*(f32 *)(q + 0x9c28) > *(f32 *)(p + 0xab4)) {
+        for (n = 0; n < 0x40; n++) {
+            if (*(s8 *)&((u8 *)(q + 0x9cbc))[n * 0x24] != 0) {
+                *(f32 *)&((u8 *)(q + 0x9cc0))[n * 0x24] =
+                    *(f32 *)&((u8 *)(q + 0x9cc0))[n * 0x24]
+                    + *(f32 *)&((u8 *)(q + 0x9ccc))[n * 0x24];
+                *(f32 *)&((u8 *)(q + 0x9cc4))[n * 0x24] =
+                    *(f32 *)&((u8 *)(q + 0x9cc4))[n * 0x24]
+                    + *(f32 *)&((u8 *)(q + 0x9cd0))[n * 0x24];
+                *(f32 *)&((u8 *)(q + 0x9cc8))[n * 0x24] =
+                    *(f32 *)&((u8 *)(q + 0x9cc8))[n * 0x24]
+                    + *(f32 *)&((u8 *)(q + 0x9cd4))[n * 0x24];
+                *(f32 *)&((u8 *)(q + 0x9cd0))[n * 0x24] =
+                    *(f32 *)&((u8 *)(q + 0x9cd0))[n * 0x24]
+                    - *(f32 *)(p + 0xab8);
+                *(s16 *)&((u8 *)(q + 0x9cd8))[n * 0x24] =
+                    *(s16 *)&((u8 *)(q + 0x9cd8))[n * 0x24]
+                    + *(s16 *)&((u8 *)(q + 0x9cdc))[n * 0x24];
+                *(s16 *)&((u8 *)(q + 0x9cda))[n * 0x24] =
+                    *(s16 *)&((u8 *)(q + 0x9cda))[n * 0x24]
+                    + *(s16 *)&((u8 *)(q + 0x9cde))[n * 0x24];
+                if (*(f32 *)&((u8 *)(q + 0x9cc4))[n * 0x24]
+                    < *(f32 *)(p + 0x8b4))
+                    *(s8 *)&((u8 *)(q + 0x9cbc))[n * 0x24] = 0;
+            }
+        }
+        if (*(s32 *)(q + 0x20) == 0x78) {
+            for (n = 0; n < 0x40; n++) {
+                k = 0;
+                do {
+                    *(f32 *)&((u8 *)(q + 0x9cc0))[n * 0x24] =
+                        *(f32 *)(p + 0x8d0)
+                            * (*(f32 *)(p + 0xabc)
+                               * ((f32)rand() / *(f32 *)(p + 0x8d8)))
+                        - *(f32 *)(p + 0x9f8) - *(f32 *)(p + 0xac0);
+                    *(f32 *)&((u8 *)(q + 0x9cc8))[n * 0x24] =
+                        *(f32 *)(p + 0x8d0)
+                            * (*(f32 *)(p + 0xac4)
+                               * ((f32)rand() / *(f32 *)(p + 0x8d8)))
+                        - *(f32 *)(p + 0x95c) - *(f32 *)(p + 0xac0);
+                    k++;
+                    ek = *(f32 *)(p + 0xaa0) * (f32)k;
+                } while (mathutil_sum_of_sq_2(
+                             *(f32 *)&((u8 *)(q + 0x9cc0))[n * 0x24]
+                                 - *(f32 *)(q + 0x9888),
+                             *(f32 *)&((u8 *)(q + 0x9cc8))[n * 0x24]
+                                 - *(f32 *)(q + 0x9890))
+                         > *(f32 *)(p + 0x8c0) * ek
+                               * (*(f32 *)(p + 0x8c0) * ek));
+                for (m = 0; m < n; m++) {
+                    if (mathutil_sum_of_sq_2(
+                            *(f32 *)&((u8 *)(q + 0x9cc0))[n * 0x24]
+                                - *(f32 *)&((u8 *)(q + 0x9cc0))[m * 0x24],
+                            *(f32 *)&((u8 *)(q + 0x9cc8))[n * 0x24]
+                                - *(f32 *)&((u8 *)(q + 0x9cc8))[m * 0x24])
+                        < *(f32 *)(p + 0xac8))
+                        break;
+                }
+                if (m != n) {
+                    n--;
+                    continue;
+                }
+                for (m = 0; m < 10; m++) {
+                    if (*(s8 *)&((u8 *)(q + 0x9878))[m * 0x68] == 1) {
+                        if (mathutil_sum_of_sq_2(
+                                *(f32 *)&((u8 *)(q + 0x9888))[m * 0x68]
+                                    - *(f32 *)&((u8 *)(q + 0x9cc0))[n * 0x24],
+                                *(f32 *)&((u8 *)(q + 0x9890))[m * 0x68]
+                                    - *(f32 *)&((u8 *)(q + 0x9cc8))[n * 0x24])
+                            < *(f32 *)(p + 0xacc))
+                            break;
+                    }
+                }
+                if (m != 10) {
+                    n--;
+                    continue;
+                }
+                if (*(f32 *)&((u8 *)(q + 0x9cc4))[n * 0x24]
+                    > *(f32 *)(p + 0xa5c))
+                    *(f32 *)&((u8 *)(q + 0x9cc4))[n * 0x24] =
+                        *(f32 *)(p + 0xa5c);
+            }
+
+            *(f32 *)(q + 0x9c28) = *(f32 *)(p + 0x8b4);
+            c = 0;
+            *(f32 *)(q + 0x9c2c) = *(f32 *)(p + 0x8b4);
+            *(f32 *)(q + 0x9880) = *(f32 *)(p + 0x8b8);
+            *(f32 *)(q + 0x9884) = *(f32 *)(p + 0x8b4);
+            do {
+                c++;
+                v.x = (f32)rand() / *(f32 *)(p + 0x8d8) - *(f32 *)(p + 0x8c0);
+                v.y = *(f32 *)(p + 0x8b4);
+                v.z = (f32)rand() / *(f32 *)(p + 0x8d8) - *(f32 *)(p + 0x8c0);
+                e = v.x * v.x + v.z * v.z;
+                if (e > *(f32 *)(p + 0x944)) {
+                    e = *(f32 *)(p + 0xa5c) * mathutil_rsqrt(e);
+                    v.x = v.x * e;
+                    v.z = v.z * e;
+                    if (v.x + *(f32 *)(q + 0x9888) < *(f32 *)(p + 0x9f8)
+                        && v.x + *(f32 *)(q + 0x9888) > *(f32 *)(p + 0x9fc)
+                        && v.z + *(f32 *)(q + 0x9890) < *(f32 *)(p + 0x95c)
+                        && v.z + *(f32 *)(q + 0x9890) > *(f32 *)(p + 0x9dc)) {
+                        for (m3 = 1; m3 < 9; m3++) {
+                            if (*(s8 *)&((u8 *)(q + 0x9878))[m3 * 0x68] == 1) {
+                                if (mathutil_sum_of_sq_2(
+                                        *(f32 *)(q + 0x9888) + v.x
+                                            - *(f32 *)&((u8 *)(q
+                                                               + 0x9888))[m3
+                                                                          * 0x68],
+                                        *(f32 *)(q + 0x9890) + v.z
+                                            - *(f32 *)&((u8 *)(q
+                                                               + 0x9890))[m3
+                                                                          * 0x68])
+                                    < *(f32 *)(p + 0xad0))
+                                    break;
+                                if (lbl_00018608(
+                                        *(f32 *)(q + 0x9888),
+                                        *(f32 *)(q + 0x9890),
+                                        *(f32 *)(q + 0x9888) + v.x,
+                                        *(f32 *)(q + 0x9890) + v.z,
+                                        *(f32 *)&((u8 *)(q + 0x9888))[m3 * 0x68],
+                                        *(f32 *)&((u8 *)(q + 0x9890))[m3 * 0x68])
+                                    < *(f32 *)(p + 0x8c0))
+                                    break;
+                            }
+                        }
+                        if (m3 == 9)
+                            c = -1;
+                    }
+                }
+            } while (c > -1 && c < 100);
+
+            cameraInfo[0].eye.x = *(f32 *)(q + 0x9888) + v.x;
+            cameraInfo[0].eye.z = *(f32 *)(q + 0x9890) + v.z;
+            if (c < 100)
+                cameraInfo[0].eye.y = *(f32 *)(p + 0x8c0);
+            else
+                cameraInfo[0].eye.y = *(f32 *)(p + 0xa1c);
+            *(s32 *)(q + 0x20) = 0;
+            lbl_802F1C30 = 0x1800;
+        }
+    } else {
+        for (n = 0; n < 0x40; n++) {
+            if (__fabs(*(f32 *)&((u8 *)(q + 0x9cc4))[n * 0x24]
+                       - *(f32 *)(p + 0xad4))
+                > *(f64 *)(p + 0x9e0)) {
+                *(f32 *)&((u8 *)(q + 0x9cc4))[n * 0x24] =
+                    *(f32 *)&((u8 *)(q + 0x9cc4))[n * 0x24]
+                    + *(f32 *)&((u8 *)(q + 0x9cd0))[n * 0x24];
+                *(f32 *)&((u8 *)(q + 0x9cd0))[n * 0x24] =
+                    *(f32 *)&((u8 *)(q + 0x9cd0))[n * 0x24]
+                    - *(f32 *)(p + 0xab8);
+                if (*(f32 *)&((u8 *)(q + 0x9cc4))[n * 0x24]
+                    < *(f32 *)(p + 0xad4))
+                    *(f32 *)&((u8 *)(q + 0x9cc4))[n * 0x24] =
+                        *(f32 *)(p + 0xad4);
+            }
+            *(s16 *)&((u8 *)(q + 0x9cd8))[n * 0x24] = 0;
+            *(s16 *)&((u8 *)(q + 0x9cda))[n * 0x24] =
+                *(s16 *)&((u8 *)(q + 0x9cda))[n * 0x24]
+                + *(s16 *)&((u8 *)(q + 0x9cde))[n * 0x24];
+        }
+        if (*(s32 *)(q + 0x20) > 0xb4)
+            st = 1;
+    }
+
+    if (lbl_0000939C(1))
+        st = 2;
+    if (st != 0) {
+        event_finish(0x12);
+        event_start(0x12);
+        u_play_music(0x64, 8);
+        lbl_00018008();
+        if (*(s8 *)(q + 4) != 0) {
+            if (controllerInfo[playerControllerIDs[0]].held.button != 0x200)
+                *(s8 *)(q + 4) = 0;
+        }
+    }
 }
 #pragma peephole on
 asm void lbl_00006DC0(void)

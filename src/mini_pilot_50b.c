@@ -231,7 +231,7 @@ struct PilotSpray;
 void lbl_0000B000(struct PilotB000 *p);
 void lbl_0000B130(Vec *pos, Vec *vel, struct PilotSpray *e);
 void lbl_0000B624(Vec *pos, Vec *vel, struct PilotSpray *e);
-void lbl_0000BACC(void);
+void lbl_0000BACC(Vec *pos, Vec *vel, u32 idx);
 
 struct PilotB000
 {
@@ -451,10 +451,87 @@ void lbl_0000B624(Vec *pos, Vec *vel, struct PilotSpray *e)
     }
 }
 
-asm void lbl_0000BACC(void)
+#pragma peephole on
+void lbl_0000BACC(Vec *pos, Vec *vel, u32 idx)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_0000BACC.s"
+    struct GMAModelEntry *ents;
+    u8 *k = (u8 *)lbl_0000C690;
+    Mtx m;
+    Vec w;
+    Vec v;
+    Vec w2;
+    Vec v2;
+    struct GMAModel *model;
+    f32 a;
+    f32 t;
+    f32 t2;
+    f32 z;
+    int i;
+
+    ents = minigameGma->modelEntries;
+    mathutil_mtxA_push();
+    mathutil_mtxA_to_mtx(m);
+    mathutil_mtxA_from_mtxB();
+    mathutil_mtxA_mult_right(m);
+    a = *(f32 *)(k + 0x8C) * mathutil_vec_len(vel);
+    a = a / *(f32 *)(k + 0x90);
+    if (a > *(f32 *)(k + 0x20))
+        a = *(f32 *)(k + 0x20);
+    avdisp_set_alpha(a);
+
+    mathutil_mtxA_push();
+    mathutil_mtxA_get_translate_alt2(&v);
+    mathutil_mtxA_tf_vec_xyz(&w, *(f32 *)(k + 0x20), *(f32 *)k, *(f32 *)k);
+    z = w.z;
+    w.x = mathutil_sqrt(w.x * w.x + z * z);
+    w.z = *(f32 *)k;
+    mathutil_vec_normalize_len(&w);
+    mathutil_mtxA_sq_from_identity();
+    mathutil_mtxA_rotate_z_sin_cos(w.y, w.x);
+    t = *(f64 *)(k + 0x98) * __fabs(z);
+    mathutil_mtxA_set_translate_xyz(v.x - *(f32 *)(k + 0x40), v.y - *(f32 *)(k + 0xA0),
+                                    v.z - *(f32 *)(k + 0x40));
+    mathutil_mtxA_scale_xyz(t, *(f32 *)(k + 0x20) + (t + a), *(f32 *)(k + 0x20));
+    for (i = 0; i < 5; i++)
+    {
+        mathutil_mtxA_translate_xyz(*(f32 *)(k + 0xA0), *(f32 *)k, *(f32 *)(k + 0x58));
+        mathutil_mtxA_rotate_z(-1024);
+        gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+        avdisp_set_alpha(*(f32 *)(k + 0x20) - *(f32 *)(k + 0xA4) * (i / *(f32 *)(k + 0xA8)));
+        model = ents[*(u32 *)&lbl_0000D3A0[(idx & 15) * 4]].model;
+        set_shape_flags_in_model(model, 2);
+        idx++;
+        avdisp_draw_model_unculled_sort_none(model);
+    }
+    mathutil_mtxA_pop();
+
+    mathutil_mtxA_push();
+    mathutil_mtxA_get_translate_alt2(&v2);
+    mathutil_mtxA_tf_vec_xyz(&w2, *(f32 *)(k + 0x80), *(f32 *)k, *(f32 *)k);
+    z = w2.z;
+    t2 = w2.x;
+    w2.x = mathutil_sqrt(t2 * t2 + z * z);
+    w2.z = *(f32 *)k;
+    mathutil_vec_normalize_len(&w2);
+    mathutil_mtxA_sq_from_identity();
+    mathutil_mtxA_rotate_z_sin_cos(w2.y, w2.x);
+    t2 = *(f64 *)(k + 0x98) * __fabs(z);
+    mathutil_mtxA_set_translate_xyz(*(f32 *)(k + 0x40) + v2.x, v2.y - *(f32 *)(k + 0xA0),
+                                    v2.z - *(f32 *)(k + 0x40));
+    mathutil_mtxA_scale_xyz(-t2, *(f32 *)(k + 0x20) + (t2 + a), *(f32 *)(k + 0x20));
+    for (i = 0; i < 5; i++)
+    {
+        mathutil_mtxA_translate_xyz(*(f32 *)(k + 0xA0), *(f32 *)k, *(f32 *)(k + 0x58));
+        mathutil_mtxA_rotate_z(-1024);
+        gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+        avdisp_set_alpha(*(f32 *)(k + 0x20) - *(f32 *)(k + 0xA4) * (i / *(f32 *)(k + 0xA8)));
+        model = ents[*(u32 *)&lbl_0000D3A0[(idx & 15) * 4]].model;
+        set_shape_flags_in_model(model, 2);
+        idx++;
+        avdisp_draw_model_unculled_sort_none(model);
+    }
+    mathutil_mtxA_pop();
+    mathutil_mtxA_pop();
 }
 
 #pragma force_active reset

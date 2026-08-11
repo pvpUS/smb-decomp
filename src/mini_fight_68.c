@@ -32,6 +32,8 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "avdisp.h"
+#include "mathutil.h"
 #include "../data/common.nlobj.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
@@ -172,63 +174,20 @@ extern void func_8006AD3C();
 extern void func_8006B3E8();
 extern void item_create();
 extern void item_replace_type_funcs();
-extern void mathutil_atan2();
-extern void mathutil_mtxA_from_rotate_y();
-extern void mathutil_mtxA_from_translate();
-extern void mathutil_mtxA_pop();
-extern void mathutil_mtxA_rotate_y();
-extern void mathutil_mtxA_tf_point();
-extern void mathutil_mtxA_tf_vec();
-extern void mathutil_mtxA_tf_vec_xyz();
-extern void mathutil_mtxA_to_mtx();
-extern void mathutil_mtxA_to_quat();
-extern void mathutil_mtxA_translate_xyz();
-extern void mathutil_sin();
-extern void mathutil_tan();
-extern void mathutil_vec_normalize_len();
-extern void mathutil_vec_set_len();
 extern void mini_commend_free_data();
 extern void spawn_stobj();
-extern void u_math_unk15();
 extern void ape_skel_anim_main();
-extern void avdisp_draw_model_culled_sort_all();
-extern void avdisp_draw_model_culled_sort_translucent();
-extern void avdisp_set_post_mult_color();
 extern void func_8006A9B8();
 extern void func_8006AAEC();
 extern void func_8009D794();
 extern void func_8009D8A4();
 extern void lens_flare_draw();
-extern void mathutil_mtxA_from_identity();
-extern void mathutil_mtxA_from_quat();
-extern void mathutil_mtxA_from_rotate_x();
-extern void mathutil_mtxA_push();
-extern void mathutil_mtxA_rigid_inv_tf_vec();
-extern void mathutil_mtxA_rotate_x();
-extern void mathutil_mtxA_rotate_z();
-extern void mathutil_mtxA_to_euler();
-extern void mathutil_mtxA_translate();
-extern void mathutil_sqrt();
-extern void mathutil_vec_to_euler();
-extern void mathutil_vec_to_euler_xy();
 extern void new_ape_stat_motion();
 extern void u_load_minigame_graphics();
 extern void unref_func_8003938C();
 extern void vibration_control();
 extern void GXSetNumTevStages_cached();
-extern void avdisp_draw_model_unculled_sort_all();
-extern void avdisp_draw_model_unculled_sort_translucent();
-extern void avdisp_set_bound_sphere_scale();
-extern void avdisp_set_post_add_color();
-extern void avdisp_set_z_mode();
 extern void func_8009DB40();
-extern void mathutil_atan();
-extern void mathutil_mtxA_from_mtx();
-extern void mathutil_mtxA_from_mtxB_translate();
-extern void mathutil_mtxA_mult_left();
-extern void mathutil_mtxA_normalize_basis();
-extern void mathutil_mtxA_rigid_inv_tf_point();
-extern void mathutil_mtxA_scale_s();
 extern void ord_tbl_draw_nodes();
 extern void raycast_stage_down();
 extern void set_ape_model_lod();
@@ -237,35 +196,20 @@ extern void unref_func_80039320();
 extern void unref_func_800393F8();
 extern void GXSetTevAlphaOp_cached();
 extern void ape_destroy();
-extern void avdisp_draw_model_unculled_sort_none();
-extern void mathutil_mtxA_from_mtxB();
-extern void mathutil_mtxA_from_translate_xyz();
-extern void mathutil_mtxA_rigid_inv_tf_tl();
-extern void mathutil_mtxA_sq_from_identity();
-extern void mathutil_mtxA_tf_point_xyz();
-extern void mathutil_mtxA_translate_neg();
-extern void mathutil_vec_dot_normalized_safe();
 extern void rend_efc_mirror_enable();
 extern void stobj_draw();
 extern void u_ball_init_1();
 extern void GXSetTevAlphaIn_cached();
-extern void avdisp_set_alpha();
 extern void background_draw();
 extern void light_init();
-extern void mathutil_mtxA_from_mtxB_translate_xyz();
 extern void set_bg_ambient();
-extern void u_avdisp_set_some_func_1();
 extern void GXSetTevColorOp_cached();
 extern void alloc_pool_light();
-extern void avdisp_draw_model_culled_sort_none();
 extern void func_8009CD5C();
-extern void mathutil_mtxA_scale_xyz();
 extern void ord_tbl_set_depth_offset();
 extern void GXSetTevColorIn_cached();
 extern void draw_monkey();
 extern void func_8009C5E4();
-extern void mathutil_mtxA_sq_from_mtx();
-extern void mathutil_mtxA_to_euler_yxz();
 extern void rend_efc_draw();
 extern void GXSetTevKAlphaSel_cached();
 extern void background_light_assign();
@@ -395,10 +339,121 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_00013C6C(void)
+void lbl_00013C6C(void)
+{
+    item_replace_type_funcs(1, 0);
+    item_replace_type_funcs(3, 0);
+    item_replace_type_funcs(4, 0);
+}
+void lbl_00013CAC(struct Item *item)
+{
+    item->state = 0;
+    item->unk12 = 0x1E0;
+    item->modelLODs = minigameGma->modelEntries[*(s16 *)(lbl_0001D7E4 + item->subType * 2)].model;
+    item->flags = 0x20;
+    item->radius = ((struct GMAModel *)item->modelLODs)->boundSphereRadius;
+    item->unk18 = *(f32 *)lbl_0001C4E8;
+    item->shadowModel = commonGma->modelEntries[0x4E].model;
+    item->shadowColor.r = 0x80;
+    item->shadowColor.g = 0x80;
+    item->shadowColor.b = 0x80;
+    item->unk7C.x = item->radius;
+    item->unk7C.y = item->radius;
+    item->unk7C.z = item->radius;
+}
+asm void lbl_00013D50(void)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00013C6C.s"
+#include "../asm/nonmatchings/mini_fight/lbl_00013D50.s"
+}
+#pragma peephole on
+void lbl_00013FD0(struct Item *item)
+{
+    s32 t = item->unk12;
+    f32 *k = (f32 *)lbl_0001C4E8;
+    struct GMAModel *m;
+    f32 rad;
+    f32 c[4];
+
+    if (t < 0x3C && (t & 4))
+        return;
+    rad = item->radius;
+    m = item->modelLODs;
+    mathutil_mtxA_from_mtxB_translate_xyz(item->pos.x,
+        item->pos.y + k[0xC] * (k[2] + mathutil_sin(t << 9)),
+        item->pos.z);
+    mathutil_mtxA_sq_from_identity();
+    mathutil_mtxA_rotate_z((s16)(k[0xD] * rad
+        + k[0xE] * mathutil_sin((item->index << 9) - (t << 10))));
+    mathutil_mtxA_scale_s(item->radius / m->boundSphereRadius);
+    GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+    GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
+    if (rad < k[2])
+    {
+        f32 d = k[2] - rad;
+
+        c[0] = k[0xF] * d;
+        c[1] = k[0x10] * d;
+        c[2] = k[0x11] * d;
+        if (c[0] > k[2])
+            c[0] = k[2];
+        if (c[1] > *(f32 *)((u8 *)k + 8))
+            c[1] = *(f32 *)((u8 *)k + 8);
+        if (c[2] > *(f32 *)&k[2])
+            c[2] = *(f32 *)&k[2];
+        avdisp_set_post_add_color(c[0], c[1], c[2], k[0x12]);
+    }
+    avdisp_draw_model_culled_sort_translucent(m);
+    if (rad < k[2])
+        avdisp_set_post_add_color(k[0x12], k[0x12], k[0x12], k[0x12]);
+}
+#pragma peephole reset
+asm void lbl_0001415C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_0001415C.s"
+}
+#pragma peephole on
+void lbl_000143A0(void)
+{
+}
+#pragma peephole reset
+#pragma peephole on
+void lbl_000143A4(struct Item *item)
+{
+    f32 *k = (f32 *)lbl_0001C540;
+
+    item->state = 1;
+    item->modelLODs = *(void **)(lbl_0001D7F0 + item->subType * 0x10 + 0x48);
+    item->flags = 0x22;
+    item->radius = k[0];
+    item->unk18 = k[1];
+    item->rotVelX = *(s16 *)(lbl_0001D7F0 + item->subType * 0x10 + 0x52);
+    item->rotVelY = *(s16 *)(lbl_0001D7F0 + item->subType * 0x10 + 0x54);
+    item->rotVelZ = *(s16 *)(lbl_0001D7F0 + item->subType * 0x10 + 0x56);
+    item->shadowModel = commonGma->modelEntries[0x4E].model;
+    item->shadowColor.r = 0x46;
+    item->shadowColor.g = 0x47;
+    item->shadowColor.b = 0x5F;
+    item->unk7C.x = item->radius;
+    item->unk7C.y = k[2] * item->radius;
+    item->unk7C.z = item->radius;
+}
+#pragma peephole reset
+asm void lbl_00014478(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00014478.s"
+}
+asm void lbl_000147E0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_000147E0.s"
+}
+asm void lbl_00014958(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_fight/lbl_00014958.s"
 }
 
 #pragma force_active reset

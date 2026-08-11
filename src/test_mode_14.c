@@ -279,9 +279,37 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-static asm void lbl_00002048(void)
+static void lbl_00002048(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00002048.s"
+    u8 *p = lbl_10000000;
+    u16 btn = controllerInfo[0].pressed.button;
+
+    if (btn & PAD_BUTTON_LEFT)
+    {
+        *(int *)(p + 0x40) -= 1;
+        if (*(int *)(p + 0x40) < 0)
+            *(int *)(p + 0x40) = 6;
+    }
+    if (btn & PAD_BUTTON_RIGHT)
+    {
+        *(int *)(p + 0x40) += 1;
+        if (*(int *)(p + 0x40) > 6U)
+            *(int *)(p + 0x40) = 0;
+    }
+    if (btn & PAD_BUTTON_UP)
+    {
+        int *v;
+
+        if (*(v = (int *)(p + 0x44)) < 0xFF)
+            *v = *v + 1;
+    }
+    if (btn & PAD_BUTTON_DOWN)
+    {
+        int *v = (int *)(p + 0x44);
+
+        if (*(int *)(p + 0x44) > 0)
+            *v = *(int *)(p + 0x44) - 1;
+    }
+    u_replay_test_main();
 }
 #pragma force_active reset
