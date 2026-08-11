@@ -475,6 +475,16 @@ def census(tree, stem, mod):
             cat = ('d-JUMPTBL' if has_bctr else
                    'a-BLOCKED' if inline_magic else
                    'b-POOL' if pool else 'c-FREE')
+            # `cat` is a PRIORITY CHAIN, so it shows only the FIRST stop sign and
+            # the real blocker can be invisible.  sel_ngc's `ECB0` (694) files as
+            # d-JUMPTBL when what actually blocks it is the signed+unsigned magic
+            # proof, which made the project's "7,315 behind a jump table" figure
+            # misleading by 694.  Keep `cat` exactly as it is -- every consumer
+            # and every historical figure depends on it -- and report the rest
+            # alongside it.
+            stops = (['JUMPTBL'] if has_bctr else []) + \
+                    (['BLOCKED'] if inline_magic else []) + \
+                    (['POOL'] if pool else [])
             # RUN 20: keep the magic LABELS, not just their S/U kinds.
             # rel_reach.py needs the label to ask "does this function's OWN TU
             # already emit the magic at that address?", which is the question
@@ -501,6 +511,7 @@ def census(tree, stem, mod):
                               leaf=is_leaf, settled=settled,
                               reads_magic=''.join(reads),
                               reads_labels=reads_labels,
+                              stops=stops,
                               needs_kind=needs_kind))
     return table, (bias, hits, ntgt, runner), magics
 
@@ -571,8 +582,11 @@ def main():
                      ' ' * 18))
         if a.detail:
             for t in sorted(table, key=lambda x: (x['cat'], -x['insn'])):
-                print('        %-20s %8s %5d  %-11s %-24s%s%s'
+                print('        %-20s %8s %5d  %-11s %-24s%s%s%s'
                       % (t['fn'], t['addr'], t['insn'], t['cat'], t['owner'],
+                         # every stop sign, not just the one `cat` won with
+                         ('  +' + '+'.join(t['stops'][1:])
+                          if len(t['stops']) > 1 else ''),
                          ' LEAF' if t['leaf'] else '',
                          ' leaf?' if not t['settled'] else ''))
         for k in ('fns', 'insn'):

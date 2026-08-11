@@ -737,6 +737,11 @@ def main():
         # ents[i] into its remainder -- otherwise the original label vanishes
         # and never gets its zero-size alias.
         carved = [e['label'] for e in ents[i:h['end'] + 1] if e['label']]
+        # ...and the SIZE, for the same reason.  The `must emit EXACTLY N bytes`
+        # message below used to sum ents[i:...] after the rewrite, so on a
+        # prefix carve it read the remainder's bytes=0 and reported only the
+        # alignment extension -- `EXACTLY 0 bytes` for a file that must emit 32.
+        carved_bytes = sum(e['bytes'] for e in ents[i:h['end'] + 1])
         if h['bytes'] is not None and h['bytes'] < ent['bytes']:
             # carve a prefix: keep the remainder, re-labelled at the new address
             kept, used = [], 0
@@ -776,7 +781,7 @@ def main():
             # built GOLDEN having emitted exactly 36 bytes (0x24) at 0xB8, with
             # the next segment resuming at 0xDC -- 4 mod 8.  The warning was
             # wrong and is gone.  What actually matters is the byte COUNT.
-            gone = h['back'] + sum(e['bytes'] for e in ents[i:h['end'] + 1])
+            gone = h['back'] + carved_bytes
             print('  %s must emit EXACTLY %d bytes of .data at this point '
                   '(0x%X..0x%X).\n    Check it with `objdump -h` on the built '
                   'object before you gate.'
