@@ -31,6 +31,14 @@ TWO WAYS THROUGH, both verified with a GOLDEN build:
      alias is re-emitted.  (mini_bowling; mini_race used the bare form.)  This
      is the cheap route and it is enough to ADD a hole to a carved module --
      mini_race carved a second hole this way for +885 instructions.
+
+     RUN 24, mini_race: as holes accumulate, `--hole L:8` DIES on a hole that
+     is already landed ("asks for more bytes than the label's run (0)").  Every
+     already-landed hole takes a BARE `--hole`; only the NEW hole takes `:8`.
+
+     RUN 24, option + mini_bowling independently: the `.data` flavour used to
+     refuse outright for want of an address comment.  stamp_addresses() below
+     fixes that at the source.
   2. Reinsert each hole's bytes from the owning object's own section --
      `objdump -s -j .rodata src/x.c.o` IS the hole content, by definition.
      mini_fight's `mkpristine.py` does this and round-tripped to a GOLDEN
@@ -55,6 +63,8 @@ import sys
 MAIN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECTION = re.compile(r'\.section (\.\w+)')
 GLOBAL = re.compile(r'^\.global (lbl_[0-9A-Fa-f]+)$')
+LABEL = re.compile(r'^lbl_([0-9A-Fa-f]{8}):$')
+ADDR = re.compile(r'^# 0x[0-9A-Fa-f]+$')
 
 
 def sources_items(mk, mod):
@@ -83,6 +93,50 @@ def split_sections(lines):
         if name not in order:
             order.append(name)
     return pre, secs, order
+
+
+def stamp_addresses(body):
+    """Give every `lbl_XXXXXXXX:` an explicit `# 0xADDR` comment.
+
+    RUN 24, found INDEPENDENTLY by option and mini_bowling with the same
+    diagnosis.  A carved hole's label comes back ZERO-SIZE (see the header),
+    and rel_carve writes those aliases with no address comment -- so
+    `rel_carve --data-hole L:0`, the documented way to re-declare a landed
+    hole, dies with
+
+        lbl_00015480 has no `# 0xADDR` comment, so its alignment cannot be
+        checked -- refusing rather than guessing.
+
+    That blocked re-carving ANY already-carved module with a landed `.data`
+    hole, which is exactly the case section 2 of the brief tells every module
+    to use.  The `.rodata` path has no alignment check, which is why run 23
+    never hit it.  Both modules worked around it by patching the blob by hand.
+
+    The address is not a guess: in this tree a data label's NAME is its
+    address.  Verified over the five untouched modules' 31 data segments --
+    938 labels carry a `# 0xADDR` comment and the name matches it in 938 of
+    938 cases, 0 exceptions.  So a missing comment is recoverable exactly.
+
+    A comment emits no bytes, so this cannot move an address on its own.  It
+    does let entry_width() resolve a `.balign` that previously counted as 0
+    for want of a known address -- which is a correction, not a regression:
+    rel_carve_selftest and rel_carve_regress both still pass (see below).
+    """
+    n = 0
+    out = []
+    for i, l in enumerate(body):
+        out.append(l)
+        m = LABEL.match(l.strip())
+        if not m:
+            continue
+        j = i + 1
+        while j < len(body) and not body[j].strip():
+            j += 1
+        if j < len(body) and ADDR.match(body[j].strip()):
+            continue
+        out.append('    # 0x%X' % int(m.group(1), 16))
+        n += 1
+    return out, n
 
 
 def reassemble(mod, dest):
@@ -136,6 +190,11 @@ def reassemble(mod, dest):
             if s == '.balign 8' and not body and name == '.rodata':
                 continue
             body.append(l)
+        body, stamped = stamp_addresses(body)
+        if stamped:
+            print('  %s: stamped `# 0xADDR` on %d label(s) that had none '
+                  '(zero-size hole aliases) -- `--hole L:0` works on them now'
+                  % (name, stamped))
         out += ['', '.section %s' % name] + body
     open(os.path.join(dest, 'asm', '%s.s' % mod), 'w', newline='\n').write(
         '\n'.join(out) + '\n')
@@ -149,7 +208,19 @@ def main():
         shutil.rmtree(dest)
     os.makedirs(os.path.join(dest, 'asm', 'nonmatchings', mod))
     os.makedirs(os.path.join(dest, 'src'))
+    # RUN 24 (option, and mini_race independently): this used to create an
+    # EMPTY tools/, so `cd <dest> && python tools/rel_carve.py` died with
+    # "can't open file", and reaching for the WARM tree's copy instead makes
+    # rel_carve resolve REPO from its own __file__ and read the warm --
+    # already carved -- blob, whereupon it refuses.  That is the likeliest
+    # reason four modules hit the `--from` refusal in run 23.  Populate it.
     os.makedirs(os.path.join(dest, 'tools'))
+    t = 0
+    for f in os.listdir(os.path.join(MAIN, 'tools')):
+        if f.endswith('.py'):
+            shutil.copy(os.path.join(MAIN, 'tools', f),
+                        os.path.join(dest, 'tools', f))
+            t += 1
     shutil.copy(os.path.join(MAIN, 'Makefile'), os.path.join(dest, 'Makefile'))
     n = 0
     srcdir = os.path.join(MAIN, 'asm', 'nonmatchings', mod)
@@ -164,9 +235,9 @@ def main():
             shutil.copy(os.path.join(MAIN, 'src', f), os.path.join(dest, 'src', f))
             m += 1
     segs = reassemble(mod, dest)
-    print('%s: test tree at %s -- %d nonmatchings .s, %d src .c, blob '
+    print('%s: test tree at %s -- %d nonmatchings .s, %d src .c, %d tools, blob '
           'reassembled from %d segment(s): %s'
-          % (mod, dest, n, m, len(segs), ' '.join(segs)))
+          % (mod, dest, n, m, t, len(segs), ' '.join(segs)))
 
 
 if __name__ == '__main__':
