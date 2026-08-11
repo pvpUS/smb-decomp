@@ -91,6 +91,45 @@ def compare(a, b):
     return 1 if (gone or new or moved) else 0
 
 
+def warn_if_stale(plf, tree):
+    """Warn -- loudly -- if the `.plf` predates any `.c` that feeds it.
+
+    This tool's whole output is derived from the `.plf`, so a stale link makes
+    it report a FALSE `changed` for a function nobody touched.  Run 26 hit it:
+    after a stored-draft verification pass mini_pilot got `117/118, 1 changed:
+    lbl_000015D8` for a function that is still asm and whose source `cmp`s
+    clean; rebuilding gave `118/118, 0 changed`.
+
+    `rel_objsect.py` has carried this guard since run 24 and it is exactly why
+    its `NOT-GOLDEN` is trustworthy.  `rel_fnhash` had none and printed no
+    warning at all, which is worse than being wrong loudly.  Note `make …plf`
+    does NOT refresh the `.rel`, so the two artifacts go stale independently.
+    """
+    try:
+        t = os.path.getmtime(plf)
+    except OSError:
+        return
+    newer = []
+    src = os.path.join(tree, 'src')
+    if os.path.isdir(src):
+        for f in os.listdir(src):
+            if f.endswith(('.c', '.h')):
+                p = os.path.join(src, f)
+                try:
+                    if os.path.getmtime(p) > t:
+                        newer.append(f)
+                except OSError:
+                    pass
+    if newer:
+        newer.sort()
+        sys.stderr.write(
+            'WARNING: %s is OLDER than %d source file(s) -- e.g. %s\n'
+            '  Every hash below comes from that stale link, so a "changed"\n'
+            '  here may be an artifact, not a real codegen difference.\n'
+            '  Rebuild before believing this output.\n'
+            % (os.path.basename(plf), len(newer), ', '.join(newer[:3])))
+
+
 def emit(mod, out, tree):
     if mod not in PLF:
         sys.exit('unknown module %r -- one of: %s'
@@ -99,6 +138,7 @@ def emit(mod, out, tree):
     if not os.path.exists(plf):
         sys.exit('no %s -- build the module first (make %s)'
                  % (plf, PLF[mod].replace('.plf', '.rel')))
+    warn_if_stale(plf, tree)
 
     syms = subprocess.run([OD, '-t', plf], capture_output=True, text=True).stdout
     fns = {}

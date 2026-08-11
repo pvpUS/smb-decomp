@@ -83,6 +83,23 @@ def mask(wd):
     return wd
 
 
+def symbol_size(plf, label):
+    """Instruction count of `label` in the built `.plf`, from the SYMBOL TABLE.
+
+    This is the authoritative length in BOTH directions.  The `blr` scan that
+    used to do this job could only ever be right about a LONG build -- see the
+    comment at the trim below, and run 26's mini_fight report, which caught it
+    reporting a 1-SHORT draft as +64 LONG.  `objdump -t` prints `F .text <size>`
+    for every function, so no heuristic is needed when the symbol is present.
+    """
+    d = os.popen('"%s" -t "%s"' % (OBJDUMP, plf)).read()
+    for ln in d.splitlines():
+        f = ln.split()
+        if len(f) >= 6 and f[-1] == label and f[-3] == '.text':
+            return int(f[-2], 16) // 4
+    return None
+
+
 def load_fdiff(tree, stem):
     """Borrow rel_fdiff's loaders so relocation placeholders are handled the
     way the SCORER handles them, not the way this file would guess."""
@@ -143,6 +160,7 @@ def main():
             sys.exit('%s is not in %s.map -- it may already be converted, or '
                      'the link is stale' % (label, TARGETS[mod]))
         base = mp[label]
+        nbuilt = symbol_size(plf, label)
 
         gold = [mask(w) for _, w, _ in rows]
         gtxt = [t for _, _, t in rows]
@@ -161,14 +179,24 @@ def main():
     finally:
         os.chdir(cwd)
 
-    # Trim the read-ahead back to the built function: stop at the first `blr`
-    # at or after golden's length, so a LONG body is reported as long instead of
-    # bleeding into the next function.
-    end = len(built)
-    for j in range(len(rows) - 1, len(built)):
-        if btxt[j].startswith('blr'):
-            end = j + 1
-            break
+    # Trim the read-ahead back to the built function.
+    #
+    # Prefer the symbol table -- it is exact in both directions.  The fallback
+    # `blr` scan below is only reached when the symbol is absent, and it is
+    # WRONG FOR A SHORT BUILD by construction: it starts at golden's last index,
+    # so a short body's own `blr` sits BEFORE the start, is skipped, and the scan
+    # runs on into the NEXT function and stops at that one's `blr`.  Run 26 hit
+    # exactly this -- a 1-short draft was reported as `+64 LONG`, inverting the
+    # tool's own verdict on the one case §5 promotes it for.  Starting the scan
+    # at index 0 is not a fix either: an early return would truncate a long body.
+    if nbuilt is not None:
+        end = min(nbuilt, len(built))
+    else:
+        end = len(built)
+        for j in range(len(rows) - 1, len(built)):
+            if btxt[j].startswith('blr'):
+                end = j + 1
+                break
     built, btxt = built[:end], btxt[:end]
 
     delta = len(built) - len(gold)
