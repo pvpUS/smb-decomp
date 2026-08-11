@@ -51,19 +51,22 @@
 # offset: 0x00000000	length: 0x00000000	flags: 0
 # offset: 0x00000000	length: 0x00000000	flags: 0
 # 2
+
 .section .ctors
     # 0x1BF78
 #    .4byte 0x00000000
 
 # 3
+
 .section .dtors
     # 0x1BF7C
 #    .4byte 0x00000000
 
 # 4
 
+
+
 .section .rodata
-.balign 8
 .balign 8
 lbl_0001BF80:
     # 0x1BF80

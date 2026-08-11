@@ -278,9 +278,109 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_00009060(void)
+void lbl_00009060(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00009060.s"
+    u8 *k = lbl_0000FE78;
+    u8 *w = lbl_10000000;
+    u8 *d = lbl_000102B0;
+    u8 **q;
+    u8 **q2;
+    u8 *p;
+
+    switch (gameSubmode)
+    {
+    case 0x60:
+        lbl_00000630();
+        break;
+    case 0x64:
+        lbl_00000934();
+        break;
+    case 0x66:
+        lbl_00001B78();
+        break;
+    case 0x68:
+        window_set_cursor_pos(4, 4);
+        window_printf_2((char *)(d + 0x974));
+        window_printf_2((char *)(d + 0x980),
+                        *(u32 *)&((u8 (*)[8])(d + 0x940))[*(s32 *)(w + 0x40)][0]);
+        window_printf_2((char *)(d + 0x990), *(u32 *)(w + 0x44));
+        draw_normal_game_scene();
+        lbl_0000215C();
+        GXSetTexCopySrc(0, 0, currRenderMode->fbWidth, currRenderMode->efbHeight);
+        GXSetTexCopyDst(currRenderMode->fbWidth, currRenderMode->efbHeight,
+                        *(u32 *)&((u8 (*)[8])(d + 0x93C))[*(s32 *)(w + 0x40)][0], 0);
+        GXCopyTex(*(void **)(q = (u8 **)(w + 0x68)), 0);
+        p = w + 0x48;
+        GXInitTexObj((GXTexObj *)p, *q, currRenderMode->fbWidth,
+                     currRenderMode->efbHeight,
+                     *(u32 *)&((u8 (*)[8])(d + 0x93C))[*(s32 *)(w + 0x40)][0],
+                     0, 0, 0);
+        GXInitTexObjLOD((GXTexObj *)p, 0, 0, *(f32 *)(k + 0x60),
+                        *(f32 *)(k + 0x60), *(f32 *)(k + 0x60), 0, 0, 0);
+        break;
+    case 0x6A:
+        window_set_cursor_pos(4, 4);
+        window_printf_2((char *)(d + 0x9A0));
+        lbl_000095F8();
+        lbl_00009998();
+        draw_test_camera_target();
+        break;
+    case 0x6C:
+        lbl_0000B57C();
+        break;
+    case 0x6E:
+        lbl_0000C00C();
+        break;
+    case 0x70:
+        window_set_cursor_pos(4, 4);
+        window_printf_2((char *)(d + 0x26E0),
+                        *(u32 *)&((u8 (*)[0xC])(d + 0x2080))[*(s32 *)(w + 0x70)][0]);
+        if (*(q2 = (u8 **)(w + 0x74)) == NULL)
+        {
+            window_printf_2((char *)(d + 0x26F4));
+            break;
+        }
+        window_printf_2((char *)(d + 0x2700),
+            *(u32 *)(*(u8 **)&((u8 (*)[4])(*q2 + 4))[*(s32 *)(w + 0x6C)][0] - 8));
+        window_printf_2((char *)(d + 0x2714),
+            *(u32 *)*(u8 **)(*(u8 **)&((u8 (*)[4])(*q2 + 4))[*(s32 *)(w + 0x6C)][0] - 4));
+        mathutil_mtxA_from_mtxB();
+        nlObjPut((struct NlObj *)*(u8 **)&((u8 (*)[4])(*q2 + 4))[*(s32 *)(w + 0x6C)][0]);
+        draw_test_camera_target();
+        break;
+    case 0x72:
+        lbl_000031B8();
+        break;
+    case 0x74:
+        lbl_00003A4C();
+        break;
+    case 0x76:
+        func_8004A800();
+        break;
+    case 0x78:
+        lbl_0000FD8C();
+        mathutil_mtxA_from_mtxB();
+        nl2ngc_draw_model_sort_translucent_alt2(
+            *(struct NlObj **)((u8 *)g_commonNlObj + 0xC));
+        break;
+    case 0x7B:
+        lbl_00005384();
+        break;
+    case 0x7D:
+        lbl_000073EC();
+        break;
+    case 0x7F:
+        lbl_00007D20();
+        break;
+    case 0x81:
+        lbl_00008008();
+        break;
+    case 0x83:
+        lbl_0000884C();
+        break;
+    case 0x85:
+        lbl_00008F40();
+        break;
+    }
 }
 #pragma force_active reset

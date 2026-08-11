@@ -395,10 +395,90 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_00014CC0(void)
+void lbl_00014CC0(struct Item *item)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00014CC0.s"
+    u8 *k = lbl_0001C5B0;
+    Vec v;
+    f32 y;
+
+    if (item->state == 0)
+        return;
+    if (item->unk64 != 0)
+        y = item->pos.y + item->unk74;
+    else
+        y = *(f32 *)(k + 0xC);
+    switch (item->state)
+    {
+    case 1:
+        item->state = 2;
+    case 2:
+        if (item->pos.y - y > *(f32 *)(k + 0x10))
+            item->vel.y += *(f32 *)(k + 0x14);
+        else
+            item->vel.y += *(f32 *)(k + 0x18);
+        if (item->unk12 < 0x20)
+        {
+            item->state = 3;
+            item->flags &= ~2;
+        }
+        else
+        {
+            item->radius += *(f32 *)k
+                          * (*(f32 *)(lbl_0001D878 + item->subType * 0xC) - item->radius);
+        }
+        break;
+    case 3:
+        item->vel.y += *(f32 *)(k + 0x14);
+        item->radius *= *(f32 *)(k + 0x1C) - ((f32 *)k)[7] / (item->unk12 + 1);
+        break;
+    case 4:
+        item->state = 5;
+    case 5:
+        item->state = 6;
+        item->unk10 = 15;
+    case 6:
+        item->unk10--;
+        if (item->unk10 < 0)
+            item->state = 7;
+        break;
+    case 7:
+        item->radius -= *(f64 *)(k + 0x20);
+        if (item->radius < *(f32 *)(k + 0x28))
+            g_poolInfo.itemPool.statusList[item->index] = STAT_DEST;
+        break;
+    }
+    item->prevPos = item->pos;
+    item->prevRotX = item->rotX;
+    item->prevRotY = item->rotY;
+    item->prevRotZ = item->rotZ;
+    item->vel.x *= *(f64 *)(k + 0x30);
+    item->vel.y *= *(f64 *)(k + 0x30);
+    item->vel.z *= *(f64 *)(k + 0x30);
+    item->pos.x += item->vel.x;
+    item->pos.y += item->vel.y;
+    item->pos.z += item->vel.z;
+    if (item->pos.y - y < item->radius)
+    {
+        item->pos.y = y + item->radius;
+        if (item->vel.y < *(f32 *)(k + 0x38))
+            item->vel.y *= *(f32 *)(k + 0x3C);
+    }
+    item->rotX += item->rotVelX;
+    item->rotY += item->rotVelY;
+    item->rotZ += item->rotVelZ;
+    if (item->animGroupId == 0)
+    {
+        set_ball_look_point(2, &item->pos, *(f32 *)(k + 0x1C));
+    }
+    else
+    {
+        mathutil_mtxA_from_mtx(animGroups[item->animGroupId].transform);
+        mathutil_mtxA_tf_point(&item->pos, &v);
+        set_ball_look_point(2, &v, *(f32 *)(k + 0x1C));
+    }
+    item->unk6C.z = -item->rotY;
+    item->unk7C.x = item->radius;
+    item->unk7C.y = *(f32 *)(k + 0x40) * item->radius;
 }
 
 #pragma force_active reset

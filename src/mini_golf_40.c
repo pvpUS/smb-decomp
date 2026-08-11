@@ -203,12 +203,12 @@ void lbl_0000E8AC(void);
 void lbl_0000E998(void);
 void lbl_0000E99C(void);
 void lbl_0000F11C(void);
-void lbl_0000F194(void);
-void lbl_0000F290(void);
-void lbl_0000F750(void);
-void lbl_0000F7E8(void);
-void lbl_0000FA18(void);
-void lbl_0000FBC8(void);
+void lbl_0000F194(struct Ball *ball);
+void lbl_0000F290(struct Ball *ball);
+void lbl_0000F750(struct Ball *ball);
+void lbl_0000F7E8(struct Ball *ball);
+void lbl_0000FA18(struct Ball *ball);
+void lbl_0000FBC8(struct Ball *ball);
 void lbl_0000FCE0(void);
 void lbl_000100D4(void);
 void lbl_00010304(void);
@@ -257,9 +257,60 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-asm void lbl_0000F194(void)
+u32 golfPadFFFF = 0xFFFF0000;
+
+void lbl_0000F194(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_0000F194.s"
+    u8 *st = (u8 *)lbl_10000170;
+
+    switch (ball->unk148)
+    {
+    case 1:
+        *(u32 *)(st + 0x14) = 0;
+        *(u32 *)(st + 0x18) = 0;
+        *(u32 *)(st + 0xc) = 0;
+        lbl_0000F290(ball);
+        break;
+    case 2:
+        *(u32 *)(st + 0x14) = 0;
+        *(u32 *)(st + 0x18) = 0;
+        *(u32 *)(st + 0xc) = 0;
+        lbl_0000F750(ball);
+        break;
+    case 3:
+        *(u32 *)(st + 0x14) = 0;
+        *(u32 *)(st + 0x18) = 0;
+        *(u32 *)(st + 0xc) = 0;
+        lbl_0000FBC8(ball);
+        break;
+    case 4:
+        *(u32 *)(st + 0xc) = 0;
+        lbl_0000FCE0();
+        break;
+    case 5:
+        *(u32 *)(st + 0x14) = 0;
+        *(u32 *)(st + 0x18) = 0;
+        *(u32 *)(st + 0) = 0;
+        lbl_0000F7E8(ball);
+        break;
+    case 6:
+        *(u32 *)(st + 0x14) = 0;
+        *(u32 *)(st + 0x18) = 0;
+        *(u32 *)(st + 0) = 0;
+        lbl_0000FA18(ball);
+        break;
+    case 0:
+        *(u32 *)(st + 0x14) = 0;
+        *(u32 *)(st + 0x18) = 0;
+        *(u32 *)(st + 0) = 0;
+        *(u32 *)(st + 0xc) = 0;
+        break;
+    default:
+        *(u32 *)(st + 0x14) = 0;
+        *(u32 *)(st + 0x18) = 0;
+        *(u32 *)(st + 0) = 0;
+        *(u32 *)(st + 0xc) = 0;
+        break;
+    }
 }
 #pragma force_active reset

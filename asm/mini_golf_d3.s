@@ -1,34 +1,86 @@
 # mini_golf data segment 3 -- rodata continuation after a carved hole
-#
-# RUN 17 carve.  The 8 bytes at 0x266F8 are the SIGNED int->float magic
-# double 0x43300000_80000000.  They are now emitted by the merged
-# src/mini_golf_58.c TU (_58.._62), which sits between this object and
-# asm/mini_golf_d5.s in SOURCES.  lbl_000266F8 stays here as a zero-size
-# trailing label so the still-asm users keep resolving to 0x266F8.
 .include "macros.inc"
-.global lbl_000266F8
+.global lbl_00026390
+.global lbl_000263B0
+.global lbl_000264A8
 
 .section .rodata
 .balign 8
-lbl_000266A8:
+lbl_00026388:
+    .4byte 0x3FE00000
+    .4byte 0x00000000
+lbl_00026390:
+    # 0x26390
+    .4byte 0x00000000
+    .4byte 0x3F800000
+    .4byte 0x40400000
+    .4byte 0x34000000
+    .4byte 0x3FE80000
+    .4byte 0x00000000
+    .4byte 0x3FC99999
+    .4byte 0x9999999A
+lbl_000263B0:
+    # 0x263B0
+    .4byte 0x43300000
+    .4byte 0x80000000
+    .4byte 0x3FF75C28
+    .4byte 0xF5C28F5C
+    .4byte 0x40220000
+    .4byte 0x00000000
+    .4byte 0x41100000
+    .4byte 0x00000000
+    .4byte 0x40240000
+    .4byte 0x00000000
     .4byte 0x403E0000
     .4byte 0x00000000
-    .4byte 0x477FFF00
-    .4byte 0x42100000
-    .4byte 0x47000000
-    .4byte 0x41C80000
-    .4byte 0x43A00000
-    .4byte 0x42900000
-    .4byte 0x43700000
-    .4byte 0x42C00000
-    .4byte 0x40740000
+    .4byte 0x404E0000
+    .4byte 0x00000000
+    .4byte 0x40100000
+    .4byte 0x00000000
+    .4byte 0x3FD00000
+    .4byte 0x00000000
+    .4byte 0x40080000
+    .4byte 0x00000000
+    .4byte 0x3FF00000
+    .4byte 0x00000000
+    .4byte 0x402E0000
+    .4byte 0x00000000
+    .4byte 0x40340000
+    .4byte 0x00000000
+    .4byte 0x3F847AE1
+    .4byte 0x47AE147B
+    .4byte 0x3FF33333
+    .4byte 0x33333333
+    .4byte 0x3F000000
+    .4byte 0x00000000
+    .4byte 0x3FF80000
+    .4byte 0x00000000
+    .4byte 0x40540000
+    .4byte 0x00000000
+    .4byte 0x41F00000
+    .4byte 0x00000000
+    .4byte 0x40490000
+    .4byte 0x00000000
+    .4byte 0x46800000
+    .4byte 0x42B40000
+    .4byte 0xC6800000
+    .4byte 0x39E903BA
+    .4byte 0x3ECCCC46
+    .4byte 0x00000000
+    .4byte 0x408C2000
+    .4byte 0x00000000
+    .4byte 0x44610000
+    .4byte 0x00000000
+    .4byte 0x40590000
+    .4byte 0x00000000
+    .4byte 0x407C2000
+    .4byte 0x00000000
+    .4byte 0x41A00000
+    .4byte 0x00000000
+    .4byte 0x40140000
     .4byte 0x00000000
     .4byte 0x40040000
     .4byte 0x00000000
-    .4byte 0x42000000
-    .4byte 0x00000000
-    .4byte 0x401C0000
-    .4byte 0x00000000
-    .4byte 0x3FD33333
-    .4byte 0x33333333
-lbl_000266F8:
+    .4byte 0x47000000
+    .4byte 0x43E10000
+lbl_000264A8:

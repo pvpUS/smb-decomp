@@ -306,7 +306,7 @@ void lbl_00008C4C(u8 *, struct Ball *);
 static void lbl_00009A08(struct Camera *cam, int a1);
 static void lbl_00009D3C(struct Camera *cam, int arg);
 void lbl_0000A364(u8 *, struct Ball *);
-void lbl_0000A9C4(void);
+f32 lbl_0000A9C4(f32 a, f32 b);
 void lbl_0000A9EC(void);
 void lbl_0000AC30(void);
 void lbl_0000ACF4(void);
@@ -388,10 +388,10 @@ void lbl_00012D50(void);
 
 static void lbl_00009BF8(struct Camera *cam, int arg, int a2);
 static void lbl_00008CC8(struct Camera *cam, struct Ball *ball);
-static void lbl_00008EC8(void);
-static void lbl_0000933C(void);
-static void lbl_000098A8(void);
-static void lbl_0000A088(void);
+static void lbl_00008EC8(struct Camera *cam, struct Ball *ball);
+static void lbl_0000933C(struct Camera *cam, struct Ball *ball);
+static void lbl_000098A8(struct Camera *cam, int arg, int a2);
+static void lbl_0000A088(struct Camera *cam, struct Ball *ball);
 void lbl_0000A31C(u8 *, struct Ball *);
 #pragma force_active on
 #pragma peephole on
@@ -434,22 +434,283 @@ static void lbl_00008CC8(struct Camera *cam, struct Ball *ball)
     cam->subState = 2;
 }
 
-static asm void lbl_00008EC8(void)
+#pragma peephole on
+static void lbl_00008EC8(struct Camera *cam, struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00008EC8.s"
+    u8 *cfg = lbl_00013AA0;
+    s16 rotY;
+    s16 pitch;
+    s16 lim;
+    s32 t;
+    s32 u;
+    f32 sq;
+    s16 a;
+    Vec eyeSave;
+    Vec lookSave;
+    Vec v;
+    Vec k1;
+    Vec k2;
+    Vec k3;
+    Vec *p;
+
+    eyeSave = cam->eye;
+    lookSave = cam->lookAt;
+    if (debugFlags & 0xA)
+        return;
+    v.x = cam->unkAC.x - cam->lookAt.x;
+    v.y = cam->unkAC.y - cam->lookAt.y;
+    v.z = cam->unkAC.z - cam->lookAt.z;
+    sq = mathutil_vec_sq_len(&v);
+    if (sq > *(f32 *)(cfg + 0x44))
+    {
+        v.x = v.x * mathutil_rsqrt(sq);
+        v.y = v.y * mathutil_rsqrt(sq);
+        v.z = v.z * mathutil_rsqrt(sq);
+    }
+    else
+    {
+        k1 = *(Vec *)(cfg + 0x20);
+        p = &k1;
+        v = *p;
+    }
+    v.x = *(f64 *)(cfg + 0x48) * v.x;
+    v.y = *(f64 *)(cfg + 0x48) * v.y;
+    v.z = *(f64 *)(cfg + 0x48) * v.z;
+    v.x = v.x + cam->lookAt.x;
+    v.y = v.y + cam->lookAt.y;
+    v.z = v.z + cam->lookAt.z;
+    cam->lookAt = ball->pos;
+    cam->lookAt.y = cam->lookAt.y + *(f64 *)(cfg + 0x18);
+    if (modeCtrl.unk30 >= 3)
+        cam->lookAt.y = cam->lookAt.y + *(f32 *)(cfg + 0x50);
+    v.x = cam->lookAt.x - v.x;
+    v.y = cam->lookAt.y - v.y;
+    v.z = cam->lookAt.z - v.z;
+    if (ball->unk80 < 0x3C)
+        a = 0;
+    else
+        a = mathutil_atan2(v.y, mathutil_sqrt(mathutil_sum_of_sq_2(v.x, v.z)));
+    rotY = mathutil_atan2(v.x, v.z) - 0x8000;
+    t = (s16)(rotY - cam->rotY);
+    if (t < -0x200)
+        u = -0x200;
+    else if (t > 0x200)
+        u = 0x200;
+    else
+        u = t;
+    rotY = cam->rotY + u;
+    if (modeCtrl.unk30 >= 3)
+        lim = 0x100;
+    else
+        lim = 0x1800;
+    if (a < -lim)
+        a = -lim;
+    else if (a > lim)
+        a = lim;
+    pitch = cam->unkB8 + *(f64 *)(cfg + 0x58) * (a - cam->unkB8);
+    cam->unkB8 = pitch;
+    mathutil_mtxA_from_translate(&cam->lookAt);
+    mathutil_mtxA_rotate_y(rotY);
+    mathutil_mtxA_rotate_x(pitch);
+    k2 = *(Vec *)(cfg + 0x2C);
+    p = &k2;
+    v = *p;
+    mathutil_mtxA_tf_point(&v, &cam->unkAC);
+    cam->unk10C = rotY - cam->rotY;
+    cam->unk10C = *(f32 *)(cfg + 0x60) * cam->unk10C;
+    cam->rotY = cam->rotY + cam->unk10C;
+    cam->rotX = pitch + 0xF300;
+    mathutil_mtxA_from_translate(&cam->lookAt);
+    mathutil_mtxA_rotate_y(cam->rotY);
+    mathutil_mtxA_rotate_x(cam->rotX);
+    k3 = *(Vec *)(cfg + 0x38);
+    k3.z = lbl_0000A9C4(*(f32 *)(cfg + 0x64), *(f32 *)(cfg + 0x68));
+    p = &k3;
+    v = *p;
+    mathutil_mtxA_tf_point(&v, (Vec *)cam);
 }
 
-static asm void lbl_0000933C(void)
+#pragma peephole on
+static void lbl_0000933C(struct Camera *cam, struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000933C.s"
+    u8 *cfg = lbl_00013AA0;
+    s16 a;
+    s16 rotY;
+    s16 pitch;
+    s32 t;
+    s32 u;
+    f32 sq;
+    Vec *p;
+    f64 w;
+    Vec v;
+    Vec eyeSave;
+    Vec lookSave;
+    Vec k1;
+    Vec k2;
+    Vec k3;
+
+    if (debugFlags & 0xA)
+        return;
+    cam->sub28.fov = (*(struct RaceCamCfg **)lbl_10001B24)->unk2;
+    eyeSave = cam->eye;
+    lookSave = cam->lookAt;
+    v.x = cam->unkAC.x - cam->lookAt.x;
+    v.y = cam->unkAC.y - cam->lookAt.y;
+    v.z = cam->unkAC.z - cam->lookAt.z;
+    sq = mathutil_vec_sq_len(&v);
+    if (sq > *(f32 *)(cfg + 0x44))
+    {
+        v.x = v.x * mathutil_rsqrt(sq);
+        v.y = v.y * mathutil_rsqrt(sq);
+        v.z = v.z * mathutil_rsqrt(sq);
+    }
+    else
+    {
+        k1 = *(volatile Vec *)(cfg + 0x78);
+        p = &k1;
+        v = *p;
+    }
+    w = *(f64 *)(cfg + 0x48) * v.x;
+    v.x = w + cam->lookAt.x;
+    w = *(f64 *)(cfg + 0x48) * v.y;
+    v.y = w + cam->lookAt.y;
+    w = *(f64 *)(cfg + 0x48) * v.z;
+    v.z = w + cam->lookAt.z;
+    k2 = *(Vec *)(cfg + 0x84);
+    k2.x = ball->pos.x;
+    k2.y = *(f64 *)(cfg + 0x18) + ball->pos.y;
+    k2.z = ball->pos.z;
+    cam->lookAt = k2;
+    v.x = cam->lookAt.x - v.x;
+    v.y = cam->lookAt.y - v.y;
+    v.z = cam->lookAt.z - v.z;
+    if (ball->unk80 < 0x3C)
+        a = 0;
+    else
+        a = mathutil_atan2(v.y, mathutil_sqrt(mathutil_sum_of_sq_2(v.x, v.z)));
+    rotY = mathutil_atan2(v.x, v.z) - 0x8000;
+    t = (s16)(rotY - cam->rotY);
+    if (t < -0x200)
+        u = -0x200;
+    else if (t > 0x200)
+        u = 0x200;
+    else
+        u = t;
+    rotY = cam->rotY + u;
+    if (!(cam->flags & 2) && !(ball->flags & 0x1000))
+    {
+        s32 c;
+        s32 e;
+
+        c = (s16)(ball->unk92 - rotY);
+        if (c > 0x800)
+            c = c - 0x800;
+        else if (c < -0x800)
+            c = c + 0x800;
+        else
+            c = 0;
+        c = c >> 7;
+        e = cam->unk10C;
+        if (c == 0)
+        {
+            e = 0;
+        }
+        else if ((e < 0 && c > 0) || (e > 0 && c < 0))
+        {
+            e = 0;
+        }
+        else if (c < 0)
+        {
+            if (c < e - 4)
+                e = e - 4;
+            else
+                e = c;
+        }
+        else
+        {
+            if (c > e + 4)
+                e = e + 4;
+            else
+                e = c;
+        }
+        rotY += e;
+        t = (s16)(rotY - cam->rotY);
+        if (t < -0x300)
+            t = -0x300;
+        else if (t > 0x300)
+            t = 0x300;
+        rotY = cam->rotY + t;
+    }
+    if (a < -0x1800)
+        a = -0x1800;
+    else if (a > 0x1800)
+        a = 0x1800;
+    pitch = cam->unkB8 + *(f64 *)(cfg + 0x58) * (a - cam->unkB8);
+    cam->unkB8 = pitch;
+    mathutil_mtxA_from_translate(&cam->lookAt);
+    mathutil_mtxA_rotate_y(rotY);
+    mathutil_mtxA_rotate_x(pitch);
+    v.x = *(f32 *)(cfg + 0x9C);
+    v.y = *(f32 *)(cfg + 0x9C);
+    v.z = *(f32 *)(cfg + 0x64);
+    mathutil_mtxA_tf_point(&v, &cam->unkAC);
+    cam->unk10C = rotY - cam->rotY;
+    cam->rotY = rotY;
+    if (camPerspChange)
+        cam->rotX = pitch + *(u16 *)lbl_802F16BC;
+    else
+        cam->rotX = pitch + *(u16 *)lbl_10001B18;
+    mathutil_mtxA_from_translate(&cam->lookAt);
+    mathutil_mtxA_rotate_y(cam->rotY);
+    mathutil_mtxA_rotate_x(cam->rotX);
+    k3 = *(Vec *)(cfg + 0x90);
+    k3.z = lbl_0000A9C4(*(f32 *)(cfg + 0x64), *(f32 *)(cfg + 0x68));
+    p = &k3;
+    v = *p;
+    mathutil_mtxA_tf_point(&v, (Vec *)cam);
+    cam->eyeVel.x = cam->eye.x - eyeSave.x;
+    cam->eyeVel.y = cam->eye.y - eyeSave.y;
+    cam->eyeVel.z = cam->eye.z - eyeSave.z;
+    cam->lookAtVel.x = cam->lookAt.x - lookSave.x;
+    cam->lookAtVel.y = cam->lookAt.y - lookSave.y;
+    cam->lookAtVel.z = cam->lookAt.z - lookSave.z;
 }
 
-static asm void lbl_000098A8(void)
+#pragma peephole on
+static void lbl_000098A8(struct Camera *cam, int arg, int a2)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000098A8.s"
+    struct Ball *ball;
+    s8 *buf;
+    s16 count = 0;
+    s16 i;
+    f32 s;
+    f64 dead;
+    Vec v;
+
+    v = *(volatile Vec *)lbl_00013B40;
+    cam->lookAt = v;
+    ball = ballInfo;
+    buf = g_poolInfo.playerBuf;
+    for (i = 0; i < 4; i++, ball++, buf++)
+    {
+        if (*buf == 2 && !(ball->unk144->unk14 & 0x40))
+        {
+            count++;
+            cam->lookAt.x = cam->lookAt.x + ball->pos.x;
+            cam->lookAt.y = cam->lookAt.y + ball->pos.y;
+            cam->lookAt.z = cam->lookAt.z + ball->pos.z;
+        }
+    }
+    if (count > 0)
+    {
+        cam->lookAt.x = cam->lookAt.x * (s = *(f32 *)lbl_00013B08 / count);
+        cam->lookAt.y = cam->lookAt.y * s;
+        cam->lookAt.z = cam->lookAt.z * s;
+    }
+    cam->flags &= ~4;
+    cam->flags |= 8;
+    cam->subState = 4;
+    lbl_00009A08(cam, (int)ball);
 }
 
 #pragma peephole on
@@ -518,10 +779,61 @@ static asm void lbl_00009D3C(struct Camera *cam, int arg)
 #include "../asm/nonmatchings/mini_race/lbl_00009D3C.s"
 }
 
-static asm void lbl_0000A088(void)
+#pragma peephole on
+static void lbl_0000A088(struct Camera *cam, struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000A088.s"
+    u8 *cfg = lbl_00013AA0;
+    struct Ball_child *bc = ball->unk144;
+    s16 rotX;
+    s16 rotY;
+    s16 rotZ;
+    s32 d;
+    Vec eyeSave;
+    Vec lookSave;
+    Vec v;
+    Vec t;
+
+    if (debugFlags & 0xA)
+        return;
+    eyeSave = cam->eye;
+    lookSave = cam->lookAt;
+    rotX = cam->rotX;
+    rotY = cam->rotY;
+    rotZ = cam->rotZ;
+    cam->sub28.fov = (*(struct RaceCamCfg **)lbl_10001B24)->unk2;
+    if (bc->unk14 & 0x20000)
+    {
+        cam->sub28.fov = cam->sub28.fov + *(f32 *)(cfg + 0x100) *
+            ((0x3C - *(s16 *)((u8 *)bc + 0x1C)) / *(f32 *)(cfg + 0x104));
+    }
+    cam->eye.x = cam->eye.x + cam->eyeVel.x;
+    cam->eye.y = cam->eye.y + cam->eyeVel.y;
+    cam->eye.z = cam->eye.z + cam->eyeVel.z;
+    cam->lookAt = ball->pos;
+    cam->lookAt.y = cam->lookAt.y + *(f64 *)(cfg + 0x18);
+    v.x = cam->lookAt.x - cam->eye.x;
+    v.y = cam->lookAt.y - cam->eye.y;
+    v.z = cam->lookAt.z - cam->eye.z;
+    d = -cam->rotY;
+    cam->rotY = mathutil_atan2(v.x, v.z) - 0x8000;
+    cam->rotX = mathutil_atan2(v.y, mathutil_sqrt(mathutil_sum_of_sq_2(v.x, v.z)));
+    cam->rotZ = 0;
+    d = d + cam->rotY;
+    if (d < 0)
+        d = -d;
+    if (d > 0x100)
+    {
+        cam->eye = eyeSave;
+        cam->lookAt = lookSave;
+        cam->rotX = rotX;
+        cam->rotY = rotY;
+        cam->rotZ = rotZ;
+        t = *(volatile Vec *)(cfg + 0xF4);
+        cam->eyeVel = t;
+    }
+    cam->eyeVel.x = *(f32 *)(cfg + 0x108) * cam->eyeVel.x;
+    cam->eyeVel.y = *(f32 *)(cfg + 0x108) * cam->eyeVel.y;
+    cam->eyeVel.z = *(f32 *)(cfg + 0x108) * cam->eyeVel.z;
 }
 
 #pragma force_active reset

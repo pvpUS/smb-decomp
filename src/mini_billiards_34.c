@@ -198,7 +198,7 @@ void lbl_00009F3C(void);
 void lbl_0000A054(void);
 void lbl_0000C85C(void);
 s32 lbl_0000D0A4(void);
-void lbl_0000D330(void);
+s32 lbl_0000D330(void);
 void lbl_0000D7E8(struct Camera *, struct Ball *);
 void lbl_0000E8D0(void);
 void lbl_00010FD0(void);
@@ -285,11 +285,145 @@ s32 lbl_0000D0A4(void)
     }
     return 0;
 }
-asm void lbl_0000D330(void)
+#pragma opt_common_subs off
+s32 lbl_0000D330(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_0000D330.s"
+    u8 *g = lbl_1000B340;
+    u8 *p = lbl_0001CF00;
+    Vec v;
+    f32 *q;
+
+    if (*(s32 *)lbl_10000020 < 2) {
+        *(s8 *)(g + 2) = 0;
+        *(s8 *)(g + 0) = 0;
+        *(s8 *)(g + 1) = 0;
+    }
+
+    if (*(s8 *)(g + 2) == 0) {
+        if ((*(s8 *)(g + 0) == 0
+             && abs(*(s8 *)(*(u8 **)lbl_10009C88 + 4)) > 20)
+            || (*(s8 *)(g + 1) == 0
+                && abs(*(s8 *)(*(u8 **)lbl_10009C88 + 5)) > 20))
+            *(s8 *)(g + 2) = 5;
+    }
+
+    if (*(s8 *)(g + 0) == 0) {
+        if (*(s8 *)(*(u8 **)lbl_10009C88 + 4) <= -20) {
+            if (*(s8 *)(g + 2) % 3 != 1)
+                *(s8 *)(g + 2) -= 1;
+            *(s8 *)(g + 0) = 1;
+        } else if (*(s8 *)(*(u8 **)lbl_10009C88 + 4) >= 20) {
+            if (*(s8 *)(g + 2) % 3 != 0)
+                *(s8 *)(g + 2) += 1;
+            *(s8 *)(g + 0) = 1;
+        }
+    } else if (abs(*(s8 *)(*(u8 **)lbl_10009C88 + 4)) <= 20) {
+        *(s8 *)(g + 0) = 0;
+    }
+
+    if (*(s8 *)(g + 1) == 0) {
+        if (*(s8 *)(*(u8 **)lbl_10009C88 + 5) >= 20) {
+            if (*(s8 *)(g + 2) > 3)
+                *(s8 *)(g + 2) = *(s8 *)(g + 2) - 3;
+            *(s8 *)(g + 1) = 1;
+        } else if (*(s8 *)(*(u8 **)lbl_10009C88 + 5) <= -20) {
+            if (*(s8 *)(g + 2) < 7)
+                *(s8 *)(g + 2) = *(s8 *)(g + 2) + 3;
+            *(s8 *)(g + 1) = 1;
+        }
+    } else if (abs(*(s8 *)(*(u8 **)lbl_10009C88 + 5)) <= 20) {
+        *(s8 *)(g + 1) = 0;
+    }
+
+    if ((*(u16 *)*(u8 **)lbl_10009C88 & 0x200) && *(s32 *)lbl_10000020 > 0x1E
+        && *(s8 *)(g + 2) != 0) {
+        *(s32 *)lbl_10000020 = 0;
+        *(s8 *)(g + 2) = 0;
+        u_play_sound_0(0x10D);
+    }
+
+    switch (*(s8 *)(g + 2)) {
+    case 0:
+        v.x = *(f32 *)(p + 0x20);
+        v.y = *(f32 *)(p + 0x20);
+        v.z = *(f32 *)(p + 0x48);
+        break;
+    case 1:
+        v.x = *(f32 *)(p + 0x58);
+        v.y = *(f32 *)(p + 0x5C);
+        v.z = *(f32 *)(p + 0x60);
+        break;
+    case 2:
+        v.x = *(f32 *)(p + 0x20);
+        v.y = *(f32 *)(p + 0x5C);
+        v.z = *(f32 *)(p + 0x60);
+        break;
+    case 3:
+        v.x = *(f32 *)(p + 0x64);
+        v.y = *(f32 *)(p + 0x5C);
+        v.z = *(f32 *)(p + 0x60);
+        break;
+    case 4:
+        v.x = *(f32 *)(p + 0x58);
+        v.y = *(f32 *)(p + 0x20);
+        v.z = *(f32 *)(p + 0x60);
+        break;
+    case 5:
+        v.x = *(f32 *)(p + 0x20);
+        v.y = *(f32 *)(p + 0x20);
+        v.z = *(f32 *)(p + 0x60);
+        break;
+    case 6:
+        v.x = *(f32 *)(p + 0x64);
+        v.y = *(f32 *)(p + 0x20);
+        v.z = *(f32 *)(p + 0x60);
+        break;
+    case 7:
+        v.x = *(f32 *)(p + 0x58);
+        v.y = *(f32 *)(p + 0x68);
+        v.z = *(f32 *)(p + 0x60);
+        break;
+    case 8:
+        v.x = *(f32 *)(p + 0x20);
+        v.y = *(f32 *)(p + 0x68);
+        v.z = *(f32 *)(p + 0x60);
+        break;
+    case 9:
+        v.x = *(f32 *)(p + 0x64);
+        v.y = *(f32 *)(p + 0x68);
+        v.z = *(f32 *)(p + 0x60);
+        break;
+    }
+
+    q = (f32 *)(lbl_00020DA0 + 8);
+
+    *(f32 *)(lbl_00020DA0 + 0) = *(f32 *)(p + 0x6C) * *(f32 *)(lbl_00020DA0 + 0)
+                                 + *(f32 *)(p + 0x70) * v.x;
+    *(f32 *)(lbl_00020DA0 + 8) = *(f32 *)(p + 0x6C) * *(f32 *)(lbl_00020DA0 + 8)
+                                 + *(f32 *)(p + 0x70) * v.y;
+    *(f32 *)lbl_10000050 = *(f32 *)(p + 0x6C) * *(f32 *)lbl_10000050
+                           + *(f32 *)(p + 0x70) * v.z;
+
+    if (((*(u16 *)*(u8 **)lbl_10009C88 & 0x800)
+         || (*(f32 *)lbl_10000050 > *(f32 *)(p + 0x74)
+             && (*(u16 *)*(u8 **)lbl_10009C88 & 0x200)))
+        && *(s8 *)lbl_1000000D == 0) {
+        *(u8 *)lbl_1000000D = 1;
+        *(f32 *)(lbl_00020DA0 + 0) = *(f32 *)(lbl_10009878 + 0x10);
+        *(f32 *)(lbl_00020DA0 + 4) =
+            *(f32 *)(p + 0x28) + *(f32 *)(lbl_10009878 + 0x14);
+        *q = *(f32 *)(lbl_10009878 + 0x18);
+        *(s16 *)lbl_1000004C = mathutil_atan2(-*(f32 *)(lbl_10009878 + 0x34),
+                                              -*(f32 *)(lbl_10009878 + 0x3C));
+        *(s16 *)lbl_1000004E = 0;
+        *(s16 *)lbl_1000004A = -0x800;
+        *(f32 *)lbl_10000050 = *(f32 *)(p + 0x78);
+        u_play_sound_0(0x10C);
+        return 1;
+    }
+    return 0;
 }
+#pragma opt_common_subs reset
 #pragma peephole on
 void lbl_0000D7E8(struct Camera *camera, struct Ball *ball)
 {

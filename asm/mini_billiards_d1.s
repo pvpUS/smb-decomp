@@ -1,239 +1,152 @@
-# mini_billiards data segment 1 -- rodata continuation after a carved hole
+# mini_billiards data segment 1 -- data continuation after a carved hole
 .include "macros.inc"
-.global lbl_0001CC88
-.global lbl_0001CE18
-.global lbl_0001CF00
-.global lbl_0001CF50
+.global lbl_00020DA0
+.global lbl_00020E30
+.global lbl_00020E38
+.global lbl_00020E40
+.global lbl_00020EC0
+.global lbl_00020EE0
+.global lbl_00020F00
+.global lbl_00020F70
+.global lbl_00020FC0
+.global lbl_00021080
 
 .section .rodata
 .balign 8
-lbl_0001CBD8:
-    .4byte 0x41200000
-    .4byte 0x3D305F29
-    .4byte 0x3E8CD04F
+
+.section .data
+lbl_00020DA0:
+    # 0x20DA0
     .4byte 0x00000000
-    .4byte 0x3FC00000
     .4byte 0x00000000
-    .4byte 0xBC088889
-    .4byte 0x34000000
-    .4byte 0xBBB60B61
-    .4byte 0x3649539C
-    .4byte 0x3E000000
-    .4byte 0x3B449BA6
-    .4byte 0x3C088889
-    .4byte 0xC1B1EEF6
-    .4byte 0x3F999999
-    .4byte 0x4120F362
-    .4byte 0xC0B1EEF6
-    .4byte 0x40B1EEF6
-    .4byte 0x3C888889
-    .4byte 0x3F7FFFCE
-    .4byte 0x404E0000
     .4byte 0x00000000
-    .4byte 0x40232492
-    .4byte 0x49249249
-    .4byte 0x40E00000
+    .asciz "\nError: A called an unlinked function.\n"
+    .asciz "Address:      Back Chain    LR Save\n"
+    .balign 4
+    .asciz "0x%08x:   0x%08x    0x%08x\n"
+    .asciz "mini_billiards.c"
+    .balign 4
+    .4byte 0x0A000000
+lbl_00020E30:
+    # 0x20E30
+    .asciz "mode:%d"
+lbl_00020E38:
+    # 0x20E38
+    .asciz "time:%d"
+lbl_00020E40:
+    # 0x20E40
+    .4byte _prolog + 0x16E0
+    .4byte _prolog + 0x16E8
+    .4byte _prolog + 0x16E8
+    .4byte _prolog + 0x16E8
+    .4byte _prolog + 0x16E8
+    .4byte _prolog + 0x16E8
+    .4byte _prolog + 0x16E8
+    .4byte _prolog + 0x16F0
+    .4byte _prolog + 0x16F8
+    .4byte _prolog + 0x1700
+    .4byte _prolog + 0x1808
+    .4byte _prolog + 0x1834
+    .4byte _prolog + 0x1928
+    .4byte _prolog + 0x1930
+    .4byte _prolog + 0x1938
+    .4byte _prolog + 0x1938
+    .4byte _prolog + 0x1938
+    .4byte _prolog + 0x1938
+    .4byte _prolog + 0x1938
+    .4byte _prolog + 0x1940
+    .4byte _prolog + 0x19AC
+    .4byte _prolog + 0x19B4
+    .4byte _prolog + 0x19BC
+    .4byte _prolog + 0x19C4
+    .4byte _prolog + 0x19CC
+    .4byte _prolog + 0x19D4
+    .4byte _prolog + 0x19DC
+    .4byte 0xFFFFFFFF
     .4byte 0x00000000
-    .4byte 0x40A248DB
-    .4byte 0x6DB6DB6E
-    .4byte 0x42FE0000
+    .4byte 0x3F000000
     .4byte 0x00000000
-    .4byte 0x3FA99999
-    .4byte 0xA0000000
-    .4byte 0x3BA3D70A
+    .4byte 0xFFFFFFFF
+lbl_00020EC0:
+    # 0x20EC0
+    .4byte _prolog + 0x8900
+    .4byte _prolog + 0x8924
+    .4byte _prolog + 0x8948
+    .4byte _prolog + 0x896C
+    .4byte _prolog + 0x8990
+    .4byte _prolog + 0x89B4
+    .4byte _prolog + 0x89D8
+    .4byte _prolog + 0x89FC
+lbl_00020EE0:
+    # 0x20EE0
+    .4byte _prolog + 0x8414
+    .4byte _prolog + 0x8478
+    .4byte _prolog + 0x84DC
+    .4byte _prolog + 0x8540
+    .4byte _prolog + 0x85A4
+    .4byte _prolog + 0x8608
+    .4byte _prolog + 0x866C
+    .4byte _prolog + 0x86D0
+lbl_00020F00:
+    # 0x20F00
+    .4byte _prolog + 0x8E28
+    .4byte _prolog + 0x8E8C
+    .4byte _prolog + 0x8EF0
+    .4byte _prolog + 0x8F54
+    .4byte _prolog + 0x8F94
+    .4byte _prolog + 0x8FD4
+    .4byte _prolog + 0x9038
+    .4byte _prolog + 0x909C
+    .4byte _prolog + 0x9100
+    .4byte _prolog + 0x913C
+    .4byte _prolog + 0x9178
+    .4byte _prolog + 0x91B4
+    .4byte _prolog + 0x91F4
+    .4byte _prolog + 0x926C
+    .asciz "Wall In:%d %d %d\n"
+    .balign 4
+    .asciz "In Out Over:%d %d %d\n"
+    .balign 4
+    .asciz "Out:%d %d\n"
+    .balign 4
+lbl_00020F70:
+    # 0x20F70
+    .4byte 0x01000011
+    .4byte 0x02000001
+    .4byte 0xB4000000
+    .4byte 0x3F800000
+    .4byte 0x3F800000
+    .4byte 0x3F800000
     .4byte 0x3F19999A
-    .4byte 0x3DB05F29
-    .4byte 0x3DC2F0E1
-    .4byte 0x3EBBEA4F
+    .4byte 0x407FFFFC
+    .4byte 0xC0333333
+    .4byte 0x9900F600
     .4byte 0x00000000
-    .4byte 0x3EC92A73
-    .4byte 0x80000000
-    .4byte 0x40200000
-    .4byte 0xC231EEF6
-    .4byte 0x41A00000
-    .4byte 0x40400000
-lbl_0001CC88:
-    # 0x1CC88
-    .4byte 0x43300000
-    .4byte 0x00000000
-    .4byte 0xBE000000
-    .4byte 0xC120F362
-    .4byte 0x3E800000
-    .4byte 0x00000000
-    .4byte 0x3D23D70B
+    .4byte 0xBDE055FC
+    .4byte 0xBF396840
+    .4byte 0x3F2E47DC
+    .4byte 0x41380008
     .4byte 0x3E4CCCCD
-    .4byte 0x3F814880
-    .4byte 0x3F80A3D7
-    .4byte 0x41A973E1
-    .4byte 0xC1A973E1
-    .4byte 0x3F8020C6
-    .4byte 0x3F001062
-    .4byte 0x3CB60B61
     .4byte 0x00000000
     .4byte 0x00000000
+    .4byte 0x41B00000
     .4byte 0x00000000
-    .4byte 0xBF800000
-    .4byte 0x41700000
-    .4byte 0x426FFFFF
-    .4byte 0x3F8B60B6
-    .4byte 0x3F82D815
-    .4byte 0x3F82D82E
-    .4byte 0xBCB60B61
-    .4byte 0x40888889
-    .4byte 0x4020B60B
-    .4byte 0x3CCCCCCD
-    .4byte 0x3F666666
-    .4byte 0x3CF5C28F
-    .4byte 0x3D1B9FE3
-    .4byte 0x3E47996D
-    .4byte 0xBE544C38
-    .4byte 0x3F9A8987
-    .4byte 0x41C80000
-    .4byte 0x40A00000
-    .4byte 0x400921F9
-    .4byte 0xC0000000
-    .4byte 0x3A83126F
-    .4byte 0x421533A4
-    .4byte 0x42057338
-    .4byte 0x41857338
-    .4byte 0x3FA00000
-    .4byte 0x4131EF35
-    .4byte 0x3BD04B30
-    .4byte 0x3F167918
-    .4byte 0x3F4F1BBD
-    .4byte 0x3F737871
-    .4byte 0xBE9E377A
-    .4byte 0xBF737871
-    .4byte 0xBF167918
-    .4byte 0x3C94CBC1
-    .4byte 0x3DCCCCCD
-    .4byte 0x3D23D70A
-    .4byte 0x3FE00000
+lbl_00020FC0:
+    # 0x20FC0
+    .asciz "same time %d\n"
+    .balign 4
+    .asciz "kado illigal.%d %f"
+    .balign 4
+    .asciz "old:%14.6e\n"
+    .asciz "Reverse kado %d"
+    .asciz "KADO illigal.%d %12.6e"
+    .balign 4
+    .asciz "KADO:%14.6e %14.6e %14.6e\n"
+    .balign 4
+    .asciz "coli illigal.%d %d\n"
+    .asciz "coli illigal.%d %d %f %f\n"
+    .balign 4
+    .asciz "Ball Calc Overflow.\n"
+    .balign 4
     .4byte 0x00000000
-    .4byte 0x3D4CCCCD
-    .4byte 0x3F7FFFFE
-    .4byte 0x39504B30
-    .4byte 0x41A7F5AA
-    .4byte 0x3E3F1B69
-    .4byte 0x411DF6F4
-    .4byte 0x3E0EA9EA
-    .4byte 0x3EF162F1
-    .4byte 0x409AE148
-    .4byte 0x3EBF1B69
-    .4byte 0x00000000
-    .4byte 0x3F800000
-    .4byte 0x00000000
-    .4byte 0x3EFFFFFC
-    .4byte 0xC131EEF6
-    .4byte 0x40800000
-    .4byte 0x3E99999A
-    .4byte 0x3ECCCCCD
-    .4byte 0x3F333333
-    .4byte 0x421533A4
-    .4byte 0x3F000000
-    .4byte 0x421533A4
-    .4byte 0x421533A4
-    .4byte 0x3F000000
-    .4byte 0xC21533A4
-    .4byte 0xC21533A4
-    .4byte 0x3F000000
-    .4byte 0x421533A4
-    .4byte 0xC21533A4
-    .4byte 0x3F000000
-    .4byte 0xC21533A4
-    .4byte 0x41C6EF86
-    .4byte 0x3F000000
-    .4byte 0x00000000
-    .4byte 0xC1C6EF86
-    .4byte 0x3F000000
-    .4byte 0x00000000
-    .4byte 0x00000000
-    .4byte 0x3F000000
-    .4byte 0x41C6EF86
-    .4byte 0xBF000000
-    .4byte 0x3F00068E
-    .4byte 0x3F266666
-    .4byte 0x00000000
-lbl_0001CE18:
-    # 0x1CE18
-    .4byte 0x00000000
-    .4byte 0x3F800000
-    .4byte 0x00000000
-    .4byte 0x00000000
-    .4byte 0x00000000
-    .4byte 0x3F800000
-    .4byte 0x00000000
-    .4byte 0x00000000
-    .4byte 0xBF800000
-    .4byte 0x00000000
-    .4byte 0x3F8CCCCD
-    .4byte 0x34000000
-    .4byte 0x3FEFFFFF
-    .4byte 0xC0000000
-    .4byte 0x3F000000
-    .4byte 0x3F800000
-    .4byte 0x3E800000
-    .4byte 0x00000000
-    .4byte 0x3EFFFF9B
-    .4byte 0x3F800001
-    .4byte 0x3F8020C6
-    .4byte 0x35C9539C
-    .4byte 0x80000000
-    .4byte 0x3F733333
-    .4byte 0x3A83126F
-    .4byte 0x38D1B717
-    .4byte 0x3F80A3D7
-    .4byte 0x3F7FFFFE
-    .4byte 0x40000000
-    .4byte 0x00000000
-    .4byte 0x3F800000
-    .4byte 0x00000000
-    .4byte 0x3E000000
-    .4byte 0x3F600000
-    .4byte 0x3C23D70A
-    .4byte 0x3B83126E
-    .4byte 0x3FEFAE14
-    .4byte 0x80000000
-    .4byte 0x40352E7C
-    .4byte 0x20000000
-    .4byte 0x40241E6C
-    .4byte 0x40000000
-    .4byte 0x3A3A6267
-    .4byte 0x3AF9096C
-    .4byte 0x40490FDB
-    .4byte 0x00000000
-    .4byte 0x00000000
-    .4byte 0x00000000
-    .4byte 0x3C822EFE
-    .4byte 0xBFC00000
-    .4byte 0x3E800000
-    .4byte 0x40400000
-    .4byte 0x41A575ED
-    .4byte 0xC1A575ED
-    .4byte 0x4118F77B
-    .4byte 0xC118F77B
-    .4byte 0x3F000002
-    .4byte 0x3649539C
-lbl_0001CF00:
-    # 0x1CF00
-    .4byte 0x40149BA6
-    .4byte 0x3C23D70A
-    .4byte 0x3F400000
-    .4byte 0x41200000
-    .4byte 0x42DE6AB4
-    .4byte 0x46000000
-    .4byte 0x42C80000
-    .4byte 0x3F000000
-    .4byte 0x00000000
-    .4byte 0x38D1B717
-    .4byte 0x3F800000
-    .4byte 0x3F555555
-    .4byte 0x3F79999A
-    .4byte 0x3FAAAAAB
-    .4byte 0x3E4CCCCD
-    .4byte 0x40888889
-    .4byte 0x4020B60B
-    .4byte 0x41700000
-    .4byte 0x42B60000
-    .4byte 0x00000000
-lbl_0001CF50:
+lbl_00021080:

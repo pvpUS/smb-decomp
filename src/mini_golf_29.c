@@ -171,7 +171,7 @@ void lbl_000093C4(void);
 void lbl_000093D4(void);
 void lbl_000093F0(void);
 void lbl_00009404(void);
-void lbl_00009414(void);
+u16 lbl_00009414(void);
 void lbl_00009424(void);
 void lbl_00009438(void);
 void lbl_00009448(void);
@@ -191,17 +191,17 @@ void lbl_00009B68(void);
 void lbl_00009C10(void);
 void lbl_00009C50(void);
 void lbl_0000B280(void);
-void lbl_0000B36C(void);
-void lbl_0000B754(void);
-void lbl_0000B8A8(void);
-void lbl_0000BDEC(void);
-void lbl_0000C128(void);
-void lbl_0000C230(void);
-void lbl_0000C33C(void);
-void lbl_0000D64C(void);
-void lbl_0000E8AC(void);
-void lbl_0000E998(void);
-void lbl_0000E99C(void);
+void lbl_0000B36C(struct Camera *camera, struct Ball *ball);
+void lbl_0000B754(struct Camera *, struct Ball *);
+void lbl_0000B8A8(struct Camera *, struct Ball *);
+void lbl_0000BDEC(struct Camera *, struct Ball *);
+void lbl_0000C128(struct Camera *, struct Ball *);
+void lbl_0000C230(struct Camera *, struct Ball *);
+void lbl_0000C33C(struct Camera *, struct Ball *);
+void lbl_0000D64C(struct Camera *, struct Ball *);
+void lbl_0000E8AC(struct Camera *, struct Ball *);
+void lbl_0000E998(struct Camera *, struct Ball *);
+void lbl_0000E99C(struct Camera *, struct Ball *);
 void lbl_0000F11C(void);
 void lbl_0000F194(void);
 void lbl_0000F290(void);
@@ -257,9 +257,106 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-asm void lbl_0000B36C(void)
+void lbl_0000B36C(struct Camera *camera, struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_0000B36C.s"
+    u8 *p = (u8 *)lbl_00026378;
+    u8 *w = (u8 *)lbl_10000130;
+
+    if (debugFlags & 0xA)
+        return;
+    if (lbl_00009414() != 0)
+        ball = &ballInfo[modeCtrl.currPlayer];
+    switch (camera->subState)
+    {
+    case 8:
+        lens_flare_set_light_angle(0, 0x4000);
+        *(f32 *)(w + 0x20) = *(f32 *)p;
+        camera->lookAt = ball->pos;
+        camera->rotY = mathutil_atan2(camera->lookAt.x - camera->eye.x,
+                                      camera->lookAt.z - camera->eye.z) - 0x8000;
+        camera->rotX = mathutil_atan2(camera->lookAt.y - camera->eye.y,
+                       mathutil_sqrt(mathutil_sum_of_sq_2(
+                           camera->lookAt.x - camera->eye.x,
+                           camera->lookAt.z - camera->eye.z)));
+        camera->rotZ = 0;
+        break;
+    case 13:
+        lens_flare_set_light_angle(0, 0x4000);
+        *(f32 *)(w + 0x20) = *(f32 *)p;
+        break;
+    case 11:
+        *(f32 *)(w + 0x20) = *(f32 *)p;
+        lens_flare_set_light_angle(g_bgLightInfo.infLightRotY, 0xC00);
+        lbl_0000E99C(camera, ball);
+        break;
+    case 0:
+        *(f32 *)(w + 0x20) = *(f32 *)p;
+        lbl_0000B754(camera, ball);
+        break;
+    case 12:
+        lens_flare_set_light_angle(0, 0x4000);
+        lbl_0000C33C(camera, ball);
+        break;
+    case 4:
+        *(u32 *)(w + 0x34) = globalAnimTimer - 1;
+        *(u32 *)(w + 0x1C) += 1;
+        camera->eye.x = camera->eye.x + camera->eyeVel.x / *(u32 *)(w + 0x1C);
+        camera->eye.y = camera->eye.y + camera->eyeVel.y / *(u32 *)(w + 0x1C);
+        camera->eye.z = camera->eye.z + camera->eyeVel.z / *(u32 *)(w + 0x1C);
+        lens_flare_set_light_angle(0, 0x4000);
+        if (*(u32 *)(w + 0x1C) > 0x3C)
+            camera->subState = 1;
+        break;
+    case 3:
+        *(u32 *)(w + 0x34) = globalAnimTimer - 1;
+        *(u32 *)(w + 0x1C) += 1;
+        if (*(u32 *)(w + 0x1C) > 0x1E)
+        {
+            *(u32 *)(w + 0x1C) = 0;
+            camera->subState = 4;
+        }
+        lens_flare_set_light_angle(0, 0x4000);
+        lbl_0000D64C(camera, ball);
+        break;
+    case 2:
+        *(f32 *)(w + 0x20) = *(f32 *)p;
+    case 5:
+        *(u32 *)(w + 0x34) = globalAnimTimer - 1;
+    case 7:
+    case 19:
+        *(u32 *)(w + 0x1C) = 0;
+        lens_flare_set_light_angle(0, 0x4000);
+        lbl_0000D64C(camera, ball);
+        break;
+    case 6:
+        *(f32 *)(w + 0x20) = *(f32 *)p;
+        *(u32 *)(w + 0x1C) = 0;
+    case 1:
+        *(u32 *)(w + 0x34) = globalAnimTimer - 1;
+        lens_flare_set_light_angle(g_bgLightInfo.infLightRotY, 0xC00);
+        lbl_0000D64C(camera, ball);
+        break;
+    case 14:
+        *(u32 *)(w + 0x1C) = 0;
+        lens_flare_set_light_angle(0, 0x4000);
+        lbl_0000C230(camera, ball);
+        break;
+    case 9:
+        lbl_0000E8AC(camera, ball);
+        break;
+    case 10:
+        lbl_0000E998(camera, ball);
+        break;
+    case 15:
+        lbl_0000B8A8(camera, ball);
+        break;
+    case 16:
+    case 17:
+        lbl_0000BDEC(camera, ball);
+        break;
+    case 18:
+        lbl_0000C128(camera, ball);
+        break;
+    }
 }
 #pragma force_active reset

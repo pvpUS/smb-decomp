@@ -178,7 +178,7 @@ extern void set_shape_flags_in_model();
 extern void stobj_draw();
 extern void u_draw_ball_shadow();
 extern void u_load_character_graphics();
-extern void u_make_ape_sub();
+extern void *u_make_ape_sub();
 
 // Forward declarations so mwcc accepts `<fn>@ha/@l` and cross-function
 // branches before each function is defined below.
@@ -449,9 +449,71 @@ asm void lbl_00003C34(void)
     nofralloc
 #include "../asm/nonmatchings/test_mode/lbl_00003C34.s"
 }
-asm void lbl_00003D94(void)
+#pragma peephole on
+#define AP(i) (*(u8 **)((q = p + (i) * 4) + 0xBC))
+#define TH(i) (*(u8 **)((q = p + (i) * 4) + 0xFC))
+#define EL(i) (*(u8 **)&((u8 (*)[4])(p + 0xBC))[i][0])
+void lbl_00003D94(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00003D94.s"
+    u8 *k = lbl_0000FE78;
+    u8 *p = lbl_10000000;
+    s32 c;
+    u8 *q;
+    u8 *r;
+    Vec v3;
+    Vec v2;
+    Vec v1;
+    Vec v0;
+
+    if (*(s32 *)(p + 0x13C) >= 0x10)
+        return;
+    u_load_character_graphics(*(s32 *)(p + 0x158), 0);
+    if (*(s32 *)(p + 0x154) < 0)
+        *(s32 *)(p + 0x154) = motsklFileData->skeletonsCount - 1;
+    else if (*(u32 *)(p + 0x154) >= motsklFileData->skeletonsCount)
+        *(s32 *)(p + 0x154) = 0;
+    {
+        struct SkeletonFileData *m = motsklFileData;
+        void *sk = m->skeletons[*(s32 *)(p + 0x154)].name;
+
+        if (*(s32 *)(p + 0x158) < 0)
+            *(s32 *)(p + 0x158) = m->unkC - 1;
+        else if (*(u32 *)(p + 0x158) >= m->unkC)
+            *(s32 *)(p + 0x158) = 0;
+        AP(*(s32 *)(p + 0x13C)) = (u8 *)u_make_ape_sub(sk,
+            *(void **)((u8 *)m->unk8 + *(s32 *)(p + 0x158) * 0x1C));
+    }
+    *(s32 *)(*(u8 **)(q + 0xBC) + 0x10) = *(s32 *)(p + 0x158);
+    *(s32 *)(AP(*(s32 *)(p + 0x13C)) + 0x74) = *(s32 *)(p + 0x13C);
+    TH(*(s32 *)(p + 0x13C)) = (u8 *)thread_create((ThreadCallback)lbl_00003C34,
+                              (struct Ape *)AP(*(s32 *)(p + 0x13C)), 5);
+    *(Vec *)(p + 0x144) = v3 = *(Vec *)(k + 0x104);
+    mathutil_mtxA_from_identity();
+    mathutil_mtxA_rotate_y(0x4000);
+    mathutil_mtxA_to_quat((Quaternion *)(AP(*(s32 *)(p + 0x13C)) + 0x60));
+    c = *(s32 *)(p + 0x13C);
+    if (c != 0)
+    {
+        float s = *(f32 *)(k + 0x100);
+
+        *(u16 *)(*(u8 **)AP(c) + 0x38) =
+            *(u16 *)(*(u8 **)(((u8 **)(r = p + 0xB8))[c]) + 0x38) + 1;
+        if (*(s32 *)(p + 0x13C) & 1)
+            s = s * *(f32 *)(k + 0x88);
+        *(Vec *)(AP(*(s32 *)(p + 0x13C)) + 0x30) =
+            *(Vec *)((((u8 **)r)[*(s32 *)(p + 0x13C)]) + 0x30);
+        *(f32 *)(AP(*(s32 *)(p + 0x13C)) + 0x30) =
+            *(f32 *)(AP(*(s32 *)(p + 0x13C)) + 0x30) +
+            s * *(s32 *)(p + 0x13C);
+    }
+    else if (*(s32 *)(p + 0x158) == 3)
+        *(Vec *)(EL(c) + 0x30) = v2 = *(Vec *)(k + 0x110);
+    else
+        *(Vec *)(EL(c) + 0x30) = v1 = *(Vec *)(k + 0x11C);
+    func_8008BFD8(AP(*(s32 *)(p + 0x13C)), lbl_00012F7C, 8);
+    *(s32 *)(p + 0x13C) = *(s32 *)(p + 0x13C) + 1;
 }
+#undef AP
+#undef TH
+#undef EL
 #pragma force_active reset

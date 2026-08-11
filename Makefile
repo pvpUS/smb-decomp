@@ -538,6 +538,7 @@ SOURCES := \
 	src/mini_race_49.c \
 	src/mini_race_49b.c \
 	src/mini_race_49c.c \
+	asm/mini_race_d1.s \
 	src/mini_race_49d.c \
 	src/mini_race_50.c \
 	src/mini_race_51.c \
@@ -614,7 +615,7 @@ SOURCES := \
 	src/mini_race_117bh.c \
 	src/mini_race_117bhb.c \
 	src/mini_race_117bi.c \
-	asm/mini_race_d1.s
+	asm/mini_race_d2.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
 mkbe.rel_mini_race.plf: $(O_FILES)
@@ -704,6 +705,7 @@ SOURCES := \
 	src/mini_bowling_87.c \
 	src/mini_bowling_88.c \
 	src/mini_bowling_89.c \
+	asm/mini_bowling_d6.s \
 	src/mini_bowling_90.c \
 	src/mini_bowling_91.c \
 	src/mini_bowling_92.c \
@@ -711,7 +713,7 @@ SOURCES := \
 	src/mini_bowling_94.c \
 	src/mini_bowling_95.c \
 	src/mini_bowling_96.c \
-	asm/mini_bowling_d6.s
+	asm/mini_bowling_d7.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
 mkbe.rel_mini_bowling.plf: $(O_FILES)
@@ -831,6 +833,7 @@ SOURCES := \
 	src/mini_fight_57.c \
 	src/mini_fight_57b.c \
 	src/mini_fight_57bb.c \
+	asm/mini_fight_d2.s \
 	src/mini_fight_57c.c \
 	src/mini_fight_57d.c \
 	src/mini_fight_57e.c \
@@ -852,13 +855,15 @@ SOURCES := \
 	src/mini_fight_68.c \
 	src/mini_fight_68i.c \
 	src/mini_fight_68h.c \
+	asm/mini_fight_d3.s \
 	src/mini_fight_68g.c \
+	asm/mini_fight_d4.s \
 	src/mini_fight_68f.c \
 	src/mini_fight_68e.c \
 	src/mini_fight_68d.c \
 	src/mini_fight_68b.c \
 	src/mini_fight_68c.c \
-	asm/mini_fight_d2.s \
+	asm/mini_fight_d5.s \
 	src/mini_fight_78f.c \
 	src/mini_fight_80.c \
 	src/mini_fight_81.c \
@@ -878,7 +883,7 @@ SOURCES := \
 	src/mini_fight_92.c \
 	src/mini_fight_93.c \
 	src/mini_fight_94.c \
-	asm/mini_fight_d3.s
+	asm/mini_fight_d6.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
 mkbe.rel_mini_fight.plf: $(O_FILES)
@@ -899,39 +904,6 @@ SOURCES := \
 	src/mini_pilot_8b.c \
 	src/mini_pilot_9.c \
 	asm/mini_pilot_d1.s \
-	src/mini_pilot_12bd.c \
-	src/mini_pilot_12be.c \
-	src/mini_pilot_12bf.c \
-	src/mini_pilot_12bg.c \
-	src/mini_pilot_12bh.c \
-	src/mini_pilot_12bi.c \
-	src/mini_pilot_12bj.c \
-	src/mini_pilot_12bk.c \
-	src/mini_pilot_12bl.c \
-	src/mini_pilot_12bm.c \
-	src/mini_pilot_12bn.c \
-	src/mini_pilot_12bo.c \
-	src/mini_pilot_12bp.c \
-	src/mini_pilot_12bq.c \
-	src/mini_pilot_12br.c \
-	src/mini_pilot_12bs.c \
-	src/mini_pilot_12bt.c \
-	src/mini_pilot_12bu.c \
-	src/mini_pilot_13.c \
-	src/mini_pilot_14.c \
-	src/mini_pilot_15.c \
-	src/mini_pilot_16.c \
-	src/mini_pilot_16b.c \
-	src/mini_pilot_16c.c \
-	src/mini_pilot_17.c \
-	src/mini_pilot_18.c \
-	src/mini_pilot_19.c \
-	src/mini_pilot_20.c \
-	src/mini_pilot_21.c \
-	src/mini_pilot_22.c \
-	src/mini_pilot_22b.c \
-	src/mini_pilot_23.c \
-	src/mini_pilot_24.c \
 	src/mini_pilot_24b.c \
 	src/mini_pilot_24c.c \
 	src/mini_pilot_24d.c \
@@ -964,6 +936,7 @@ ALL_RELS += mkbe.rel_mini_pilot.rel
 # mkbe.rel_mini_golf.rel sources
 SOURCES := \
 	asm/mini_golf.s \
+	asm/mini_golf_d1.s \
 	src/mini_golf.c \
 	src/mini_golf_2.c \
 	src/mini_golf_3.c \
@@ -993,6 +966,7 @@ SOURCES := \
 	src/mini_golf_27.c \
 	src/mini_golf_28.c \
 	src/mini_golf_29.c \
+	asm/mini_golf_d2.s \
 	src/mini_golf_30.c \
 	src/mini_golf_31.c \
 	src/mini_golf_32.c \
@@ -1004,10 +978,11 @@ SOURCES := \
 	src/mini_golf_38.c \
 	src/mini_golf_39.c \
 	src/mini_golf_40.c \
+	asm/mini_golf_d3.s \
 	src/mini_golf_41.c \
-	asm/mini_golf_d1.s \
+	asm/mini_golf_d4.s \
 	src/mini_golf_46.c \
-	asm/mini_golf_d2.s \
+	asm/mini_golf_d5.s \
 	src/mini_golf_47.c \
 	src/mini_golf_48.c \
 	src/mini_golf_49.c \
@@ -1015,11 +990,11 @@ SOURCES := \
 	src/mini_golf_51.c \
 	src/mini_golf_52.c \
 	src/mini_golf_53.c \
-	asm/mini_golf_d3.s \
+	asm/mini_golf_d6.s \
 	src/mini_golf_56.c \
 	src/mini_golf_57.c \
 	src/mini_golf_58.c \
-	asm/mini_golf_d5.s \
+	asm/mini_golf_d7.s \
 	src/mini_golf_63.c \
 	src/mini_golf_64.c \
 	src/mini_golf_65.c \
@@ -1034,7 +1009,7 @@ SOURCES := \
 	src/mini_golf_74.c \
 	src/mini_golf_75.c \
 	src/mini_golf_76.c \
-	asm/mini_golf_d4.s
+	asm/mini_golf_d8.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
 mkbe.rel_mini_golf.plf: $(O_FILES)
@@ -1044,6 +1019,7 @@ ALL_RELS += mkbe.rel_mini_golf.rel
 # mkbe.rel_mini_billiards.rel sources
 SOURCES := \
 	asm/mini_billiards.s \
+	asm/mini_billiards_d1.s \
 	src/mini_billiards.c \
 	src/mini_billiards_2.c \
 	src/mini_billiards_3.c \
@@ -1051,7 +1027,7 @@ SOURCES := \
 	src/mini_billiards_5.c \
 	src/mini_billiards_6.c \
 	src/mini_billiards_7.c \
-	asm/mini_billiards_d1.s \
+	asm/mini_billiards_d2.s \
 	src/mini_billiards_26.c \
 	src/mini_billiards_27.c \
 	src/mini_billiards_28.c \
@@ -1063,7 +1039,7 @@ SOURCES := \
 	src/mini_billiards_33b.c \
 	src/mini_billiards_33c.c \
 	src/mini_billiards_34.c \
-	asm/mini_billiards_d2.s \
+	asm/mini_billiards_d3.s \
 	src/mini_billiards_36.c \
 	src/mini_billiards_37.c \
 	src/mini_billiards_37b.c \
@@ -1082,7 +1058,7 @@ SOURCES := \
 	src/mini_billiards_48.c \
 	src/mini_billiards_49.c \
 	src/mini_billiards_50.c \
-	asm/mini_billiards_d3.s
+	asm/mini_billiards_d4.s
 O_FILES := $(addsuffix .o,$(SOURCES))
 ALL_O_FILES += $(O_FILES)
 mkbe.rel_mini_billiards.plf: $(O_FILES)
@@ -1131,6 +1107,7 @@ SOURCES := \
 	src/test_mode_25b.c \
 	src/test_mode_26.c \
 	src/test_mode_27.c \
+	asm/test_mode_dB.s \
 	src/test_mode_32.c \
 	src/test_mode_33.c \
 	src/test_mode_34.c \
@@ -1163,6 +1140,7 @@ SOURCES := \
 	src/test_mode_59.c \
 	src/test_mode_60.c \
 	src/test_mode_61.c \
+	asm/test_mode_d6.s \
 	src/test_mode_62.c \
 	src/test_mode_63.c \
 	src/test_mode_64.c \

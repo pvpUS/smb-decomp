@@ -49,6 +49,7 @@
 #include "stobj.h"
 #include "world.h"
 #include "stdlib.h"
+#include "thread.h"
 
 struct PilotRodata0
 {
@@ -124,7 +125,7 @@ extern u8 lbl_10000034[];
 extern u8 lbl_10000038[];
 extern u8 lbl_1000003C[];
 extern u8 lbl_10000040[];
-extern u8 lbl_10000044[];
+extern s32 lbl_10000044[];
 extern u8 lbl_10000054[];
 extern u8 lbl_1000005C[];
 extern u8 lbl_10000064[];
@@ -159,13 +160,9 @@ extern void draw_test_camera_target();
 extern void func_80042214();
 extern void func_8009C5E4();
 extern void func_8009CD5C();
-extern void func_8009D794();
 extern void func_8009DB40();
 extern void func_800AB2A0();
 extern void func_800AB444();
-extern void func_800AB6F8();
-extern void func_800AC43C();
-extern void func_800AC5E0();
 extern void gxutil_draw_line_multicolor();
 extern void item_create();
 extern void mini_commend_free_data();
@@ -173,7 +170,6 @@ extern void qsort();
 extern void set_shape_flags_in_model();
 extern void stcoli_sub35();
 extern void u_load_minigame_graphics();
-extern void thread_create();
 
 // Forward declarations so mwcc accepts `<fn>@ha/@l` and cross-function
 // branches before each function is defined below.
@@ -203,20 +199,10 @@ void lbl_00004570(void);
 void lbl_000048C0(void);
 void lbl_00004A14(void);
 void lbl_00004E84(void);
-void lbl_00004F68(void);
-void lbl_00005044(void);
-void lbl_000051A4(void);
 void lbl_0000580C(void);
-void lbl_00005824(void);
-void lbl_00006124(void);
-void lbl_00006490(void);
-void lbl_0000669C(void);
 void lbl_00006A94(void);
 void lbl_00006B5C(void);
 void lbl_00006B94(void);
-void lbl_00006BF4(void);
-void lbl_00006CCC(void);
-void lbl_00006D14(void);
 void lbl_00006DFC(void);
 void lbl_00007EF8(void);
 void lbl_00008134(void);
@@ -303,6 +289,38 @@ void lbl_000035B8(void);
 void lbl_00003860(void);
 void lbl_000038D4(void);
 void lbl_00003AD0(void);
+
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+struct PilotResultRec
+{
+    u8 filler0[4];
+    /*0x04*/ s16 unk4;
+    /*0x06*/ u8 filler6[2];
+    /*0x08*/ s16 unk8;
+    /*0x0A*/ u8 fillerA[2];
+};
+void lbl_00006BF4(struct Ball *);
+extern int func_800AC5E0();
+int lbl_00006D14(void);
+extern int func_8009D794();
+extern int func_800AC43C(int, void *, int);
+extern int func_800AB6F8();
+void lbl_00006CCC(f32 *outU, f32 *outV, f32 dist, f32 x, f32 y, f32 fovScale);
+void lbl_00004F68(struct Ball *ball);
+void lbl_00004FA8(struct Ball *ball);
+void lbl_00005008(struct Ball *ball);
+void lbl_00005044(struct Ball *ball);
+void lbl_00006124(struct Ball *, struct PhysicsBall *, int);
+void lbl_0000509C(struct Ball *ball);
+void lbl_00005824(struct Ball *ball);
+void lbl_00006490(struct Ball *, struct PhysicsBall *, int);
+void lbl_0000669C(struct Ball *, struct PhysicsBall *, int);
+void lbl_000051A4(struct Ape *ape, int status);
+void lbl_00005414(struct Ape *ape, f32 speed);
+
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
 
 #pragma force_active on
 void lbl_000008AC(void)
@@ -953,5 +971,1114 @@ void lbl_00002408(void)
     if (lbl_802F1FF0 > 0x78)
         lbl_802F1FF4 = 0xB;
 }
+
+void lbl_000024D0(void)
+{
+    event_resume(2);
+    hud_show_go_banner(0x3c);
+    lbl_802F1FF0 = 0;
+    lbl_802F1FF6 = 12;
+    lbl_802F1FF4 = -1;
+    ((void (**)(void))lbl_0000C748)[12]();
+}
+
+void lbl_0000253C(void)
+{
+    struct Ball *ball = currentBall;
+
+    lbl_802F1FF0++;
+    if ((controllerInfo[playerControllerIDs[ball->playerId]].pressed.button & 0x100)
+     && !((ball->flags & BALL_FLAG_00)
+       && mathutil_vec_len(&ball->vel) < *(f64 *)lbl_0000BFE8)
+     && lbl_802F1FF0 > 60)
+    {
+        lbl_802F1FF4 = 0xd;
+        return;
+    }
+    if (*(s16 *)lbl_10000018 == 0 && (ball->ape->flags & 2)
+     && lbl_802F1FF0 % 30 == 1)
+    {
+        u_somePlayerId = ball->playerId;
+        lbl_802F1DFC = playerCharacterSelection[u_somePlayerId];
+        u_play_sound_0(((s16 *)lbl_0000BE80)[(rand() >> 12) & 7]);
+    }
+    lbl_00004A14();
+}
+
+void lbl_000026BC(void)
+{
+    u8 *k = (u8 *)lbl_0000BE80;
+    u8 *w = (u8 *)lbl_10000000;
+    struct Ball *ball = currentBall;
+    Quaternion q;
+
+    *(f32 *)(w + 4) = *(f32 *)(k + 0x180);
+    q = *(Quaternion *)(k + 0x170);
+    ball->unk98 = q;
+    mathutil_mtxA_sq_from_identity();
+    if (mathutil_sum_of_sq_2(ball->vel.x, ball->vel.z) > *(f64 *)(k + 0x188)
+     || (ball->flags & BALL_FLAG_00))
+        mathutil_mtxA_rotate_y(mathutil_atan2(-ball->vel.x, -ball->vel.z));
+    mathutil_mtxA_sq_to_mtx(ball->unk30);
+    ball->unk148 = 1;
+    cameraInfo[ball->playerId].subState = 2;
+    ball->flags |= 0x10;
+    lbl_802F1FD0 |= 0x100;
+    u_play_sound_0(0xf0);
+    if (*(s16 *)(w + 0x18) == 0)
+        *(s32 *)(w + 0x2c) = u_play_sound_2(0xef);
+    vibration_control(playerControllerIDs[ball->playerId], 1, 10);
+    lbl_802F1FF0 = 0;
+    lbl_802F1FF4 = 0xe;
+    if (lbl_802F1FF4 != -1)
+    {
+        lbl_802F1FF6 = lbl_802F1FF4;
+        lbl_802F1FF4 = -1;
+    }
+    ((void (**)(void))lbl_0000C748)[lbl_802F1FF6]();
+}
+
+void lbl_00002890(void)
+{
+    struct Ball *ball = currentBall;
+
+    lbl_802F1FF0++;
+    if (lbl_802F1FF0 == 0x11)
+    {
+        u_somePlayerId = ball->playerId;
+        lbl_802F1DFC = playerCharacterSelection[u_somePlayerId];
+        u_play_sound_0(0x1f);
+    }
+    if ((lbl_802F1FD0 & 2) && (ball->ape->flags & 2)
+     && lbl_802F1FF0 % 30 == 1)
+    {
+        u_somePlayerId = ball->playerId;
+        lbl_802F1DFC = playerCharacterSelection[u_somePlayerId];
+        u_play_sound_0(((s16 *)lbl_0000BE80)[(rand() >> 12) & 7]);
+    }
+    if ((controllerInfo[playerControllerIDs[ball->playerId]].pressed.button & 0x100)
+     && *(f32 *)lbl_802F1FDC >= *(f64 *)lbl_0000C010)
+        lbl_802F1FF4 = 0x11;
+    else
+        lbl_00004A14();
+}
+
+void lbl_00002A2C(void)
+{
+    struct Ball *ball = currentBall;
+    u8 *k = (u8 *)lbl_0000BE80;
+
+    lbl_802F1FD0 |= 0x20;
+    if (*(f32 *)lbl_802F1FDC >= *(f64 *)(k + 0x198))
+        *(f32 *)lbl_802F1FDC = *(f32 *)(k + 0x1a0);
+    ball->restitution = *(f32 *)(k + 0x1a4);
+    SoundOffID(0xef);
+    *(s16 *)lbl_1000001E = 0;
+    lbl_802F1FF0 = 0;
+    lbl_802F1FF6 = 0x10;
+    lbl_802F1FF4 = -1;
+    ((void (**)(void))lbl_0000C748)[16]();
+}
+
+void lbl_00002AE8(void)
+{
+    struct Ball *ball = currentBall;
+    u8 *w = (u8 *)lbl_10000000;
+    u16 t;
+
+    lbl_802F1FF0++;
+    if (ball->state == 0)
+    {
+        event_suspend(2);
+        stageInfo.unk1C |= 1;
+        *(u16 *)(w + 0x1e) += 1;
+    }
+    t = *(u16 *)(w + 0x1e);
+    if (t == 0x1e)
+    {
+        lbl_000099A4();
+        func_8002BFCC(0x16a, 0x16b);
+        u_play_music(0, 8);
+    }
+    else if (t == 0x78)
+    {
+        u_play_sound_0(0x1af);
+    }
+    else if (t == 0xf0)
+    {
+        u_play_music(100, 8);
+    }
+    else if (t > 0xf0)
+    {
+        if ((controllerInfo[playerControllerIDs[ball->playerId]].pressed.button & 0x100)
+         || t > 0x1a4)
+            lbl_802F1FF4 = 0;
+    }
+    lbl_00004A14();
+}
+
+void lbl_00002C18(void)
+{
+    u8 *w = (u8 *)lbl_10000000;
+    struct Ball *ball = currentBall;
+    u8 *k = (u8 *)lbl_0000BE80;
+    struct PilotResultRec *tbl;
+    s32 i;
+
+    event_suspend(2);
+    ball->unk148 = 3;
+    tbl = (struct PilotResultRec *)lbl_80285A80;
+    i = modeCtrl.currPlayer;
+    if (tbl[i].unk8 != 0)
+        ball->restitution = *(f32 *)(k + 0x1a8);
+    else if (tbl[i].unk4 != 0)
+        ball->restitution = *(f32 *)(k + 0x1ac);
+    else
+        ball->restitution = *(f32 *)(k + 0x1a4);
+
+    if (*(s32 *)(w + 0x2c) != -1)
+    {
+        SoundOff(*(s32 *)(w + 0x2c));
+        *(s32 *)(w + 0x2c) = -1;
+    }
+    lbl_802F1FF0 = 0;
+    lbl_802F1FF6 = 0x12;
+    lbl_802F1FF4 = -1;
+    ((void (**)(void))lbl_0000C748)[18]();
+}
+
+void lbl_00002D24(void)
+{
+    lbl_802F1FF0++;
+    if (*(s16 *)lbl_10000018 == 0
+     && *(f64 *)lbl_0000C030 == *(f32 *)lbl_802F1FDC
+     && lbl_802F1FF0 % 30 == 1)
+    {
+        u_somePlayerId = modeCtrl.currPlayer;
+        lbl_802F1DFC = playerCharacterSelection[u_somePlayerId];
+        u_play_sound_0(((s16 *)lbl_0000BE80)[(rand() >> 12) & 7]);
+    }
+    lbl_00004A14();
+}
+
+void lbl_00002E04(void)
+{
+    struct PilotResultRec *tbl = (struct PilotResultRec *)lbl_80285A80;
+    s32 i = modeCtrl.currPlayer;
+
+    if (tbl[i].unk4 != 0)
+        u_play_sound_0(0x135);
+    else if (tbl[i].unk8 != 0)
+        u_play_sound_0(0x138);
+    lbl_802F1FF6 = 0x14;
+    lbl_802F1FF4 = -1;
+    ((void (**)(void))lbl_0000C748)[20]();
+}
+
+void lbl_00002E94(void)
+{
+    lbl_00004A14();
+}
+
+void lbl_00002EB4(void)
+{
+    struct Ball *ball = currentBall;
+    s32 t;
+
+    stageInfo.unk1C |= 1;
+    lbl_00006BF4(ball);
+    lbl_00008568();
+    t = *(s32 *)lbl_10000074;
+    if (t >= 5 && !(lbl_802F1FD0 & 2))
+        lbl_802F1FD0 |= 1;
+    if (t >= 0x12c)
+        u_play_sound_0(0x1ae);
+    else if (t >= 0x64)
+        u_play_sound_0(0x1ad);
+    else if (t >= 0xa)
+        u_play_sound_0(0x1a0);
+    else
+        u_play_sound_0(0x1a4);
+    u_play_music(0, 8);
+    SoundOffID(0xf9);
+    cameraInfo[ball->playerId].subState = 3;
+    ball->state = 0;
+    lbl_802F1FF0 = 0;
+    *(s32 *)lbl_1000008C = 0;
+    lbl_802F1FF6 = 0x16;
+    lbl_802F1FF4 = -1;
+    ((void (**)(void))lbl_0000C748)[22]();
+}
+
+void lbl_00002FF4(void)
+{
+    struct Ball *ball = currentBall;
+    u8 *w = (u8 *)lbl_10000000;
+
+    lbl_802F1FF0++;
+    if (lbl_802F1FF0 == 0xf)
+    {
+        if (!(lbl_802F1FD0 & 0x40))
+        {
+            u_somePlayerId = ball->playerId;
+            lbl_802F1DFC = playerCharacterSelection[u_somePlayerId];
+            if (*(s32 *)(w + 0x74) >= 0x1f4)
+                u_play_sound_0(0x12d);
+            else if (*(s32 *)(w + 0x74) >= 0x12c)
+                u_play_sound_0(0x130);
+            else if (*(s32 *)(w + 0x74) >= 0x64)
+                u_play_sound_0(0x12f);
+            else if (*(s32 *)(w + 0x74) >= 0xa)
+                u_play_sound_0(0x12e);
+            else
+                u_play_sound_0(0x12c);
+        }
+    }
+    else if (lbl_802F1FF0 == 0x1e)
+    {
+        if (*(s32 *)(w + 0x74) >= 0x12c)
+        {
+            func_8002BFCC(0x15f, 0x160);
+            *(s32 *)(w + 0x94) = 0x1fe;
+        }
+        else if (*(s32 *)(w + 0x74) >= 0x64)
+        {
+            func_8002BFCC(0x163, 0x15c);
+            *(s32 *)(w + 0x94) = 0x10e;
+        }
+        else if (*(s32 *)(w + 0x74) >= 0xa)
+        {
+            func_8002BFCC(0x15d, 0x15e);
+            *(s32 *)(w + 0x94) = 0xf0;
+        }
+        else
+        {
+            func_8002BFCC(0x16a, 0x16b);
+            *(s32 *)(w + 0x94) = 0xd2;
+        }
+    }
+    if (lbl_802F1FF0 == *(s32 *)(w + 0x94))
+        u_play_music(100, 8);
+
+    {
+        int cp = modeCtrl.currPlayer;
+
+        if (((s32 *)lbl_80285A58)[cp] == 0)
+        {
+            *(s32 *)(w + 0x8c) += 1;
+        }
+        else if (controllerInfo[playerControllerIDs[ball->playerId]].pressed.button & 0x100)
+        {
+            ((s32 *)(w + 0x44))[cp] += ((s32 *)lbl_80285A58)[cp];
+            ((s32 *)lbl_80285A58)[cp] = 0;
+            lbl_802F1FEC = 0;
+        }
+    }
+
+    if (*(s32 *)(w + 0x8c) > 0x14 && lbl_802F1FF0 > 0x78
+     && ((controllerInfo[playerControllerIDs[ball->playerId]].pressed.button & 0x100)
+      || lbl_802F1FF0 > 0x1e0))
+        lbl_802F1FF4 = 0;
+    else
+        lbl_00004A14();
+}
+
+void lbl_00003298(void)
+{
+    u8 *w = (u8 *)lbl_10000000;
+    s32 pa;
+    s32 pb;
+    s32 pc;
+    s32 pd;
+
+    event_finish_all();
+    event_start(1);
+    event_start(4);
+    event_start(0xf);
+    event_start(0x10);
+    event_start(0x12);
+    event_start(0x14);
+    event_start(0x13);
+    camera_set_state_all(0x43);
+    cameraInfo[0].subState = 4;
+    *(s16 *)(w + 0x18) = 0;
+    *(s32 *)(w + 0x98) = 0;
+    *(s32 *)(w + 0x9c) = 0;
+    *(s32 *)(w + 0xa0) = 0;
+    *(s32 *)(w + 0xa4) = 0;
+    lbl_0000A69C();
+    lbl_802F1FF0 = 0;
+    *(s32 *)(w + 0x8c) = 0;
+    lbl_802F1FF6 = 0x18;
+    lbl_802F1FF4 = -1;
+    ((void (**)(void))lbl_0000C748)[24]();
+}
+
+void lbl_00003374(void)
+{
+    u8 *w = (u8 *)lbl_10000000;
+    s32 i;
+    s32 sel;
+    s32 flags;
+    u8 rec[8];
+    s32 dead[2];
+
+    lbl_802F1FF0++;
+    if (lbl_00006D14() && lbl_802F1FF0 > 50)
+    {
+        *(s32 *)(w + 0x98) = *(s32 *)(w + 0x44);
+        *(s32 *)(w + 0x9c) = *(s32 *)(w + 0x48);
+        *(s32 *)(w + 0xa0) = *(s32 *)(w + 0x4c);
+        *(s32 *)(w + 0xa4) = *(s32 *)(w + 0x50);
+    }
+    for (i = 0; i < 4; i++)
+    {
+        if (g_poolInfo.playerPool.statusList[i] != 0
+         && ((s32 *)(w + 0x98))[i] != ((s32 *)(w + 0x44))[i])
+            break;
+    }
+    if (i == 4)
+        *(s32 *)(w + 0x8c) += 1;
+    if ((lbl_00006D14() && *(s32 *)(w + 0x8c) > 20) || lbl_802F1FF0 > 720)
+    {
+        *(s8 *)(w + 0x34) = -1;
+        if (modeCtrl.playerCount == 1)
+        {
+            flags = 0;
+            if (lbl_802F1FD0 & (1 << 3))
+                flags |= 1;
+            if (lbl_802F1FD0 & (1 << 4))
+                flags |= 2;
+            switch (*(s16 *)(w + 0x64))
+            {
+            case 5:
+                sel = 6;
+                break;
+            case 10:
+                sel = 7;
+                break;
+            default:
+                sel = 8;
+                break;
+            }
+            rec[3] = playerCharacterSelection[0];
+            *(u16 *)(rec + 4) = *(s32 *)(w + 0x44);
+            rec[6] = flags;
+            *(s8 *)(w + 0x34) = (s8)func_800AC5E0(sel, rec);
+            if (*(s8 *)(w + 0x34) < 0)
+            {
+                lbl_802F1FF4 = 0x1b;
+                return;
+            }
+        }
+        pauseMenuState.unk4 |= 2;
+        lbl_802F1FF4 = 0x19;
+    }
+}
+
+void lbl_000035B8(void)
+{
+    u8 *k = (u8 *)lbl_0000BE80;
+    s8 spC[4];
+    s8 sp8[4];
+    int i;
+    int j;
+    int rank;
+
+    u_free_minigame_graphics();
+    lbl_802F1FD4 = NULL;
+    event_finish_all();
+    event_start(1);
+    event_start(4);
+    event_start(0x14);
+    event_start(0x13);
+    event_start(0x12);
+    event_start(0xf);
+    event_start(0xd);
+    event_start(0x10);
+    if (modeCtrl.playerCount == 1)
+    {
+        spC[0] = playerCharacterSelection[0];
+        spC[1] = -1;
+        spC[2] = -1;
+        spC[3] = -1;
+        sp8[0] = *(u8 *)lbl_10000034;
+    }
+    else
+    {
+        for (i = 0; i < 4; i++)
+        {
+            if (g_poolInfo.playerPool.statusList[i] == 0)
+            {
+                spC[i] = -1;
+            }
+            else
+            {
+                rank = 0;
+                for (j = 0; j < 4; j++)
+                {
+                    if (i != j && g_poolInfo.playerPool.statusList[j] != 0
+                     && lbl_10000044[j] > lbl_10000044[i])
+                        rank++;
+                }
+                spC[i] = playerCharacterSelection[i];
+                sp8[i] = rank;
+            }
+        }
+    }
+    func_8009C5E4(spC, sp8);
+    lbl_802F1FD0 |= 4;
+    camera_set_state_all(0x46);
+    mathutil_mtxA_from_translate_xyz(*(f32 *)(k + 0x30), *(f32 *)(k + 0x1b8), *(f32 *)(k + 0x1bc));
+    mathutil_mtxA_rotate_y(0x8000);
+    func_8009DB40(mathutilData->mtxA);
+    lbl_802F1FF0 = 0;
+    lbl_802F1FF6 = 0x1a;
+    lbl_802F1FF4 = -1;
+    ((void (**)(void))lbl_0000C748)[26]();
+}
+
+void lbl_00003860(void)
+{
+    lbl_802F1FF0++;
+    if (lbl_802F1FF0 >= 60 && func_8009D794()
+     && (lbl_00006D14() || lbl_802F1FF0 > 0x708))
+        lbl_802F1FF4 = 0x1b;
+}
+
+// UNVERIFIED: the 8-byte high-score record handed to func_800AC43C.  Games
+// 6/7/8 use the 8-byte "pair" layout -- cf. struct MiniScoreU16Pair in
+// src/mini_ranking.c, which is itself invented.
+struct PilotRankRec
+{
+    u8 name[3];
+    u8 chara;
+    u16 score;
+    u8 unk6;
+    u8 unk7;
+};
+
+void lbl_000038D4(void)
+{
+    struct PilotRankRec recs[5];
+    u8 flags = 0;
+    int game;
+    int i;
+
+    u_free_minigame_graphics();
+    lbl_802F1FD4 = NULL;
+    mini_commend_free_data();
+    lbl_802F1FD0 &= ~4;
+    event_finish_all();
+    event_start(0x10);
+    event_start(0x12);
+    if (lbl_802F1FD0 & 8)
+        flags |= 1;
+    if (lbl_802F1FD0 & 0x10)
+        flags |= 2;
+    switch (*(s16 *)lbl_10000064)
+    {
+    case 5:
+        game = 6;
+        break;
+    case 10:
+        game = 7;
+        break;
+    default:
+        game = 8;
+        break;
+    }
+    for (i = 0; i < 4; i++)
+    {
+        if (g_poolInfo.playerPool.statusList[i] == 0)
+            break;
+        recs[i].chara = playerCharacterSelection[i];
+        recs[i].score = lbl_10000044[i];
+        recs[i].unk6 = flags;
+    }
+    if (func_800AC43C(game, recs, modeCtrl.playerCount) != 0)
+        func_800AB2A0(game, 1);
+    else
+        func_800AB2A0(game, 0);
+    modeCtrl.submodeTimer = 0;
+    lbl_802F1FF6 = 0x1c;
+    lbl_802F1FF4 = -1;
+    ((void (**)(void))lbl_0000C748)[28]();
+}
+
+void lbl_00003AD0(void)
+{
+    if (modeCtrl.submodeTimer == 0)
+    {
+        if (lbl_00006D14() && !func_800AB6F8())
+        {
+            u_play_sound_0(0xd1);
+            modeCtrl.submodeTimer = 60;
+            start_screen_fade(0x101, 0xFFFFFF, 60);
+            u_play_music(60, 2);
+        }
+    }
+    else if (--modeCtrl.submodeTimer == 0)
+    {
+        func_800AB444();
+        func_80012434(modeCtrl.gameType);
+    }
+}
+
+void lbl_00003B6C(void)
+{
+    switch (lbl_802F1FF6) {
+    case 0x1c:
+        break;
+    case 0x1b:
+    default:
+        lbl_00003BDC();
+        break;
+    case 0x1a:
+        lbl_00003BDC();
+        func_8009CD5C();
+        if (((s8 *)eventInfo)[0x138] == 2)
+            effect_draw();
+        break;
+    }
+}
+asm void lbl_00003BDC(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_00003BDC.s"
+}
+
+#pragma peephole on
+struct PilotDrawNode { struct OrdTblNode node; u32 lightGroup; int ballId; };
+
+void lbl_00004024(void)
+{
+    struct Ball *ball = ballInfo;
+    s8 *status = g_poolInfo.playerPool.statusList;
+    int i;
+
+    for (i = 0; i < g_poolInfo.playerPool.count; i++, ball++, status++) {
+        struct PilotDrawNode *node;
+        struct OrdTblNode *entry;
+
+        if (*status == STAT_NULL || *status == STAT_FREEZE)
+            continue;
+        if (ball->unk148 != 2 && ball->unk148 != 3)
+            continue;
+        mathutil_mtxA_from_mtxB();
+        entry = ord_tbl_get_entry_for_pos(&ball->pos);
+        node = ord_tbl_alloc_node(sizeof(*node));
+        node->node.drawFunc = (OrdTblDrawFunc)lbl_000040EC;
+        node->lightGroup = peek_light_group();
+        node->ballId = i;
+        ord_tbl_insert_node(entry, &node->node);
+    }
+}
+asm void lbl_000040EC(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_000040EC.s"
+}
+
+#pragma peephole on
+
+void lbl_00004450(void)
+{
+    u8 *m = (u8 *)lbl_10000000;
+    struct Ball *ball = currentBall;
+    u8 *k = (u8 *)lbl_0000BE80;
+    f32 u;
+    f32 v;
+    s16 ang;
+    f32 scale;
+
+    if (mathutil_vec_sq_len((Vec *)(m + 0x68)) < *(f64 *)(k + 0x240))
+        return;
+    ang = mathutil_atan2(*(f32 *)(m + 0x68), *(f32 *)(m + 0x70));
+    lbl_00006CCC(&u, &v, *(f32 *)(k + 0x1CC), *(f32 *)(k + 0x248),
+                 *(f32 *)(k + 0x24C), cameraInfo[ball->playerId].sub28.unk38);
+    scale = *(f32 *)(k + 0x250);
+    mathutil_mtxA_from_mtxB();
+    mathutil_mtxA_set_translate_xyz(u, v, *(f32 *)(k + 0x254));
+    mathutil_mtxA_rotate_y(ang);
+    mathutil_mtxA_scale_s(scale);
+    gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+    avdisp_set_bound_sphere_scale(scale);
+    avdisp_draw_model_unculled_sort_translucent(minigameGma->modelEntries[9].model);
+}
+asm void lbl_00004570(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_00004570.s"
+}
+
+#pragma peephole on
+
+void lbl_000048C0(void)
+{
+    u8 *k = (u8 *)lbl_0000BE80;
+    struct Ball *ball = currentBall;
+    struct RaycastHit hit;
+    Vec up;
+    Quaternion quat;
+    Mtx mtx;
+    u32 hit_;
+
+    up = *(Vec *)(k + 0x2A8);
+    avdisp_set_post_mult_color(*(f32 *)(k + 0x2B4), *(f32 *)(k + 0x2B4),
+                               *(f32 *)(k + 0x2B4), *(f32 *)(k + 0x2B4));
+    avdisp_set_z_mode(1, 3, 0);
+    hit_ = raycast_stage_down(&ball->pos, &hit, NULL);
+    if (hit_)
+    {
+        mathutil_mtxA_from_identity();
+        mathutil_mtxA_scale_s(*(f32 *)(k + 0x2B8));
+        mathutil_mtxA_to_mtx(mtx);
+        mathutil_mtxA_from_mtxB_translate(&hit.pos);
+        mathutil_mtxA_mult_left(mtx);
+        mathutil_mtxA_to_mtx(mtx);
+        mathutil_quat_from_dirs(&quat, &up, &hit.normal);
+        mathutil_mtxA_from_quat(&quat);
+        mathutil_mtxA_mult_left(mtx);
+        if (*(f32 *)lbl_802F1FDC > *(f64 *)(k + 0x1B0))
+            mathutil_mtxA_scale_s(*(f32 *)(k + 0x2BC));
+        else
+            mathutil_mtxA_scale_s(*(f32 *)(k + 0x2C0));
+        gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+        avdisp_draw_model_culled_sort_none(commonGma->modelEntries[0x4E].model);
+    }
+    avdisp_set_post_mult_color(*(f32 *)(k + 0x34), *(f32 *)(k + 0x34),
+                               *(f32 *)(k + 0x34), *(f32 *)(k + 0x34));
+    avdisp_set_z_mode(1, 3, 1);
+}
+void lbl_00004A14(void)
+{
+    struct Ball *ball = currentBall;
+    u8 *m = (u8 *)lbl_10000000;
+    u8 *k = (u8 *)lbl_0000BE80;
+    int id;
+
+    if (ball->pos.y < *(f64 *)(k + 0x2C8) || (lbl_802F1FD0 & 0x200))
+    {
+        if (*(s16 *)(m + 0x18) == 0)
+        {
+            if (*(s32 *)(m + 0x2C) != -1)
+            {
+                SoundOff(*(s32 *)(m + 0x2C));
+                *(s32 *)(m + 0x2C) = -1;
+            }
+            if (lbl_802F1FF6 == 0xE)
+                u_play_sound_0(0xF6);
+            else
+                u_play_sound_0(0xF5);
+            vibration_control(playerControllerIDs[ball->playerId], 1, 0x14);
+        }
+        else if (*(s16 *)(m + 0x18) == 0xA)
+        {
+            switch (ball->ape->charaId)
+            {
+            case 1:
+                u_play_sound_0(0xEE);
+                break;
+            case 2:
+                u_play_sound_0(0xEA);
+                break;
+            case 3:
+                id = u_play_sound_1_dupe(0x161);
+                SoundRev(id, 0x60);
+                SoundCho(id, 0x40);
+                break;
+            default:
+                u_play_sound_0(0xEC);
+                break;
+            }
+        }
+
+        (*(s16 *)(m + 0x18))++;
+        if (!(lbl_802F1FD0 & 0x200)
+         && ((mathutil_sqrt(mathutil_sum_of_sq_2(ball->vel.x, ball->vel.z)) < *(f64 *)(k + 0x2D0)
+              && ball->pos.y < *(f64 *)(k + 0x2D8))
+             || ball->pos.y < *(f64 *)(k + 0x2E0)))
+        {
+            lbl_802F1FD0 |= 0x200;
+            hud_show_fallout_banner(0xB4);
+            func_8002BFCC(0x16A, 0x16B);
+            u_play_music(0, 8);
+        }
+
+        if (*(s16 *)(m + 0x1A) == 0x50)
+            u_play_sound_0(0xC);
+        else if (*(s16 *)(m + 0x1A) > 0xB4)
+            lbl_802F1FF4 = 0;
+
+        if (lbl_802F1FD0 & 0x200)
+            (*(s16 *)(m + 0x1A))++;
+
+        if (*(f32 *)lbl_802F1FDC > *(f64 *)(k + 0x1B0))
+        {
+            ball->vel.x = *(f64 *)(k + 0x2E8) * ball->vel.x;
+            ball->vel.y = *(f64 *)(k + 0x2E8) * ball->vel.y;
+            ball->vel.z = *(f64 *)(k + 0x2E8) * ball->vel.z;
+        }
+        else
+        {
+            ball->vel.x = *(f64 *)(k + 0x2F0) * ball->vel.x;
+            ball->vel.y = *(f64 *)(k + 0x2F0) * ball->vel.y;
+            ball->vel.z = *(f64 *)(k + 0x2F0) * ball->vel.z;
+        }
+
+        if (ball->vel.y < *(f64 *)(k + 0x1B0))
+            ball->vel.y = ball->vel.y * *(f64 *)(k + 0x2F8);
+    }
+    else
+    {
+        if (*(s16 *)(m + 0x18) != 0)
+        {
+            SoundOffID(0xEE);
+            SoundOffID(0xEA);
+            SoundOffID(0x161);
+            SoundOffID(0xEC);
+            *(s16 *)(m + 0x18) = 0;
+        }
+        *(s16 *)(m + 0x1A) = 0;
+    }
+
+    if (ball->pos.y < *(f64 *)(k + 0x300) && *(s16 *)(m + 0x18) == 0
+     && lbl_802F1FF6 != 0x16)
+        u_play_sound_0(0xF9);
+    else
+        SoundOffID(0xF9);
+
+    if (lbl_802F1FD0 & 0x1000)
+    {
+        if (*(s32 *)(m + 0x30) == -1)
+            *(s32 *)(m + 0x30) = u_play_sound_2(0xF3);
+    }
+    else
+    {
+        if (*(s32 *)(m + 0x30) != -1)
+        {
+            SoundOff(*(s32 *)(m + 0x30));
+            *(s32 *)(m + 0x30) = -1;
+        }
+    }
+
+    if (((s32 *)lbl_80285A58)[modeCtrl.currPlayer] > 0)
+    {
+        int d = ((s32 *)lbl_80285A58)[modeCtrl.currPlayer] / lbl_802F1FEC;
+
+        if (d < 1)
+            d = 1;
+        ((s32 *)lbl_80285A58)[modeCtrl.currPlayer] -= d;
+        ((s32 *)(m + 0x44))[modeCtrl.currPlayer] += d;
+    }
+
+    if (lbl_802F1FEC > 0)
+        lbl_802F1FEC--;
+    if (*(s16 *)lbl_802F1FE0 > 0)
+        (*(s16 *)lbl_802F1FE0)--;
+}
+
+void lbl_00004E84(void)
+{
+    struct Ball *ball = currentBall;
+
+    if (lbl_802F1FF6 == 0x10 && *(s16 *)lbl_10000018 == 0
+     && !(ball->flags & BALL_FLAG_00) && ball->state != 0
+     && lbl_802F1FF0 % 30 == 1)
+    {
+        u_somePlayerId = ball->playerId;
+        lbl_802F1DFC = playerCharacterSelection[u_somePlayerId];
+        u_play_sound_0(((s16 *)lbl_0000BE80)[(rand() >> 12) & 7]);
+    }
+}
+void lbl_00004F68(struct Ball *ball)
+{
+    ((void (**)(struct Ball *))lbl_0000C7BC)[ball->unk148](ball);
+    lbl_00006B94();
+}
+
+void lbl_00004FA8(struct Ball *ball)
+{
+    struct PhysicsBall physBall;
+
+    lbl_00006124(ball, &physBall, 0);
+    handle_ball_rotational_kinematics(ball, &physBall, 0);
+    update_ball_ape_transform(ball, &physBall, 0);
+    ball->unk80++;
+}
+
+void lbl_00005008(struct Ball *ball)
+{
+    lbl_0000580C();
+    ball->unk148 = 2;
+    lbl_00005044(ball);
+}
+void lbl_00005044(struct Ball *ball)
+{
+    struct PhysicsBall physBall;
+
+    lbl_00005824(ball);
+    lbl_00006490(ball, &physBall, 0);
+    update_ball_ape_transform(ball, &physBall, 0);
+    ball->unk80++;
+}
+
+void lbl_0000509C(struct Ball *ball)
+{
+    u8 *k = (u8 *)lbl_0000BE80;
+    struct PhysicsBall physBall;
+
+    if (*(f32 *)lbl_802F1FDC > *(f64 *)(k + 0x1B0))
+    {
+        if (*(s16 *)lbl_10000018 == 0)
+            *(f32 *)lbl_802F1FDC = *(f32 *)lbl_802F1FDC - *(f64 *)(k + 0x2A0);
+        else
+            *(f32 *)lbl_802F1FDC = *(f32 *)lbl_802F1FDC - *(f64 *)(k + 0x308);
+        if (*(f32 *)lbl_802F1FDC <= *(f64 *)(k + 0x1B0))
+        {
+            *(f32 *)lbl_802F1FDC = *(f32 *)(k + 0x30);
+            u_play_sound_0(0xF1);
+            vibration_control(playerControllerIDs[ball->playerId], VIBRATION_STATE_1,
+                              0xA);
+        }
+    }
+    lbl_0000669C(ball, &physBall, 0);
+    handle_ball_rotational_kinematics(ball, &physBall, 0);
+    update_ball_ape_transform(ball, &physBall, 0);
+    ball->unk80++;
+}
+void lbl_000051A4(struct Ape *ape, int status)
+{
+    u8 *k = (u8 *)lbl_0000BE80;
+    struct Ball *ball = &ballInfo[ape->ballId];
+    struct RaycastHit hit;
+    int r28;
+    float speed;
+
+    switch (status)
+    {
+    case THREAD_STATUS_KILLED:
+        ape_destroy(ape);
+        return;
+    }
+
+    if (debugFlags & 0xA)
+        return;
+    if (ball != currentBall)
+        return;
+
+    raycast_stage_down(&ball->pos, &hit, NULL);
+    ape->flags &= -20;
+    if ((!(hit.flags & 1) && ball->vel.y < *(f32 *)(k + 0x310))
+        || (*(f64 *)(k + 0x1B0) == *(f32 *)lbl_802F1FDC && *(s16 *)lbl_10000018 != 0))
+        ape->flags |= 2;
+    else if (mathutil_vec_len(&ball->unkB8) < *(f32 *)(k + 0x314))
+        ape->flags |= 1;
+
+    if (*(f32 *)lbl_802F1FDC > *(f64 *)(k + 0x1B0))
+    {
+        mathutil_mtxA_from_mtx(ball->unk30);
+        mathutil_mtxA_rotate_y(-0x4000);
+        mathutil_mtxA_to_quat(&ape->unk60);
+    }
+    else
+    {
+        r28 = !(ape->flags & 3);
+        u_ball_something_with_ape_rotation(ape);
+        if (r28)
+        {
+            speed = u_ball_something_with_walking_speed(ape);
+        }
+        else
+        {
+            speed = *(f32 *)(k + 0x30);
+            mathutil_mtxA_from_quat(&ape->unk60);
+            mathutil_mtxA_normalize_basis();
+            if (ape->flags & (1 << 1))
+                func_80037718(ape);
+        }
+    }
+
+    if (ball->flags & BALL_FLAG_05)
+        speed = mathutil_vec_len(&ball->vel);
+
+    if (lbl_802F1FF6 == 12)
+        check_ball_teeter(ape);
+    else
+        ball->flags &= ~BALL_FLAG_TEETER;
+
+    mathutil_mtxA_to_quat(&ape->unk60);
+    lbl_00005414(ape, speed);
+    ape_skel_anim_main(ape);
+    if (!(ape->flags & (1 << 3)))
+        func_8003765C(ape);
+    ape_face_dir(ape, &ball->lookPoint);
+    ball->unk100 = 0;
+    ball->lookPointPrio = *(f32 *)(k + 0x30);
+}
+
+void lbl_00005414(struct Ape *ape, f32 speed)
+{
+    u8 *m = (u8 *)lbl_10000000;
+    struct Ball *ball = &ballInfo[ape->ballId];
+    s32 stat;
+    s32 mot = 0;
+    s32 arg = 0;
+    u32 fl;
+    u32 bf;
+    s32 t;
+
+    if (*(f32 *)lbl_802F1FDC > *(f64 *)lbl_0000C030)
+    {
+        if (lbl_802F1FD0 & 0x20)
+        {
+            stat = 0xC;
+            if ((ball->flags & 1) || ball->state == 0)
+                mot = 6;
+            else
+                mot = 2;
+        }
+        else if (*(s16 *)(m + 0x18) != 0 || (lbl_802F1FD0 & 0x22))
+        {
+            stat = 0xC;
+            mot = 2;
+        }
+        else
+        {
+            stat = 0xC;
+            t = controllerInfo[playerControllerIDs[ball->playerId]].held.stickX;
+            if (t < -30)
+                mot = 8;
+            else if (t > 30)
+                mot = 9;
+            else
+                mot = 0;
+        }
+    }
+    else if ((lbl_802F1FD0 & 0x40) && *(s16 *)(m + 0x18) == 0)
+    {
+        stat = 0xC;
+        if ((ball->flags & 1) || ball->state == 0)
+            mot = 7;
+        else
+            mot = 3;
+    }
+    else if (lbl_802F1FF6 == 0x16 && (lbl_802F1FD0 & 1))
+    {
+        t = *(s32 *)(m + 0x74);
+        stat = 5;
+        if (t >= 0x1F4)
+            mot = 0xC;
+        else if (t >= 0x12C)
+            mot = 0xA;
+        else if (t >= 0xC8)
+            mot = 8;
+        else if (t >= 0x64)
+            mot = 6;
+        else if (t >= 0x32)
+            mot = 4;
+        else if (t >= 0x28)
+            mot = 2;
+        else
+            mot = 0;
+    }
+    else
+    {
+        fl = ape->flags;
+        if (fl & 0x100)
+        {
+            stat = 1;
+            arg = 6;
+            set_ape_model_lod(ape, 0);
+        }
+        else if (fl & 0x800)
+        {
+            stat = 2;
+            mot = 0xD;
+        }
+        else if (fl & 0x40000)
+        {
+            stat = 2;
+            mot = 0x10;
+        }
+        else if (gameSubmode == 0x4B)
+        {
+            stat = 5;
+            mot = 0xC;
+        }
+        else
+        {
+            bf = ball->flags;
+            if (bf & 0x4000)
+            {
+                if (lbl_802F1FF0 < 0x18)
+                    return;
+                ape->flags = fl | 0x1000;
+                stat = 2;
+                mot = 0xC;
+                if (ape->flags & 0x2000)
+                    ball->flags &= ~0x4000;
+            }
+            else if (fl & 2)
+            {
+                stat = 3;
+            }
+            else if (bf & 0x8000)
+            {
+                if (!(infoWork.flags & 0x40))
+                {
+                    stat = 9;
+                    mot = (infoWork.currFloor & 1) + 1;
+                }
+                else
+                {
+                    stat = 9;
+                    mot = 0;
+                }
+            }
+            else if (bf & 0x20)
+            {
+                ball->flags = bf & ~0x20;
+                stat = 4;
+                speed = mathutil_vec_len(&ball->vel);
+            }
+            else if (bf & 2)
+            {
+                mot = ape->unk54;
+                stat = 2;
+            }
+            else if (fl & 1)
+            {
+                stat = 1;
+                if (bf & 1)
+                    speed = ape->unk54++;
+                else
+                    speed = *(f32 *)lbl_0000BEB0;
+            }
+            else
+            {
+                stat = 0;
+            }
+        }
+    }
+    if (stat != 1 || gameSubmode == 0x31)
+        ape->unk54 = 0;
+    new_ape_stat_motion(ape, stat, mot, arg, speed);
+}
+
+#pragma peephole on
+
+void lbl_0000580C(void)
+{
+    *(f32 *)lbl_802F1FDC = *(f32 *)lbl_0000BEB4;
+}
+asm void lbl_00005824(struct Ball *ball)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_pilot/lbl_00005824.s"
+}
+
+#pragma peephole on
 
 #pragma force_active reset

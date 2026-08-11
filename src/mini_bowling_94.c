@@ -240,14 +240,157 @@ void lbl_0000E510(void);
 void lbl_0000E5D4(void);
 void lbl_0000E7B0(void);
 void lbl_0000E870(void);
-void lbl_0000E894(void);
-void lbl_0000EC38(void);
-void lbl_0000EDB0(void);
 
+f64 lbl_0000E894(Vec *, Vec *, Vec *, f32 *, s32 *, f32);
+int lbl_0000EC38(Vec *, f32);
+f32 lbl_0000EDB0(Vec *, Vec *, f32);
+
+/* Two spellings below are load-bearing, both proven by a golden build.
+ * 1. `res = res;` in the ka == kb arm.  mwcc folds an EMPTY then-block (and an
+ *    INT self-assignment) but keeps a FLOAT one, and only the kept block emits
+ *    golden's `bne <next> ; b <end>` instead of a single `beq <end>`.
+ * 2. `v` is f64 and so is the return type, and the additive arms are written as
+ *    two statements.  mwcc puts a register VARIABLE in operand A of a
+ *    commutative fadd and an anonymous temp in operand B, so
+ *    `v = C - a->y; v = (f32)(v + rad);` gives golden's `fadd f1,f0,f30` where
+ *    the one-statement `v = C - a->y + rad;` gives `fadd f1,f30,f0`.
+ *    A separate `f64 d` temp also works but is a SIXTH local and costs 8 bytes
+ *    of frame; five locals fit with none homed.
+ */
 #pragma force_active on
-asm void lbl_0000E894(void)
+f64 lbl_0000E894(Vec *a, Vec *b, Vec *out, f32 *depth, s32 *kind, f32 rad)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000E894.s"
+    u8 *t = lbl_00014E10;
+    s32 ka;
+    f32 res;
+    f64 v;
+    s32 kb;
+
+    res = *(f32 *)(t + 0);
+    ka = lbl_0000EC38(a, rad);
+    kb = lbl_0000EC38(b, rad);
+    if (ka == kb) {
+        res = res;
+    } else {
+        if ((kb == 0xf || kb == 5) && ka <= 2U) {
+            ka = 0xa;
+        } else if (kb == 0x10) {
+            if (ka == 2) {
+                ka = 0xb;
+            } else {
+                ka = 0xd;
+            }
+        } else if (kb == 0x11) {
+            if (ka == 2) {
+                ka = 0xc;
+            } else {
+                ka = 0xd;
+            }
+        }
+    }
+
+    switch (ka) {
+    case 0:
+    case 1:
+        v = lbl_0000EDB0(a, out, rad);
+        res = *(f32 *)(t + 4);
+        break;
+    case 2:
+        out->x = *(f32 *)(t + 8);
+        out->y = *(f32 *)(t + 0);
+        out->z = *(f32 *)(t + 8);
+        v = *(f64 *)(t + 0x10) - a->y;
+        v = (f32)(v + rad);
+        break;
+    case 3:
+        out->x = a->x - *(f64 *)(t + 0x18);
+        out->y = a->y - *(f64 *)(t + 0x10);
+        out->z = *(f32 *)(t + 8);
+        v = (f32)(rad - mathutil_vec_normalize_len(out));
+        break;
+    case 4:
+        out->x = a->x - *(f64 *)(t + 0x20);
+        out->y = a->y - *(f64 *)(t + 0x10);
+        out->z = *(f32 *)(t + 8);
+        v = (f32)(rad - mathutil_vec_normalize_len(out));
+        break;
+    case 5:
+        out->x = *(f32 *)(t + 8);
+        out->y = a->y - *(f64 *)(t + 0x10);
+        out->z = a->z - *(f64 *)(t + 0x28);
+        v = (f32)(rad - mathutil_vec_normalize_len(out));
+        break;
+    case 6:
+        out->x = *(f32 *)(t + 8);
+        out->y = *(f32 *)(t + 0x30);
+        out->z = *(f32 *)(t + 8);
+        v = *(f64 *)(t + 0x38) - a->y;
+        v = (f32)(v + rad);
+        break;
+    case 7:
+        out->x = *(f32 *)(t + 8);
+        out->y = *(f32 *)(t + 8);
+        out->z = *(f32 *)(t + 4);
+        res = *(f32 *)(t + 0x48);
+        v = *(f64 *)(t + 0x40) - a->z;
+        v = (f32)(v + rad);
+        break;
+    case 8:
+        out->x = *(f32 *)(t + 0);
+        out->y = *(f32 *)(t + 8);
+        out->z = *(f32 *)(t + 8);
+        v = *(f64 *)(t + 0x50) - a->x;
+        v = (f32)(v + rad);
+        break;
+    case 9:
+        out->x = *(f32 *)(t + 0x30);
+        out->y = *(f32 *)(t + 8);
+        out->z = *(f32 *)(t + 8);
+        v = *(f64 *)(t + 0x50) + a->x;
+        v = (f32)(v + rad);
+        break;
+    case 10:
+        out->x = *(f32 *)(t + 8);
+        out->y = *(f32 *)(t + 8);
+        out->z = *(f32 *)(t + 0x30);
+        v = *(f64 *)(t + 0x58) + a->z;
+        v = (f32)(v + rad);
+        break;
+    case 11:
+        out->x = *(f32 *)(t + 0x30);
+        out->y = *(f32 *)(t + 8);
+        out->z = *(f32 *)(t + 8);
+        v = *(f64 *)(t + 0x20) + a->x;
+        v = (f32)(v + rad);
+        break;
+    case 12:
+        out->x = *(f32 *)(t + 0);
+        out->y = *(f32 *)(t + 8);
+        out->z = *(f32 *)(t + 8);
+        v = *(f64 *)(t + 0x20) - a->x;
+        v = (f32)(v + rad);
+        break;
+    case 13:
+        out->x = *(f32 *)(t + 8);
+        out->y = *(f32 *)(t + 8);
+        out->z = *(f32 *)(t + 0);
+        v = *(f64 *)(t + 0x60) - a->z;
+        v = (f32)(v + rad);
+        break;
+    case 14:
+    case 15:
+    case 16:
+    case 17:
+    default:
+        out->x = *(f32 *)(t + 8);
+        out->y = *(f32 *)(t + 0);
+        out->z = *(f32 *)(t + 8);
+        v = *(f32 *)(t + 0x68);
+        break;
+    }
+
+    *kind = ka;
+    *depth = res;
+    return v;
 }
 #pragma force_active reset
