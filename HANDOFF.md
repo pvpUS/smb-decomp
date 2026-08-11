@@ -382,7 +382,46 @@ the detector; run it before quoting any near-miss.**
 - Fix `rel_merge_tu`'s duplicate-tag bug; fold `pragmafix.py` into it.
 - `rel_census` should report ALL stop signs, not the first.
 
-### RUN-24 PREP — see §0.29-PREP below once written.
+### RUN-24 PREP — COMPLETE. The next session launches nine agents directly.
+
+- **`C:/tmp/smbm/RUN24_BRIEF.md`** — written (2,083 lines, 125 KB). Assembled by
+  **`C:/tmp/smbm/_brief24/assemble.py`**, which locates sections by heading text,
+  asserts all 14 appear exactly once and in order, asserts the **idiom blocks are
+  newest-first** (23 → 22 → 21 → 20 → 19 → 18), and **hard-fails on five claims
+  run 23 falsified** plus the two §11 rows it corrected plus any stale
+  stored-draft path. It also asserts the run-24 figures (44.62%, 84,888,
+  910/1,080/913) actually appear, so a carried header cannot slip through.
+  Rewritten: header/Goal/§0, §1, §2's tail, §5, **all of §6**, §7's new-idiom
+  block, §8, §9, §10, §11, §12. Carried: §2's body **including the magic-ADDRESS
+  rule**, §3, §4, and §7 from the run-22 block down.
+  - **★ §8 IS REWRITTEN EVERY RUN, NOT CARRIED**, and run 23 justified it a
+    second time: `23B0` was listed in §11 as "the cheapest draft" when it builds
+    **126 against 128**, and that fact was already in run 22's README. The new §8
+    leads with the *narrowed* TU-merge rule (it is a MAY, not a MUST — run 23
+    moved three carried figures into a 33-file TU and none changed).
+- **`C:/tmp/smbm/RUN23_RESULTS.md`** — all nine sections (96 KB), ordered by
+  instructions gained, with orchestrator cross-references marked as such.
+- **NEW: `C:/tmp/smbm/_harvest_run23/`** — 27 scripts with a README indexing them
+  by purpose, and §0 of the brief points at it. **Runs 21 and 22 were never
+  harvested and run 23's agents lost time hunting through `_scratch_<MOD>/run21/`
+  and `run22/`.** The README also records the reconciliation of the three
+  independent `rel_carve` patches and the installer defect they all share.
+- **All nine warm copies reset and re-gated GOLDEN from deleted objects**
+  (`warm_reset_run24.sh`, `fail=0`). **Verified independently of the script's own
+  gate**: each copy's built `.rel` hashed against `supermonkeyball.sha1` — **all
+  nine match** — `tools`/`src`/`asm` diffs **0** for all nine, `Makefile`
+  identical, **854 `src/*.c` in every copy and in main** (so the 33 deletions
+  propagated), all four new/changed tools present **9/9**, and every load-bearing
+  zero-size alias intact (`sel_ngc` 1, `mini_fight` 6, `mini_billiards` 1, plus
+  mini_golf's `golfPadFFFF`). **Re-verified a second time after an unplanned
+  machine shutdown: still 9/9.**
+  - The reset also **removed one stale warm tool** — mini_billiards'
+    hand-copied `rel_carve_regress_run23.py`, superseded by the
+    `CARVE_BASE_FILE` escape now in the real gate.
+- **Object metrics for the brief: 910 `.o` under `src/`+`asm/`, 1,080 tree-wide,
+  913 sources (854 `.c` + 59 `.s`).**
+- **Pushed** to `fork/wip/rel-drafts-and-dol-matches`.
+- **ONE AGENT PER MODULE, NO WORKERS** — eleventh consecutive run.
 
 ---
 
