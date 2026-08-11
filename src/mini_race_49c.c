@@ -773,10 +773,89 @@ static void lbl_00009BF8(struct Camera *cam, int arg, int a2)
     lbl_00009D3C(cam, arg);
 }
 
-static asm void lbl_00009D3C(struct Camera *cam, int arg)
+#pragma peephole on
+static void lbl_00009D3C(struct Camera *cam, int arg)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00009D3C.s"
+    struct DecodedStageLzPtr_child5 *path;
+    u8 *rec;
+    u8 *cfg = lbl_00013AA0;
+    u8 *base = lbl_10000028;
+    struct Ball *ball;
+    Vec sp1C;
+    Vec v;
+    f32 len;
+    f32 t;
+    s16 i;
+
+    path = decodedStageLzPtr->unk78;
+    if (debugFlags & 0xA)
+        return;
+    cam->sub28.fov = *(s16 *)(*(u8 **)lbl_10001B24 + 2);
+    if (*(u16 *)(((u8 **)lbl_10000054)[0] + 0x1E) == 0)
+    {
+        rec = (u8 *)ballInfo[0].unk144;
+    }
+    else
+    {
+        rec = ((u8 **)lbl_10000054)[0];
+        for (i = 0; i < 4; i++)
+        {
+            if (((u8 **)lbl_10000054)[i] == NULL2)
+                break;
+            if (*(u32 *)(((u8 **)lbl_10000054)[i] + 0x14) & 0x40)
+                break;
+            if (*(u32 *)(((u8 **)lbl_10000054)[i] + 0x14) & 0x20000)
+                continue;
+            if (*(u32 *)(((u8 **)lbl_10000054)[i] + 0x14) & 2)
+                continue;
+            rec = ((u8 **)lbl_10000054)[i];
+            break;
+        }
+    }
+    ball = &ballInfo[*(u16 *)rec];
+    v.x = ball->pos.x - cam->lookAt.x;
+    v.y = ball->pos.y - cam->lookAt.y;
+    v.z = ball->pos.z - cam->lookAt.z;
+    len = mathutil_vec_len(&v);
+    if (len > *(f32 *)(cfg + 0x9C))
+    {
+        t = len / *(f64 *)(cfg + 0xE0);
+        if (t > *(f64 *)(cfg + 0xE8))
+            t = *(f32 *)(cfg + 0xF0);
+        v.x = v.x * t;
+        v.y = v.y * t;
+        v.z = v.z * t;
+        cam->lookAt.x = cam->lookAt.x + v.x;
+        cam->lookAt.y = cam->lookAt.y + v.y;
+        cam->lookAt.z = cam->lookAt.z + v.z;
+    }
+    lbl_000031C0(path, &sp1C,
+                 lbl_00003238(*(f32 *)(rec + 0x1D4) +
+                              *(f64 *)(cfg + 0xC8) *
+                              (*(f64 *)(cfg + 0xD0) / *(f32 *)(base + 8))));
+    sp1C.y = sp1C.y + *(f32 *)(cfg + 0xD8);
+    v.x = sp1C.x - cam->eye.x;
+    v.y = sp1C.y - cam->eye.y;
+    v.z = sp1C.z - cam->eye.z;
+    len = mathutil_vec_len(&v);
+    if (len > *(f32 *)(cfg + 0x9C))
+    {
+        t = len / *(f64 *)(cfg + 0xE0);
+        if (t > *(f64 *)(cfg + 0xE8))
+            t = *(f32 *)(cfg + 0xF0);
+        v.x = v.x * t;
+        v.y = v.y * t;
+        v.z = v.z * t;
+        cam->eye.x = cam->eye.x + v.x;
+        cam->eye.y = cam->eye.y + v.y;
+        cam->eye.z = cam->eye.z + v.z;
+    }
+    v.x = cam->lookAt.x - cam->eye.x;
+    v.y = cam->lookAt.y - cam->eye.y;
+    v.z = cam->lookAt.z - cam->eye.z;
+    cam->rotY = mathutil_atan2(v.x, v.z) - 0x8000;
+    cam->rotX = mathutil_atan2(v.y, mathutil_sqrt(mathutil_sum_of_sq_2(v.x, v.z)));
+    cam->rotZ = 0;
 }
 
 #pragma peephole on

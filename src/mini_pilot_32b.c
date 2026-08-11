@@ -222,7 +222,7 @@ void lbl_000097C8(void);
 void lbl_000099A4(void);
 void lbl_00009C18(void);
 void lbl_00009F4C(void);
-void lbl_0000A098(void);
+void lbl_0000A098(struct Sprite *sprite);
 void lbl_0000A69C(void);
 void lbl_0000A754(void);
 s32 lbl_0000AE94(s32 x);
@@ -996,10 +996,201 @@ void lbl_00009FB0(s8 *status, struct Sprite *sprite, int d1, int d2, int d3)
     sprite->y = *(f64 *)(k + 0x278);
 }
 
-asm void lbl_0000A098(void)
+void lbl_0000A098(struct Sprite *sprite)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_0000A098.s"
+    u8 *d = (u8 *)lbl_0000D218;
+    u8 *k = (u8 *)lbl_0000C360;
+    NLsprarg params;
+    f32 tx;
+    f32 ty;
+    f32 x = sprite->x;
+    f32 y = sprite->y;
+    f32 zm;
+    f32 radius;
+    f32 bx;
+    f32 by;
+    f32 bz;
+    int arc;
+    s16 step;
+    int sprno;
+    int i;
+    s16 ang;
+    s16 prod;
+
+    switch (*(s8 *)lbl_10000087)
+    {
+    case 10:
+        radius = *(f32 *)(k + 0x280);
+        sprno = 0xB21;
+        zm = *(f32 *)(k + 0x284);
+        break;
+    case 12:
+        radius = *(f32 *)(k + 0x288);
+        sprno = 0xB20;
+        zm = *(f32 *)(k + 0x54);
+        break;
+    case 15:
+        radius = *(f32 *)(k + 0x28C);
+        sprno = 0xB1F;
+        zm = *(f32 *)(k + 0x54);
+        break;
+    }
+
+    params.zm_x = *(f32 *)(k + 0x54);
+    params.zm_y = *(f32 *)(k + 0x54);
+    params.u0 = params.v0 = *(f32 *)(k + 0x98);
+    params.u1 = params.v1 = *(f32 *)(k + 0x54);
+    params.ang = 0;
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = 5;
+    params.trnsl = *(f32 *)(k + 0x54);
+    params.base_color = 0x00FFFFFF;
+    params.offset_color = 0;
+    params.attr = 0xA;
+    params.sprno = 0xB22;
+    params.x = x;
+    params.y = y;
+    params.z = *(f32 *)(k + 0xF0);
+    nlSprPut(&params);
+
+    params.sprno = 0xB27;
+    params.x = x;
+    params.y = y;
+    params.z = *(f32 *)(k + 0x290);
+    nlSprPut(&params);
+
+    for (i = 0; i < *(s8 *)lbl_10000087; i++)
+    {
+        step = 0x10000 / *(s8 *)lbl_10000087;
+        ang = i * step;
+        params.attr = 0xE;
+        params.zm_x = *(f32 *)(k + 0x54);
+        params.zm_y = *(f32 *)(k + 0x54);
+        params.ang = ang + step / 2;
+        params.sprno = 0xB28;
+        params.x = x;
+        params.y = y;
+        params.z = *(f32 *)(k + 0x294);
+        nlSprPut(&params);
+        if (((s8 *)lbl_10000078)[i] != -1)
+        {
+            params.attr = 0xE;
+            params.ang = ang;
+            params.base_color = 0;
+            params.offset_color = 0x00FF9230;
+            params.trnsl = *(f32 *)(k + 0x298);
+            params.sprno = sprno;
+            params.x = x;
+            params.y = y;
+            params.z = *(f32 *)(k + 8);
+            nlSprPut(&params);
+            params.trnsl = *(f32 *)(k + 0x54);
+            params.base_color = 0x00FFFFFF;
+            params.offset_color = 0;
+        }
+    }
+
+    arc = 0x10000 / *(s8 *)lbl_10000087;
+    params.attr = 0xE;
+    params.zm_x = *(f32 *)(k + 0x54);
+    params.zm_y = *(f32 *)(k + 0x54);
+    params.ang = (u16)(*(u16 *)lbl_1000008A - *(u16 *)lbl_1000008A % arc);
+    if (*(s16 *)lbl_10000088 <= 2 || ((globalAnimTimer >> 2) & 1))
+    {
+        params.trnsl = *(f32 *)(k + 0x29C);
+        params.base_color = 0x00FFE6E6;
+        params.offset_color = 0;
+        params.sprno = sprno;
+        params.x = x;
+        params.y = y;
+        params.z = *(f32 *)(k + 0x9C);
+        nlSprPut(&params);
+        params.trnsl = *(f32 *)(k + 0x54);
+        params.base_color = 0x00FFFFFF;
+    }
+
+    params.attr = 0xA;
+    params.zm_x = *(f32 *)(k + 0x18);
+    params.zm_y = *(f32 *)(k + 0x1C);
+    params.sprno = ((u32 *)neutralFaceTable)[playerCharacterSelection[modeCtrl.currPlayer]];
+    params.x = x;
+    params.y = y;
+    params.z = *(f32 *)(k + 0x254);
+    nlSprPut(&params);
+
+    for (i = 0; i < *(s8 *)lbl_10000087; i++)
+    {
+        step = 0x10000 / *(s8 *)lbl_10000087;
+        prod = i * step;
+        if (((s8 *)lbl_10000078)[i] != -1)
+        {
+            params.base_color = 0x00FFFFFF;
+            params.offset_color = 0;
+            params.attr = 0xA;
+            params.zm_x = zm;
+            params.zm_y = zm;
+            params.ang = 0;
+            bx = radius * -mathutil_sin(prod);
+            by = radius * -mathutil_cos((s16)prod);
+            params.sprno = ((s16 *)(d + 0xF4))[((s8 *)lbl_10000078)[i]];
+            params.x = x + bx;
+            params.y = y + by;
+            params.z = *(f32 *)(k + 0x290);
+            nlSprPut(&params);
+        }
+    }
+
+    if (*(s16 *)lbl_10000088 != 0)
+        return;
+    if (sprite->userVar <= 0xF)
+        return;
+
+    tx = *(f32 *)(k + 0x2A0);
+    ty = *(f32 *)(k + 0x2A4);
+    params.zm_x = *(f32 *)(k + 0x54);
+    params.zm_y = *(f32 *)(k + 0x54);
+    params.u0 = params.v0 = *(f32 *)(k + 0x98);
+    params.u1 = params.v1 = *(f32 *)(k + 0x54);
+    params.ang = 0;
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = 5;
+    params.trnsl = *(f32 *)(k + 0x54);
+    params.base_color = 0x00FFFFFF;
+    params.offset_color = 0;
+    params.zm_x = *(f32 *)(k + 0x2A8);
+    params.zm_y = *(f32 *)(k + 0x2AC);
+    params.sprno = 0xB31;
+    params.x = *(f32 *)(k + 0x2A0) - *(f64 *)(k + 0x2B0);
+    params.y = *(f32 *)(k + 0x2A4) - *(f64 *)(k + 0x88);
+    params.z = *(f32 *)(k + 0xF0);
+    nlSprPut(&params);
+
+    reset_text_draw_settings();
+    set_text_font(0xB1);
+    func_80071B50(0x200000);
+    lbl_0000AD6C(0xFFFFFF, 0, (char *)(d + 0x164), tx, ty);
+    lbl_0000AD6C(0xFFFFFF, 0, (char *)(d + 0x16C), (f32)(*(f64 *)(k + 0x2B8) + (*(f64 *)(k + 0x2C0) + tx)), ty);
+
+    bz = *(f64 *)(k + 0x2B8) + *(f32 *)(k + 0x2A0) - *(f64 *)(k + 0x88);
+    params.u0 = *(f32 *)(k + 0x98);
+    params.v0 = *(f32 *)(k + 0x98);
+    params.u1 = *(f32 *)(k + 0x2C8);
+    params.v1 = *(f32 *)(k + 0x18);
+    params.zm_x = *(f32 *)(k + 0x2C8);
+    params.zm_y = *(f32 *)(k + 0x18);
+    params.base_color = 0;
+    params.sprno = 2;
+    params.x = *(f64 *)(k + 0x130) + bz;
+    params.y = *(f64 *)(k + 0x130) + *(f32 *)(k + 0x2A4);
+    params.z = *(f32 *)(k + 8);
+    nlSprPut(&params);
+
+    params.base_color = 0x00FFFFFF;
+    params.sprno = 2;
+    params.x = bz;
+    params.y = *(f32 *)(k + 0x2A4);
+    params.z = *(f32 *)(k + 0x9C);
+    nlSprPut(&params);
 }
 
 #pragma peephole on

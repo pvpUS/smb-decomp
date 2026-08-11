@@ -172,7 +172,7 @@ void lbl_0000A840(void);
 void lbl_0000A870();
 void lbl_0000A950(void);
 void lbl_0000B1C0(void);
-void lbl_0000B920(void);
+void lbl_0000B920(struct Sprite *sprite);
 void lbl_0000BEE8(struct Sprite *);
 void lbl_0000C970(void);
 void lbl_0000D82C(struct Sprite *sprite);
@@ -498,10 +498,172 @@ asm void lbl_0000B1C0(void)
 #include "../asm/nonmatchings/sel_ngc_rel/lbl_0000B1C0.s"
 }
 #pragma peephole on
-asm void lbl_0000B920(void)
+void lbl_0000B920(struct Sprite *sprite)
 {
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_0000B920.s"
+    u8 *tbl = lbl_00012730;
+    u8 *k = lbl_00011CB0;
+    char buf[512];
+    f32 ty;
+    f32 tx;
+    f32 by;
+    f32 bx;
+    int lang = 1;
+    int i;
+    int n = 8;
+    int v;
+    int pulse;
+    int on;
+
+    lbl_0000A870(sprite);
+
+    if (((char **)*(u8 **)(tbl + 0x3CE8))[sprite->userVar] == NULL)
+        return;
+
+    reset_text_draw_settings();
+    set_text_font(sprite->fontId);
+
+    for (i = 0; i < 2; i++)
+    {
+        strcpy(buf, (((char ****)(tbl + 0x3CE4))[lang])[sprite->userVar][i]);
+
+        switch (i)
+        {
+        case 0:
+            set_text_mul_color(0xFFFF00);
+            set_text_scale(*(f32 *)(k + 0x90), *(f32 *)(k + 0xC));
+            sprite->scaleX = *(f32 *)(k + 0x90);
+            sprite->scaleY = *(f32 *)(k + 0xC);
+            break;
+        case 1:
+            set_text_mul_color(0xFF8000);
+            set_text_scale(*(f32 *)(k + 0x84), *(f32 *)(k + 0x40));
+            sprite->scaleX = *(f32 *)(k + 0x84);
+            sprite->scaleY = *(f32 *)(k + 0x40);
+            break;
+        }
+
+        switch (i)
+        {
+        case 0:
+            ty = sprite->y - *(f32 *)(k + 0x94);
+            set_text_pos(sprite->x - sprite->scaleX
+                             * (*(f64 *)(k + 0x98) * u_get_jpn_text_width(sprite->fontId, buf)),
+                         ty);
+            break;
+        case 1:
+            ty = *(f32 *)(k + 0xA0) + sprite->y;
+            set_text_pos(sprite->x - sprite->scaleX
+                             * (*(f64 *)(k + 0x98) * u_get_jpn_text_width(sprite->fontId, buf)),
+                         ty);
+            break;
+        }
+
+        sprite_puts(buf);
+        set_text_mul_color(0x202000);
+        set_text_pos(sprite->x - sprite->scaleX
+                         * (*(f64 *)(k + 0x98) * u_get_jpn_text_width(sprite->fontId, buf)),
+                     *(f32 *)(k + 0x70) + ty);
+        sprite_puts(buf);
+    }
+
+    sprite->scaleX = *(f32 *)(k + 0xC);
+    sprite->scaleY = *(f32 *)(k + 0xC);
+
+    if (sprite->userVar == 3)
+        return;
+
+    switch (sprite->userVar)
+    {
+    case 1:
+        n = 0x17;
+        break;
+    case 2:
+        n = 0x3F;
+        break;
+    case 5:
+    case 6:
+        n = 0x44;
+        break;
+    }
+
+    tx = sprite->x + n;
+    ty = sprite->y - *(f32 *)(k + 0x94);
+
+    switch (sprite->userVar)
+    {
+    case 2:
+    default:
+        v = *(s32 *)lbl_802F1FB0;
+        break;
+    case 4:
+    case 5:
+    case 6:
+        v = *(s8 *)((u8 *)&lbl_801EED98 + 4);
+        break;
+    }
+
+    set_text_mul_color(0xFFFF);
+    set_text_scale(*(f32 *)(k + 0xC), *(f32 *)(k + 0xC));
+    set_text_pos(tx, ty);
+    sprite_printf((char *)(tbl + 0x3CEC), v);
+    set_text_mul_color(0x2020);
+    set_text_pos(*(f32 *)(k + 0x70) + tx, *(f32 *)(k + 0x70) + ty);
+    sprite_printf((char *)(tbl + 0x3CEC), v);
+
+    switch (sprite->userVar)
+    {
+    case 1:
+    case 4:
+        bx = (*(f32 *)(k + 0xA4) + sprite->x) - *(f32 *)(k + 0xA8);
+        by = sprite->y - *(f32 *)(k + 0xAC);
+        set_text_scale(*(f32 *)(k + 0x40), *(f32 *)(k + 0x40));
+        set_text_pos(bx, by);
+        set_text_mul_color(0xFFFFFF);
+        sprite_puts((char *)(tbl + 0x3CF0));
+        set_text_pos(*(f32 *)(k + 0x70) + bx, *(f32 *)(k + 0x70) + by);
+        set_text_mul_color(0);
+        sprite_puts((char *)(tbl + 0x3D10));
+        break;
+    }
+
+    switch (sprite->userVar)
+    {
+    case 2:
+    case 5:
+    case 6:
+        return;
+    }
+
+    for (i = 0; i < 2; i++)
+    {
+        on = (sprite->userVar == 1 || sprite->userVar == 4);
+        if (on)
+            pulse = *(f64 *)(k + 0xB0)
+                  * (*(f64 *)(k + 0x30) - __fabs(mathutil_sin(globalAnimTimer << 9)));
+        else
+            pulse = 0;
+
+        if (i == 0 && v == 1)
+            continue;
+        if (i == 1 && v == 5)
+            continue;
+        if (!on)
+            continue;
+
+        set_text_mul_color(0xFFFF);
+        set_text_add_color(pulse | ((pulse << 16) | (pulse << 8)));
+        bx = sprite->x + n + (i == 0 ? -32 : 26);
+        by = sprite->y - *(f32 *)(k + 0x94);
+        set_text_scale(((f32 *)k)[3], *(f32 *)(k + 0xC));
+        set_text_pos(bx, by);
+        sprite_printf((char *)(tbl + 0x3D50),
+                      i == 0 ? (char *)(tbl + 0x3D30) : (char *)(tbl + 0x3D40));
+        set_text_add_color(0);
+        set_text_mul_color(0x202000);
+        set_text_pos(*(f32 *)(k + 0x70) + bx, *(f32 *)(k + 0x70) + by);
+        sprite_printf((char *)(tbl + 0x3D50),
+                      i == 0 ? (char *)(tbl + 0x3D30) : (char *)(tbl + 0x3D40));
+    }
 }
 #pragma peephole on
 void lbl_0000BEE8(struct Sprite *sprite)

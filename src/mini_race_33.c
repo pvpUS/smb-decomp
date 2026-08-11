@@ -268,7 +268,7 @@ void lbl_00005CEC(void);
 void lbl_00005DDC(void);
 void lbl_00005FC4(void);
 void lbl_0000612C(void);
-void lbl_000061D0(void);
+void lbl_000061D0(struct Ball *ball);
 void lbl_00006248(void);
 void lbl_000062F8(void);
 void lbl_000065A0(void);
@@ -375,10 +375,40 @@ void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
 #pragma force_active on
-asm void lbl_000061D0(void)
+struct RaceSub
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000061D0.s"
+    u8 filler0[0x10];
+    f32 unk10;
+    u32 unk14;
+    u8 filler18[0x262 - 0x18];
+    u8 unk262;
+    u8 filler263[0x26A - 0x263];
+    s16 unk26A;
+};
+void lbl_000061D0(struct Ball *ball)
+{
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+    int state = st->unk262;
+
+    if (state != 2)
+    {
+        if (state < 2)
+        {
+            st->unk10 = st->unk10;
+        }
+        else if (state < 4)
+        {
+            ball->currRadius = ball->targetRadius;
+            ball->modelScale = *(f32 *)lbl_00013760;
+            if (ball->ape != NULL)
+                ball->ape->modelScale = ball->modelScale;
+            st->unk10 = ball->modelScale * (ball->modelScale * ball->modelScale);
+        }
+    }
+    st->unk262 = 0;
+    st->unk14 &= ~4;
+    st->unk26A = 0;
+    st->unk262 = 0;
 }
 
 #pragma force_active reset
