@@ -72,6 +72,12 @@ closes out.** Nothing was lost this time; that was luck, not process.
 **Run 23 observed this**: all five tool landings happened after the ninth agent
 closed, and eight of nine agents reported `diff -rq tools` empty at start *and*
 end. The one exception was self-inflicted and declared (see §0.29).
+**Run 24 observed it cleanly**: all three tool landings happened after the ninth
+agent closed, and **all nine** reported `diff -rq tools` empty at start and end.
+Two modules hit a genuinely blocking tool bug mid-run and **fixed the INPUT
+rather than the tool**, declared it, and handed over the workaround — which is
+better than the run-23 pattern of patching the warm tool, and is what got the
+defect fixed properly at the source (§0.30).
 
 ### SNAPSHOT THE OWNER ONCE. RESTORE FROM THE SNAPSHOT, NEVER FROM DISK.
 
@@ -97,7 +103,160 @@ it. `_scratch_<MOD>/run<N>/pristine/` is the convention.**
 
 ---
 
-## 0.29 — RUN 23 DONE (2026-08-10): +2,811 insn, 43.14% -> 44.62%. START HERE.
+## 0.30 — RUN 24 DONE (2026-08-11): +1,537 insn, 44.62% -> 45.43%. START HERE.
+
+Nine parallel agents, one per module, **no workers — TWELFTH consecutive run
+under the standing rule.** Six of nine gained. **The run's structural result is
+that a rule the project had been following since run 21 was WRONG: a `.data`
+hole does not have to be a multiple of 8 — only its START must be 8-aligned.**
+
+| module | still-asm | insn | % | gained |
+|---|---|---|---|---|
+| **mini_pilot** | 9 fns | 10163/12137 | **83.74%** | **+576 / +1** |
+| **mini_race** | 34 fns | 14048/19817 | **70.89%** | **+268 / +2** |
+| **test_mode** | 22 fns | 11238/16232 | **69.23%** | **+482 / +1** |
+| **mini_bowling** | 16 fns | 10109/15313 | **66.02%** | **+74 / +2** |
+| **option** | 12 fns | 5405/12375 | **43.68%** | **+33 / +1** |
+| sel_ngc | 11 fns | 7219/18084 | 39.92% | 0 |
+| **mini_fight** | 71 fns | 9025/28585 | **31.57%** | **+104 / +1** |
+| mini_billiards | 21 fns | 8549/28793 | 29.69% | 0 |
+| mini_golf | 18 fns | 10670/38919 | 27.42% | 0 |
+| **TOTAL** | **214 fns** | **86425/190254** | **45.43%** | **+1537 / +8** |
+
+**Verified in the main tree, not taken on report**: nine trees diffed before
+merging (**8 modified `.c`, 15 modified `.s`, 4 NEW `.s`, 1 DELETED `.s`, the
+Makefile, and nothing else**); every module re-gated GOLDEN at the exact sha1
+its agent reported; a clean build from **0 objects** gives **913** objects under
+`src/`+`asm/` and **1,083** tree-wide; `sha1sum -c supermonkeyball.sha1` is
+**12/12 OK including the DOL**; all nine pass `rel_structcheck` **CLEAN**; and
+the census reproduces all nine still-asm figures exactly. Reconciles both ways:
+190,254 − 103,829 = 86,425, and 222 − 8 = 214.
+
+### ★★★ THE `.data` ALIGNMENT RULE WAS WRONG — and it was in the brief, the
+### handoff and the project memory
+
+Every brief since run 21 said **"`.data` holes must be 8-ALIGNED"**. **Only the
+START must be**, because the constraint belongs to the mwcc object. test_mode
+carved a **36-byte** hole at `0x12C10` and gated GOLDEN, with the tail segment
+declaring `.balign 4` and the section sizes summing to the pre-carve total
+exactly. mini_bowling proved the same from the other end — its hole **ends** at
+`0x15424` (4 mod 8) and gates GOLDEN.
+
+**This removes the forward-padding requirement from most future `.data` carves.**
+
+### ★★★ 646 INSTRUCTIONS AT ONE DIFF WERE ON THE *RETIRED* LIST
+
+mini_billiards' `lbl_00006DC0`: a run-7 whole-file draft, extracted and
+installed, builds **646 == 646, RAW 1, ALIGNED 1 in 1, span 31-32.** Retired in
+run 9 and named in no target list since. mini_bowling's `lbl_000042A4` (91) had
+sat in `nearmiss/` since ~run 8 and **had never been built by anyone**; it is
+**3 in 2 at the exact count**.
+
+> **A retirement without a BUILT INSTRUCTION COUNT next to it is not a
+> retirement.** Both of those cost one install and one build to find.
+
+### ★★★ THE `rel_carve` REGENERATION ⚠ IS CLOSED FOR TWO MODULES
+
+**mini_golf** (isolated copy): all nine `.s` byte-identical, `Makefile` differs
+by one line, **both orders build GOLDEN**. **mini_bowling** (with a build):
+re-carving with only its run-23 holes gates GOLDEN and reproduces `d1..d6`
+byte-identically. **Still open for mini_fight**, which did not regenerate.
+
+### ★★ TWO MODULES FOUND THE SAME TOOL BUG AND NEITHER PATCHED `tools/`
+
+`rel_blob_reassemble` emitted zero-size hole aliases without their `# 0xADDR`
+comment, so `rel_carve --data-hole L:0` — the documented way to re-declare a
+landed hole — refused outright. option and mini_bowling diagnosed it
+independently, **fixed the input rather than the tool, and handed over the
+workaround.** That is the freeze protocol working, and it is what got the defect
+fixed properly. **Landed in `tools/` after the ninth agent closed** (commit
+`8026f32`), with the address recovered rather than guessed: a data label's NAME
+is its address, verified 938/938 across the tree, and A/B tested against
+mini_bowling's own blocking label.
+
+### ★★ THE COMPILER'S PRAGMA TABLE, AND FOUR LIVE PRAGMAS NOBODY HAD USED
+
+sel_ngc extracted the full mwcc 1.1 pragma name table by regex over
+`mwcceppc.exe` (`strings` fails on it). `opt_unroll_instr_count N` (sharp
+threshold: ≤90 → x4, ≥92 → x8), `opt_unroll_count N`, `optimization_level N`
+and `optimize_for_size on` are all **LIVE**. This falsifies "`opt_unroll_loops
+off` is the only lever on the unroll factor".
+
+### ⚠ §11 WAS WRONG TWICE AGAIN — an eighth consecutive run
+
+- **mini_race's second carve was priced at cost 0, gain 621. The real gain was
+  59, and the 621 was never available** — one magic per TU, and all seven
+  still-asm users reference the same address, so a carve serves exactly one.
+  The way to get the rest is a **TU merge**, priced at 680 and uncosted.
+- **mini_bowling's `3A10`: the named untried shape builds 201 — four LONG**, and
+  the mechanism is aliasing.
+
+Four more inherited figures died on **length** (`230E4` 653 vs 628 and 648 vs
+628; `15520` 43 short; mini_pilot's `40EC` recorded 217 but building 216).
+
+### TOOLS LANDED (all after the ninth agent closed — commit `8026f32`)
+
+- **`rel_blob_reassemble.py`** — stamps `# 0xADDR` on zero-size aliases;
+  populates the throwaway tree's `tools/`.
+- **`rel_objsect.py` (NEW)** — generic promotion of mini_golf's `probe51.py`,
+  read-only by design, with `--record`/`--compare`. The detector for a draft
+  whose data layout is wrong.
+- **`rel_ablind.py`** — `ABLIND_POS=1` prints the positional word count §12
+  requires. Three modules had written it by hand.
+- Gates: `rel_carve_selftest` 62 files / 2,166 checks / 0 mismatches;
+  `rel_carve_regress` **19/19 byte-identical**.
+
+### STILL OPEN (orchestrator)
+
+- **Verify the landed `rel_carve.py` reproduces mini_fight's own carve output**
+  before it is ever regenerated. (mini_golf and mini_bowling are done.)
+- **Let `rel_carve` ADD holes to an already-carved worktree directly**, instead
+  of the `rel_blob_reassemble` + bare-`--hole` dance.
+- **Three modules independently wrote a "find this instruction shape in matched
+  C" scanner this run** (`scanmr2.py`, `scanpro24.py`, `scanpro.py`). A fourth
+  is the signal to generalise one into `tools/`.
+- Fix `rel_merge_tu`'s duplicate-tag bug; fold `pragmafix.py` into it.
+- `rel_census` should report ALL stop signs, not the first.
+- `rel_carve`'s "must emit EXACTLY N bytes" message describes only the alignment
+  extension, not the hole — it said "EXACTLY 0 bytes" for a file that must emit
+  32.
+
+### RUN-25 PREP — COMPLETE. The next session launches nine agents directly.
+
+- **`C:/tmp/smbm/RUN25_BRIEF.md`** — written (2,084 lines, 127 KB) by
+  **`C:/tmp/smbm/_brief25/assemble.py`**, which locates sections by heading
+  text, asserts all 14 appear exactly once and in order, asserts the idiom
+  blocks are newest-first (24 → 23 → 22 → 21 → 20 → 19 → 18), and **hard-fails
+  on nine claims run 24 falsified**. The falsified-claim guard is
+  **paragraph-scoped**, not window-scoped: a ±600-character window let an
+  injected copy of a dead claim through because §11's own preamble contains the
+  word "wrong". **Both negative tests now fail correctly and the real assembly
+  passes** — the guard is proven live in both directions.
+  - **★ §8 IS REWRITTEN EVERY RUN, NOT CARRIED**, and run 24 justified it a
+    third time: a function *retired in run 9* is at one diff.
+- **`C:/tmp/smbm/RUN24_RESULTS.md`** — all nine sections (113 KB), ordered by
+  instructions gained, orchestrator cross-references marked as such.
+- **`C:/tmp/smbm/_harvest_run24/`** — 21 scripts with a README indexing them by
+  purpose, including the three shape-scanners, `pragsweep.py` (which closed a
+  draft stuck since run 14) and the corrected `fixblob24.py`.
+- **All nine warm copies reset and re-gated GOLDEN from deleted objects**
+  (`warm_reset_run25.sh`, `fail=0`). **Verified independently of the script's own
+  gate**: each copy's built `.rel` hashed against `supermonkeyball.sha1` — **all
+  nine match** — `tools`/`src`/`asm` diffs **0** for all nine, `Makefile`
+  identical, **854 `src/*.c` and 62 `asm/*.s` in every copy**, the three new/
+  changed tools present **9/9**, `asm/option_d3.s` **absent** in all nine, and
+  every load-bearing zero-size alias plus both alignment pads (`golfPadFFFF`,
+  `bowlPad153F0`) intact.
+  - One caution for whoever writes the next check: **`lbl_00021080` lives in
+    `mini_billiards_d1.s`, not `_d4.s`.** Run 23's note says the alias was added
+    when `_d4` was created, which is true and misleading — my first verification
+    pass reported it MISSING because it looked in the wrong file. The tree was
+    fine.
+- **ONE AGENT PER MODULE, NO WORKERS** — twelfth consecutive run.
+
+---
+
+## 0.29 — RUN 23 DONE (2026-08-10): +2,811 insn, 43.14% -> 44.62%. Superseded by §0.30.
 
 Nine parallel agents, one per module, **no workers — ELEVENTH consecutive run
 under the standing rule.** Seven of nine gained — the most in any run. **The
