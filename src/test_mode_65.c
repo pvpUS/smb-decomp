@@ -277,10 +277,42 @@ void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
-#pragma force_active on
-asm void lbl_00009560(void)
+/*
+ * struct TestCamWork -- 0x9C stride, from the matched src/test_mode_66.c
+ * (lbl_000095F8), which walks the same lbl_10000E00 array.
+ */
+struct TestCamWork
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00009560.s"
+    /*0x00*/ Vec pos;
+    /*0x0C*/ Vec target;
+    /*0x18*/ Vec up;
+    /*0x24*/ float unk24;
+    /*0x28*/ float unk28;
+    /*0x2C*/ Mtx mtx;
+    /*0x5C*/ float unk5C;
+    /*0x60*/ float unk60;
+    /*0x64*/ void *unk64;
+    /*0x68*/ void *unk68;
+    /*0x6C*/ void *unk6C;
+    /*0x70*/ GXTexObj tex;
+    /*0x90*/ s32 idx;
+    /*0x94*/ void *bufs[2];
+};
+
+#pragma force_active on
+void lbl_00009560(void)
+{
+    struct TestCamWork *e;
+    int i;
+
+    lbl_0000A7E4();
+    lbl_0000ADF0();
+    e = (struct TestCamWork *)lbl_10000E00;
+    for (i = 2; i > 0; i--)
+    {
+        if (i == 2 && (controllerInfo[0].held.button & PAD_BUTTON_DOWN))
+            e->pos = currentCamera->lookAt;
+        e++;
+    }
 }
 #pragma force_active reset

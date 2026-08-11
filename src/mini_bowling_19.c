@@ -174,7 +174,7 @@ void lbl_00007740(void);
 void lbl_00007778(void);
 void lbl_00007878(void);
 void lbl_00007964(void);
-void lbl_000079E8(void);
+void lbl_000079E8(int, struct Ball *);
 void lbl_00007A6C(void);
 void lbl_00007C54(void);
 void lbl_00007E74(void);
@@ -217,7 +217,7 @@ void lbl_0000B0AC(void);
 void lbl_0000B1BC(void);
 void lbl_0000B344(void);
 void lbl_0000B460(void);
-void lbl_0000B654(void);
+void lbl_0000B654(int);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
 void lbl_0000BDE0(void);
@@ -246,9 +246,34 @@ void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
 
 #pragma force_active on
-asm void lbl_00004BD8(void)
+void lbl_00004BD8(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00004BD8.s"
+    struct Ball *ball;
+    u8 *w = lbl_10000000;
+
+    if ((controllerInfo[playerControllerIDs[(ball = currentBall)->playerId]].pressed.button & PAD_BUTTON_A) && *(s32 *)w < 0xf0) {
+        if ((s32)lbl_802F1BF0 == 0) {
+            lbl_000079E8(0, ball);
+            lbl_0000B654(0);
+            lbl_000029A8();
+        } else {
+            lbl_000079E8(0, ball);
+            lbl_0000B654(0);
+            lbl_00004410();
+        }
+    } else if (ball->pos.y < *(f32 *)lbl_00010F94 || *(s32 *)w < 0) {
+        *(s8 *)(w + 0x13f) += 1;
+        if (*(s8 *)(w + 0x13f) < *(s8 *)(w + 0x140)) {
+            lbl_00004A80();
+        } else if ((s32)lbl_802F1BF0 == 0) {
+            lbl_000079E8(0, ball);
+            lbl_0000B654(0);
+            lbl_000029A8();
+        } else {
+            lbl_000079E8(0, ball);
+            lbl_0000B654(0);
+            lbl_00004410();
+        }
+    }
 }
 #pragma force_active reset

@@ -293,10 +293,155 @@ struct TestFontGroup
 };
 
 #pragma force_active on
-asm void lbl_000031B8(void)
+struct TestBmEntry
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_000031B8.s"
+    /*0x0*/ s32 kind;
+    /*0x4*/ char *fmt;
+    /*0x8*/ void *val;
+};
+
+struct TestBmTile
+{
+    /*0x0*/ s32 x;
+    /*0x4*/ s32 y;
+};
+
+void lbl_000031B8(void)
+{
+    f32 *k = (f32 *)lbl_0000FE78;
+    u8 *p = lbl_10000000;
+    u8 *d = lbl_000102B0;
+    struct BitmapGroup *g = &bitmapGroups[*(int *)(p + 0x7C)];
+    u8 *q;
+    struct TPLTextureHeader *th = &g->tpl->texHeaders[*(int *)(p + 0x80)];
+    struct TestBmEntry *e;
+    int i;
+    int found = 0;
+    int id;
+    int *t;
+    int w;
+    int h;
+    f32 u0;
+    f32 v0;
+    f32 u1;
+    f32 v1;
+    f32 tr;
+    NLsprarg params;
+
+    q = p + 0x80;
+    if (!(controllerInfo[0].held.button & PAD_BUTTON_B))
+    {
+        window_set_cursor_pos(3, 5);
+        for (i = 0, e = (struct TestBmEntry *)(d + 0x2894); e->kind != 0; i++, e++)
+        {
+            if (i == *(int *)(p + 0x84))
+            {
+                window_move_cursor(-2, 0);
+                window_set_text_color(1);
+                u_debug_print((char *)(d + 0x2988));
+                window_set_text_color(0);
+            }
+            switch (e->kind)
+            {
+            case 1:
+                window_printf_2(e->fmt, g->name);
+                break;
+            case 2:
+                window_printf_2(e->fmt, *(int *)e->val,
+                                bitmapNames[*(int *)(p + 0x7C)][*(int *)e->val],
+                                th->width, th->height);
+                break;
+            case 4:
+                window_printf_2(e->fmt, *(u8 *)e->val);
+                break;
+            case 5:
+                window_printf_2(e->fmt, *(s16 *)e->val);
+                break;
+            case 6:
+            case 7:
+            case 8:
+                window_printf_2(e->fmt, *(f32 *)e->val);
+                break;
+            }
+        }
+    }
+    if (*(int *)(p + 0xB0) != 0)
+    {
+        id = *(int *)q | (*(int *)(p + 0x7C) << 8);
+        for (t = (int *)(d + 0x2984); *(int *)t != -1; t++)
+        {
+            if (*t == id)
+            {
+                found = 1;
+                break;
+            }
+        }
+    }
+    if (found)
+    {
+        params.z = k[27];
+        params.zm_x = k[46];
+        params.zm_y = k[46];
+        params.u0 = k[24];
+        params.v0 = k[24];
+        params.u1 = k[46];
+        params.v1 = k[46];
+        params.ang = 0;
+        tr = *(f32 *)(p + 0x90);
+        params.trnsl = tr;
+        params.listType = -1;
+        params.attr = 0x2100A;
+        params.base_color = ((int)(k[56] * tr) << 24) |
+                            (p[0x88] * 0x10000) | (p[0x89] * 0x100) | p[0x8A];
+        params.offset_color = (p[0x8B] << 16) | (p[0x8C] << 8) | p[0x8D];
+        for (i = 0; i < 8; i++)
+        {
+            params.sprno = (*(int *)(p + 0x7C) << 8) | (*(int *)q + i);
+            params.x = ((struct TestBmTile *)spriteTileOffsets)[i].x + 0x140;
+            params.y = ((struct TestBmTile *)spriteTileOffsets)[i].y + 0xF0;
+            nlSprPut(&params);
+        }
+    }
+    else if (th->width != 0 && th->height != 0)
+    {
+        params.sprno = *(int *)q | (*(int *)(p + 0x7C) << 8);
+        params.x = k[57];
+        params.y = k[58];
+        params.z = k[27];
+        u1 = *(f32 *)(p + 0xA8);
+        u0 = *(f32 *)(p + 0xA0);
+        params.zm_x = *(f32 *)(p + 0x94) * (u1 - u0);
+        v1 = *(f32 *)(p + 0xAC);
+        v0 = *(f32 *)(p + 0xA4);
+        params.zm_y = *(f32 *)(p + 0x98) * (v1 - v0);
+        params.u0 = u0;
+        params.v0 = v0;
+        params.u1 = u1;
+        params.v1 = v1;
+        params.ang = *(s16 *)(p + 0x8E);
+        tr = *(f32 *)(p + 0x90);
+        params.trnsl = tr;
+        params.listType = -1;
+        params.attr = 0x2100A;
+        params.base_color = ((int)(k[56] * tr) << 24) |
+                            (p[0x88] * 0x10000) | (p[0x89] * 0x100) | p[0x8A];
+        params.offset_color = (p[0x8B] << 16) | (p[0x8C] << 8) | p[0x8D];
+        nlSprPut(&params);
+    }
+    if (!(controllerInfo[0].held.button & PAD_BUTTON_B))
+    {
+        w = th->width;
+        h = th->height;
+        reset_text_draw_settings();
+        set_text_pos(params.x - w / 2 - k[59], params.y - h / 2 - *(f32 *)((u8 *)k + 0xEC));
+        sprite_puts((char *)(d + 0x298C));
+        set_text_pos(params.x + w / 2, params.y - h / 2 - k[59]);
+        sprite_puts((char *)(d + 0x298C));
+        set_text_pos(params.x - w / 2 - k[59], params.y + h / 2);
+        sprite_puts((char *)(d + 0x298C));
+        set_text_pos(params.x + w / 2, params.y + h / 2);
+        sprite_puts((char *)(d + 0x298C));
+    }
 }
 #pragma peephole on
 void lbl_00003774(void)

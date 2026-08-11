@@ -43,6 +43,37 @@
 #include "nl2ngc.h"
 #include "string.h"
 
+/* Local struct shapes for lbl_0001B880.  INVENTED -- no symbol file confirms
+   them.  Sizes are pinned by the asm (0x68 ball stride, 6-byte player stride,
+   0x18 aim-table stride); the field types are pinned by the loads.  */
+struct BilliardsBall
+{
+    s8 state;          /* +0x00 */
+    u8 filler1[0xF];
+    f32 x;             /* +0x10 */
+    f32 y;             /* +0x14 */
+    f32 z;             /* +0x18 */
+    u8 filler1C[0x4C];
+};                     /* 0x68 */
+
+struct BilliardsPlayerC
+{
+    s8 unk0;
+    s8 unk1;
+    s8 unk2;
+    u8 filler3[3];
+};                     /* 6 */
+
+struct BilliardsAim
+{
+    f32 x;             /* +0x00 */
+    f32 unk4;
+    f32 z;             /* +0x08 */
+    f32 t;             /* +0x0C */
+    f32 dx;            /* +0x10 */
+    f32 dz;            /* +0x14 */
+};                     /* 0x18 */
+
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_billiards.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0001C2B8[];
@@ -125,7 +156,7 @@ extern u8 lbl_10000061[];
 extern u8 lbl_10000062[];
 extern u8 lbl_10000064[];
 extern u8 lbl_100000A4[];
-extern u8 lbl_10000A64[];
+extern struct BilliardsPlayerC lbl_10000A64[];
 extern u8 lbl_10000A70[];
 extern u8 lbl_10009710[];
 extern u8 lbl_10009878[];
@@ -210,9 +241,9 @@ void lbl_00017408(void);
 void lbl_00017A00(void);
 void lbl_00018008(void);
 void lbl_00018474(void);
-void lbl_00018608(void);
+f32 lbl_00018608(double, double, double, double, double, double);
 void lbl_000186EC(void);
-void lbl_000189B4(void);
+s8 lbl_000189B4(Vec *, Vec *, Vec *, Vec *);
 void lbl_00018A98(void);
 void lbl_00018C78(void);
 void lbl_00018F4C(void);
@@ -472,10 +503,210 @@ asm void lbl_0001A18C(void)
 #include "../asm/nonmatchings/mini_billiards/lbl_0001A18C.s"
 }
 #pragma peephole on
-asm void lbl_0001B880(void)
+// lbl_0001B880 variant -- run 27
+void lbl_0001B880(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_0001B880.s"
+    u8 *q = lbl_00020C40;
+    Vec v44;
+    Vec v38;
+    Vec v2c;
+    Vec v20;
+    Vec v14;
+    Vec v08;
+    f32 best;
+    f32 d;
+    f32 e;
+    f32 f;
+    f32 gx;
+    f32 gz;
+    int k;
+    int j;
+    int i;
+    int bestk;
+    struct BilliardsBall *bb;
+    int t;
+
+    ((struct BilliardsBall *)lbl_10009878)->state = 1;
+    ((struct BilliardsBall *)lbl_10009878)->y = *(f32 *)(q + 0x14);
+    if (lbl_10000A64[lbl_802F1C32].unk2 == 0) {
+        ((struct BilliardsBall *)lbl_10009878)->x = *(f32 *)(q + 0x18);
+        ((struct BilliardsBall *)lbl_10009878)->z = *(f32 *)(q + 0x18);
+    }
+    if (lbl_10000A64[lbl_802F1C32].unk1 == 2
+        && *(s8 *)lbl_10000049 < 9)
+        t = -1;
+    else
+        t = 0;
+    i = t;
+    for (; i < 2; i++) {
+        best = *(f32 *)(q + 0x3c);
+        bestk = -1;
+        for (k = 0; k < 6; k++) {
+            if (i <= 0) {
+                if (i == -1) {
+                    v44.x = ((struct BilliardsBall *)lbl_10009878)[9].x;
+                    v44.z = ((struct BilliardsBall *)lbl_10009878)[9].z;
+                } else {
+                    v44.x = ((struct BilliardsAim *)lbl_0001CAD8)[k].x + ((struct BilliardsAim *)lbl_0001CAD8)[k].dx * ((struct BilliardsAim *)lbl_0001CAD8)[k].t;
+                    v44.z = ((struct BilliardsAim *)lbl_0001CAD8)[k].z + ((struct BilliardsAim *)lbl_0001CAD8)[k].dz * ((struct BilliardsAim *)lbl_0001CAD8)[k].t;
+                }
+                for (j = *(s8 *)lbl_10000049 + 1; j < i + 10; j++) {
+                    if (((struct BilliardsBall *)lbl_10009878)[j].state == 1) {
+                        if (lbl_00018608(((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].x, ((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].z, v44.x, v44.z,
+                                         ((struct BilliardsBall *)lbl_10009878)[j].x, ((struct BilliardsBall *)lbl_10009878)[j].z)
+                            < *(f32 *)(q + 0x144))
+                            break;
+                    }
+                }
+            }
+            if (j == i + 10 || i == 1) {
+                v20.x = ((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].x - v44.x;
+                v20.y = *(f32 *)(q + 0x18);
+                v20.z = ((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].z - v44.z;
+                mathutil_vec_normalize_len(&v20);
+                v38.x = *(f32 *)(q + 0x148) * (*(f32 *)(q + 0x14) * v20.x)
+                        + ((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].x;
+                v38.y = *(f32 *)(q + 0x14);
+                v38.z = *(f32 *)(q + 0x148) * (*(f32 *)(q + 0x14) * v20.z)
+                        + ((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].z;
+                if (v38.x > *(f32 *)(q + 0xd8))
+                    continue;
+                if (v38.x < *(f32 *)(q + 0xdc))
+                    continue;
+                if (v38.z > *(f32 *)(q + 0x6c))
+                    continue;
+                if (v38.z < *(f32 *)(q + 0xe0))
+                    continue;
+                for (j = *(s8 *)lbl_10000049 + 1; j < i + 10; j++) {
+                    if (((struct BilliardsBall *)lbl_10009878)[j].state == 1) {
+                        if (mathutil_sqrt(mathutil_sum_of_sq_2(
+                                v38.x - ((struct BilliardsBall *)lbl_10009878)[j].x, v38.z - ((struct BilliardsBall *)lbl_10009878)[j].z))
+                            < *(f32 *)(q + 0x144))
+                            break;
+                    }
+                }
+                if (i == -1) {
+                    bestk = 0;
+                    v2c = v44;
+                }
+                if (j != i + 10)
+                    continue;
+                v14.x = ((struct BilliardsAim *)lbl_0001CAD8)[k].dx;
+                v14.y = *(f32 *)(q + 0x18);
+                v14.z = ((struct BilliardsAim *)lbl_0001CAD8)[k].dz;
+                if (mathutil_vec_dot_prod(&v20, &v14) < *(f32 *)(q + 0x114))
+                    continue;
+                v14.x = -((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].x;
+                v14.z = -((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].z;
+                mathutil_vec_normalize_len(&v14);
+                d = mathutil_vec_dot_prod(&v20, &v14);
+                if (d > best) {
+                    best = d;
+                    bestk = k;
+                    v2c = v44;
+                }
+            }
+        }
+        if (bestk != -1)
+            break;
+    }
+    if (bestk == -1) {
+        for (k = 0; k < 0x10000; k += 100) {
+            func_80007214(k, &v20.x, &v20.z);
+            v20.x = v20.x * *(f32 *)(q + 0x144);
+            v20.z = v20.z * *(f32 *)(q + 0x144);
+            v38.x = v20.x + ((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].x;
+            v38.z = v20.z + ((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].z;
+            for (j = *(s8 *)lbl_10000049 + 1; j < 10; j++) {
+                if (((struct BilliardsBall *)lbl_10009878)[j].state == 1) {
+                    if (mathutil_sqrt(mathutil_sum_of_sq_2(
+                            v38.x - ((struct BilliardsBall *)lbl_10009878)[j].x, v38.z - ((struct BilliardsBall *)lbl_10009878)[j].z))
+                        < *(f32 *)(q + 0x144))
+                        break;
+                }
+            }
+            if (j == 10)
+                break;
+        }
+        if (k == 0x10000) {
+            ((struct BilliardsBall *)lbl_10009878)->x = v38.x;
+            ((struct BilliardsBall *)lbl_10009878)->z = v38.z;
+        } else {
+            ((struct BilliardsBall *)lbl_10009878)->x = *(f32 *)(q + 0x18);
+            ((struct BilliardsBall *)lbl_10009878)->z = *(f32 *)(q + 0x18);
+        }
+    } else {
+        v08 = *(Vec *)(q + 0x138);
+        bb = ((struct BilliardsBall *)lbl_10009878);
+        v20.x = ((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].x - v2c.x;
+        v20.y = *(f32 *)(q + 0x18);
+        v20.z = ((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].z - v2c.z;
+        mathutil_vec_normalize_len(&v20);
+        v14.x = *(f32 *)(q + 0x68) * (*(f32 *)(q + 0x14c) * v20.x) + ((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].x;
+        v14.y = *(f32 *)(q + 0x18);
+        v14.z = *(f32 *)(q + 0x68) * (*(f32 *)(q + 0x14c) * v20.z) + ((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].z;
+        v44.x = *(f32 *)(q + 0x148) * (*(f32 *)(q + 0x14) * v20.x) + ((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].x;
+        v44.y = *(f32 *)(q + 0x18);
+        v44.z = *(f32 *)(q + 0x148) * (*(f32 *)(q + 0x14) * v20.z) + ((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].z;
+        if (lbl_000189B4(&v08, &v44, &v14, &v38) != 0) {
+            for (k = *(s8 *)lbl_10000049; k < 10; k++) {
+                if (((struct BilliardsBall *)lbl_10009878)[k].state == 1) {
+                    if (lbl_00018608(v44.x, v44.z, v38.x, v38.z,
+                                     bb[k].x, bb[k].z)
+                        < *(f32 *)(q + 0x150))
+                        break;
+                }
+            }
+            if (k == 10) {
+                ((struct BilliardsBall *)lbl_10009878)->x = v38.x;
+                ((struct BilliardsBall *)lbl_10009878)->z = v38.z;
+                goto done;
+            }
+        }
+        for (k = 5; k > 0; k--) {
+            gx = ((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].x;
+            e = *(f32 *)(q + 0x154) * (*(f32 *)(q + 0x14) * v20.x);
+            ((struct BilliardsBall *)lbl_10009878)->x = gx + e * (f32)k;
+            gz = ((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].z;
+            f = *(f32 *)(q + 0x154) * (*(f32 *)(q + 0x14) * v20.z);
+            ((struct BilliardsBall *)lbl_10009878)->z = gz + f * (f32)k;
+            if (((struct BilliardsBall *)lbl_10009878)->x > *(f32 *)(q + 0xd8))
+                continue;
+            if (((struct BilliardsBall *)lbl_10009878)->x < *(f32 *)(q + 0xdc))
+                continue;
+            if (((struct BilliardsBall *)lbl_10009878)->z > *(f32 *)(q + 0x6c))
+                continue;
+            if (((struct BilliardsBall *)lbl_10009878)->z < *(f32 *)(q + 0xe0))
+                continue;
+            for (j = *(s8 *)lbl_10000049 + 1; j < 10; j++) {
+                if (((struct BilliardsBall *)lbl_10009878)[j].state == 1) {
+                    if (lbl_00018608(((struct BilliardsBall *)lbl_10009878)->x, ((struct BilliardsBall *)lbl_10009878)->z, ((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].x, ((struct BilliardsBall *)lbl_10009878)[*(s8 *)lbl_10000049].z,
+                                     ((struct BilliardsBall *)lbl_10009878)[j].x, ((struct BilliardsBall *)lbl_10009878)[j].z)
+                        < *(f32 *)(q + 0x144))
+                        break;
+                }
+            }
+            if (j == 10)
+                break;
+        }
+    }
+done:
+    *(f32 *)lbl_1000B418 = ((struct BilliardsBall *)lbl_10009878)->x;
+    *(f32 *)(lbl_1000B418 + 4) = ((struct BilliardsBall *)lbl_10009878)->z;
+    ((struct BilliardsBall *)lbl_10009878)->x = *(f32 *)(q + 0x18);
+    ((struct BilliardsBall *)lbl_10009878)->z = *(f32 *)(q + 0x18);
+    do {
+        i = 0;
+        for (k = 1; k < 10; k++) {
+            if (((struct BilliardsBall *)lbl_10009878)[k].state == 1) {
+                if (mathutil_sum_of_sq_2(((struct BilliardsBall *)lbl_10009878)->x - ((struct BilliardsBall *)lbl_10009878)[k].x, ((struct BilliardsBall *)lbl_10009878)->z - ((struct BilliardsBall *)lbl_10009878)[k].z)
+                    < *(f32 *)(q + 0x158)) {
+                    i = 1;
+                    ((struct BilliardsBall *)lbl_10009878)->x = ((struct BilliardsBall *)lbl_10009878)->x + *(f32 *)(q + 0x14);
+                }
+            }
+        }
+    } while (i == 1);
 }
 #pragma peephole on
 #pragma force_active reset

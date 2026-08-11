@@ -32,6 +32,8 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "mathutil.h"
+#include "avdisp.h"
 #include "../data/common.nlobj.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
@@ -159,7 +161,17 @@ extern u8 infoWork[];
 extern u8 lbl_801EED98[];
 extern u8 lbl_8028C0B0[];
 extern u8 pauseMenuState[];
-extern u8 polyDisp[];
+struct PolyDisp
+{
+    u32 flags;
+    Vec unk4;
+    Vec unk10;
+    Vec unk1C;
+    Vec unk28;
+    Vec unk34;
+    Vec unk40;
+};
+extern struct PolyDisp polyDisp;
 extern u8 worldInfo[];
 
 // Imported functions the code calls that no included header declares.
@@ -172,63 +184,20 @@ extern void func_8006AD3C();
 extern void func_8006B3E8();
 extern void item_create();
 extern void item_replace_type_funcs();
-extern void mathutil_atan2();
-extern void mathutil_mtxA_from_rotate_y();
-extern void mathutil_mtxA_from_translate();
-extern void mathutil_mtxA_pop();
-extern void mathutil_mtxA_rotate_y();
-extern void mathutil_mtxA_tf_point();
-extern void mathutil_mtxA_tf_vec();
-extern void mathutil_mtxA_tf_vec_xyz();
-extern void mathutil_mtxA_to_mtx();
-extern void mathutil_mtxA_to_quat();
-extern void mathutil_mtxA_translate_xyz();
-extern void mathutil_sin();
-extern void mathutil_tan();
-extern void mathutil_vec_normalize_len();
-extern void mathutil_vec_set_len();
 extern void mini_commend_free_data();
 extern void spawn_stobj();
-extern void u_math_unk15();
 extern void ape_skel_anim_main();
-extern void avdisp_draw_model_culled_sort_all();
-extern void avdisp_draw_model_culled_sort_translucent();
-extern void avdisp_set_post_mult_color();
 extern void func_8006A9B8();
 extern void func_8006AAEC();
 extern void func_8009D794();
 extern void func_8009D8A4();
 extern void lens_flare_draw();
-extern void mathutil_mtxA_from_identity();
-extern void mathutil_mtxA_from_quat();
-extern void mathutil_mtxA_from_rotate_x();
-extern void mathutil_mtxA_push();
-extern void mathutil_mtxA_rigid_inv_tf_vec();
-extern void mathutil_mtxA_rotate_x();
-extern void mathutil_mtxA_rotate_z();
-extern void mathutil_mtxA_to_euler();
-extern void mathutil_mtxA_translate();
-extern void mathutil_sqrt();
-extern void mathutil_vec_to_euler();
-extern void mathutil_vec_to_euler_xy();
 extern void new_ape_stat_motion();
 extern void u_load_minigame_graphics();
 extern void unref_func_8003938C();
 extern void vibration_control();
 extern void GXSetNumTevStages_cached();
-extern void avdisp_draw_model_unculled_sort_all();
-extern void avdisp_draw_model_unculled_sort_translucent();
-extern void avdisp_set_bound_sphere_scale();
-extern void avdisp_set_post_add_color();
-extern void avdisp_set_z_mode();
 extern void func_8009DB40();
-extern void mathutil_atan();
-extern void mathutil_mtxA_from_mtx();
-extern void mathutil_mtxA_from_mtxB_translate();
-extern void mathutil_mtxA_mult_left();
-extern void mathutil_mtxA_normalize_basis();
-extern void mathutil_mtxA_rigid_inv_tf_point();
-extern void mathutil_mtxA_scale_s();
 extern void ord_tbl_draw_nodes();
 extern void raycast_stage_down();
 extern void set_ape_model_lod();
@@ -237,35 +206,20 @@ extern void unref_func_80039320();
 extern void unref_func_800393F8();
 extern void GXSetTevAlphaOp_cached();
 extern void ape_destroy();
-extern void avdisp_draw_model_unculled_sort_none();
-extern void mathutil_mtxA_from_mtxB();
-extern void mathutil_mtxA_from_translate_xyz();
-extern void mathutil_mtxA_rigid_inv_tf_tl();
-extern void mathutil_mtxA_sq_from_identity();
-extern void mathutil_mtxA_tf_point_xyz();
-extern void mathutil_mtxA_translate_neg();
-extern void mathutil_vec_dot_normalized_safe();
 extern void rend_efc_mirror_enable();
 extern void stobj_draw();
 extern void u_ball_init_1();
 extern void GXSetTevAlphaIn_cached();
-extern void avdisp_set_alpha();
 extern void background_draw();
 extern void light_init();
-extern void mathutil_mtxA_from_mtxB_translate_xyz();
 extern void set_bg_ambient();
-extern void u_avdisp_set_some_func_1();
 extern void GXSetTevColorOp_cached();
 extern void alloc_pool_light();
-extern void avdisp_draw_model_culled_sort_none();
 extern void func_8009CD5C();
-extern void mathutil_mtxA_scale_xyz();
 extern void ord_tbl_set_depth_offset();
 extern void GXSetTevColorIn_cached();
 extern void draw_monkey();
 extern void func_8009C5E4();
-extern void mathutil_mtxA_sq_from_mtx();
-extern void mathutil_mtxA_to_euler_yxz();
 extern void rend_efc_draw();
 extern void GXSetTevKAlphaSel_cached();
 extern void background_light_assign();
@@ -411,7 +365,7 @@ void lbl_000094F0(void);
 void lbl_000095EC(void);
 void lbl_000095F0(void);
 void lbl_000096E0(void);
-void lbl_00009A68(void);
+void lbl_00009A68(struct Effect *);
 void lbl_00009B94(void);
 void lbl_00009B98(void);
 void lbl_00009B9C(void);
@@ -432,12 +386,41 @@ void lbl_00008238(void);
 void lbl_0000823C(void);
 void lbl_0000A68C(void);
 #pragma force_active on
-asm void lbl_00009A68(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00009A68.s"
-}
 #pragma peephole on
+#pragma opt_common_subs off
+void lbl_00009A68(struct Effect *e)
+{
+    f32 *k = (f32 *)lbl_0001C108;
+    f32 c;
+    f32 v[3];
+    if (polyDisp.flags & 4)
+        return;
+    mathutil_mtxA_from_translate(&e->pos);
+    mathutil_mtxA_rotate_z((s16)e->unk88.z);
+    mathutil_mtxA_scale_s(e->scale.x);
+    GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+    GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
+    avdisp_set_bound_sphere_scale(e->scale.x);
+    c = e->colorFactor;
+    if (c > k[0])
+    {
+        v[0] = e->unk18 * c;
+        v[1] = e->unk1C * c;
+        v[2] = e->unk20 * c;
+        if (v[0] > k[1])
+            v[0] = k[1];
+        if (v[1] > k[1])
+            v[1] = k[1];
+        if (v[2] > k[1])
+            v[2] = k[1];
+        avdisp_set_post_add_color(v[0], v[1], v[2], k[0]);
+    }
+    avdisp_draw_model_culled_sort_translucent(e->model);
+    if (c > k[0])
+        avdisp_set_post_add_color(k[0], k[0], k[0], k[0]);
+}
+#pragma opt_common_subs reset
+#pragma peephole reset
 static void lbl_00009B94(void)
 {
 }

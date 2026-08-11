@@ -34,6 +34,7 @@
 #include "window.h"
 #include "avdisp.h"
 #include "mathutil.h"
+#include "stcoli.h"
 #include "../data/common.nlobj.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
@@ -122,7 +123,16 @@ extern u8 lbl_0001D768[];
 extern u8 lbl_0001D790[];
 extern u8 lbl_0001D7E4[];
 extern u8 lbl_0001D7F0[];
-extern u8 lbl_0001D838[];
+struct FightBananaInfo
+{
+    /*0x00*/ void *modelLODs;
+    /*0x04*/ f32 radius;
+    /*0x08*/ s16 bananaValue;
+    /*0x0A*/ s16 rotVelX;
+    /*0x0C*/ s16 rotVelY;
+    /*0x0E*/ s16 rotVelZ;
+};
+extern struct FightBananaInfo lbl_0001D838[];
 extern u8 lbl_0001D858[];
 extern u8 lbl_0001D878[];
 extern u8 lbl_0001D890[];
@@ -157,7 +167,13 @@ extern u8 lbl_10019040[];
 extern u8 backgroundInfo[];
 extern u8 g_bgLightInfo[];
 extern u8 g_stobjInfo[];
-extern u8 infoWork[];
+struct FightInfoWork
+{
+    u32 flags;
+    /*0x04*/ s16 timerCurr;
+    /*0x06*/ s16 timerMax;
+};
+extern struct FightInfoWork infoWork;
 extern u8 lbl_801EED98[];
 extern u8 lbl_8028C0B0[];
 extern u8 pauseMenuState[];
@@ -166,7 +182,6 @@ extern u8 worldInfo[];
 
 // Imported functions the code calls that no included header declares.
 extern void ape_face_dir();
-extern void collide_ball_with_stage();
 extern void fade_color_base_default();
 extern void func_8000D5B8();
 extern void func_80047518();
@@ -189,7 +204,6 @@ extern void vibration_control();
 extern void GXSetNumTevStages_cached();
 extern void func_8009DB40();
 extern void ord_tbl_draw_nodes();
-extern void raycast_stage_down();
 extern void set_ape_model_lod();
 extern void thread_create();
 extern void unref_func_80039320();
@@ -445,15 +459,100 @@ asm void lbl_00014478(void)
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_00014478.s"
 }
-asm void lbl_000147E0(void)
+#pragma peephole on
+void lbl_000147E0(struct Item *item)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000147E0.s"
+    u8 *k = lbl_0001C540;
+    float scale;
+    float f30;
+    struct GMAModel *model;
+    Vec v;
+
+    f30 = item->radius;
+    mathutil_mtxA_from_mtxB();
+    mathutil_mtxA_translate(&item->pos);
+    mathutil_mtxA_sq_from_mtx(userWork->matrices[2]);
+    mathutil_mtxA_rotate_y(item->rotY);
+    mathutil_mtxA_rotate_x(item->rotX);
+    mathutil_mtxA_rotate_z(item->rotZ);
+    model = get_lod(item->modelLODs);
+    scale = *(f64 *)(k + 0x50) * (f30 / model->boundSphereRadius);
+    if (test_scaled_sphere_in_frustum(&model->boundSphereCenter,
+                                      model->boundSphereRadius, scale) == 0)
+        return;
+    if (*(f64 *)(k + 0x58) != scale)
+        mathutil_mtxA_scale_xyz(scale, scale, scale);
+    mathutil_mtxA_get_translate_alt(&v);
+    f30 = -((v.z + f30 + *(f32 *)(k + 0x1C)) / f30);
+    if (f30 > *(f32 *)(k + 0x38))
+    {
+        avdisp_set_bound_sphere_scale(scale);
+        GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+        GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
+        if (f30 < *(f32 *)(k + 0x10))
+        {
+            avdisp_set_alpha(f30);
+            avdisp_draw_model_unculled_sort_all(model);
+        }
+        else
+        {
+            avdisp_draw_model_unculled_sort_none(model);
+        }
+    }
 }
-asm void lbl_00014958(void)
+#pragma peephole reset
+#pragma peephole on
+#pragma opt_propagation off
+void lbl_00014958(struct Item *item, struct PhysicsBall *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_00014958.s"
+    u8 *k = lbl_0001C540;
+
+    item->flags &= ~ITEM_FLAG_TANGIBLE;
+    item->state = 4;
+    item->vel.y = *(f64 *)(k + 0x60) * item->radius;
+    item->rotVelY <<= 2;
+    item->vel.x += *(f64 *)(k + 0x68) * ball->vel.x;
+    item->vel.y += *(f64 *)(k + 0x68) * ball->vel.y;
+    item->vel.z += *(f64 *)(k + 0x68) * ball->vel.z;
+    if (!(infoWork.flags & (1 << 4)) || (infoWork.flags & (1 << 11)))
+    {
+        struct Effect effect;
+
+        give_bananas(lbl_0001D838[item->subType].bananaValue);
+        g_poolInfo.itemPool.statusList[item->index] = STAT_DEST;
+        item->state = 0;
+        item->flags |= ITEM_FLAG_INVISIBLE;
+        item->flags &= ~ITEM_FLAG_TANGIBLE;
+        memset(&effect, 0, sizeof(effect));
+        effect.type = ET_HOLDING_BANANA;
+        effect.playerId = currentBall->playerId;
+        mathutil_mtxA_from_mtx(animGroups[ball->animGroupId].transform);
+        mathutil_mtxA_tf_point(&item->pos, &effect.pos);
+        mathutil_mtxA_tf_vec(&item->vel, &effect.vel);
+        effect.rotX = item->rotX;
+        effect.rotY = item->rotY;
+        effect.rotZ = item->rotZ;
+        effect.model = get_lod((void *)item->modelLODs);
+        effect.scale.x = *(f64 *)(k + 0x50) * (item->radius / effect.model->boundSphereRadius);
+        effect.scale.y = effect.scale.x;
+        effect.scale.z = effect.scale.y;
+        spawn_effect(&effect);
+    }
+    switch (item->subType)
+    {
+    case 0:
+        u_play_sound_0(0x39);
+        if ((infoWork.flags & (1 << 11)) || !(infoWork.flags & (1 << 4)))
+            u_play_sound_0(0x2820);
+        break;
+    case 1:
+        u_play_sound_0(3);
+        if ((infoWork.flags & (1 << 11)) || !(infoWork.flags & (1 << 4)))
+            u_play_sound_0(0x2820);
+        break;
+    }
 }
+#pragma opt_propagation reset
+#pragma peephole reset
 
 #pragma force_active reset
