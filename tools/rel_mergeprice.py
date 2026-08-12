@@ -61,6 +61,30 @@ import rel_census as C           # noqa: E402
 import rel_reach as R            # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# mwcc emits ONE contiguous 16-byte magic block per TU: two doubles whose
+# addresses differ by exactly 8.  Two magics further apart than this can never
+# share a TU, however many emitters are merged into it.
+MAGIC_BLOCK_GAP = 8
+
+_LBL_ADDR = re.compile(r'lbl_([0-9A-Fa-f]{8})$')
+
+
+def _addr_span(labels):
+    """Byte distance between the lowest and highest `lbl_XXXXXXXX` given.
+
+    None when fewer than two labels resolve -- a single magic is always
+    satisfiable in principle, and an unparseable name must not be read as 0
+    (that would silently call a dead row live, which is the bug being fixed).
+    """
+    addrs = []
+    for name in labels or ():
+        m = _LBL_ADDR.match(name.strip())
+        if m:
+            addrs.append(int(m.group(1), 16))
+    if len(addrs) < 2:
+        return None
+    return max(addrs) - min(addrs)
 EMITTING = ('.rodata', '.data', '.sdata', '.sdata2')
 
 
@@ -227,6 +251,27 @@ def price(tree, mod, max_span):
 
     rows = []
     for fn, insn, own, need, naddr in readers:
+        # ** A READER WANTING TWO MAGICS MORE THAN 8 BYTES APART IS DEAD, AND
+        # NO MERGE CAN FIX IT. **  mwcc emits ONE contiguous 16-byte magic
+        # block per TU -- two doubles, 8 bytes apart.  Merging N emitters into
+        # one TU does not produce two blocks; it produces one.  So a reader
+        # referencing magics 88 or 48 bytes apart cannot be served by any span.
+        #
+        # Run 30 fixed this tool from KIND to ADDRESS and the single-host path
+        # is correct.  The HOST-PAIR path was never revisited: it checks that
+        # the pair's addresses are covered between two hosts, which is exactly
+        # the right question for two SEPARATE 8-byte magics and exactly the
+        # wrong one here, because after the merge they are no longer separate.
+        #
+        # mini_golf found it in run 31: `lbl_00011A6C` (208) wants
+        # lbl_000266a0 + lbl_000266f8, 0x58 = 88 bytes apart, and
+        # `lbl_0000C33C` (1220) wants two 0x30 = 48 bytes apart.  Both were
+        # priced AVAILABLE, and 11A6C's row advertised "also unlocks ... = 622"
+        # on top -- 1,428 instructions of structurally dead work priced live.
+        gap = _addr_span(naddr)
+        if gap is not None and gap > MAGIC_BLOCK_GAP:
+            rows.append((10 ** 6 + 1, fn, insn, own, need, naddr, gap))
+            continue
         best = None
         for host, hk, ha in cands:
             # ADDRESS first.  A host that emits the right KIND at the wrong
@@ -282,6 +327,14 @@ def price(tree, mod, max_span):
     for nspan, fn, insn, own, need, naddr, rest in rows:
         want = ','.join(sorted(naddr)) if naddr else ('+'.join(sorted(need))
                                                       or '?')
+        if nspan == 10 ** 6 + 1:
+            print('  %-14s %5d  %-24s wants %-22s DEAD: those magics are '
+                  '0x%X apart' % (fn, insn, os.path.basename(own), want, rest))
+            print('        one TU emits ONE contiguous 16-byte magic block '
+                  '(two doubles, 8 bytes apart), so NO merge and NO carve of '
+                  'a\n          single hole can serve both. This needs two '
+                  'separate holes, or the reader split across two TUs.')
+            continue
         if rest is None:
             print('  %-14s %5d  %-24s wants %-22s NO HOST emits that ADDRESS '
                   '-- a merge cannot help; this needs a carve or a new emitter'

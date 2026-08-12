@@ -112,9 +112,27 @@ The standing lesson is the general one: when this tool and a hand derivation
 disagree, the hand derivation had a signal the tool did not.  Find out which,
 before believing either number.
 
-REQUIRES A BUILD.  The `.map` is a build output; run `make <TARGET>.plf` first.
-Without it this refuses rather than guessing -- an under-report that looks
-authoritative is exactly the failure being fixed here.
+REQUIRES A BUILD, AND THE HEADER USED TO OVERSTATE WHAT THAT BUYS YOU
+--------------------------------------------------------------------
+mini_bowling reported in run 30 that this paragraph contradicted the code two
+lines below it.  It did, in two separate ways, and both are now fixed:
+
+  * "Without it this refuses rather than guessing" was true of the `.map` only.
+    The MAGIC TABLE has its own, separate fallback: with no `.plf` (or no
+    objdump) `rel_census` scans the asm blob instead, and this tool does NOT
+    refuse -- it warns and prints a figure that is an UPPER BOUND.  That is the
+    right behaviour, but it is not what the paragraph said.
+
+  * ** A .plf that EXISTS but is STALE was silently trusted. **  Presence was
+    the only test; `magics.src == 'linked'` was then true and no warning fired
+    at all.  A build artifact older than the sources that feed it is the same
+    fictional-match mode as a stale `.o` -- the one the project has been bitten
+    by since run 3 -- and it was the one input here nobody checked.  Every run
+    now prints a STALE banner naming the newer file.
+
+So: run `make <TARGET>.plf` first.  The `.map` is refused when missing; the
+magic table degrades to an upper bound and says so; staleness is now detected
+rather than assumed away.
 """
 import argparse
 import glob
@@ -140,6 +158,37 @@ SEC_RE = re.compile(r'^\s*([0-9a-f]{8})\s+([0-9a-f]{6})\s+[0-9a-f]{8}\s+\d+\s+'
 # "  00000918 000000 00000918 lbl_0001CBD0 (entry of .rodata) 	mini_...s.o"
 ENT_RE = re.compile(r'^\s*([0-9a-f]{8})\s+[0-9a-f]{6}\s+[0-9a-f]{8}\s+'
                     r'(lbl_[0-9A-Fa-f]+)\s+\(entry of \.rodata\)')
+
+
+def stale_warning(tree, mod, stem):
+    """Lines warning that the link artifacts predate the sources they describe.
+
+    Presence was the only test until run 31, so a `.plf`/`.map` left over from
+    an earlier build was trusted exactly as much as a fresh one -- silently,
+    because `magics.src` is 'linked' either way.  A module agent installs a
+    variant and re-runs this tool constantly; without the check the answer can
+    describe a tree that no longer exists.
+    """
+    arts = [os.path.join(tree, TARGET[mod] + ext) for ext in ('.plf', '.map')]
+    arts = [p for p in arts if os.path.exists(p)]
+    if not arts:
+        return []
+    oldest = min(os.path.getmtime(p) for p in arts)
+    newer = []
+    for pat in ('src/%s*.c' % stem, 'asm/%s*.s' % stem):
+        for p in glob.glob(os.path.join(tree, pat)):
+            if os.path.getmtime(p) > oldest:
+                newer.append(os.path.basename(p))
+    if not newer:
+        return []
+    newer.sort()
+    out = ['%-16s !! STALE LINK ARTIFACT: %d source file(s) are NEWER than %s'
+           % (mod, len(newer), ' / '.join(os.path.basename(p) for p in arts)),
+           '%-16s    newest first: %s' % ('', ', '.join(newer[:6])
+                                          + (' ...' if len(newer) > 6 else '')),
+           '%-16s    Every figure below describes the PREVIOUS build. Re-run '
+           '`make %s.plf`.' % ('', TARGET[mod])]
+    return out
 
 
 def rodata_owners(tree, mod):
@@ -246,6 +295,8 @@ def main():
             print('%-16s NO MAP at %s -- run `make %s.plf` first; refusing to '
                   'guess' % (mod, os.path.basename(mapf), TARGET[mod]))
             continue
+        for line in stale_warning(a.tree, mod, stem):
+            print(line)
 
         kinds = owned_kinds(a.tree, spans)
         if kinds is None:

@@ -294,12 +294,112 @@ def arity_cfg(lines):
     return sorted(((r, first.get(r, 0)) for r in args), key=lambda x: (x[1], x[0]))
 
 
+# --- is this callee still asm, or is it already C? ------------------------
+#
+# ** asm/nonmatchings/<stem>/<label>.s SURVIVES CONVERSION. **  Nothing deletes
+# it when a function is banked, so its mere existence says NOTHING about whether
+# the build still uses it.  Until run 31 `arity()` read it unconditionally and
+# `main()` only printed "already converted" when the file was MISSING -- which
+# for a converted callee it never is.  So the tool reported arity off dead asm,
+# silently, with no warning at all.
+#
+# option hit this in run 30 on `lbl_00004260`: the .s is a run-5-era artifact,
+# no .c includes it, and the true signature `void lbl_00004260(int)` is written
+# in src/option_11.c.  The tool said 0 args.  Because the whole diagnostic is
+# "golden sets FEWER argument registers than the callee READS", a 0-arg reading
+# does not merely lose information -- it INVERTS the diagnostic, exactly the
+# failure mode the run-28 under-report fix was written to stop.
+#
+# The authority for a converted callee is its C signature.  The .s is a
+# fallback, and when it is used on a converted function the caller is told.
+
+_STUB_INC = r'#include\s+"\.\./asm/nonmatchings/%s/%s\.s"'
+
+# `[static] <type> lbl_XXXXXXXX(<params>)` as a declaration or a definition.
+_C_SIG = (r'^[ \t]*(?:extern[ \t]+|static[ \t]+)*'
+          r'[A-Za-z_][A-Za-z0-9_ \t*]*?[ \t*]+\*?%s[ \t]*\(([^)]*)\)[ \t]*[;{]')
+
+
+def _module_c_files(root, stem):
+    src = os.path.join(root, 'src')
+    if not os.path.isdir(src):
+        return []
+    return [os.path.join(src, f) for f in sorted(os.listdir(src))
+            if f.startswith(stem) and f.endswith('.c')]
+
+
+def still_asm(module, label, tree=None):
+    """True iff some .c in the module still #includes this label's .s.
+
+    Derived from the SOURCE, never from the presence of the .s file.
+    """
+    stem = STEMS.get(module, module)
+    root = tree or REPO
+    pat = re.compile(_STUB_INC % (re.escape(stem), re.escape(label)))
+    for path in _module_c_files(root, stem):
+        with open(path, encoding='utf-8', errors='replace') as fh:
+            if pat.search(fh.read()):
+                return True
+    return False
+
+
+def c_signatures(module, label, tree=None):
+    """-> [(file, line, params-as-written), ...] for a label's C signatures.
+
+    Every site is returned, because they DISAGREE in practice: option's
+    lbl_00004260 is `void` in src/option.c and src/option_10.c and `int` in
+    src/option_11.c.  A tool that silently picks one is the same class of bug
+    as reading the dead .s.
+    """
+    stem = STEMS.get(module, module)
+    root = tree or REPO
+    pat = re.compile(_C_SIG % re.escape(label))
+    out = []
+    for path in _module_c_files(root, stem):
+        with open(path, encoding='utf-8', errors='replace') as fh:
+            text = strip_comments(fh.read())
+        for i, line in enumerate(text.split('\n'), 1):
+            m = pat.match(line)
+            if m:
+                out.append((os.path.basename(path), i,
+                            ' '.join(m.group(1).split())))
+    return out
+
+
+def c_arity(params):
+    """Argument count from a parameter list as written.  None if unknowable.
+
+    `(void)` is zero.  `()` declares NOTHING about arity in C and must not be
+    read as zero -- that is the same silent inversion as the dead-.s read.
+    """
+    p = params.strip()
+    if p == 'void':
+        return 0
+    if p == '':
+        return None
+    depth, n = 0, 1
+    for c in p:
+        if c in '([':
+            depth += 1
+        elif c in ')]':
+            depth -= 1
+        elif c == ',' and depth == 0:
+            n += 1
+    return n
+
+
 def arity(module, label, tree=None, limit=None):
     """-> [(register, first-read index), ...], or None if there is no .s.
 
     Uses CFG liveness by default.  `limit` forces the OLD straight-line scan
     over the first `limit` instructions and is kept only so the run-27
     behaviour can be reproduced for comparison; it under-reports.
+
+    ** This reads the .s whether or not the function is still asm. **  Callers
+    must consult `still_asm()` first; `main()` does.  It stays unconditional so
+    the asm reading of an already-converted function remains available for
+    comparison -- a legitimate thing to want, and what the run-26 and run-27
+    wins were built on -- but it is no longer the DEFAULT answer.
     """
     stem = STEMS.get(module, module)
     root = tree or REPO
@@ -323,27 +423,45 @@ def arity(module, label, tree=None, limit=None):
 _EXPR_WORDS = {'return', 'else', 'do', 'case', 'goto', 'sizeof'}
 
 
+def _blank(txt, i, j):
+    """`txt[i:j]` blanked to spaces, KEEPING newlines.
+
+    Keeping the newlines matters and the original did not: a multi-line /* */
+    became one run of spaces, so every LINE NUMBER after it shifted.  Nothing
+    consumed line numbers when this was written, so the defect was latent; the
+    run-31 `c_signatures()` reader surfaced it immediately, reporting
+    src/option_11.c:116 for a declaration that is on line 125.
+
+    Length is still preserved exactly, so every offset-based caller is
+    unaffected.
+    """
+    return ''.join('\n' if c == '\n' else ' ' for c in txt[i:j])
+
+
 def strip_comments(txt):
-    """Remove /* */ and // comments and string/char literals, keeping length."""
+    """Remove /* */ and // comments and string/char literals.
+
+    Length-preserving AND line-preserving -- see `_blank`.
+    """
     out, i, n = [], 0, len(txt)
     while i < n:
         c = txt[i]
         if c == '/' and i + 1 < n and txt[i + 1] == '*':
             j = txt.find('*/', i + 2)
             j = n if j < 0 else j + 2
-            out.append(' ' * (j - i))
+            out.append(_blank(txt, i, j))
             i = j
         elif c == '/' and i + 1 < n and txt[i + 1] == '/':
             j = txt.find('\n', i)
             j = n if j < 0 else j
-            out.append(' ' * (j - i))
+            out.append(_blank(txt, i, j))
             i = j
         elif c in '"\'':
             j = i + 1
             while j < n and txt[j] != c:
                 j += 2 if txt[j] == '\\' else 1
             j = min(j + 1, n)
-            out.append(' ' * (j - i))
+            out.append(_blank(txt, i, j))
             i = j
         else:
             out.append(c)
@@ -511,8 +629,59 @@ def selftest():
         print('SELFTEST ok   %-28s 0 called / 256 declared'
               % 'declare-only owner is empty')
 
+    # DEFECT 4 (run 31): THE .s SURVIVES CONVERSION.  A fixture module where
+    # one label is still asm and one is already C, with the .s present for BOTH
+    # -- which is the real on-disk state, and is why the old "no .s" check
+    # could never fire.
+    import shutil
+    import tempfile
+    root = tempfile.mkdtemp(prefix='arity_')
+    try:
+        src = os.path.join(root, 'src')
+        asm = os.path.join(root, 'asm', 'nonmatchings', 'option')
+        os.makedirs(src)
+        os.makedirs(asm)
+        with open(os.path.join(src, 'option_1.c'), 'w') as fh:
+            fh.write('/* a block comment\n   spanning\n   three lines */\n'
+                     'void lbl_00000AAA(void);\n'
+                     'void lbl_00000BBB(int);\n'
+                     '#include "../asm/nonmatchings/option/lbl_00000AAA.s"\n')
+        with open(os.path.join(src, 'option_2.c'), 'w') as fh:
+            fh.write('void lbl_00000BBB(void);\n')      # the stale disagreement
+        for lab in ('lbl_00000AAA', 'lbl_00000BBB'):
+            with open(os.path.join(asm, lab + '.s'), 'w') as fh:
+                fh.write('/* 00000000 00000000 */ blr\n')   # reads nothing => 0
+
+        def t(name, got_, want):
+            nonlocal ok
+            if got_ != want:
+                ok = False
+                print('SELFTEST FAIL %-28s got %r want %r' % (name, got_, want))
+            else:
+                print('SELFTEST ok   %-28s %r' % (name, got_))
+
+        t('still-asm from #include', still_asm('option', 'lbl_00000AAA', root), True)
+        t('converted despite live .s', still_asm('option', 'lbl_00000BBB', root), False)
+        t('.s exists for both', os.path.exists(os.path.join(asm, 'lbl_00000BBB.s')), True)
+        sigs = c_signatures('option', 'lbl_00000BBB', root)
+        t('both signatures found', sorted(p for _f, _l, p in sigs), ['int', 'void'])
+        # line 5 only if the 3-line block comment kept its newlines
+        t('line survives block comment',
+          [ln for f, ln, p in sigs if f == 'option_1.c'], [5])
+        t('disagreement visible', sorted({c_arity(p) for _f, _l, p in sigs}), [0, 1])
+        t('(void) is zero', c_arity('void'), 0)
+        t('() is UNKNOWN not zero', c_arity(''), None)
+        t('nested commas count once', c_arity('int (*f)(int, int), char *p'), 2)
+        t('dead .s would say 0', len(arity('option', 'lbl_00000BBB', root)), 0)
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
     print()
     print('SELFTEST', 'PASS' if ok else 'FAIL')
+    print('A PASSING SELFTEST IS NOT A GATE.  This tool shipped broken in BOTH'
+          ' modes with a passing selftest in run 29.  Gate it against a real'
+          ' module: `rel_arity.py option lbl_00004260` must say ALREADY C /'
+          ' 1 arg, and a still-asm label must be unchanged.')
     return 0 if ok else 1
 
 
@@ -573,9 +742,41 @@ def main():
     for lab in labels:
         a = arity(module, lab, tree=tree, limit=limit)
         if a is None:
-            print('%-16s  (no .s -- already converted, or not in this module)'
-                  % lab)
+            print('%-16s  (no .s -- not in this module)' % lab)
             continue
+
+        # ** The .s survives conversion.  Ask the SOURCE, not the filesystem. **
+        if not still_asm(module, lab, tree=tree):
+            sigs = c_signatures(module, lab, tree=tree)
+            counts = {c_arity(p) for _f, _l, p in sigs}
+            known = sorted(c for c in counts if c is not None)
+            if sigs:
+                best = max(known) if known else None
+                print('%-16s  ALREADY C -- signature is the authority, not the'
+                      ' .s%s' % (lab, '' if best is None else
+                                 '   => %d arg(s)' % best))
+                for f, ln, p in sigs[:4]:
+                    n = c_arity(p)
+                    print('      (%s)%s   %s:%d'
+                          % (p, '' if n is None
+                             else '  = %d arg(s)' % n, f, ln))
+                if len(sigs) > 4:
+                    print('      ... and %d more site(s)' % (len(sigs) - 4))
+                if len(known) > 1:
+                    print('      ** SITES DISAGREE (%s) -- the highest is used'
+                          ' above; read them before trusting it **'
+                          % ', '.join(str(c) for c in known))
+                if None in counts:
+                    print('      ** at least one site declares () -- which'
+                          ' states NOTHING about arity, and is not 0 **')
+                # The dead-.s reading, for comparison only, clearly labelled.
+                print('      dead .s would have said: %d arg(s)%s'
+                      % (len(a), '  <-- WRONG, and it inverts the diagnostic'
+                         if best is not None and len(a) != best else ''))
+                continue
+            print('%-16s  ALREADY C but NO signature found -- falling back to'
+                  ' the .s, WHICH THE BUILD NO LONGER USES' % lab)
+
         shown = ' '.join('%s@%d%s' % (r, i, '*' if i > ENTRY_WINDOW else '')
                          for r, i in a)
         late = [r for r, i in a if i > ENTRY_WINDOW]

@@ -170,6 +170,33 @@ TARGETS = {
 OBJDUMP = os.environ.get(
     'OBJDUMP', 'C:/devkitPro/devkitPPC/bin/powerpc-eabi-objdump.exe')
 
+
+def _stale_lines(tree, mod, stem):
+    """Lines warning that the link artifacts predate the sources they describe.
+
+    Presence was the only test until run 31, so a `.plf` left over from an
+    earlier build was trusted exactly as much as a fresh one -- and because
+    `magics.src` reads 'linked' either way, nothing could warn.  See the call
+    site for mini_golf's silent signed/unsigned transposition.
+    """
+    arts = [os.path.join(tree, TARGETS[mod] + ext) for ext in ('.plf', '.map')]
+    arts = [p for p in arts if os.path.exists(p)]
+    if not arts:
+        return []
+    oldest = min(os.path.getmtime(p) for p in arts)
+    newer = sorted(os.path.basename(p)
+                   for pat in ('src/%s*.c' % stem, 'asm/%s*.s' % stem)
+                   for p in glob.glob(os.path.join(tree, pat))
+                   if os.path.getmtime(p) > oldest)
+    if not newer:
+        return []
+    return ['      !! STALE LINK ARTIFACT: %d source file(s) are NEWER than %s'
+            % (len(newer), ' / '.join(os.path.basename(p) for p in arts)),
+            '         newest: %s%s' % (', '.join(newer[:6]),
+                                       ' ...' if len(newer) > 6 else ''),
+            '         The magic split above describes the PREVIOUS build and '
+            'can be INVERTED. Re-run `make %s.plf`.' % TARGETS[mod]]
+
 INSN = re.compile(r'^/\* ([0-9A-F]{8}) ([0-9A-F]{8}) \*/[ \t]*(\S*)[ \t]*(.*)$')
 DEFN = re.compile(r'^(lbl_[0-9A-Fa-f]+):')
 # The same pattern for scanning a WHOLE FILE.  Reusing DEFN with finditer and no
@@ -556,6 +583,21 @@ def main():
             biasnote += '  !! NOT 100% -- distrust d-JUMPTBL'
         print('=== %-15s %3d fns / %6d insn   magic: %d signed + %d unsigned   %s'
               % (mod, len(table), tot, ns, nu, biasnote))
+        # ** A LINKED-BUT-STALE .plf INVERTS THIS LINE, SILENTLY. **
+        # mini_golf, run 31: `4 signed + 5 unsigned` off a stale artifact and
+        # `5 signed + 4 unsigned` after a clean rebuild of the IDENTICAL tree
+        # -- an exact transposition, with no warning of any kind.  `magics.src`
+        # is 'linked' in both cases, so the block below cannot fire; presence
+        # was the only test anything performed.
+        #
+        # test_mode hit the same class in rel_reach the same run, with a
+        # 333-instruction swing, and reported that the trigger is the CLOSE-OUT
+        # SEQUENCE EVERY AGENT RUNS: restore the owners (which deletes their
+        # objects), then run the checks.  So this is the default path into the
+        # defect, not an edge case.  rel_objsect and rel_fnhash have carried
+        # staleness guards for runs; these two did not.
+        for line in _stale_lines(tree, mod, stem):
+            print(line)
         if magics.src != 'linked':
             # Run 20 caught this tool reporting `0 signed + 1 unsigned` for
             # mini_bowling when the truth was 6 + 1.  An under-count here reads
