@@ -15,8 +15,8 @@ A run is **exactly nine agents, one per REL module.** A module agent must **not*
 spawn subagents, workers, or helper agents of any kind. Its module is its own
 work, done directly in its own warm copy.
 
-This is permanent, not a run-13 experiment. **Runs 13, 14 and 15 all ran this
-way: zero stranding, zero worktree-merge hazards, zero lost matches, three
+This is permanent, not a run-13 experiment. **Runs 13 through 29 all ran this
+way: zero stranding, zero worktree-merge hazards, zero lost matches, SEVENTEEN
 times running.** The evidence:
 
 - **The concurrency cap is 20 project-wide.** With nine module agents live only
@@ -69,7 +69,12 @@ the newer files in and re-ran everything deliberately. But:
 
 **Do tool work in scratch while agents are live; land it after the last one
 closes out.** Nothing was lost this time; that was luck, not process.
-**Run 28 is the SEVENTH consecutive clean run**: all three tool landings happened
+**Run 29 is the EIGHTH consecutive clean run**: all three tool landings happened
+after the ninth agent closed and **all nine reported `diff -rq tools` clean at
+start and end. No module patched a tool** — the one defect found
+(`rel_arity.py`'s docstring still describing the linear scan run 28 replaced)
+was **diagnosed and handed over**, which is the behaviour to ask for.
+**Run 28 was the seventh**: all three tool landings happened
 after the ninth agent closed and **all nine reported `diff -rq tools` clean at
 start and end**. **No module patched a tool at all** — and the three defects
 found were in `rel_arity.py`, **the tool the orchestrator itself had shipped one
@@ -128,7 +133,206 @@ it. `_scratch_<MOD>/run<N>/pristine/` is the convention.**
 
 ---
 
-## 0.34 — RUN 28 DONE (2026-08-11): +420 insn, 47.63% -> 47.85%. START HERE.
+## 0.35 — RUN 29 DONE (2026-08-11): +797 insn, 47.85% -> 48.27%. START HERE.
+
+Nine parallel agents, one per module, **no workers — SEVENTEENTH consecutive run
+under the standing rule.** Four of nine gained. **The run's structural result is
+that the previous brief's headline idiom is not a lever at all, that a function
+sitting under "Retired WITH A PROOF" for four runs is two words from MATCH, and
+that a carve finally landed WITH its reader in the same run.**
+
+| module | still-asm | insn | % | gained |
+|---|---|---|---|---|
+| mini_pilot | 6 fns | 10999/12137 | 90.62% | 0 |
+| **test_mode** | 16 fns | 12061/16231 | **74.31%** | **+262 / +2** |
+| **mini_race** | 30 fns | 14555/19817 | **73.45%** | **+200 / +1** |
+| mini_bowling | 14 fns | 10432/15313 | 68.13% | 0 |
+| option | 12 fns | 5405/12375 | 43.68% | 0 |
+| **sel_ngc** | 9 fns | 7726/18084 | **42.72%** | **+137 / +1** |
+| **mini_billiards** | 18 fns | 10418/28793 | **36.18%** | **+198 / +1** |
+| mini_fight | 72 fns | 9562/28585 | 33.45% | 0 |
+| mini_golf | 18 fns | 10670/38919 | 27.42% | 0 |
+| **TOTAL** | **195 fns** | **91828/190254** | **48.27%** | **+797 / +5** |
+
+**Verified in the main tree, not taken on report**: nine trees diffed before
+merging (**8 changed paths — 5 modified `.c`, 1 modified `Makefile`, 1 deleted
+`.s`, 2 new `.s`, and NOTHING else** — no `tools/`, no `asm/nonmatchings/`, and
+every changed-file list matched its own agent's report exactly); **zero hygiene
+problems** (every modified file keeping the line endings it had; **both new `.s`
+stored LF, byte-consistent with their sibling segments**); all four merged
+modules rebuilt in the main tree to the **exact sha1 their agents reported**; all
+nine `--gate` GOLDEN **from deleted objects with every hash matching its agent's,
+including the five modules that changed nothing**; all nine `rel_structcheck`
+**CLEAN, run by the orchestrator** (195 stubs, down exactly 5); a clean build
+from **0 objects** gives `sha1sum -c` **12/12 OK including the DOL**; the census
+reproduces all nine still-asm figures. Reconciles three ways: 190,254 − 98,426 =
+**91,828**, 200 − 5 = **195**, and 99,223 − 98,426 = **797**.
+
+> **★ EVERY OBJECT METRIC MOVED BY EXACTLY +1** — mini_billiards' carve split one
+> `.s` into two. **899** `*.o` under `src/`+`asm/`, **1,069** tree-wide, **902**
+> source files (**839** `.c` + **63** `.s`). **First carve to land since run 24.**
+>
+> **One carried figure corrected: sel_ngc is 42.72%, not its agent's 42.73%**
+> (7,726 / 18,084 = 42.7228, which rounds down).
+
+### ★★★ RUN 28's HEADLINE IDIOM IS NOT A LEVER — and sel_ngc's conversion DELETED it
+
+`#pragma opt_dead_assignments off` entered the run-29 brief as "a **FIX**, not
+only a canary". Four modules measured it: **byte-identical on ~1,218 insn in
+option** (44 links, canaries at head and tail), **byte-identical on six
+mini_fight functions**, **inert on two mini_bowling functions and WORSE on a
+third** (11 in 8 → 26 in 18), **backwards in mini_billiards** (drops golden's
+frame), **live but wrong-direction in mini_pilot** — and **ACTIVELY HARMFUL in
+sel_ngc, where the correct base is MATCH without it and 5 in 4 with it.**
+**It banked 245 once, in run 28, and nowhere since. Read it as a DIAGNOSTIC
+that points at a transform.**
+
+### ★★★ A §8 RETIREMENT WAS WRONG, AND NOBODY HAD EVER PRINTED ITS DIFF
+
+**mini_pilot `lbl_00003BDC` (274)** sat under *"Retired WITH A PROOF — do not
+re-take"* from run 25 through run 28. It is a **2-word pure-GPR allocator
+tie-break at 274 == 274**, `G`/`GF` both **0 in 0**, **272 of 274 positional**.
+**A retirement without a printed residual is not a retirement** — and the record
+is now three deep (mini_billiards banked 651 in run 27 from a run-22 retirement,
+and 198 this run from a function no list ever named).
+
+### ★★★ A PRAGMA AND A SOURCE CHANGE CAN BE THE TWO HALVES OF ONE FIX
+
+**First instances in the project, and there were two in one run.** test_mode's
+`2684`: pragma alone **−1 LENGTH**, source alone **+2**, together **RAW 0**.
+mini_fight's `15E00`: 97 in 20 → 86 in 8 → **82 in 4**, tail (insn 180-389)
+byte-identical. **So a pragma that is inert or worse ALONE is not retired** —
+sweep it against your best source variant. That is expensive; it is also the
+only thing that found either of these.
+
+### ★★ A CARVE LANDED WITH ITS READER — the model to copy
+
+mini_billiards split `mini_billiards_d3.s` (`.text` 0, `.data` 0) at
+`lbl_00020C20`, halves straddling `_48.c`, byte accounting exact, **and banked
+the 198-instruction reader in the same run.** `rel_carve.py` was **not used** —
+for a `.rodata`-only segment with an 8-aligned split point the harvested
+splitter suffices. **Its second carve is layout-PROVEN to a golden build** by
+filling the hole with a `const double` of the magic bit pattern (stronger than
+run 28's empty-hole proof), unblocking `16D9C` (296).
+⚠ **mini_golf declined twice, correctly** — a carve banks nothing on its own.
+
+### ★★ ADJACENCY IS THE WALL: 5,987 INSTRUCTIONS RETIRED FOR ~0 BUILDS
+
+**option 3,278** (no contiguous S+U block anywhere; halves 304 B and 248 B
+apart), **mini_billiards 1,879**, **mini_golf 830** (all at exactly **88
+bytes**, including the new `12EEC` 478). ⚠ **And a run-26 claim repeated by two
+briefs was simply wrong**: `38A8`'s `.s` does NOT reference "one unsigned magic
+and no other" — there is an `lfd f2, lbl_0000C270@l(r4)` at `0x3ACC`.
+**`rel_reach` was right; the hand derivation was not.**
+
+### ★★ §11 WAS WRONG IN THREE OF NINE — a THIRTEENTH consecutive run
+
+mini_billiards banked from a function **no target list has ever named**, found
+in 20 minutes with `rel_xref` plus reachability by address. mini_bowling's own
+§11 line — *"the arity lever is EXHAUSTED here, 0 mismatches over 13 stub owners
+and all 82 files"* — **was measured on a unit that cannot return a non-zero
+answer**: every stub owner is all-stub, so `--calls` audited **zero call edges**;
+per target off its own `.s` it is **21 mismatches over 37 call edges**. And
+mini_bowling's *"REACHABLE delta is +0"* is false. **But §11 was RIGHT about
+mini_race** (both targets reachable and undrafted — one banked 200, the other
+went blank page → 8 in 6) **and RIGHT about mini_fight's `15E00`.**
+
+### ⚠ HAZARDS
+
+- **NEW: `_scratch_mini_billiards/run29/pristine_start/` is PRE-CARVE** —
+  restoring `_48.c` or the `Makefile` from it **un-banks 198 AND breaks the
+  carve.** Runs 23/25/26/27/28 hazards all still live.
+- **The run-26 mini_fight row list is STALE BY 252** — `147E0` and `14958` are
+  already C (orchestrator-verified: no `#include` of their `.s` in `src/`).
+  Three functions / **523** remain.
+- **An EXACT instruction count is not evidence**: mini_golf got `214 == 214`
+  with `rel_sdiff` saying `EXACT` on a draft whose shape was wrong.
+- **An aligned score ranked two drafts backwards — third run running.**
+- **A CANARY SET OF TWO IS NOT REDUNDANT**: mini_fight's `peephole off` canary
+  was silently shadowed by the body's own `#pragma peephole on`; only the second
+  canary stopped a clean-looking 21-row sweep from being believed.
+- **`optimize_for_size on` is FUNCTION-SPECIFIC** — a hard build failure on
+  `15E00`, fine on three other functions in the same module.
+- **test_mode's `FBA8` merge permanently FORECLOSES `EEF4` (351).** Price what a
+  merge kills, not only what it buys.
+
+### TOOLS LANDED (all after the ninth agent closed — commit `4f1b3a8`)
+
+- **`tools/rel_blindtable.py` (NEW)** — the plain/`F`/`G`/`GF` table §12 has
+  demanded for four runs; six modules hand-rolled it in run 29 alone. It
+  **does not install, build or restore**. Gates: 8-case self-test including four
+  DAMAGED rows that must not parse plus a re-check that the good row still does;
+  a real 7-blind table against the linked build; bogus label exits 2. **Two
+  defects found while gating** (it advised "pure register numbering" about
+  perfectly-matched functions; `--blinds ,` ran plain twice).
+  ⚠ **NOT GATED against a nonzero table** — that needs an installed draft and
+  all nine trees were occupied. Stated in the brief, not papered over.
+- **`tools/rel_mergeprice.py` (NEW)** — per-reader TU merge pricing, built on
+  `rel_reach`'s derivation. **Three defects found while gating; the third
+  inverted its purpose** — it ranked by span alone, so a reader whose cheapest
+  host was blocked read DEAD even when a longer span was AVAILABLE.
+  Liveness-first ranking took **test_mode `A7FC` (333) DEAD → AVAILABLE**.
+  Models **host PAIRS** (no single `.c` object in any module emits both kinds).
+  **Leaves the `.rodata`-only-`.s` question OPEN in its output** rather than
+  deciding it, because test_mode and an earlier derivation disagree.
+- **`tools/rel_arity.py`** — docstring only: it still described the LINEAR scan
+  run 28 replaced. **Found by mini_bowling and handed over, not patched.**
+
+### STILL OPEN (orchestrator)
+
+- **Promote `mini_pilot__scanpair.py`** — the generalised matched-code
+  instruction-pair oracle the run-25 harvest README asked for; **it produced the
+  `3BDC` proof that overturned a retirement** and replaces every one-off shape
+  scanner. **Then `sel_ngc__dolpro29.py`** (DOL-wide prologue classifier; it
+  falsified run 27's "no worked example exists" with 46 of them).
+- **Give `rel_blindtable` its nonzero gate** the moment a module has a live
+  near-miss installed.
+- `_harvest_run27/mini_billiards__seg.py` is still un-promoted and **ran
+  UNMODIFIED** this run; its owner listed the four changes it needs.
+- **Let `rel_carve` ADD holes to an already-carved worktree directly.**
+- Fix `rel_merge_tu`'s duplicate-tag bug; fold `pragmafix.py` into it — and fix
+  its CRLF destruction while you are there.
+
+### RUN-30 PREP — COMPLETE. The next session launches nine agents directly.
+
+- **`C:/tmp/smbm/RUN30_BRIEF.md`** — written (**3,287 lines, 200 KB**) by
+  **`C:/tmp/smbm/_brief30/assemble.py`**, which locates sections by heading
+  text, asserts all 14 appear exactly once and in order, asserts the idiom
+  blocks are newest-first (**29 → 28 → … → 18**), and **hard-fails on eight
+  claims run 29 falsified**. **All eight needles verified present in
+  RUN29_BRIEF.md via `--audit`** — four matched nothing on the first pass
+  because of line wrapping and were corrected rather than kept.
+  - **One new guard, paragraph-scoped and PROVEN TO FIRE**: `rel_blindtable`
+    may not be prescribed without its ungated axis stated in the same
+    paragraph. **It took four corrections to become a real guard** — it fired on
+    the argument-convention table, then on its own usage code block, then
+    rejected the paragraph that carried the caveat because the brief shouts in
+    capitals; and `canary` had to come OUT of the caveat list because it let §9
+    pass by coincidence. **The assembler now asserts the guard fires on a
+    caveat-free prescription**, so it cannot decay into decoration.
+  - **★ §8 IS REWRITTEN EVERY RUN, NOT CARRIED**, and run 29 justified it an
+    eighth time in the hardest possible way — a retired function is two words
+    from MATCH.
+- **`C:/tmp/smbm/RUN29_RESULTS.md`** — all nine sections (**4,793 lines,
+  276 KB**), ordered by instructions gained, each under an **ORCHESTRATOR
+  VERIFIED** block written from what was measured in the trees.
+- **`C:/tmp/smbm/_harvest_run29/`** — **106 scripts** with a README indexing them
+  by purpose, naming the four worth promoting next and flagging the defects in
+  three of them.
+- **`C:/tmp/smbm/_orch_run29/`** — `predmerge_diff.sh`, `postmerge_verify.sh`
+  (**baselines updated to 899/1,069/902 — the run-24-27 figures in it were
+  stale**), `hygiene.py` (self-testing), `BASELINE.md`, `MERGE_LOG.md`,
+  `assemble_results.py`, and the nine per-module reports.
+- **All nine warm copies reset and re-gated GOLDEN from deleted objects**
+  (`warm_reset_run30.sh`, `fail=0`). **Verified independently of the script's own
+  gate**: each copy's built `.rel` hashed against `supermonkeyball.sha1` — **all
+  nine MATCH** — `tools` diffs **0 for all nine**, **839 `.c` + 63 `.s` in every
+  copy**, and both new tools present **9/9**.
+- **ONE AGENT PER MODULE, NO WORKERS** — seventeenth consecutive run.
+
+---
+
+## 0.34 — RUN 28 DONE (2026-08-11): +420 insn, 47.63% -> 47.85%. Superseded by §0.35.
 
 Nine parallel agents, one per module, **no workers — SIXTEENTH consecutive run
 under the standing rule.** Three of nine gained. **The run's structural result
