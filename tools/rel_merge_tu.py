@@ -54,6 +54,7 @@ src/mini_bowling_67.c + _68.c, which the OLD tool turns into
 `merge_heads` now returns (text, notes, conflicts) -- it was a 2-tuple.
 """
 import argparse
+import glob
 import os
 import re
 import sys
@@ -86,11 +87,39 @@ def write(p, s):
     # exactly the whole-file diff this function exists to avoid.
     # (HANDOFF sections 0.23/0.24 assert the opposite -- that this wrote LF into
     # a CRLF tree. That was backwards; measured in run 19.)
+    #
+    # RUN 30: this was a SUBSTRING test (`b'\r\n' in ...`), so ONE stray
+    # CRLF anywhere made the WHOLE file CRLF.  Five src/*.c are genuinely
+    # mixed and src/mini_bowling_4b.c is 85 CRLF / 247 LF -- majority LF
+    # -- so the old test rewrote all 247 LF lines and produced exactly
+    # the whole-file diff this function exists to prevent.  Majority wins
+    # now, and a mixed file is ANNOUNCED: on those five the tool makes an
+    # irreversible choice and the agent has to be able to see it.
     try:
         with open(p, 'rb') as fh:
-            nl = '\r\n' if b'\r\n' in fh.read() else '\n'
+            b = fh.read()
+        crlf = b.count(b'\r\n')
+        lf = b.count(b'\n') - crlf
+        nl = '\r\n' if crlf >= lf else '\n'
+        if crlf and lf:
+            print('rel_merge_tu: %s is MIXED (%d CRLF / %d LF); writing '
+                  'all %s' % (p, crlf, lf,
+                              'CRLF' if nl == '\r\n' else 'LF'),
+                  file=sys.stderr)
     except FileNotFoundError:
-        nl = '\r\n'                      # new file: follow the tree majority
+        # New file: follow the SIBLINGS, not the tree.  mini_fight is 92
+        # CRLF / 63 LF; a tree-majority default drops a CRLF file into a
+        # module 40% of whose files are LF.
+        votes = [0, 0]
+        for q in glob.glob(os.path.join(os.path.dirname(p) or '.', '*.c')):
+            try:
+                bb = open(q, 'rb').read()
+            except OSError:
+                continue
+            c2 = bb.count(b'\r\n')
+            votes[0] += c2
+            votes[1] += bb.count(b'\n') - c2
+        nl = '\r\n' if votes[0] >= votes[1] else '\n'
     open(p, 'w', encoding='utf-8', newline=nl).write(s)
 
 
@@ -369,9 +398,23 @@ def merge_heads(heads, files):
                     continue                  # keep the base's; do not decide
                 if specificity(it) <= specificity(b):
                     continue      # base already says at least as much
-                notes.append('%r: %s retypes it; dropped the base head\'s '
-                             'weaker declaration' % (k, f))
-                base[keys[k]] = None
+                notes.append('%r: %s retypes it; replaced the base head\'s '
+                             'weaker declaration IN PLACE' % (k, f))
+                # RUN 30 DEFECT.  This used to set base[keys[k]] = None
+                # and let the richer form fall through to `extra`, i.e.
+                # BELOW the entire base head.  Any base-head declaration
+                # that USES the tag then preceded its definition:
+                #     extern struct BowlPin bowlPins[];  <- base, stays
+                #     struct BowlPin { int a; int b; };  <- carried below
+                # which powerpc-eabi-gcc rejects outright: `array type
+                # has incomplete element type'.  A merge that will not
+                # compile is indistinguishable at a glance from a merge
+                # that loses a match, and this one had NO diagnostic.
+                # Substituting in place keeps every ordering the base
+                # head already had.
+                base[keys[k]] = it
+                seen.add(s)
+                continue
             if k is not None:
                 extra_keys[k] = len(extra)
             else:
@@ -422,6 +465,44 @@ def fix_protos(text):
     if add:
         head = head.rstrip('\n') + '\n\n' + '\n'.join(add) + '\n\n'
     return head + body, notes
+
+
+_PEEP_DEF = re.compile(
+    r'^(static\s+)?(asm\s+)?[\w \t*]+?\b(lbl_[0-9A-Fa-f]+)\s*\([^;{]*\)\s*$')
+
+
+def peephole_fix(text):
+    """Insert `#pragma peephole on` before every C definition that FOLLOWS an
+    asm stub in the merged TU.  Idempotent.  Returns (text, notes).
+
+    This is `_harvest_run16/pragmafix.py`, folded in because merging is what
+    CREATES the condition it repairs: absorbing a still-asm file next to a
+    matched one is exactly how an already-C function ends up downstream of an
+    `asm` block, and run 12 measured that the mixed-TU deopt is ONLY the
+    peephole pass and ONLY after the asm block -- so `#pragma peephole on`
+    fixes it in place and the file does not need splitting.
+
+    The standalone inserted `'#pragma peephole on\r'`, which is right in a CRLF
+    file and a LONE CR in an LF one (63 of mini_fight's files are LF).  Here
+    the text is already LF-normalised by read() and write() re-applies the
+    file's own ending, so a plain line is correct for both.
+    """
+    lines = text.split('\n')
+    out, notes, prev_asm = [], [], False
+    for i, ln in enumerate(lines):
+        m = _PEEP_DEF.match(ln)
+        if m and i + 1 < len(lines) and lines[i + 1].strip().startswith('{'):
+            is_asm = bool(m.group(2))
+            if not is_asm and prev_asm:
+                k = len(out) - 1
+                while k >= 0 and not out[k].strip():
+                    k -= 1
+                if k < 0 or 'peephole on' not in out[k]:
+                    out.append('#pragma peephole on')
+                    notes.append(m.group(3))
+            prev_asm = is_asm
+        out.append(ln)
+    return '\n'.join(out), notes
 
 
 def main():
@@ -485,6 +566,13 @@ def main():
     merged, pnotes = fix_protos(merged)
     for n in pnotes:
         print('  proto: %s' % n)
+    merged, peeps = peephole_fix(merged)
+    if peeps:
+        print('  peephole: inserted `#pragma peephole on` before %d C '
+              'definition(s) that now follow an asm stub: %s'
+              % (len(peeps), ', '.join(peeps)))
+        print('            (run 12: the mixed-TU deopt is ONLY the peephole '
+              'pass and ONLY after the asm block -- GATE, do not assume.)')
     write(files[0], merged)
     if conflicts:
         # The merged file KEEPS THE FIRST FORM of each of these.  Until run 15

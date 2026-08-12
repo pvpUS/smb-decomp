@@ -157,7 +157,7 @@ def price(tree, mod, max_span):
     idx = {f: n for n, f in enumerate(files)}
     emit, unbuilt = emitters(tree, files)
 
-    # host objects, by the kind of magic they emit
+    # host objects, by the kind of magic they emit...
     hosts = {}
     for obj, k in (kinds or {}).items():
         if not k:
@@ -165,6 +165,22 @@ def price(tree, mod, max_span):
         src = 'src/' + obj[:-2]                    # foo.c.o -> src/foo.c
         if src in idx:
             hosts[src] = k
+
+    # ...AND BY THE ADDRESSES THEY OWN, which is what actually decides the
+    # merge.  RUN 30, found by mini_race: this tool used to answer by KIND, and
+    # 11 of its 20 mini_race rows were wrong -- 1,912 instructions that no
+    # merge can reach at all, including a 492-instruction headline row whose
+    # named host emits 0x13C70 while both its readers want 0x13F60/0x13F38.
+    # Sections 2 and 6 have said the condition is the ADDRESS since run 22.
+    #
+    # `owners` is keyed UPPERCASE (rel_reach) and `reads_labels` LOWERCASE
+    # (rel_census).  Normalise, or the join matches nothing and every reader
+    # reads DEAD -- a vacuous answer that looks like a confident one.
+    host_addr = {}
+    for lbl, obj in (owners or {}).items():
+        src = 'src/' + obj[:-2] if obj.endswith('.o') else obj
+        if src in idx:
+            host_addr.setdefault(src, set()).add(lbl.lower())
 
     table, _bias, _magics = C.census(tree, stem, mod)
     readers = []
@@ -180,7 +196,8 @@ def price(tree, mod, max_span):
         ownobj = os.path.basename(own) + '.o'
         if need and need <= kinds.get(ownobj, set()):
             continue                               # reachable today, no merge
-        readers.append((t['fn'], t['insn'], own, need))
+        readers.append((t['fn'], t['insn'], own, need,
+                        {x.lower() for x in (t.get('reads_labels') or [])}))
 
     print('=== %-15s %d SOURCES entries, %d a-BLOCKED readers, hosts: %s'
           % (mod, len(files), len(readers),
@@ -199,18 +216,27 @@ def price(tree, mod, max_span):
     # into the reader's TU.  test_mode's priced-but-uncut 840-instruction merge
     # is exactly that (`_16.c` emits u, `_27.c` emits s).  So candidates are
     # single hosts AND host pairs.
-    cands = [((h,), k) for h, k in hosts.items()]
+    cands = [((h,), k, host_addr.get(h, set())) for h, k in hosts.items()]
     for h1, k1 in hosts.items():
         for h2, k2 in hosts.items():
             if idx[h1] < idx[h2] and not (k1 | k2) <= k1 and \
                     not (k1 | k2) <= k2:
-                cands.append(((h1, h2), k1 | k2))
+                cands.append(((h1, h2), k1 | k2,
+                              host_addr.get(h1, set()) |
+                              host_addr.get(h2, set())))
 
     rows = []
-    for fn, insn, own, need in readers:
+    for fn, insn, own, need, naddr in readers:
         best = None
-        for host, hk in cands:
-            if need and not need <= hk:
+        for host, hk, ha in cands:
+            # ADDRESS first.  A host that emits the right KIND at the wrong
+            # ADDRESS cannot serve this reader, and saying otherwise is the
+            # defect this rewrite fixes.  Kind is retained only for display and
+            # as a fallback when the census could not name the labels.
+            if naddr:
+                if not naddr <= ha:
+                    continue
+            elif need and not need <= hk:
                 continue
             pts = [idx[own]] + [idx[h] for h in host]
             a, b = min(pts), max(pts)
@@ -236,8 +262,9 @@ def price(tree, mod, max_span):
             second = [f for f in span
                       if f in emit and f.endswith('.c')
                       and f not in host and f != own]
-            free = [(f2, i2) for f2, i2, o2, n2 in readers
-                    if f2 != fn and o2 in span and n2 and n2 <= hk]
+            free = [(f2, i2) for f2, i2, o2, n2, a2 in readers
+                    if f2 != fn and o2 in span
+                    and ((a2 and a2 <= ha) or (not a2 and n2 and n2 <= hk))]
             # RANK BY LIVENESS FIRST, THEN BY SPAN.  Ranking by span alone
             # reports a reader DEAD whenever its cheapest candidate is blocked,
             # even though a slightly longer span is available -- a tool that
@@ -247,17 +274,18 @@ def price(tree, mod, max_span):
             if best is None or cand[:2] < best[:2]:
                 best = cand
         if best is None:
-            rows.append((10 ** 6, fn, insn, own, need, None))
+            rows.append((10 ** 6, fn, insn, own, need, naddr, None))
         else:
-            rows.append((best[1], fn, insn, own, need) + (best[2:],))
+            rows.append((best[1], fn, insn, own, need, naddr) + (best[2:],))
 
     rows.sort(key=lambda r: (r[0], -r[2]))
-    for nspan, fn, insn, own, need, rest in rows:
+    for nspan, fn, insn, own, need, naddr, rest in rows:
+        want = ','.join(sorted(naddr)) if naddr else ('+'.join(sorted(need))
+                                                      or '?')
         if rest is None:
-            print('  %-14s %5d  %-24s wants %-3s  NO HOST emits it -- a merge '
-                  'cannot help; this needs a carve or a new emitter'
-                  % (fn, insn, os.path.basename(own), '+'.join(sorted(need))
-                     or '?'))
+            print('  %-14s %5d  %-24s wants %-22s NO HOST emits that ADDRESS '
+                  '-- a merge cannot help; this needs a carve or a new emitter'
+                  % (fn, insn, os.path.basename(own), want))
             continue
         host, nonc, second, free, rodonly = rest
         if max_span and nspan > max_span:
@@ -268,8 +296,8 @@ def price(tree, mod, max_span):
         elif nonc:
             verdict = 'DEAD: non-.c in span'
         hostname = '+'.join(os.path.basename(h) for h in host)
-        print('  %-14s %5d  %-24s wants %-3s  span %3d -> %-24s %s'
-              % (fn, insn, os.path.basename(own), '+'.join(sorted(need)) or '?',
+        print('  %-14s %5d  %-24s wants %-22s span %3d -> %-24s %s'
+              % (fn, insn, os.path.basename(own), want,
                  nspan, hostname, verdict))
         if len(host) > 1:
             # The absorbed emitters concatenate in SOURCES order, so the merged
@@ -327,7 +355,43 @@ def selftest():
     # ...and the gate is not vacuous: the good Makefile still parses.
     open(os.path.join(d, 'Makefile'), 'w').write(mk)
     assert len(sources_order(d, 'mini_race')) == 3
-    print('rel_mergeprice selftest: 4 cases OK')
+    # RUN 30 -- the ADDRESS join, which is the whole point of the rewrite.
+    # A gate that does not exercise the fix is decoration, and this tool's own
+    # docstring says a self-test over its own fixtures is how `rel_arity`
+    # shipped broken in BOTH modes.
+    #
+    # The two sources DISAGREE ON CASE: rel_reach yields `lbl_000137B8`,
+    # rel_census `lbl_000137b8`.  Un-normalised, the join matches nothing and
+    # every reader reads DEAD -- a vacuous answer wearing a confident one's
+    # clothes.  These cases are taken from mini_race's real numbers.
+    owners_up = {'lbl_000137B8': 'mini_race_37.c.o',
+                 'lbl_00013C70': 'mini_race_91.c.o'}
+    idx_ = {'src/mini_race_37.c': 0, 'src/mini_race_91.c': 1}
+    host_addr = {}
+    for lbl, obj in owners_up.items():
+        src = 'src/' + obj[:-2]
+        if src in idx_:
+            host_addr.setdefault(src, set()).add(lbl.lower())
+    assert host_addr == {'src/mini_race_37.c': {'lbl_000137b8'},
+                         'src/mini_race_91.c': {'lbl_00013c70'}}, host_addr
+
+    # lbl_000065A0 wants 0x137B8 and _37.c owns it -> LIVE.
+    assert {'lbl_000137b8'} <= host_addr['src/mini_race_37.c']
+    # lbl_00011128 wants 0x13F60, which NO host owns.  The pre-run-30 tool
+    # called this AVAILABLE via _91.c because both are kind `s` -- a
+    # 492-instruction row that is flatly impossible.
+    assert not {'lbl_00013f60'} <= host_addr['src/mini_race_91.c']
+    assert not any({'lbl_00013f60'} <= a for a in host_addr.values())
+    # KIND alone cannot tell those two apart: every host here is `s` and so is
+    # every reader.  That is exactly why the kind test passed them.
+    assert {'s'} <= {'s'} and {'s'} <= {'s'}
+    # A reader wanting TWO addresses needs ONE host owning BOTH (mini_race's
+    # lbl_00011E50 wants 0x13F60+0x13FF0 and is adjacency-dead).
+    assert not any({'lbl_00013f60', 'lbl_00013ff0'} <= a
+                   for a in host_addr.values())
+    # ...and the gate is not vacuous: the live row still resolves.
+    assert any({'lbl_00013c70'} <= a for a in host_addr.values())
+    print('rel_mergeprice selftest: 10 cases OK')
 
 
 def main():

@@ -37,9 +37,15 @@ mid-run and could have silently broken an agent's scratch script):
 
 READ THE TABLE THE WAY SECTION 12 MEANS IT:
   * `G`/`GF` 0 in 0 means the residual is PURE REGISTER NUMBERING -- an
-    allocator tie-break, not a source-shape problem.  Do not start a spelling
+    allocator tie-break, not a source-shape problem.  Do not start a SPELLING
     sweep on it.  sel_ngc's `10214` went 5 in 4 -> 0 in 0 on ONE pragma and the
     brief's "that half is structural" was simply false.
+    ** BUT DO NOT READ THAT AS "WALK AWAY". **  The LOCAL SET is not a
+    spelling: how many temps the source DECLARES decides what the allocator
+    has to place.  Run 30's largest conversion (mini_golf, 337 insn) came from
+    declaring two more `f64` temps on a function whose GF row said tie-break --
+    golden lands three products in f3/f2/f1 and one reused temp pins all three.
+    This tool's own advice line would have told it to walk away.
   * plain far worse than positional means a LENGTH or INSERTION problem.  Run
     `tools/rel_sdiff.py`; it says "WRONG LENGTH, this is not a near-miss" out
     loud.
@@ -240,7 +246,14 @@ def main():
         elif gf and gf[2] == 0:
             print('  ^ GF 0 in 0 while plain is not: the residual is PURE '
                   'REGISTER NUMBERING (an allocator tie-break).\n'
-                  '    Do not open a spelling sweep.')
+                  '    A SPELLING sweep will not reach it -- but the LOCAL '
+                  'SET can.  How many temps\n'
+                  '    the source DECLARES decides what the allocator has to '
+                  'place, and that is not\n'
+                  '    a spelling.  mini_golf banked 337 in run 30 by adding '
+                  'two f64 temps to a\n'
+                  '    function whose GF row said tie-break; this line used to '
+                  'say "walk away".')
     return bad
 
 
