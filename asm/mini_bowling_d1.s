@@ -6,6 +6,7 @@
 .global lbl_00010CC0
 .global lbl_00010CC8
 .global lbl_00010D58
+.global lbl_00010D60
 
 .section .rodata
 .balign 8
@@ -1890,3 +1891,10 @@ lbl_00010CC8:
     .4byte 0x3FA99999
     .4byte 0x9999999A
 lbl_00010D58:
+# lbl_00010D60 is the UNSIGNED int->float magic.  Its 8 bytes now belong to
+# src/mini_bowling_4bb.c, which emits the whole 16-byte block at 0x10D58, so
+# the symbol is interior to THAT object's .rodata and no SOURCES position can
+# reach it.  An anchor symbol needs no section contribution (run 32,
+# test_mode): .set it off the alias above, which sits at the end of this
+# file's own .rodata.
+.set lbl_00010D60, lbl_00010D58 + 8

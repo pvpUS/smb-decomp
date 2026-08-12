@@ -403,11 +403,6 @@ static void lbl_00017BA0(s8 *arg, struct Sprite *sp);
 void lbl_00017DC0(int arg);
 
 #pragma force_active on
-asm void lbl_000177C8(void)
-{
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000177C8.s"
-}
 #pragma peephole on
 static void lbl_00017950(s8 *arg, struct Sprite *sp)
 {

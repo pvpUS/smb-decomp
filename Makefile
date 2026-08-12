@@ -618,34 +618,7 @@ SOURCES := \
 	src/mini_bowling_4.c \
 	src/mini_bowling_4b.c \
 	src/mini_bowling_4bb.c \
-	src/mini_bowling_5.c \
-	src/mini_bowling_6.c \
-	src/mini_bowling_7.c \
-	src/mini_bowling_8.c \
-	src/mini_bowling_9.c \
-	src/mini_bowling_10.c \
-	src/mini_bowling_11.c \
-	src/mini_bowling_12i.c \
-	src/mini_bowling_12zi.c \
-	src/mini_bowling_12zzi.c \
-	src/mini_bowling_12zzz.c \
-	src/mini_bowling_13.c \
-	src/mini_bowling_14.c \
-	src/mini_bowling_15.c \
-	src/mini_bowling_16.c \
-	src/mini_bowling_17.c \
-	src/mini_bowling_18.c \
-	src/mini_bowling_19.c \
-	src/mini_bowling_20.c \
-	src/mini_bowling_21.c \
-	src/mini_bowling_22.c \
-	src/mini_bowling_23.c \
-	src/mini_bowling_24.c \
-	src/mini_bowling_25.c \
-	src/mini_bowling_25b.c \
-	src/mini_bowling_25c.c \
 	asm/mini_bowling_d3.s \
-	src/mini_bowling_26.c \
 	asm/mini_bowling_d2.s \
 	src/mini_bowling_32.c \
 	src/mini_bowling_33.c \
@@ -1180,16 +1153,6 @@ SOURCES := \
 	src/test_mode_110b.c \
 	src/test_mode_111.c \
 	src/test_mode_112.c \
-	src/test_mode_113.c \
-	src/test_mode_114.c \
-	src/test_mode_115.c \
-	src/test_mode_115b.c \
-	src/test_mode_116.c \
-	src/test_mode_117.c \
-	src/test_mode_118.c \
-	src/test_mode_119.c \
-	src/test_mode_120.c \
-	src/test_mode_121.c \
 	src/test_mode_122.c \
 	asm/test_mode_d5.s
 O_FILES := $(addsuffix .o,$(SOURCES))

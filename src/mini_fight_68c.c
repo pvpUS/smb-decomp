@@ -313,7 +313,7 @@ void lbl_0000E458(void);
 void lbl_0000E4D4(void);
 void lbl_0000E9D8(void);
 void lbl_0000EA10(void);
-void lbl_0000EBF4(void);
+s32 lbl_0000EBF4(void);
 void lbl_0000EC58(void);
 void lbl_0000EDA8(void);
 void lbl_0000EE80(void);
@@ -1002,5 +1002,61 @@ void lbl_000175B8(s8 *unused, struct Sprite *sp)
     sp->scaleY = *(f32 *)(k + 0x104) * *(f32 *)(e + 0x18);
 }
 #pragma peephole on
+
+void lbl_000177C8(void)
+{
+    char buf[0x100];
+    u8 *d = lbl_0001D8B0;
+    u8 *k = lbl_0001C628;
+    struct Sprite *sp;
+    int n;
+    char *p;
+    int ang;
+    void *fn;
+    f32 y;
+    s32 pad[2];
+
+    *(u32 *)lbl_10018CFC |= 4;
+    if (lbl_0000EBF4())
+        sprintf(buf, (char *)(d + 0x34C));
+    else
+        sprintf(buf, (char *)(d + 0x358),
+                *(s16 *)((u8 *)&lbl_10017664 + 4) + 1);
+
+    fn = ((void **)(d + 0x344))[*(s16 *)((u8 *)&lbl_10017664 + 4) & 1];
+    n = strlen(buf);
+    y = *(f32 *)(k + 0xD4) - *(f32 *)(k + 0x124) * (f32)(n - 1);
+    p = buf;
+    ang = 0;
+    while (n > 0)
+    {
+        if (*p != ' ')
+        {
+            sp = create_sprite();
+            if (sp != NULL)
+            {
+                sp->x = y;
+                sp->y = *(f32 *)(k + 0x128);
+                sp->fontId = 9;
+                sp->textAlign = 5;
+                sp->depth = *(f32 *)(k + 0x6C);
+                sp->scaleX = *(f32 *)(k + 0x78);
+                sp->scaleY = *(f32 *)(k + 0x78);
+                sp->addR = 0xFF;
+                sp->addG = 0xFF;
+                sp->addB = 0xFF;
+                sp->counter = ang;
+                sp->userVar = n;
+                sp->mainFunc = (void (*)(s8 *, struct Sprite *))fn;
+                sp->text[0] = *p;
+                sp->text[1] = 0;
+            }
+        }
+        n--;
+        p++;
+        ang += 6;
+        y += *(f32 *)(k + 0x12C);
+    }
+}
 
 #pragma force_active reset

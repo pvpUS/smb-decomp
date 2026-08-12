@@ -1,6 +1,5 @@
 # mini_bowling data segment 2 -- rodata continuation after a carved hole
 .include "macros.inc"
-.global lbl_00010D60
 .global lbl_00010EE0
 .global lbl_00010EE8
 .global lbl_00010EF0
@@ -13,10 +12,8 @@
 
 .section .rodata
 .balign 8
-lbl_00010D60:
-    # 0x10D60
-    .4byte 0x43300000
-    .4byte 0x00000000
+    # 0x10D68 -- the 8 bytes of unsigned magic that used to start here are
+    # emitted by src/mini_bowling_4bb.c now; lbl_00010D60 is .set in d1.s.
     .4byte 0x41800000
     .4byte 0x00000000
     .4byte 0x3FE55555

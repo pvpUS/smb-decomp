@@ -29,7 +29,26 @@
 #include "polydisp.h"
 #include "pool.h"
 #include "rend_efc.h"
+/* src/sound.h declares SoundIcsReq as (u32,u8,s8); src/mini_bowling_26.c,
+ * absorbed into this TU, deliberately did not include sound.h and was
+ * matched against (u32,int,int).  Letting sound.h win costs exactly one
+ * instruction in lbl_00007518 (SIZE 312 -> 316) and nothing else in the
+ * module -- measured with rel_fnhash, 119/120 identical.  The header is
+ * still needed here: the asm blocks below branch to SoundOff / SoundDop,
+ * which mwcc resolves as C-scope labels. */
+#define SoundIcsReq SoundIcsReq__wrong_arity_in_sound_h
+#define SoundVol    SoundVol__wrong_arity_in_sound_h
+#define SoundPan    SoundPan__wrong_arity_in_sound_h
+#define SoundDop    SoundDop__wrong_arity_in_sound_h
 #include "sound.h"
+#undef SoundIcsReq
+#undef SoundVol
+#undef SoundPan
+#undef SoundDop
+extern void SoundIcsReq(u32 arg0, int arg1, int arg2);
+extern void SoundVol(u16 arg0, int arg1);
+extern void SoundPan(u16 arg0, int arg1, int arg2);
+extern void SoundDop(u16 arg0, int arg1);
 #include "sprite.h"
 #include "stage.h"
 #include "thread.h"
@@ -120,7 +139,7 @@ extern void func_8009DB40();
 extern void func_8009DDC4();
 extern void func_800AB2A0();
 extern void func_800AB444();
-extern void func_800AB6F8();
+extern int func_800AB6F8();
 extern void func_800AC43C();
 extern void func_800AC5E0();
 extern void mini_commend_free_data();
@@ -156,24 +175,24 @@ void lbl_000045E8(void);
 void lbl_00004A80(void);
 void lbl_00004BD8(void);
 void lbl_00004D10(void);
-void lbl_00004DF8(void);
-void lbl_00005128(void);
-void lbl_000051E0(void);
-void lbl_000054BC(void);
+void lbl_00004DF8(struct BowlScore *p);
+void lbl_00005128(struct BowlSheet *sheet);
+void lbl_000051E0(struct BowlScore *p);
+char *lbl_000054BC(void);
 void lbl_00005564(void);
 void lbl_00005B0C(void);
-void lbl_000066C4(void);
-void lbl_000068C4(void);
-void lbl_00006E64(void);
+void lbl_000066C4(struct Ape *ape, int status);
+void lbl_000068C4(struct Ape *ape, float speed);
+void lbl_00006E64(u32 color, char *str, float x, float y);
 void lbl_00006F0C(void);
 void lbl_00007518(void);
-void lbl_00007650(void);
+void lbl_00007650(s32 a, s32 b, s32 c);
 void lbl_000076D0(void);
 void lbl_00007740(void);
-void lbl_00007778(void);
+int lbl_00007778(void);
 void lbl_00007878(void);
-void lbl_00007964(void);
-void lbl_000079E8(void);
+void lbl_00007964(int idx, struct Ball *ball);
+void lbl_000079E8(int, struct Ball *);
 void lbl_00007A6C(void);
 void lbl_00007C54(void);
 void lbl_00007E74(void);
@@ -207,16 +226,16 @@ void lbl_0000A778(void);
 void lbl_0000A808(void);
 void lbl_0000A878(void);
 void lbl_0000AAAC(void);
-void lbl_0000AB98(void);
+void lbl_0000AB98(Vec *pos, s8 idx);
 void lbl_0000AC60(void);
-void lbl_0000AD8C(void);
+s16 lbl_0000AD8C(u8 *);
 void lbl_0000AF18(void);
 void lbl_0000AFEC(void);
-void lbl_0000B0AC(void);
+void lbl_0000B0AC(f32);
 void lbl_0000B1BC(void);
-void lbl_0000B344(void);
-void lbl_0000B460(void);
-void lbl_0000B654(void);
+int lbl_0000B344(void);
+void lbl_0000B460(int);
+void lbl_0000B654(int);
 void lbl_0000B848(void);
 void lbl_0000B914(void);
 void lbl_0000BDE0(void);
@@ -229,11 +248,11 @@ void lbl_0000D598(void);
 void lbl_0000D650(void);
 void lbl_0000D7F8(void);
 void lbl_0000D8CC(void);
-void lbl_0000D90C(void);
+void lbl_0000D90C(int, int);
 void lbl_0000DA0C(void);
-void lbl_0000DAF4(void);
-void lbl_0000DD4C(void);
-void lbl_0000DFA4(void);
+void lbl_0000DAF4(int, void *);
+void lbl_0000DD4C(int, void *);
+void lbl_0000DFA4(int, int);
 void lbl_0000E22C(void);
 void lbl_0000E3A0(void);
 void lbl_0000E510(void);
@@ -243,6 +262,43 @@ void lbl_0000E870(void);
 void lbl_0000E894(void);
 void lbl_0000EC38(void);
 void lbl_0000EDB0(void);
+
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+struct BowlSnd4 { s32 id[4]; };
+struct BowlScore {
+    char *split;      // 0x00 name of the split pattern left standing, or NULL
+    s16 score;        // 0x04
+    s8 frame;         // 0x06 1..10
+    s8 ball;          // 0x07 1..3
+    s8 idx;           // 0x08 index of the current ball, 0..20
+    s8 streak;        // 0x09 consecutive strikes
+    s16 total[11];    // 0x0a
+    s8 pins[21];      // 0x20
+    s8 state[21];     // 0x35
+    u8 filler4A[2];   // 0x4a
+};
+struct BowlSheet {  // per-player bowling score sheet; only these fields are known
+    u8 unk0[4];
+    s16 score;  // 0x04 running total
+    u8 unk6[0x20 - 0x06];
+    s8 pins[0x15];  // 0x20 pins felled per roll
+    s8 kind[0x15];  // 0x35 roll kind: 2 = strike, 3 = spare
+};
+struct PatEntry
+{
+    char *name;
+    u16 key;
+    u8 pad[2];
+};
+struct BowlConfig
+{
+    u8 pad0[0x1fcc];
+    struct PatEntry arr2[27];
+};
+int lbl_0000664C(u8 *p, s8 i8);
+void u_play_sound_0(int arg0);
+void u_play_music(u32 arg0, s8 arg1);
 
 #pragma force_active on
 asm void lbl_000009EC(void)
@@ -256,4 +312,1079 @@ asm void lbl_00000F98(void)
 #include "../asm/nonmatchings/mini_bowling/lbl_00000F98.s"
 }
 
+#pragma peephole on
+void lbl_00001888(void)
+{
+    int i;
+
+    u_clear_buffers_2_and_5();
+    event_finish_all();
+    polyDisp.flags &= ~0x20;
+    u_free_minigame_graphics();
+    bitmap_free_group(6);
+    SoundGroupFree();
+
+    for (i = 15; i >= 0; i--)
+    {
+        if (apeThreadNo[i] != -1)
+            thread_kill(apeThreadNo[i]);
+    }
+}
+void lbl_00001908(void)
+{
+    u8 *w = lbl_10000000;
+    u8 *tbl = lbl_0000F020;
+    if (*(s8 *)((w + modeCtrl.currPlayer * 0x4c) + 0x13) == 1 ||
+        (*(s8 *)((w + modeCtrl.currPlayer * 0x4c) + 0x13) == 2 && (s8)*(u8 *)((w + modeCtrl.currPlayer * 0x4c) + 0x12) == 10))
+        stageInfo.unk0 = 0;
+    else
+        stageInfo.unk0 = 0x1770;
+
+    lbl_0000B0AC(*(f32 *)(tbl + 0x1c24));
+    *(s16 *)(w + 0x13c) = lbl_0000AD8C(w + 0x13e);
+    lbl_0000AC60();
+    if (*(u16 *)(w + 0x13c) == 0) {
+        lbl_00004D10();
+        *(s16 *)(w + 0x13c) = lbl_0000AD8C(w + 0x13e);
+    }
+    *(s8 *)(w + 0x13f) = 0;
+    *(s8 *)(w + 0x140) = 0;
+    *(f32 *)(w + 0x168) = *(f32 *)(tbl + 0x1c98);
+    *(f32 *)(w + 0x16c) = *(f32 *)(tbl + 0x1c98);
+    *(f32 *)(w + 0x170) = *(f32 *)(tbl + 0x1c98);
+    *(s16 *)(w + 0x174) = 0;
+    BALL_FOREACH(
+        ball->state = 0x19;
+        currentBall->unk148 = 0;
+    )
+    if (modeCtrl.playerCount >= 2)
+        lbl_0000D90C(0x3c, modeCtrl.currPlayer + 1);
+    else
+        lbl_0000D90C(0x3c, 0);
+    *(f32 *)(w + 0x160) = *(f32 *)(tbl + 0x1c98);
+    *(f32 *)(w + 0x164) = *(f32 *)(tbl + 0x1dfc);
+    *(s32 *)w = 0x3c;
+    *(s32 *)lbl_00014F20 = 2;
+    *(s32 *)lbl_00014F24 = 0x4023;
+    CAMERA_FOREACH_2(camera->subState = 2;)
+}
+void lbl_00001B14(void)
+{
+    u8 *w = lbl_10000000;
+    u8 *tbl = lbl_0000F020;
+    struct BowlSnd4 snd;
+
+    snd = *(struct BowlSnd4 *)(tbl + 0x1e00);
+    if ((s32)lbl_802F1BF0 == 0 && modeCtrl.playerCount >= 2) {
+        if (*(s32 *)w == 0x3b)
+            u_play_sound_0(snd.id[modeCtrl.currPlayer]);
+        else if (*(s32 *)w == 1)
+            u_play_sound_0(0x1f5);
+    } else if (*(s32 *)w == 0x3b) {
+        u_play_sound_0(0x1f5);
+    }
+    if (*(s32 *)w < 0) {
+        if (modeCtrl.playerCount == 1)
+            u_play_sound_0(0xd81e);
+        *(f32 *)(w + 0x160) = *(f32 *)(tbl + 0x1c98);
+        *(f32 *)(w + 0x164) = *(f32 *)(tbl + 0x1dfc);
+        *(s32 *)w = 0x2710;
+        *(s32 *)lbl_00014F20 = 4;
+        *(s32 *)lbl_00014F24 = 0x40a1;
+        CAMERA_FOREACH_2(camera->subState = 2;)
+    }
+}
+void lbl_00001C84(void)
+{
+    u8 *w = lbl_10000000;
+    u8 *cfg = lbl_0000F020;
+
+    if (*(f64 *)(cfg + 0x1e10) == *(s32 *)w) {
+        if (modeCtrl.playerCount >= 2)
+            u_play_sound_0(0xd81e);
+    }
+    currentBall->vel.x = *(f64 *)(cfg + 0x1e18)
+        * controllerInfo[playerControllerIDs[currentBall->playerId]].held.stickX;
+    if ((currentBall->pos.x > *(f64 *)(cfg + 0x1e20) && currentBall->vel.x > *(f64 *)(cfg + 0x1dc0)) ||
+        (currentBall->pos.x < *(f64 *)(cfg + 0x1e28) && currentBall->vel.x < *(f64 *)(cfg + 0x1dc0)))
+        currentBall->vel.x = *(f32 *)(cfg + 0x1c98);
+    lbl_00007518();
+    if (controllerInfo[playerControllerIDs[currentBall->playerId]].pressed.button & PAD_BUTTON_A) {
+        if (*(s32 *)w > *(f64 *)(cfg + 0x1e10)) {
+            if (modeCtrl.playerCount >= 2)
+                u_play_sound_0(0xd81e);
+        }
+        u_play_sound_0(0x11a);
+        SoundIcsReq(currentBall->playerId, 0, 0);
+        currentBall->vel.x = *(f32 *)(cfg + 0x1c98);
+        currentBall->unk64 = 0;
+        *(f32 *)(w + 0x160) = *(f32 *)(cfg + 0x1c98);
+        *(f32 *)(w + 0x164) = *(f32 *)(cfg + 0x1e30);
+        *(s32 *)w = 0x258;
+        *(s32 *)lbl_00014F20 = 8;
+        *(s32 *)lbl_00014F24 = 0x4125;
+        {
+            struct Camera *cameraBackup = currentCamera;
+            struct Camera *camera = &cameraInfo[0];
+            int i;
+            for (i = 0; i < 4; i++, camera++) {
+                currentCamera = camera;
+                camera->subState = 3;
+            }
+            currentCamera = cameraBackup;
+        }
+    }
+}
+#pragma peephole on
+void lbl_00001F1C(void)
+{
+    u8 *w = lbl_10000000;
+    u8 *cfg = lbl_0000F020;
+    u8 *p = lbl_00014F20;
+    f32 v;
+
+    if (*(s32 *)w == 0x12c)
+        lbl_0000E510();
+    *(f32 *)(w + 0x160) += (v = *(f32 *)(w + 0x164));
+    if (*(f32 *)(w + 0x160) >= *(f64 *)(cfg + 0x1d28)) {
+        *(f32 *)(w + 0x160) = *(f32 *)(cfg + 0x1c9c);
+        *(f32 *)(w + 0x164) = -v;
+    } else if (*(f32 *)(w + 0x160) <= *(f64 *)(cfg + 0x1dc0)) {
+        *(f32 *)(w + 0x160) = *(f32 *)(cfg + 0x1c98);
+        *(f32 *)(w + 0x164) = -v;
+    }
+    if (*(f32 *)(w + 0x160) <= *(f64 *)(cfg + 0x1dc0))
+        u_play_sound_0(0x104009d);
+    if (*(f32 *)(w + 0x160) >= *(f64 *)(cfg + 0x1d28))
+        u_play_sound_0(0xfc009e);
+    *(f32 *)(w + 0x168) = *(f64 *)(cfg + 0x1e38) * *(f32 *)(w + 0x160) - *(f64 *)(cfg + 0x1d28);
+    if ((controllerInfo[playerControllerIDs[currentBall->playerId]].pressed.button & PAD_BUTTON_A)
+        || *(s32 *)w < 0) {
+        destroy_sprite_with_tag(0x6b);
+        u_play_sound_0(0x11a);
+        *(f32 *)(w + 0x160) = *(f32 *)(cfg + 0x1c98);
+        *(f32 *)(w + 0x164) = *(f32 *)(cfg + 0x1dfc);
+        *(f32 *)(w + 0x16c) = *(f32 *)(cfg + 0x1c98);
+        *(s32 *)w = 0x24c;
+        *(s32 *)p = 0x10;
+        *(s32 *)(p + 4) = 0x4435;
+        CAMERA_FOREACH_2(camera->subState = 4;)
+    }
+    if (controllerInfo[playerControllerIDs[currentBall->playerId]].pressed.button & PAD_BUTTON_B) {
+        destroy_sprite_with_tag(0x6b);
+        u_play_sound_0(0x119);
+        *(f32 *)(w + 0x160) = *(f32 *)(cfg + 0x1c98);
+        *(f32 *)(w + 0x164) = *(f32 *)(cfg + 0x1dfc);
+        *(s32 *)w = 0x2710;
+        *(s32 *)p = 4;
+        *(s32 *)(p + 4) = 0x40a1;
+        CAMERA_FOREACH_2(camera->subState = 2;)
+    }
+}
+void lbl_000021B4(void)
+{
+    u8 *w = lbl_10000000;
+    u8 *cfg = lbl_0000F020;
+    u8 *p = lbl_00014F20;
+    s32 dop;
+    s32 vol;
+
+    if (*(s32 *)w == 0x12c)
+        lbl_0000E510();
+
+    *(f32 *)(w + 0x16c) = *(f64 *)(cfg + 0x1d28)
+        - __fabs(mathutil_sin(*(f32 *)(cfg + 0x1e40) * *(s32 *)w));
+
+    if (*(s32 *)(p + 0xc) == -1)
+        *(s32 *)(p + 0xc) = u_play_sound_1_dupe(0x11c);
+
+    if (*(s32 *)(p + 0xc) != -1) {
+        vol = *(f64 *)(cfg + 0x1e48) + *(f64 *)(cfg + 0x1e50)
+            * (u8)(*(f32 *)(cfg + 0x1e58) * *(f32 *)(w + 0x16c));
+        dop = *(f64 *)(cfg + 0x1e60)
+            * (u16)(*(f32 *)(cfg + 0x1e58) * *(f32 *)(w + 0x16c));
+        SoundVol(*(s32 *)(p + 0xc), vol);
+        SoundPan(*(s32 *)(p + 0xc), 0x40,
+                 *(f32 *)(cfg + 0x1e68) - *(f32 *)(cfg + 0x1e68) * *(f32 *)(w + 0x16c));
+        SoundDop(*(s32 *)(p + 0xc), dop);
+    }
+
+    if ((controllerInfo[playerControllerIDs[currentBall->playerId]].pressed.button & PAD_BUTTON_A)
+        || *(s32 *)w < 0) {
+        destroy_sprite_with_tag(0x6b);
+        if (*(s32 *)(p + 0xc) != -1) {
+            SoundOff(*(s32 *)(p + 0xc));
+            *(s32 *)(p + 0xc) = -1;
+        }
+        u_play_sound_0(0x11a);
+        *(s32 *)w = *(f64 *)(cfg + 0x1e70)
+            + *(f64 *)(cfg + 0x1e48) * (*(f64 *)(cfg + 0x1d28) - *(f32 *)(w + 0x16c));
+        *(s32 *)p = 0x20;
+        *(s32 *)(p + 4) = 0x423d;
+        {
+            struct Camera *cameraBackup = currentCamera;
+            struct Camera *camera = &cameraInfo[0];
+            int i;
+            for (i = 0; i < 4; i++, camera++) {
+                currentCamera = camera;
+                camera->subState = 4;
+            }
+            currentCamera = cameraBackup;
+        }
+    }
+}
+asm void lbl_00002454(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_bowling/lbl_00002454.s"
+}
+// lbl_10000000 + 0xc is an array of four 0x4c-byte per-player records; the rest
+// of the work area resumes at +0x13c (== 0xc + 4*0x4c).  Indexing it AS AN
+// ARRAY OF STRUCTS is load-bearing: it is the only spelling that emits
+// `add r30, r31, r0` (base in rA) instead of `add r30, r0, r31`.  Every
+// byte-offset spelling -- `&w[i*0x4c + 0xc]`, `w + i*0x4c + 0xc`,
+// `&(w + 0xc)[i*0x4c]` -- gives the other operand order, and the two-step
+// `p = w + i*0x4c; p += 0xc;` sinks the +0xc into every later displacement.
+struct BowlPlayer {
+    u8 filler0[0x4c];
+};
+
+#pragma peephole on
+void lbl_000027B0(void)
+{
+    u8 *w = lbl_10000000;
+    u8 *p;
+    u8 v;
+
+    if (currentBall->pos.z < *(f64 *)lbl_00010EE0 && *(s8 *)(w + 0x140) <= 0) {
+        lbl_00007964(1, currentBall);
+        lbl_0000B460(1);
+        *(s8 *)(w + 0x140) = 1;
+    }
+    if ((((!(currentBall->flags & 0x1000) && func_800246F4(currentBall)) || currentBall->pos.y < *(f64 *)lbl_00010EE8) && lbl_0000B344()) || *(s32 *)w < 0) {
+        p = (u8 *)&((struct BowlPlayer *)(w + 0xc))[modeCtrl.currPlayer];
+        lbl_00004DF8((struct BowlScore *)p);
+        if ((s32)lbl_802F1BF0 == 0) {
+            v = p[(s8)p[8] + 0x35];
+            if ((s8)v == 2 && *(s8 *)(w + 0x140) > 0) {
+                *(s8 *)(w + 0x140) = 2;
+                *(s8 *)(w + 0x13f) = 0;
+                lbl_00007964(0, currentBall);
+                lbl_0000B460(0);
+                lbl_00004A80();
+            } else if ((s8)v == 3 && *(s8 *)(w + 0x140) > 0) {
+                *(s8 *)(w + 0x140) = 1;
+                *(s8 *)(w + 0x13f) = 0;
+                lbl_00007964(0, currentBall);
+                lbl_0000B460(0);
+                lbl_00004A80();
+            } else {
+                lbl_000029A8();
+            }
+        } else if (*(u16 *)(w + 0x13c) == 0 && *(s8 *)(w + 0x140) > 0) {
+            *(s8 *)(w + 0x140) = 2;
+            *(s8 *)(w + 0x13f) = 0;
+            lbl_00007964(0, currentBall);
+            lbl_0000B460(0);
+            lbl_00004A80();
+        } else {
+            lbl_00004410();
+        }
+    }
+}
+struct BowlMsgs { char *text[13]; };
+struct BowlSnds { s32 id[13]; };
+
+void lbl_000029A8(void)
+{
+    u8 *w = lbl_10000000;
+    u8 *p = lbl_00014F20;
+    struct BowlScore *sheet;
+    struct BowlMsgs msg;
+    struct BowlSnds snd;
+    int i;
+
+    sheet = (struct BowlScore *)(w + 0xc) + modeCtrl.currPlayer;
+
+    if (!(currentBall->flags & BALL_FLAG_GOAL)) {
+        CAMERA_FOREACH_2(camera->subState = 5;)
+        lbl_0000DD4C(0x78, p + 0x310);
+    } else {
+        i = sheet->idx;
+        switch (sheet->state[i]) {
+        case 2:
+            msg = *(struct BowlMsgs *)lbl_00010EF0;
+            snd = *(struct BowlSnds *)lbl_00010F24;
+            if (sheet->frame == 10 && sheet->ball == 3 && sheet->streak < 12 &&
+                sheet->streak >= 3) {
+                lbl_0000DAF4(0xb4, p + 0x31c);
+                u_play_sound_0(0x1ca);
+            } else {
+                lbl_0000DAF4(0xb4, msg.text[sheet->streak]);
+                u_play_sound_0(snd.id[sheet->streak]);
+            }
+            if (sheet->streak < 3)
+                lbl_00007650(0xa3, 0xa4, 0x14a);
+            else if (sheet->streak < 12)
+                lbl_00007650(0xa9, 0xaa, 0x12c);
+            else
+                lbl_00007650(0xa7, 0xa8, 0x1fe);
+            break;
+        case 3:
+            lbl_0000DAF4(0xb4, p + 0x328);
+            u_play_sound_0(0x1cb);
+            lbl_00007650(0xa1, 0xa2, 0xf0);
+            break;
+        case 1:
+        case 4:
+            lbl_0000DFA4(0xb4, sheet->pins[i]);
+            lbl_00007650(0xa5, 0xa6, 0xd2);
+            break;
+        default:
+            lbl_0000DD4C(0xb4, p + 0x330);
+            u_play_sound_0(0x1c9);
+            lbl_00007650(0x9f, 0xa0, 0xb4);
+            break;
+        }
+        BALL_FOREACH(ball->unk148 = 3;)
+        CAMERA_FOREACH_2(camera->subState = 6;)
+        *(s32 *)(w + 0x144) = 0x168;
+    }
+    if (sheet->streak == 12)
+        *(s32 *)w = 0x21c;
+    else if (!(currentBall->flags & BALL_FLAG_GOAL))
+        *(s32 *)w = 0xf0;
+    else
+        *(s32 *)w = 0x168;
+    *(s32 *)p = 0x80;
+    *(s32 *)(p + 4) = 0x60;
+}
+asm void lbl_00002DE0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_bowling/lbl_00002DE0.s"
+}
+asm void lbl_00003574(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_bowling/lbl_00003574.s"
+}
+asm void lbl_00003A10(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_bowling/lbl_00003A10.s"
+}
+// lbl_00003D24 (0x3D24): result-screen tick -- wait for an A press, then fade out
+// and hand control back to the mode dispatcher after 60 frames.
+#pragma peephole on
+void lbl_00003D24(void)
+{
+    if (modeCtrl.submodeTimer == 0) {
+        if (lbl_00007778() && func_800AB6F8() == 0) {
+            u_play_sound_0(0xd1);
+            modeCtrl.submodeTimer = 60;
+            start_screen_fade(0x101, 0xffffff, 60);
+            u_play_music(60, 2);
+        }
+    } else if (--modeCtrl.submodeTimer == 0) {
+        func_800AB444();
+        func_80012434(modeCtrl.gameType);
+    }
+}
+#define BOWL_PAD (playerControllerIDs[currentBall->playerId])
+
+void lbl_00003DC0(void)
+{
+    u8 *w = lbl_10000000;
+    s8 *sel = (s8 *)(w + 7);
+    u32 i;
+    s32 n;
+    s32 mask;
+    int k;
+
+    n = *sel;
+    mask = *(u16 *)(w + 4);
+    for (k = 0; k < 10; k++) {
+        i = n;
+        if (!(mask & (1 << n)))
+            break;
+        i++;
+        if (i >= 10)
+            i = 0;
+    }
+    *sel = i;
+
+    if ((controllerInfo[BOWL_PAD].repeat.button & PAD_BUTTON_RIGHT) ||
+        (analogInputs[BOWL_PAD].repeat & ANALOG_STICK_RIGHT)) {
+        mask = *(u16 *)(w + 4);
+        for (k = 0; k < 10; k++) {
+            i++;
+            if (i >= 10)
+                i = 0;
+            if (!(mask & (1 << i)))
+                break;
+        }
+        *sel = i;
+        u_play_sound_0(0x6c);
+    } else if ((controllerInfo[BOWL_PAD].repeat.button & PAD_BUTTON_LEFT) ||
+               (analogInputs[BOWL_PAD].repeat & ANALOG_STICK_LEFT)) {
+        mask = *(u16 *)(w + 4);
+        for (k = 0; k < 10; k++) {
+            i--;
+            if ((s32)i < 0)
+                i = 9;
+            if (!(mask & (1 << i)))
+                break;
+        }
+        *sel = i;
+        u_play_sound_0(0x6c);
+    } else if ((controllerInfo[BOWL_PAD].repeat.button & PAD_BUTTON_UP) ||
+               (analogInputs[BOWL_PAD].repeat & ANALOG_STICK_UP)) {
+        i -= 5;
+        if ((s32)i < 0)
+            i += 10;
+        if (!(*(u16 *)(w + 4) & (1 << i)))
+            *sel = i;
+        u_play_sound_0(0x6c);
+    } else if ((controllerInfo[BOWL_PAD].repeat.button & PAD_BUTTON_DOWN) ||
+               (analogInputs[BOWL_PAD].repeat & ANALOG_STICK_DOWN)) {
+        i += 5;
+        if (i >= 10)
+            i -= 10;
+        if (!(*(u16 *)(w + 4) & (1 << i)))
+            *sel = i;
+        u_play_sound_0(0x6c);
+    }
+
+    if (controllerInfo[BOWL_PAD].pressed.button & PAD_BUTTON_A) {
+        if (*(u16 *)(w + 4) & (1 << *sel)) {
+            u_play_sound_0(0x6b);
+        } else {
+            u_play_sound_0(0x6a);
+            *(s32 *)lbl_00014F20 = 0x1000;
+            *(s32 *)lbl_00014F24 = 0x20;
+            *(s32 *)w = 0x2710;
+        }
+    }
+}
+asm void lbl_000042A4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_bowling/lbl_000042A4.s"
+}
+#pragma peephole on
+void lbl_00004410(void)
+{
+    u8 *w = lbl_10000000;
+    u8 *p = lbl_00014F20;
+
+    if (!(currentBall->flags & BALL_FLAG_GOAL)) {
+        CAMERA_FOREACH_2(camera->subState = 5;)
+        lbl_0000DD4C(0xb4, p + 0x310);
+        *(s32 *)w = 0xf0;
+    } else {
+        if (*(s8 *)(w + 0x13e) == 0) {
+            lbl_00007650(0xa9, 0xaa, 0x12c);
+            lbl_0000DAF4(0xb4, p + 0x338);
+            u_play_sound_0(0x1cf);
+        } else {
+            lbl_00007650(0x9f, 0xa0, 0xb4);
+            lbl_0000DD4C(0xb4, p + 0x340);
+            u_play_sound_0(0x1cd);
+        }
+        BALL_FOREACH(ball->unk148 = 3;)
+        CAMERA_FOREACH_2(camera->subState = 6;)
+        *(s32 *)(w + 0x144) = 0x168;
+        *(s32 *)w = 0x168;
+    }
+    *(s32 *)p = 0x2000;
+    *(s32 *)(p + 4) = 0x60;
+}
+asm void lbl_000045E8(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_bowling/lbl_000045E8.s"
+}
+#pragma peephole on
+void lbl_00004A80(void)
+{
+    lbl_000079E8(1, currentBall);
+    lbl_0000B654(1);
+    if (*(s8 *)lbl_1000013F == 0)
+        CAMERA_FOREACH_2(camera->subState = 8;)
+    else if (*(s8 *)lbl_1000013F == 1)
+        CAMERA_FOREACH_2(camera->subState = 9;)
+    else
+        CAMERA_FOREACH_2(camera->subState = 1;)
+    *(s32 *)lbl_10000000 = 300;
+    *(s32 *)lbl_00014F20 = 0x4000;
+    *(s32 *)lbl_00014F24 = 0x40000;
+}
+void lbl_00004BD8(void)
+{
+    struct Ball *ball;
+    u8 *w = lbl_10000000;
+
+    if ((controllerInfo[playerControllerIDs[(ball = currentBall)->playerId]].pressed.button & PAD_BUTTON_A) && *(s32 *)w < 0xf0) {
+        if ((s32)lbl_802F1BF0 == 0) {
+            lbl_000079E8(0, ball);
+            lbl_0000B654(0);
+            lbl_000029A8();
+        } else {
+            lbl_000079E8(0, ball);
+            lbl_0000B654(0);
+            lbl_00004410();
+        }
+    } else if (ball->pos.y < *(f32 *)lbl_00010F94 || *(s32 *)w < 0) {
+        *(s8 *)(w + 0x13f) += 1;
+        if (*(s8 *)(w + 0x13f) < *(s8 *)(w + 0x140)) {
+            lbl_00004A80();
+        } else if ((s32)lbl_802F1BF0 == 0) {
+            lbl_000079E8(0, ball);
+            lbl_0000B654(0);
+            lbl_000029A8();
+        } else {
+            lbl_000079E8(0, ball);
+            lbl_0000B654(0);
+            lbl_00004410();
+        }
+    }
+}
+// lbl_00004D10 (0x4D10): (re)set up the pin rack.  In the normal game every
+// pin is spawned; otherwise only the pins selected by the per-stage bitmask
+// table reached through the pointer at lbl_00015020, indexed by the stage id
+// in lbl_10000004[3].
+void lbl_00004D10(void)
+{
+    u32 i;
+    u16 mask;
+
+    lbl_0000A808();
+    if ((int)lbl_802F1BF0 == 0)
+    {
+        for (i = 0; i < 10; i++)
+            lbl_0000AB98(&((Vec *)lbl_00010C40)[i], i);
+    }
+    else
+    {
+        mask = *(u16 *)(*(u8 **)lbl_00015020 + ((s8 *)lbl_10000004)[3] * 8);
+        for (i = 0; i < 10; i++)
+        {
+            if (mask & (1 << i))
+                lbl_0000AB98(&((Vec *)lbl_00010C40)[i], i);
+        }
+    }
+}
+// lbl_00004DF8 (0x4DF8): score the ball that has just come to rest for one
+// player.  g+0x13c is the bitmask of pins left standing, g+0x13e their count.
+// The `(s8)` casts are load-bearing, not cosmetic: when the whole RHS of a
+// byte store is narrowable mwcc drops the `extsb` of every s8 leaf, so the
+// plain `down - p->pins[i - 1]` loses one instruction.  A cast applied to a
+// non-leaf (`(s8)(int)x`, `(s8)down`) survives that pass and is what the
+// original emits.  Verified by tools/rel_probe.py, 30 spellings.
+void lbl_00004DF8(struct BowlScore *p)
+{
+    u8 *g = lbl_10000000;
+    s8 i = p->idx;
+    int down;
+
+    *(u16 *)(g + 0x13c) = lbl_0000AD8C(g + 0x13e);
+    lbl_0000AFEC();
+    p->split = NULL;
+    if (p->ball == 1) {
+        p->pins[i] = 10 - *(s8 *)(g + 0x13e);
+        if (*(s8 *)(g + 0x13e) == 0) {
+            p->state[i] = 2;
+        } else if (*(s8 *)(g + 0x13e) == 10) {
+            p->state[i] = 5;
+        } else {
+            p->split = lbl_000054BC();
+            if (p->split == NULL)
+                p->state[i] = 1;
+            else
+                p->state[i] = 4;
+        }
+    } else if (p->frame == 10 && p->ball == 2) {
+        down = 10 - *(s8 *)(g + 0x13e);
+        if (p->state[i - 1] == 2)
+            p->pins[i] = (s8)down;
+        else
+            p->pins[i] = down - (s8)(int)p->pins[i - 1];
+        if (*(s8 *)(g + 0x13e) == 0) {
+            if (p->state[i - 1] == 2)
+                p->state[i] = 2;
+            else
+                p->state[i] = 3;
+        } else if (down == p->pins[i - 1] || down == 0) {
+            if (p->state[i - 1] == 2)
+                p->state[i] = 5;
+            else
+                p->state[i] = 7;
+        } else {
+            p->split = lbl_000054BC();
+            if (p->split == NULL)
+                p->state[i] = 1;
+            else
+                p->state[i] = 4;
+        }
+    } else {
+        down = 10 - *(s8 *)(g + 0x13e);
+        if (p->frame == 10 && p->ball == 3
+            && (p->state[i - 1] == 2 || p->state[i - 1] == 3))
+            p->pins[i] = (s8)down;
+        else
+            p->pins[i] = down - (s8)(int)p->pins[i - 1];
+        if (*(s8 *)(g + 0x13e) == 0) {
+            if (p->frame == 10
+                && (p->state[i - 1] == 2 || p->state[i - 1] == 3))
+                p->state[i] = 2;
+            else
+                p->state[i] = 3;
+        } else if (down == p->pins[i - 1]) {
+            p->state[i] = 7;
+        } else {
+            p->state[i] = 1;
+        }
+    }
+    if (p->state[i] == 2)
+        p->streak = p->streak + 1;
+    else
+        p->streak = 0;
+}
+// lbl_00005128 (0x5128): recompute a player's total bowling score, adding the
+// strike (kind 2) and spare (kind 3) bonuses from the following rolls.
+void lbl_00005128(struct BowlSheet *sheet)
+{
+    int i;
+    int total;
+    int j;
+    int n;
+
+    for (i = 0, total = 0; i < 21; i++) {
+        total += sheet->pins[i];
+        if (i < 18) {
+            if (sheet->kind[i] == 2) {
+                n = 0;
+                for (j = i + 1; n < 2; j++) {
+                    if (sheet->kind[j] != 0) {
+                        n++;
+                        total += sheet->pins[j];
+                    }
+                }
+            } else if (sheet->kind[i] == 3) {
+                if (sheet->kind[i + 1] != 0)
+                    total += sheet->pins[i + 1];
+                else
+                    total += sheet->pins[i + 2];
+            }
+        }
+    }
+    sheet->score = total;
+}
+// lbl_000051E0 (0x51E0): recompute the running total for the first frame that
+// has not been scored yet, once all the balls it depends on have been thrown.
+void lbl_000051E0(struct BowlScore *p)
+{
+    int frame;
+    int ball;
+
+    for (frame = 1; frame <= 10; frame++) {
+        if (p->total[frame] == -1)
+            break;
+    }
+
+    if (frame == 10) {
+        if (p->state[18] == 0)
+            return;
+        if (p->state[19] == 0)
+            return;
+        if (p->state[18] == 2 || p->state[19] == 2 || p->state[19] == 3) {
+            if (p->state[20] == 0)
+                return;
+        }
+        p->total[frame] =
+            p->total[frame - 1] + p->pins[18] + p->pins[19] + p->pins[20];
+        return;
+    }
+
+    ball = (frame - 1) * 2;
+    if (p->state[ball] == 2) {
+        if (frame == 9) {
+            if (p->state[ball + 2] == 0)
+                return;
+            if (p->state[ball + 3] == 0)
+                return;
+            p->total[frame] =
+                p->total[frame - 1] + p->pins[ball] + p->pins[ball + 2] + p->pins[ball + 3];
+        } else if (p->state[ball + 2] == 0) {
+            return;
+        } else if (p->state[ball + 2] == 2) {
+            if (p->state[ball + 4] == 0)
+                return;
+            p->total[frame] =
+                p->total[frame - 1] + p->pins[ball] + p->pins[ball + 2] + p->pins[ball + 4];
+        } else {
+            if (p->state[ball + 3] == 0)
+                return;
+            p->total[frame] =
+                p->total[frame - 1] + p->pins[ball] + p->pins[ball + 2] + p->pins[ball + 3];
+        }
+    } else if (p->state[ball + 1] == 3) {
+        if (p->state[ball + 2] == 0)
+            return;
+        p->total[frame] =
+            p->total[frame - 1] + p->pins[ball] + p->pins[ball + 1] + p->pins[ball + 2];
+    } else {
+        if (p->state[ball + 1] == 0)
+            return;
+        p->total[frame] = p->total[frame - 1] + p->pins[ball] + p->pins[ball + 1];
+    }
+}
+char *lbl_000054BC(void)
+{
+    u8 *base = lbl_0000F020;
+    struct BowlConfig *cfg = (struct BowlConfig *)base;
+    struct PatEntry *p2;
+    u16 *p1;
+    u16 key;
+    int i;
+
+    if (*(s8 *)lbl_1000013E < 2)
+        return 0;
+    key = *(u16 *)lbl_1000013C;
+    if (key & 1)
+        return 0;
+    p1 = (u16 *)(base + 0x1f78);
+    for (i = 0; i < 41; i++)
+        if (key == p1[i])
+            return 0;
+    p2 = cfg->arr2;
+    for (i = 0; i < 27; i++)
+        if (key == p2[i].key)
+            return cfg->arr2[i].name;
+    return (char *)lbl_00015380;
+}
+asm void lbl_00005564(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_bowling/lbl_00005564.s"
+}
+
+asm void lbl_00005B0C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_bowling/lbl_00005B0C.s"
+}
+
+#pragma peephole on
+int lbl_0000664C(u8 *p, s8 i8)
+{
+    u8 *q;
+    int i;
+
+    q = p + (i = i8);
+    switch (*(s8 *)(q + 0x35))
+    {
+    case 0:
+        return 0;
+    case 2:
+        return 11;
+    case 3:
+        return 10;
+    case 5:
+        return 13;
+    case 6:
+        return 14;
+    case 7:
+        return 12;
+    case 4:
+        return -q[0x20];
+    }
+    return p[i + 0x20];
+}
+
+void lbl_000066C4(struct Ape *ape, int status)
+{
+    u8 *cfg = lbl_0000F020;
+    struct Ball *ball = &ballInfo[ape->ballId];
+    struct RaycastHit sp10;
+    int r28;
+    float speed;
+
+    switch (status)
+    {
+    case THREAD_STATUS_KILLED:
+        ape_destroy(ape);
+        return;
+    }
+
+    if (debugFlags & 0xA)
+        return;
+    if (ape->ballId != modeCtrl.currPlayer)
+        return;
+
+    raycast_stage_down(&ball->pos, &sp10, NULL);
+    ape->flags &= -20;
+    if (!(sp10.flags & 1) && ball->vel.y < *(f32 *)(cfg + 0x2144))
+        ape->flags |= 2;
+    else if (mathutil_vec_len(&ball->unkB8) < *(f32 *)(cfg + 0x2148))
+        ape->flags |= 1;
+
+    r28 = !(ape->flags & 3);
+    u_ball_something_with_ape_rotation(ape);
+    if (r28)
+    {
+        speed = u_ball_something_with_walking_speed(ape);
+    }
+    else
+    {
+        speed = *(f32 *)(cfg + 0x1c98);
+        mathutil_mtxA_from_quat(&ape->unk60);
+        mathutil_mtxA_normalize_basis();
+        if (ape->flags & (1 << 1))
+            func_80037718(ape);
+    }
+
+    if (ball->flags & BALL_FLAG_05)
+        speed = mathutil_vec_len(&ball->vel);
+
+    check_ball_teeter(ape);
+    mathutil_mtxA_to_quat(&ape->unk60);
+    lbl_000068C4(ape, speed);
+    ape_skel_anim_main(ape);
+    if (!(ape->flags & (1 << 3)))
+        func_8003765C(ape);
+    ape_face_dir(ape, &ball->lookPoint);
+    ball->unk100 = 0;
+    ball->lookPointPrio = *(f32 *)(cfg + 0x1c98);
+}
+
+void lbl_000068C4(struct Ape *ape, float speed)
+{
+    u8 *w = lbl_10000000;
+    u8 *cfg = lbl_0000F020;
+    s32 flags = *(s32 *)lbl_00014F20;
+    struct BowlScore *sheet;
+    int stat = 0xe;
+    int mot = 0;
+    int i;
+    f32 v;
+
+    if (flags & 4)
+    {
+        if (currentBall->vel.x > *(f64 *)(cfg + 0x1dc0))
+            mot = 1;
+        else if (currentBall->vel.x < *(f64 *)(cfg + 0x1dc0))
+            mot = 2;
+        else
+            mot = 0;
+    }
+    else if (flags & 0x1a)
+    {
+        mot = 0;
+    }
+    else if (flags & 0x20)
+    {
+        if (*(s32 *)w == 0x46)
+        {
+            v = *(f32 *)(w + 0x16c);
+            if (v > *(f64 *)(cfg + 0x2150))
+            {
+                mot = 3;
+                u_play_sound_0(0x3B12D);
+            }
+            else if (v > *(f64 *)(cfg + 0x2158))
+            {
+                mot = 4;
+                u_play_sound_0(0x3B020);
+            }
+            else
+            {
+                mot = 5;
+                u_play_sound_0(0x3B01F);
+            }
+        }
+        else if (*(s32 *)w > 0x46)
+        {
+            mot = 6;
+        }
+        else if (*(s32 *)w <= 1)
+        {
+            stat = 0xa;
+            mot = 4;
+        }
+    }
+    else if ((flags & 0x40) && *(s32 *)w > 0x366)
+    {
+        stat = 0xa;
+        mot = 4;
+    }
+    else if (flags & 0x80)
+    {
+        sheet = (struct BowlScore *)(w + 0xc) + modeCtrl.currPlayer;
+        i = sheet->idx;
+        switch (sheet->state[i])
+        {
+        case 2:
+            if (sheet->streak < 3)
+            {
+                if (ape->charaId == 1)
+                {
+                    stat = 8;
+                    mot = 1;
+                }
+                else
+                {
+                    stat = 5;
+                    mot = 0xa;
+                }
+            }
+            else if (sheet->streak < 0xc)
+            {
+                stat = 5;
+                mot = 8;
+            }
+            else
+            {
+                stat = 5;
+                mot = 0xc;
+            }
+            if (*(f64 *)(cfg + 0x2160) == *(s32 *)w ||
+                *(f64 *)(cfg + 0x1e70) == *(s32 *)w)
+                u_play_sound_0(0x59);
+            break;
+        case 3:
+            stat = 5;
+            mot = 4;
+            if (*(f64 *)(cfg + 0x2160) == *(s32 *)w ||
+                *(f64 *)(cfg + 0x1e70) == *(s32 *)w)
+                u_play_sound_0(0x58);
+            break;
+        case 5:
+        case 6:
+        case 7:
+            stat = 9;
+            mot = 3;
+            if ((*(f64 *)(cfg + 0x2160) == *(s32 *)w ||
+                 *(f64 *)(cfg + 0x1e70) == *(s32 *)w) &&
+                (currentBall->flags & BALL_FLAG_GOAL))
+                u_play_sound_0(0x1c);
+            break;
+        case 1:
+        default:
+            if (sheet->ball == 1 && sheet->pins[i] >= 6)
+            {
+                stat = 5;
+                mot = 2;
+                if (*(f64 *)(cfg + 0x2160) == *(s32 *)w ||
+                    *(f64 *)(cfg + 0x1e70) == *(s32 *)w)
+                    u_play_sound_0(0x1b);
+            }
+            else
+            {
+                stat = 9;
+                mot = 2;
+                if (*(f64 *)(cfg + 0x2160) == *(s32 *)w ||
+                    *(f64 *)(cfg + 0x1e70) == *(s32 *)w)
+                    u_play_sound_0(0x1c);
+            }
+            break;
+        }
+    }
+    else if (flags & 0x2000)
+    {
+        if (*(s8 *)(w + 0x13e) == 0)
+        {
+            stat = 5;
+            if ((u32)*(s8 *)(w + 6) >= 9)
+                mot = 0xc;
+            else
+                mot = 6;
+            if (*(f64 *)(cfg + 0x2160) == *(s32 *)w ||
+                *(f64 *)(cfg + 0x1e70) == *(s32 *)w)
+                u_play_sound_0(0x59);
+        }
+        else
+        {
+            stat = 9;
+            if (*(s8 *)(w + 8) < 1)
+                mot = 3;
+            else
+                mot = 2;
+            if ((*(f64 *)(cfg + 0x2160) == *(s32 *)w ||
+                 *(f64 *)(cfg + 0x1e70) == *(s32 *)w) &&
+                (currentBall->flags & BALL_FLAG_GOAL))
+                u_play_sound_0(0x1c);
+        }
+    }
+    else
+    {
+        u_choose_ape_anim(ape, speed);
+        return;
+    }
+    new_ape_stat_motion(ape, stat, mot, 0, speed);
+}
+#pragma peephole on
+void lbl_00006E64(u32 color, char *str, float x, float y)
+{
+    f32 *tbl = (f32 *)lbl_0000F020;
+
+    func_80071B1C(tbl[0x85a]);
+    set_text_pos(tbl[0x840] + x, tbl[0x840] + y);
+    set_text_mul_color(0);
+    sprite_puts(str);
+    func_80071B1C(tbl[0x73f]);
+    set_text_pos(x, y);
+    set_text_mul_color(color);
+    sprite_puts(str);
+}
+asm void lbl_00006F0C(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_bowling/lbl_00006F0C.s"
+}
+#pragma peephole on
+void lbl_00007518(void)
+{
+    u8 *tbl = lbl_0000F020;
+    f32 speed;
+    f64 t;
+    f64 v;
+    int vol;
+
+    speed = *(f64 *)(tbl + 0x2200) * mathutil_vec_len(&currentBall->vel);
+    if ((currentBall->flags & 1) && speed > *(f64 *)(tbl + 0x1d28))
+    {
+        if ((globalAnimTimer & 7) == 0)
+        {
+            t = *(f64 *)(tbl + 0x2208) * (speed - *(f64 *)(tbl + 0x1d28));
+            if (t < *(f64 *)(tbl + 0x2210))
+                v = t;
+            else
+                v = *(f64 *)(tbl + 0x2210);
+            vol = v;
+            t = *(f64 *)(tbl + 0x2218) * (speed - *(f64 *)(tbl + 0x1d28));
+            if (t < *(f64 *)(tbl + 0x2220))
+                v = t;
+            else
+                v = *(f64 *)(tbl + 0x2220);
+            SoundIcsReq(currentBall->playerId, vol, *(f64 *)(tbl + 0x2228) * v);
+        }
+    }
+    else
+    {
+        SoundIcsReq(currentBall->playerId, 0, 0);
+    }
+}
+#pragma peephole on
+void lbl_00007650(s32 a, s32 b, s32 c)
+{
+    u8 *g = lbl_10000000;
+
+    *(s32 *)(g + 0x154) = a;
+    *(s32 *)(g + 0x158) = b;
+    *(s16 *)(g + 0x15c) = c;
+    *(s16 *)(g + 0x15e) = c - *(f64 *)lbl_00011250;
+    u_play_music(0, 8);
+}
 #pragma force_active reset

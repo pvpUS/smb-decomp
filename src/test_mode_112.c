@@ -161,9 +161,9 @@ extern void func_80036000();
 extern void func_80086D20();
 extern void func_8008B9DC();
 extern void func_8008BFD8();
-extern void func_800948EC();
+extern int func_800948EC();
 extern void func_800A71B0();
-extern void func_800A722C();
+extern void *func_800A722C();
 extern void func_800A7314();
 extern void func_800A7370();
 extern void func_800A7440();
@@ -264,7 +264,7 @@ void lbl_0000D3C0(void);
 void lbl_0000D844(void);
 void lbl_0000D9FC(void);
 void lbl_0000DB2C(void);
-void lbl_0000DC60(void);
+void lbl_0000DC60(char *, char *, ...);
 void lbl_0000DDA4(void);
 void lbl_0000E2E8(void);
 void lbl_0000E3E8(void);
@@ -290,6 +290,11 @@ struct TestE3Ids
 {
     s32 v[8];
 };
+
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+static void lbl_0000F498(int a);
+static void lbl_0000F4D8(int arg);
 
 #pragma force_active on
 void lbl_0000E3E8(void)
@@ -356,5 +361,186 @@ void lbl_0000E3E8(void)
     }
     }
     mathutil_mtxA_pop();
+}
+asm void lbl_0000E628(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/test_mode/lbl_0000E628.s"
+}
+#pragma peephole on
+void lbl_0000ECB4(void)
+{
+    u8 *q = lbl_000148E8;
+    u8 *p = lbl_10003BF8;
+    int z0;
+    int z1;
+    int z2;
+    int z3;
+    int z4;
+
+    window_set_cursor_pos(4, 7);
+    window_printf_2((char *)(q + 0xFC4));
+    window_set_cursor_pos(1, 8);
+    lbl_0000DC60((char *)(q + 0xFDC), (char *)(q + 0xF0C),
+                 ((u32 *)(q + 0x8C))[*(int *)(p + 0xA8)]);
+    lbl_0000DC60((char *)(q + 0xFF0), (char *)(q + 0xF0C),
+                 ((char **)((u8 **)(q + 0xCD4))[*(int *)(p + 0xA8)])[((s32 *)(p + 0x10))[*(int *)(p + 0xA8)]]);
+    lbl_0000DC60((char *)(q + 0x1004), (char *)(q + 0xF0C),
+                 motLabel[(*(struct SomeMotInfoStruct **)(p + 0xAC))->animId]);
+    lbl_0000DC60((char *)(q + 0x1018), (char *)(q + 0x102C), (*(struct SomeMotInfoStruct **)(p + 0xAC))->unk0);
+    lbl_0000DC60((char *)(q + 0x1034), (char *)(q + 0xEFC), (*(struct SomeMotInfoStruct **)(p + 0xAC))->unk4);
+    lbl_0000DC60((char *)(q + 0x1048), (char *)(q + 0xEFC), (*(struct SomeMotInfoStruct **)(p + 0xAC))->unk8);
+    lbl_0000DC60((char *)(q + 0x105C), (char *)(q + 0xEFC), (*(struct SomeMotInfoStruct **)(p + 0xAC))->unk14);
+    lbl_0000DC60((char *)(q + 0x1070), (char *)(q + 0x1084), (*(struct SomeMotInfoStruct **)(p + 0xAC))->u_maybeSpeed);
+    lbl_0000DC60((char *)(q + 0x108C), (char *)(q + 0xF0C),
+                 ((*(struct SomeMotInfoStruct **)(p + 0xAC))->unkC & 0x1) ? (char *)(q + 0xEA4) : (char *)(q + 0xEA8));
+    lbl_0000DC60((char *)(q + 0x10A0), (char *)(q + 0xF0C),
+                 ((*(struct SomeMotInfoStruct **)(p + 0xAC))->unkC & 0x2) ? (char *)(q + 0xEA4) : (char *)(q + 0xEA8));
+    lbl_0000DC60((char *)(q + 0x10B4), (char *)(q + 0xF0C),
+                 ((*(struct SomeMotInfoStruct **)(p + 0xAC))->unkC & 0x4) ? (char *)(q + 0xEA4) : (char *)(q + 0xEA8));
+    lbl_0000DC60((char *)(q + 0x10C8), (char *)(q + 0xF0C),
+                 ((*(struct SomeMotInfoStruct **)(p + 0xAC))->unkC & 0x8) ? (char *)(q + 0xEA4) : (char *)(q + 0xEA8));
+    lbl_0000DC60((char *)(q + 0x10DC), (char *)(q + 0xF0C),
+                 ((*(struct SomeMotInfoStruct **)(p + 0xAC))->unkC & 0x10) ? (char *)(q + 0xEA4) : (char *)(q + 0xEA8));
+    lbl_0000DC60((char *)(q + 0x10F0), (char *)(q + 0x1100));
+}
+asm void lbl_0000EEF4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/test_mode/lbl_0000EEF4.s"
+}
+#pragma peephole on
+void lbl_0000F470(int enable)
+{
+    if (*(void **)lbl_10003C80 != NULL)
+        return;
+    if (enable == 0)
+        return;
+    *(void **)lbl_10003C80 = (void *)lbl_0000EEF4;
+}
+static void lbl_0000F498(int a)
+{
+    if (a != 0)
+    {
+        thread_kill(*(int *)lbl_10003BF8);
+        *(int *)lbl_10003C60 = 0;
+    }
+}
+static void lbl_0000F4D8(int arg)
+{
+    u8 *d = lbl_000148E8;
+    void *h;
+    char name[128];
+
+    if (arg == 0)
+        return;
+    if (func_800948EC() == 0)
+        return;
+    func_800A71B0((char *)(d + 0x113C), name);
+    if (strcmp(name, (char *)(d + 0x1144)) == 0)
+    {
+        char path[64];
+        OSCalendarTime ct;
+        void *buf;
+
+        buf = OSAllocFromHeap(__OSCurrHeap, 0x4E000);
+        OSTicksToCalendarTime(OSGetTime(), &ct);
+        sprintf(path, (char *)(d + 0x114C), ct.mon + 1, ct.mday, ct.hour, ct.min,
+                ct.sec);
+        h = func_800A722C((char *)(d + 0x1174), 1);
+        func_800A7370(h, buf, 0x4E000);
+        func_800A7314(h);
+        h = func_800A722C(path, 2);
+        func_800A7440(h, buf, 0x4E000);
+        func_800A7314(h);
+        OSFreeToHeap(__OSCurrHeap, buf);
+        h = func_800A722C((char *)(d + 0x118C), 2);
+    }
+    else if (strcmp(name, (char *)(d + 0x11A0)) == 0)
+    {
+        char path[64];
+        OSCalendarTime ct;
+        void *buf;
+
+        buf = OSAllocFromHeap(__OSCurrHeap, 0x4E000);
+        OSTicksToCalendarTime(OSGetTime(), &ct);
+        sprintf(path, (char *)(d + 0x11AC), ct.year, ct.mon + 1, ct.mday, ct.hour,
+                ct.min, ct.sec);
+        h = func_800A722C((char *)(d + 0x11E0), 1);
+        func_800A7370(h, buf, 0x4E000);
+        func_800A7314(h);
+        h = func_800A722C(path, 2);
+        func_800A7440(h, buf, 0x4E000);
+        func_800A7314(h);
+        OSFreeToHeap(__OSCurrHeap, buf);
+        h = func_800A722C((char *)(d + 0x11E0), 2);
+    }
+    else
+    {
+        h = func_800A722C((char *)(d + 0x1200), 2);
+    }
+    func_800A7440(h, motInfo, 0x4E000);
+    func_800A7314(h);
+}
+asm void lbl_0000F6F0(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/test_mode/lbl_0000F6F0.s"
+}
+struct TestMotWork
+{
+    /*0x00*/ u8 filler0[4];
+    /*0x04*/ struct Ape *ape;
+    /*0x08*/ float unk8;
+    /*0x0C*/ u8 fillerC[4];
+    /*0x10*/ s32 unk10[23];
+    /*0x6C*/ s32 charaId;
+    /*0x70*/ u8 filler70[0xA8 - 0x70];
+    /*0xA8*/ s32 unkA8;
+    /*0xAC*/ struct SomeMotInfoStruct *unkAC;
+};
+
+#pragma peephole on
+void lbl_0000F7BC(void)
+{
+    struct TestMotWork *w = (struct TestMotWork *)lbl_10003BF8;
+    s32 animGroup;
+    s32 frame;
+    s32 b;
+    s32 f;
+
+    b = w->unkA8;
+    if (b == 7 && (f = w->unk10[b]) >= (s32)((struct MotInfo *)&motInfo[w->charaId])->unk70[b])
+    {
+        animGroup = b;
+        frame = f;
+        mot_ape_8008BAA8(&animGroup, &frame);
+        w->unkAC = (struct SomeMotInfoStruct *)((struct MotInfo *)&motInfo[w->charaId])->unk30[animGroup] + frame;
+    }
+    else
+    {
+        w->unkAC = (struct SomeMotInfoStruct *)((struct MotInfo *)&motInfo[w->charaId])->unk30[w->unkA8]
+                   + w->unk10[w->unkA8];
+    }
+    if (w->unkAC != w->ape->unk1C || w->unkAC->animId != w->ape->unk0->u_animId)
+    {
+        w->ape->unk1C = w->unkAC;
+        if (w->unkAC->animId > u_motAnimCount)
+            w->unkAC->animId = 1;
+        w->ape->unk28 = w->unkA8;
+        w->ape->unkB0 = w->unk10[w->unkA8];
+        func_8008B9DC(w->ape, w->unkAC->animId);
+        w->unk8 = w->unkAC->u_maybeSpeed;
+    }
+}
+asm void lbl_0000F940(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/test_mode/lbl_0000F940.s"
+}
+asm void lbl_0000FBA8(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/test_mode/lbl_0000FBA8.s"
 }
 #pragma force_active reset
