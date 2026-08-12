@@ -85,7 +85,27 @@ def score(label, owner):
     if m:
         return "RAW %s ALIGNED %s in %s regions span %s" % (
             m.group(1), m.group(2), m.group(3), m.group(4) or "-"), out
-    if "MATCH" in out:
+
+    # RUN-32 FIX -- this was a FICTIONAL-MATCH MODE, found by mini_billiards.
+    #
+    # `rel_sweep`'s own trap-5 guard TEXT contains the word MATCH:
+    #   "... is an ASM STUB here and any MATCH is trivial."
+    #   "... that reports MATCH (trap 5)."
+    # so the old `if "MATCH" in out` scored an UNBUILT label as a perfect
+    # match.  Both of mini_billiards' stored `pf`-form drafts reported a flat
+    # MATCH in run 32; one identifier rename exposed `RAW 14 ALIGNED 14 in 6`.
+    # Any module feeding `pf`-form drafts to this tool was exposed.
+    #
+    # Order matters: the guard check MUST come first, because its message is
+    # exactly what the naive test matched on.
+    stub = re.search(r"(is an ASM STUB here|does not DEFINE|"
+                     r"as an `asm` function|trap 5)", out)
+    if stub:
+        return "FAIL(not-built: %s)" % stub.group(1), out
+    # A real verdict from `rel_sweep --file --label` is printed anchored, as
+    # "<label>: MATCH" on its own line.  Anchor on that rather than on a
+    # substring anywhere in the output.
+    if re.search(r"^\s*\S+:\s+MATCH\s*$", out, re.M):
         return "MATCH", out
     if "error" in out.lower() or "Error" in out:
         return "FAIL(compile)", out

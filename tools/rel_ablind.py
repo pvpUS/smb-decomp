@@ -60,6 +60,20 @@ import os
 import re
 import subprocess
 import sys
+
+sys.dont_write_bytecode = True
+
+
+def die(msg):
+    """Exit 2, never 1.
+
+    EXIT CODES ARE A CONTRACT here (rel_blindtable's docstring states it as
+    0 / 2, and defines no 1).  `sys.exit("message")` returns 1, so until run 32
+    every usage error from this tool was indistinguishable from a real negative
+    answer.  Found by corpus B while gating rel_tuprobe.
+    """
+    print(msg, file=sys.stderr)
+    raise SystemExit(2)
 import tempfile
 
 TREE = os.getcwd()
@@ -96,15 +110,15 @@ while i < len(argv):
             i += 1
             mod = argv[i]
         else:
-            sys.exit('--module needs a value')
+            die('--module needs a value')
         if not mod:
-            sys.exit('--module needs a value')
+            die('--module needs a value')
     elif a == '--tree' or a.startswith('--tree='):
-        sys.exit('rel_ablind: there is no --tree. Run it FROM the module tree:\n'
+        die('rel_ablind: there is no --tree. Run it FROM the module tree:\n'
                  '  cd C:/tmp/smbm/<module> && python tools/rel_ablind.py <label>\n'
                  '(it reads the .plf in the current directory).')
     elif a.startswith('-'):
-        sys.exit('rel_ablind: unknown option %r. Labels do not start with "-".\n'
+        die('rel_ablind: unknown option %r. Labels do not start with "-".\n'
                  'usage: python tools/rel_ablind.py [--module M] <label> [label ...]' % a)
     else:
         rest.append(a)
@@ -113,11 +127,11 @@ argv = rest
 if mod is None:
     mod = os.environ.get('ABLIND_MODULE') or os.path.basename(TREE)
 if mod not in MODULES:
-    sys.exit('rel_ablind: %r is not a module.\n  tree dir is %r -- pass '
+    die('rel_ablind: %r is not a module.\n  tree dir is %r -- pass '
              '--module <name>.\n  known: %s'
              % (mod, os.path.basename(TREE), ', '.join(sorted(MODULES))))
 if not argv:
-    sys.exit(__doc__.strip().splitlines()[0] + '\n\n' +
+    die(__doc__.strip().splitlines()[0] + '\n\n' +
              'usage: python tools/rel_ablind.py [--module M] <label> [label ...]')
 
 STEM, ART = MODULES[mod]
@@ -158,6 +172,38 @@ def nz_at(w, i, n):
     if 0 <= tgt < n and not (w & 1):
         return w
     return w & 0xFC000003
+
+
+def stubbed_labels():
+    """Labels this tree still #includes as asm -- they match themselves.
+
+    Same derivation rel_ascore has used since run 9.  A stub is assembled
+    verbatim into the .plf, so scoring it reports 0 in 0 / 100% positional --
+    a confident, fictional match.  Corpus B hit the identical mode in its own
+    probe in run 32 (a still-asm label scoring 268/268).
+    """
+    import glob
+    out = set()
+    pat = re.compile(r'#include "\.\./asm/nonmatchings/%s/([A-Za-z0-9_]+)\.s"'
+                     % re.escape(STEM))
+    for p in glob.glob(os.path.join(TREE, 'src', '%s*.c' % STEM)):
+        try:
+            txt = open(p, errors='ignore').read()
+        except OSError:
+            continue
+        out.update(pat.findall(txt))
+    return out
+
+
+def built_insn(addrs, base):
+    """Instructions in the BUILT function: distance to the next symbol.
+
+    Returns None when the label is the last symbol in the map, where there is
+    nothing to measure against.  Zero-size aliases share an address and are
+    skipped by taking the next STRICTLY greater one.
+    """
+    later = sorted(a for a in set(addrs.values()) if a > base)
+    return (later[0] - base) // 4 if later else None
 
 
 def positional(lbl, exp, got, pe, pg, n):
@@ -209,26 +255,40 @@ def disasm(words):
         mn, _, ops = P.canon(mn, ops).partition(' ')
         out.append('%s %s' % (mn, ops.replace(' ', '')))
     if len(out) != len(words):
-        sys.exit('objdump returned %d rows for %d words' % (len(out), len(words)))
+        die('objdump returned %d rows for %d words' % (len(out), len(words)))
     return out
 
 
 def main():
     if not os.path.exists(PLF):
-        sys.exit('%s missing -- build it first:\n'
+        die('%s missing -- build it first:\n'
                  '  make ... %s' % (PLF, ART + '.plf'))
     text = rf.load_text(PLF)
     addrs = rf.load_map(os.path.splitext(PLF)[0] + '.map')
     show = os.environ.get('ABLIND_SHOW')
     blind = os.environ.get('PCMP_REGBLIND', '') or '(none)'
 
+    bad = []
+    stubs = stubbed_labels()
     for lbl in argv:
         if lbl not in addrs:
             print('%-16s NOT IN MAP' % lbl)
+            bad.append(lbl)
             continue
         rows = rf.load_asm(lbl)
         n = len(rows)
         base = addrs[lbl]
+        bn = built_insn(addrs, base)
+        if bn is not None and bn != n:
+            # NOT a near-miss.  Say so loudly and score nothing -- a truncated
+            # prefix comparison is what produced `344 of 386` on a 426-insn
+            # build in run 32.
+            print('%-16s WRONG LENGTH: golden %d insn, built %d (%+d). '
+                  'This is not a near-miss; no score printed. '
+                  '(rel_sdiff prints the same verdict.)'
+                  % (lbl, n, bn, bn - n))
+            bad.append(lbl)
+            continue
         exp = [nz_at(r[1], i, n) for i, r in enumerate(rows)]
         got = [nz_at(int.from_bytes(text[base + 4 * i:base + 4 * i + 4], 'big'),
                      i, n) for i in range(n)]
@@ -241,6 +301,12 @@ def main():
         hi = max([o[2] for o in ops], default=0)
         print('%-16s blind=%-5s %3d in %-3d span %d-%d of %d'
               % (lbl, blind, tot, len(ops), lo, hi, n))
+        if lbl in stubs:
+            print('%-16s !! STILL AN ASM STUB in this tree -- it is assembled '
+                  'verbatim, so it matches ITSELF. This score is meaningless. '
+                  '(rel_sweep trap 5; rel_ascore prints the same warning.)'
+                  % '')
+            bad.append(lbl)
         if os.environ.get('ABLIND_POS'):
             positional(lbl, exp, got, pe, pg, n)
         if show and ops:
@@ -251,5 +317,9 @@ def main():
                     b = pg[j1 + k] if j1 + k < j2 else ''
                     print('   %-38s | %s' % (a, b))
 
+    # 0 = every requested label scored; 2 = at least one was NOT IN MAP or was
+    # the wrong length.  Same contract as rel_blindtable, which states it.
+    return 2 if bad else 0
 
-main()
+
+raise SystemExit(main())

@@ -293,6 +293,7 @@ def main():
             return w                       # keep the displacement -- compare it
         return w & 0xFC000003              # leaves the function: relocated
 
+    legend_shown = False
     for lbl in labels:
         if lbl not in addrs:
             print('%-16s NOT IN MAP -- is it still an asm stub, or in another '
@@ -323,6 +324,21 @@ def main():
                                                   round(100.0 * (hi - lo) / n))
         else:
             span = ''
+        # RUN-32: RAW and ALIGNED are *DIFF* counts -- how many words are WRONG,
+        # not how many are right.  Corpus A found a stored draft recorded as
+        # "5496 in 1017" being read as 89% correct when it is 89% WRONG, and by
+        # this tool's own grind-vs-retire rule that object is worse than its
+        # 6115-in-44 predecessor.
+        #
+        # The COLUMN FORMAT IS DELIBERATELY UNCHANGED: rel_vsplice parses it
+        # with `RAW\s+(\d+)\s+ALIGNED\s+(\d+)`, rel_sweep prints the identical
+        # shape, and run 21's rel_findconv incident is the standing reason not
+        # to move a contract other scripts read.  The direction is stated in a
+        # legend line instead, printed once.
+        if not legend_shown:
+            print('   (RAW and ALIGNED count WORDS THAT DIFFER -- lower is '
+                  'better; N of M insn means N wrong, not N right)')
+            legend_shown = True
         print('%-16s %4d insn   RAW %4d   ALIGNED %4d   (%d edit region%s)%s'
               % (lbl, n, raw, tot, len(ops),
                  '' if len(ops) == 1 else 's', span))

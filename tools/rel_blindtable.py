@@ -68,6 +68,18 @@ NOTINMAP = re.compile(r'^(\S+)\s+NOT IN MAP\s*$')
 DEFAULT_BLINDS = ['', 'f', 'g', 'gf', 'F', 'G', 'GF']
 
 
+def die(msg):
+    """Exit 2, never 1 -- this tool's docstring has always said 0 / 2.
+
+    `sys.exit("message")` returns 1, so until run 32 a mistyped flag was
+    indistinguishable from the documented "a row was UNPARSED" answer.  Found
+    by corpus B while gating rel_tuprobe; rel_ablind carried the identical
+    defect and is fixed the same way.
+    """
+    print(msg, file=sys.stderr)
+    raise SystemExit(2)
+
+
 def parse_rows(text):
     """-> (rows, notinmap, pos) where rows is [(label, blind, n, regions,
     lo, hi, total)].  Anything else is the caller's to print RAW."""
@@ -157,12 +169,12 @@ def main():
         a = argv[i]
         if a == '--module':
             if i + 1 >= len(argv):
-                sys.exit('--module needs a value')
+                die('--module needs a value')
             module = argv[i + 1]
             i += 2
         elif a == '--blinds':
             if i + 1 >= len(argv):
-                sys.exit('--blinds needs a value')
+                die('--blinds needs a value')
             blinds = []
             for b in argv[i + 1].split(','):
                 if b not in blinds:       # `--blinds ,` is one plain run, not
@@ -172,18 +184,18 @@ def main():
             want_pos = False
             i += 1
         elif a == '--tree' or a.startswith('--tree='):
-            sys.exit('rel_blindtable: there is no --tree, exactly as in\n'
+            die('rel_blindtable: there is no --tree, exactly as in\n'
                      'rel_ablind.  Run it FROM the module tree:\n'
                      '  cd C:/tmp/smbm/<mod> && python tools/rel_blindtable.py '
                      '<label>')
         elif a.startswith('-'):
-            sys.exit('rel_blindtable: unknown option %r.  Labels do not start '
+            die('rel_blindtable: unknown option %r.  Labels do not start '
                      'with "-".' % a)
         else:
             labels.append(a)
             i += 1
     if not labels:
-        sys.exit(__doc__.strip().splitlines()[0] + '\n\nusage: cd <module tree>'
+        die(__doc__.strip().splitlines()[0] + '\n\nusage: cd <module tree>'
                  ' && python tools/rel_blindtable.py <label> [label ...]')
 
     bad = 0
