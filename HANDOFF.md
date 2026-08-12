@@ -15,9 +15,9 @@ A run is **exactly nine agents, one per REL module.** A module agent must **not*
 spawn subagents, workers, or helper agents of any kind. Its module is its own
 work, done directly in its own warm copy.
 
-This is permanent, not a run-13 experiment. **Runs 13 through 32 all ran this
-way: zero stranding, zero worktree-merge hazards, zero lost matches, TWENTY
-times running.** The evidence:
+This is permanent, not a run-13 experiment. **Runs 13 through 33 all ran this
+way: zero stranding, zero worktree-merge hazards, zero lost matches,
+TWENTY-ONE times running.** The evidence:
 
 - **The concurrency cap is 20 project-wide.** With nine module agents live only
   11 workers can exist at any moment, first-come — so worker plans are plans
@@ -65,6 +65,32 @@ justifications applies to them**:
 
 They write only to `C:/tmp/smbm/_corpus_run<N>/` and may not touch `tools/`,
 any warm copy, or the main tree.
+
+**RETAINED AFTER RUN 33 — and this is now the strongest evidence yet, because
+a corpus agent's output BANKED.** Corpus A found the saved-GPR rule the run was
+built on, took mini_golf's `lbl_00015520` to within 28 instructions in its own
+read-only scratch, and **mini_golf banked all 6,182 the same hour** — the
+largest conversion in the project's history. Corpus B landed
+`tools/rel_relscore.py` and caught a live fiction (mini_pilot's `lbl_000011CC`
+draft **calls a symbol that exists nowhere in the project**). Corpus C
+re-derived the whole merge board by address and corrected four of its rows.
+**Three for three: a landed tool, a banked conversion, and a correction a build
+confirmed.**
+
+> ### ★★★ NEW STANDING ACT (run 33): THE ORCHESTRATOR MAY RELAY BETWEEN LIVE AGENTS — WITH ITS EVIDENCE AND ITS SAMPLE SIZE, NEVER ITS COROLLARY.
+>
+> Run 33 was the first run to relay findings between **live** agents, and it is
+> why the 6,182 banked: corpus A's draft reached mini_golf **while mini_golf was
+> still working.** Run 32's lesson was that a draft nobody knew about cost a
+> whole run; this is that lesson applied forward. mini_fight's file-boundary
+> class also reached four live modules, three of which tested it and returned
+> printed bounds — **a new class scoped and exhausted in one run instead of
+> five.**
+>
+> ⚠ **But the orchestrator relayed a magic-ORDER corollary it had over-general-
+> ised from three modules, twice, and had to correct itself twice.** Three
+> modules re-derived it from their own bytes and all three were right to.
+> **Relay the measurement and the sample size. Never the corollary.**
 
 **RETAINED AFTER RUN 32 — the experiment paid, and here is the evidence rather
 than an assertion.** Run 31's corpus phase converted nothing and its four
@@ -190,7 +216,289 @@ it. `_scratch_<MOD>/run<N>/pristine/` is the convention.**
 
 ---
 
-## 0.38 — RUN 32 DONE (2026-08-12): +60 insn, 48.79% -> 48.82%. START HERE.
+## 0.39 — RUN 33 DONE (2026-08-12): +6,614 insn, 48.82% -> 52.29%. **PAST HALFWAY.** START HERE.
+
+Nine module agents plus three read-only corpus agents. **TWENTY-FIRST
+consecutive run with no module agent spawning anything.** Three of nine gained.
+
+| module | still-asm | insn | % | gained |
+|---|---|---|---|---|
+| mini_pilot | 6 fns | 10999/12137 | 90.62% | 0 |
+| test_mode | 16 fns | 12061/16231 | 74.31% | 0 |
+| mini_race | 29 fns | 14910/19817 | 75.24% | 0 |
+| **mini_bowling** | 12 fns | 10766/15313 | **70.31%** | **+334 / +2** |
+| **mini_golf** | 16 fns | 17189/38919 | **44.17%** | **+6,182 / +1** |
+| option | 12 fns | 5405/12375 | 43.68% | 0 |
+| sel_ngc | 9 fns | 7726/18084 | 42.72% | 0 |
+| mini_billiards | 17 fns | 10714/28793 | 37.21% | 0 |
+| **mini_fight** | 70 fns | 9723/28588 | **34.01%** | **+98 / +1** |
+| **TOTAL** | **187 fns** | **99490/190254** | **52.29%** | **+6,614 / +4** |
+
+**Verified in the main tree, not taken on report**: nine trees diffed before
+merging (**four changed paths, five changed nothing** — no `tools/` line in any,
+hygiene **0 problems**, CRLF preserved on all 46 changed `.c`/`Makefile` paths
+and LF on both `.s`, every changed-file list matching its own report); all nine
+`--gate` **GOLDEN from deleted objects with every hash matching its agent's,
+including the five that changed nothing**; all nine `rel_structcheck` **CLEAN,
+orchestrator-run**; clean build from **0 objects** gives `sha1sum -c` **12/12 OK
+including the DOL**. Reconciles three ways: 190,254 − 90,764 = **99,490**,
+191 − 4 = **187**, 97,378 − 90,764 = **6,614**.
+
+**Object metrics 896 / 1,066 / 899 → 859 / 1,029 / 862** (797 `.c` + 65 `.s`).
+**All three moved by exactly −37** = 27 (mini_bowling) + 10 (test_mode) TU-merge
+deletions and nothing else. `.s` unchanged: mini_bowling's hole extension edited
+existing segments rather than carving a new one.
+
+### ★★★ 1. `lbl_00015520` IS BANKED — 6,182 INSTRUCTIONS, THE LARGEST EVER
+
+Previous record 1,967. It took **31 `rel_tuprobe` compiles and 3 real links**,
+and one changed path (`src/mini_golf_58.c`).
+
+**Run 32 named the residual class right and both its proposed routes wrong.**
+The lever was **assigning the constant at the point of use**: under
+`opt_propagation off` the assignment *is* the `li`, and the short live range
+releases the callee-saved register — so **one edit bought the 96 `li` sites AND
+`stmw r23 → stmw r25`. They were the same fact twice.**
+
+The four measured steps: **+96** rematerialisation → **+8 (+2)**
+`mathutil_floor()` (run 21's draft had this right all along; run 32 rewrote it
+as a `(s32)` cast and lost 8) → **431 → 28** callee-saved rank by declaration
+order (`n,i,w,u`) → **28 → 0** statement position, moving `col = K;` **later**.
+
+**The general rule, censused over 3,356 matched functions (corpus A):** mwcc 1.1
+emits **`stmw` iff ≥ 5 callee-saved GPRs** — 2,797 functions below the threshold
+have none, 559 above all have it, **zero exceptions** — and the count is
+**values simultaneously LIVE ACROSS A CALL**, allocated r31 downward, so
+`stmw rN` ⟺ `32 − N` saved. **No source property predicts it**: `ndecl`
+r=+0.49, `nparams` **r=+0.03**. "Count the long-lived locals" does not work.
+
+⚠ **Declaration order vs first-assignment order is SETTLED by controlled
+experiment.** In the banked body the two are **exact reverses**, and between the
+431-in-388 and 28-in-16 variants **only the declarations moved.** That bounds
+mini_race's "rank follows first *assignment* order" rather than falsifying it —
+**the axes are separable and can be opposed.**
+⚠ **Order is inert until the length is exact** — three orders scored identically
+before the length was right, two byte-identical; the same sweep after moved 403.
+⚠ **A one-sided sweep reports a dead axis.** Corpus A found the last axis and
+swept it only *earlier*, concluding it was dead; **later by ≥2 closes it.**
+⚠ **`lbl_0001B5B8` (7,131) IS NOT THE FOLLOW-ON.** Run 32's hand-off is
+falsified: **30 real loops** (not 0), `stmw r14` + 8 `stfd` = **26 callee-saved**
+(not 8), 454 calls. **The symbolic engine's enabling property does not transfer.**
+The right next target is **`lbl_000230E4` — zero real loops, `stmw r27`** — but
+the run-32 engine leaves **108 instructions unhandled across 16 mnemonics** on
+it. Extending it is the bounded job.
+⚠ **Install hazard**: the body's `opt_common_subs`/`opt_propagation` pragmas
+**must be closed after the function** — eleven C functions follow in that TU and
+**no scorer here would catch the omission** (`rel_tuprobe` reads only the
+spliced function).
+
+### ★★★ 2. A NEW ZERO-COST CLASS: A FUNCTION CAN BE **MISFILED**, NOT BLOCKED
+
+**mini_fight banked 98 with it.** `lbl_000177C8` references exactly one magic —
+the signed `0x1C648` that `mini_fight_68c.c.o` **already emits** — and `_68c.c`'s
+`.text` **ended exactly where the function began.** The decomp's file boundary
+did not match the original TU's. **The boundary move alone gated GOLDEN at zero
+instructions**, `.rodata` unchanged at 8 bytes; the conversion landed in the same
+run. No carve, no merge, no `.set`, no hole.
+
+**The class was scoped AND exhausted in the same run**, because the finding was
+relayed to four live modules: **strictly one instance exists project-wide and
+mini_fight took it.** option **0 of 8** (structurally unavailable — it has
+exactly one magic-emitting C object), mini_bowling **0 of 8** (7 at a clean edge,
+all failing adjacency by 0xBB8–0x572C bytes), test_mode **0 of 5**, sel_ngc
+**0 of 7**. ⚠ **Corpus C's relaxed-setting sel_ngc row does NOT reproduce** —
+`F788` is **interior by 0x2E38 bytes**, and corpus C's own `at_start or at_end`
+condition rejects it. **Right row, wrong instrument.**
+The test is implemented at `_scratch_mini_fight/run33/boundaryscan.py`.
+
+### ★★★ 3. mini_bowling IS 100% REACHABLE — carve 0, merge 0, split 0, jumptbl 0, dead 0
+
+**+334 / +2, and both enabling steps landed WITH their conversions**, which is
+exactly what the standing rule asks for: a **28-object TU merge** (GOLDEN at zero
+instructions, `rel_fnhash` **120/120 identical**) and an **8→16-byte hole
+extension using run 32's anchor-symbol escape** — **the second module to build
+that GOLDEN.** ⚠ **The `.set` must go in the file that DEFINES the base label.**
+
+⚠ **A header conflict can move code.** `sound.h` declares
+`SoundIcsReq(u32,u8,s8)` while the absorbed `_26.c` deliberately omits `sound.h`
+and was matched against `(u32,int,int)`; letting the header win cost **exactly 1
+instruction**, named by `rel_fnhash` in one command. **And `sound.h` cannot just
+be dropped** — its inline-asm blocks branch to `SoundOff`/`SoundDop` as **C-scope
+labels**, so scanning the `.c` text alone is not enough.
+★ **`lbl_00001C84` (166) closed in 2 builds from a blank page**, and its 14-word
+`r3↔r4` residual — which *reads* like the decline class — was fixed by **a
+comment in `src/camera.h`** documenting that exact transposition.
+⚠ **A TU merge CREATES the census defect**: mini_bowling's REACHABLE column was
+right at run start (1,869 == 1,869) and is now wrong (1,869 vs 4,547). **First
+demonstration of run 32's prediction.**
+
+### ★★★ 4. 11,732 INSTRUCTIONS CAME OFF THE DEAD LIST — AND THE SHARED PREMISE WAS FALSE
+
+**§2's "both of a TU's magics are emitted as ONE CONTIGUOUS 16-byte block" is a
+SPECIAL CASE, NOT A RULE.** A TU's `.rodata` is its **entire FP literal pool in
+codegen first-use order**; the magics are ordinary members and other constants
+sit between them. Found independently by **mini_pilot** (4 probes) and **corpus
+C** (9 probe objects; `probe_mix.o` has them **0x18 apart with two doubles
+between**). ⚠ **`rel_ledger`'s `DEAD` column, `rel_mergeprice`'s
+`MAGIC_BLOCK_GAP=8` and `rel_magicscan`'s summary all encode the false rule.
+None is fixed.**
+
+- ★ **option: 3,092 at ZERO layout cost.** `lbl_00005340`+`0000B218`+`0000A688`
+  all live in `option_30.c`, which **already emits** the signed `0xC380` and
+  needs the unsigned `0xC4B0`; the 296 bytes between are **exactly two labels**
+  whose every reader is already-matched C **inside that same file**;
+  `asm/option_d2.s` has **`.text` = 0** and `option_30.c` is **already
+  immediately before it in SOURCES.** Reachability ladder: census **699 (10%)**
+  → `rel_ledger` **1,418 (20%)** → **4,510 (65%)** after the carve.
+- ★ **sel_ngc: 2,026, and it FALSIFIED ITS OWN run-32 decline.** Three compiles
+  reproduce golden's 456-byte separation **to the byte** (signed(8) + 448 bytes
+  of file-scope constants + unsigned(8)). Its SOURCES-contradiction second leg
+  **evaporated with the premise — it only existed because it assumed a split.**
+  Behind a **two-file merge**, not dead. ⚠ Its own run-32 figure of 2,783
+  **double-counted `ECB0` (694)**, which is also jump-table blocked.
+- ★ **mini_pilot: `lbl_00009C18` re-priced from ∞ to a 496-byte carve** (not
+  512) + **4 file-scope arrays** (not 5 literals) + the 205-insn draft,
+  atomically; `mini_pilot_32b.c.o` **already emits** the signed magic and
+  `0xC3C8` is already 8-aligned.
+- **mini_billiards: the two carve candidates are MUTUALLY EXCLUSIVE and no tool
+  says so.** `_34.c.o` already emits the signed magic at `0x1cf50`, so if `37b.c`
+  takes `0x20848`, `E8D0`'s 2,496 **dies permanently**, and vice versa. Its
+  SOURCES order was checked (nobody had) and **passes**; but **the cheapest
+  reader of that hole is 1,494 instructions** — there is no cheap partner.
+
+> ### ⚠⚠ THE SETTLED MAGIC-ORDER RULE — narrower than any claim made during the run
+>
+> **Within one TU, mwcc 1.1 emits SIGNED LOW, UNSIGNED HIGH, and source
+> first-use order does not move it** (measured by compiling, independently, in
+> mini_pilot and test_mode).
+>
+> **Across TUs, either order occurs.** Orchestrator scan of all nine modules:
+> **S+U contiguous in mini_bowling (1) and mini_fight (2); U+S in
+> mini_billiards, mini_golf and test_mode (1 each); no contiguous pair at all in
+> the other four.**
+>
+> **So the question is never "what is the global order" but "does golden's order
+> AT MY ADDRESSES match what one TU emits?"** An **S+U pair is
+> merge-compatible**; a **U+S pair cannot be produced by merging its two owners
+> into one TU** — no hole size, no `.set`, no anchor symbol fixes an order
+> inversion.
+>
+> **test_mode used exactly this to prove its own 840-instruction group
+> STRUCTURALLY DEAD** (§11 had called it "priced"), and **option used it to show
+> all four of its two-magic rows ARE merge-compatible.** ⚠ **The orchestrator
+> over-generalised this twice mid-run from a 3-module sample and had to correct
+> itself twice; mini_bowling is the counter-example, with an S+U pair inside ONE
+> C object, gated GOLDEN.**
+
+### ★★ THE FIFTH FICTIONAL-MATCH MODE IS FIXED — `tools/rel_relscore.py` (NEW)
+
+`addi r30,r4,0` and `addi r30,r4,sym@l` are the same 32-bit word. The tool reads
+**relocation records on both sides** and prints `ALIGNED(words only)` beside
+`ALIGNED(+relocs)`, so **the delta IS the hidden residual**. It **imports**
+`rel_tuprobe` rather than copying it, so `nz_at` and the splicer cannot drift.
+
+- **A SIXTH BLIND SPOT NOBODY HAD NAMED**: `nz_at` masks every `bl` to
+  `0x48000001` on both sides, so **calling the wrong function scores as a
+  match** — **11,930 of 28,920 exposed instructions** (15.2% of the image).
+- **Gate: 1,160 rows, nine modules, 0 disagreements** — 942 matched functions
+  `TRUE n of n`, **191 still-asm stubs REFUSE with exit 2**, 27 no-owner rows.
+  **Orchestrator re-verified from the main tree** (a different drive — the case
+  that broke `rel_tuprobe`): the banked 6,182 body at **6182/6182 words and
+  736/736 relocations, 0 mismatched**, and a stub refused with exit 2.
+- ★ **It caught a live fiction**: mini_pilot's stored `lbl_000011CC` "2 in 2"
+  **calls `thread_create2`, a symbol that exists nowhere in the project.** True
+  3 in 3. **12 of 214 recorded labels affected across 666 drafts re-scored.**
+- ⚠ **CORRECTION to run 32's headline**: mini_race's `6CF0` "4 in 3" is **NOT
+  inflated** — the draft does carry the `@l`, edit distance 3 either way,
+  **FICTION 0**. The mechanism was real; that number was not an instance of it.
+
+### ★★ `DRAFT_INDEX.md` — 223 labels, 3,951 files, and it should be standing equipment
+
+`C:/tmp/smbm/_corpus_run33/DRAFT_INDEX.md`. **mini_golf started re-deriving
+`lbl_00023AB4` from asm before the index revealed 13 stored drafts across 9
+runs.** ⚠ It also corrects the score-token semantics: **`AinB` is A *diffs* in B
+regions, not A matches** — reading `6115in44` as "6,115 right" **inverts the
+ranking of mini_golf's own drafts.**
+
+### ⚠ HAZARDS AND CORRECTIONS
+
+- **"This draft does not compile" is now 0-for-154.** Two named mechanisms:
+  a target signature needing `//@PROTO`, and **callee** prototypes declared
+  `(void)` needing `//@SUB`. That had written off **393 instructions** in
+  mini_pilot alone, including one function at a real `119 == 119, ALIGNED 3 in 3`.
+- **`rel_merge_tu`'s head-merge fixes a `void`→`int` retype but MISSES
+  `void`→`void *`** (the star binds to the name). Cost one build. **Unfixed.**
+- **`rel_xref` COVER is callee similarity twice more** (`135DC` 0.20 jacc,
+  `122C8` 0.37) — **jaccard is the usable column.**
+- **`rel_census` and `rel_rowcount` still disagree** on mini_fight's
+  `lbl_00000270`; **`rel_census.py:576`'s one-line reachability fix is STILL
+  unmade** and a TU merge now *widens* the error (test_mode 333 → 454).
+- **mini_billiards: three carried near-miss figures are fiction** — `1E0`'s
+  "7 in 6" builds **+1 LONG**; `23B0`'s "3 in 1" builds **−2 SHORT** (the
+  pre-run-26 `rel_sdiff` defect, still embedded in a carried figure).
+- **mini_race: §11's `F3D4` "start here" was a DEAD AXIS** — under
+  `scheduling off` the emitter puts `crclr 6` immediately before the `bl` at
+  every site, so **it is a scheduler output**, corroborated by 10 matched
+  variadic sites. New MEASURED `fmuls`/`fadds` **operand-slot rule** read off
+  matched C. Two new negatives: mwcc does **not** fold `-(a-b)` to `b-a`
+  (`fneg`, +2), and **removing two `f32` locals GREW the frame** 0x68→0x70.
+- **option `6C54`: "attack the ORDER" was misdirected** — **the schedule is
+  already byte-for-byte golden's**; 36 of 37 diffs are a **register field in an
+  otherwise identical instruction**. 71 variants, nothing below 37 in 24.
+  Declined with the cause printed: **one allocator bit worth 30 of 37 words**,
+  and it needs a corpus answer on mwcc's **register-class chaining order**.
+- **sel_ngc: run 31's "early consumer" prologue mechanism is INERT at n=138.**
+  New DOL census: **`gap1` holds exactly one `lis` in 1,682 of 1,682** — a hard
+  cap nobody had recorded.
+- **`git` line endings, repo-wide and pre-existing**: `.gitattributes` sets
+  `* text=auto` with `core.autocrlf=true`, so **every blob is stored LF** while
+  the worktree holds **CRLF `.c` and LF `.s`**. Untouched files like
+  `asm/mini_bowling_d3.s` have the identical property and the build is 12/12
+  from this state, but **a fresh clone would differ from this worktree in `.s`
+  line endings and nobody has ever tested that.**
+- **Retirements confirmed**: mini_pilot `11CC` (219, `scheduling off` moves 135
+  words and the register **stays r25**), `3BDC`, `15D8`, `4570`; mini_billiards
+  `1A18C` (1,469 — §8 **understated** it: `stmw r14` + 10 `stfd` = **28**
+  callee-saved), `A054`, `17A00`; mini_fight `A690`, `14BD4`, `15E00`
+  (**schedule-régime, not registers**); test_mode `F6F0`, `A7FC`, `6974`,
+  `E2E8`; option `2704`, `8068`; sel_ngc `E778`, `030F4`; mini_race `6CF0`,
+  `3474`, `E1CC`, `D41C`, `5C20`.
+
+### TOOLS LANDED — after the twelfth agent closed, commit `ba18a74`
+
+**Twelfth consecutive clean run**: all nine reported `diff -rq tools` **0 lines
+at start AND end**, and **no module patched a tool — six diagnosed a defect and
+handed it over.**
+
+- **`tools/rel_relscore.py` (NEW)** — the fifth fictional-match mode, above.
+
+### RUN-34 PREP — what is on disk, and what run 34 should do
+
+- **`C:/tmp/smbm/RUN33_RESULTS.md`** — all nine reports (5,002 lines), each
+  under an **ORCHESTRATOR VERIFIED** block written from tree measurements.
+- **`C:/tmp/smbm/_corpus_run33/`** — `A.md`, `B.md`, `C.md`, **`DRAFT_INDEX.md`**.
+
+**THE RUN-34 RECOMMENDATION:**
+
+1. **SPEND THE 11,732 PRICED INSTRUCTIONS.** option's **3,092 at zero layout
+   cost** is the single best row on the board; sel_ngc's **2,026** behind a
+   two-file merge is next. **Every one needs its conversion in the same run** —
+   that is what made mini_bowling's 334 real and what left the rest on paper.
+2. **EXTEND THE SYMBOLIC ENGINE TO `lbl_000230E4`** (zero real loops,
+   `stmw r27`). It leaves 108 instructions unhandled across 16 mnemonics today,
+   and that is a bounded, named job — **not** `lbl_0001B5B8`, which is falsified.
+3. **FIX `rel_census.py:576`** — one line, still unmade, and a TU merge now
+   widens the error. Then `rel_ledger`'s `DEAD` column, `rel_mergeprice`'s
+   `MAGIC_BLOCK_GAP=8` and `rel_magicscan`'s summary, all three of which encode
+   the falsified contiguity rule.
+4. **ASK THE CORPUS FOR mwcc's REGISTER-CLASS CHAINING ORDER.** option's
+   `6C54` is one allocator bit from 719 instructions and 71 variants could not
+   move it; it is a corpus question, not a twelfth sweep.
+5. **PROMOTE `DRAFT_INDEX.md` TO STANDING EQUIPMENT** and regenerate it each run.
+
+---
+
+## 0.38 — RUN 32 DONE (2026-08-12): +60 insn, 48.79% -> 48.82%. Superseded by §0.39.
 
 Nine module agents plus three read-only corpus agents. **TWENTIETH consecutive
 run with no module agent spawning anything.** One of nine gained.
