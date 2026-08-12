@@ -472,11 +472,44 @@ handed it over.**
 
 - **`tools/rel_relscore.py` (NEW)** — the fifth fictional-match mode, above.
 
-### RUN-34 PREP — what is on disk, and what run 34 should do
+### RUN-34 PREP — DONE. What is on disk, and what run 34 should do.
 
 - **`C:/tmp/smbm/RUN33_RESULTS.md`** — all nine reports (5,002 lines), each
-  under an **ORCHESTRATOR VERIFIED** block written from tree measurements.
-- **`C:/tmp/smbm/_corpus_run33/`** — `A.md`, `B.md`, `C.md`, **`DRAFT_INDEX.md`**.
+  under an **ORCHESTRATOR VERIFIED** block written from tree measurements. Its
+  assembler **refuses to write if its own table does not reconcile to the
+  census.**
+- **`C:/tmp/smbm/RUN33_PLAYBOOK.md`** — the corpus phase **with the module
+  corrections folded in**, since four of its rows were corrected by the modules
+  holding the bytes and one did not reproduce at all.
+- **`C:/tmp/smbm/_harvest_run33/`** — **76 scripts** with a README indexing them
+  by purpose, **plus `DRAFT_INDEX.md` copied in**. The collector asserts
+  `copied == on-disk`, and it now says loudly if the index is missing.
+- **`C:/tmp/smbm/_corpus_run33/`** — `A.md`, `B.md`, `C.md`, **`DRAFT_INDEX.md`**
+  (223 labels, 3,951 files, eleven runs deep).
+- **`C:/tmp/smbm/_orch_run34/`** — `predmerge_diff.sh`, `postmerge_verify.sh`,
+  `hygiene.py`, `harvest34.py`, `assemble_results.py`, `BASELINE.md`, all
+  rebased on **187 fns / 90,764 insn / 52.29% / 859-1029-862**.
+  ⚠ **`assemble_results.py` REFUSES TO RUN** until its seeded run-33 table and
+  headline are rewritten — a results file that silently reprinted last run's
+  gate hashes would poison the handoff, the brief and the warm-reset banner,
+  all of which are written *from* it.
+- **`C:/tmp/smbm/_brief34/`** — `sec1.md` and `sec11.md` written.
+- **All nine warm copies reset and re-gated GOLDEN from deleted objects**
+  (`fail=0`); `diff -rq tools` **0 lines in all nine**, `rel_relscore.py`
+  present in all nine, `diff -rq src`/`asm` **0 source differences**.
+
+**Two things the orchestrator VERIFIED at baseline rather than carried:**
+
+- ⚠⚠ **`rel_ledger`'s DEAD-by-distance rows, printed live at launch**:
+  mini_fight 1,303 (`magics 0x118 apart` — **probably genuinely dead**, its 272
+  intervening bytes are in `d5.s`, not constants a C TU emits), mini_golf
+  478 + 144 (`0x58 apart` — **UNVERIFIED, re-derive**), **sel_ngc 417 + 63
+  (`0x1C8 apart` — KNOWN FALSE**, sel_ngc reproduced that exact separation with
+  three compiles). **At least 480 instructions are misclassified DEAD by the
+  tool at launch and 622 more are unverified.**
+- ⚠ **`rel_ledger.py`'s docstring still opens "Candidate for `tools/`"** — it
+  landed in run 32. The run-29 `rel_arity` stale-docstring defect repeating:
+  harmless today, but it is the tell that nobody re-read the file after landing.
 
 **THE RUN-34 RECOMMENDATION:**
 
