@@ -268,7 +268,7 @@ void lbl_000065A0(void);
 void lbl_000069D0(struct Ball *ball, Vec *v);
 Vec *lbl_00006CF0(struct Ball *ball);
 Vec *lbl_00006FF4(struct Ball *ball);
-void lbl_000070FC(void);
+Vec *lbl_000070FC(struct Ball *ball);
 void lbl_0000A9C4(void);
 void lbl_0000A9EC(void);
 void lbl_0000AC30(void);
@@ -600,10 +600,119 @@ Vec *lbl_00006FF4(struct Ball *ball)
     return &v[1];
 }
 #pragma opt_propagation reset
-asm void lbl_000070FC(void)
+Vec *lbl_000070FC(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000070FC.s"
+    Vec *v = lbl_10001AF0;
+    u8 *cfg = lbl_00013740;
+    u8 *w = lbl_10000028;
+    struct RaceSub *st;
+    struct DecodedStageLzPtr_child5_child *seg;
+    struct RacePathNode *p;
+    struct RacePathNode *q;
+    int found;
+    s16 ang;
+    f32 q24;
+    f32 c;
+    f32 u;
+    f32 iu;
+    f32 a;
+    f32 b;
+    f32 d;
+    f32 dot;
+    Vec vv;
+    Vec tmp;
+    struct RaceSndIds snd;
+    f32 sc;
+
+    found = 0;
+    p = lbl_00015768[*(u16 *)w].unk18[ball->playerId];
+    st = (struct RaceSub *)ball->unk144;
+    q = p + 1;
+
+    seg = &decodedStageLzPtr->unk78->unk1C[st->unk248];
+    while (q->unk0 >= *(f32 *)(cfg + 8))
+    {
+        if (p->unk0 <= st->unk24C && st->unk24C <= q->unk0)
+        {
+            found = 1;
+            break;
+        }
+        p++;
+        q++;
+    }
+    if (!found)
+    {
+        v[2] = st->unk23C;
+        return &v[2];
+    }
+    q24 = st->unk24C;
+    u = q24 - p->unk0;
+    u = u / (q->unk0 - p->unk0);
+    iu = *(f32 *)(cfg + 0x20) - u;
+    a = p->unk4 * iu + q->unk4 * u;
+    b = p->unk8 * iu + q->unk8 * u;
+    ang = (f32)p->unkC * iu + (f32)q->unkC * u;
+    c = *(f32 *)(cfg + 0x68) * a / *(f32 *)(w + 8);
+    d = p->unk10 * iu + q->unk10 * u;
+    lbl_000031C0((struct DecodedStageLzPtr_child5 *)seg, &vv,
+                 lbl_00003238(q24 + c));
+    vv.x = vv.x - ball->pos.x;
+    vv.y = vv.y - ball->pos.y;
+    vv.z = vv.z - ball->pos.z;
+    mathutil_vec_normalize_len(&vv);
+    sc = *(f32 *)(cfg + 0x28C) * b;
+    mathutil_vec_set_len(&vv, &v[2], sc * st->unk270);
+    vv.x = st->unk254.x - ball->pos.x;
+    vv.y = st->unk254.y - ball->pos.y;
+    vv.z = st->unk254.z - ball->pos.z;
+    mathutil_vec_normalize_len(&vv);
+    if (mathutil_vec_dot_prod(&ball->vel, &vv) > *(f32 *)(cfg + 8)
+        && (dot = mathutil_vec_dot_prod(&v[2], &vv)) > *(f32 *)(cfg + 8))
+    {
+        mathutil_vec_set_len(&vv, &tmp, *(f64 *)(cfg + 0x2C0) * -dot);
+        v[2].x = v[2].x + tmp.x;
+        v[2].y = v[2].y + tmp.y;
+        v[2].z = v[2].z + tmp.z;
+    }
+    mathutil_mtxA_from_rotate_y(ang);
+    mathutil_mtxA_tf_vec(&v[2], &v[2]);
+    ball->ape->flags |= 0x20000;
+    if (st->unk26E > 0)
+    {
+        v[2].x = *(f32 *)(cfg + 0x140) * v[2].x;
+        v[2].y = *(f32 *)(cfg + 0x140) * v[2].y;
+        v[2].z = *(f32 *)(cfg + 0x140) * v[2].z;
+        if (st->unk263 != 6
+            && mathutil_vec_sq_len(&ball->vel) > *(f32 *)(cfg + 0x294))
+        {
+            ball->ape->flags &= ~0x20000;
+            if (globalAnimTimer % ((rand() & 0x7FFF) % 5 + 8) == 0)
+            {
+                snd = *(struct RaceSndIds *)(cfg + 0x29C);
+                u_play_sound_0(snd.unk0[(rand() & 0x7FFF) % 8]);
+            }
+        }
+    }
+    if (d > *(f32 *)(cfg + 8) && st->unk1CE > 5 && !(st->unk14 & 0x10))
+    {
+        vv = st->unk254;
+        vv.y = vv.y - ball->currRadius;
+        vv.x = vv.x - ball->pos.x;
+        vv.y = vv.y - ball->pos.y;
+        vv.z = vv.z - ball->pos.z;
+        mathutil_vec_normalize_len(&vv);
+        dot = mathutil_vec_dot_prod(&ball->vel, &vv);
+        if (dot < *(f32 *)(cfg + 8))
+        {
+            vv.x = vv.x * (-dot * d);
+            vv.y = vv.y * (-dot * d);
+            vv.z = vv.z * (-dot * d);
+            ball->vel.x = ball->vel.x + vv.x;
+            ball->vel.y = ball->vel.y + vv.y;
+            ball->vel.z = ball->vel.z + vv.z;
+        }
+    }
+    return &v[2];
 }
 #pragma peephole on
 int lbl_00007688(struct Ball *ball)
