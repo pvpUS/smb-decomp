@@ -259,7 +259,7 @@ void lbl_0000C984(void);
 void lbl_0000CB0C(void);
 void lbl_0000CB10(void);
 void lbl_0000CDE0(void);
-void lbl_0000D084(void);
+int lbl_0000D084(void);
 void lbl_0000D3C0(void);
 void lbl_0000D844(void);
 void lbl_0000D9FC(void);
@@ -278,9 +278,60 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_0000D084(void)
+#define REPEAT_LOCAL(btn) (     ((rep & (btn)) || (analogInputs[0].repeat & (btn)))  || (         ((controllerInfo[0].held.button & (btn)) || (analogInputs[0].held & (btn)))      && (analogInputs[0].held & ANALOG_TRIGGER_RIGHT)     ) )
+#define REPEAT_LOCAL_UP_SET (     (((up = rep & PAD_BUTTON_UP)) || (analogInputs[0].repeat & (PAD_BUTTON_UP)))  || (         ((controllerInfo[0].held.button & (PAD_BUTTON_UP)) || (analogInputs[0].held & (PAD_BUTTON_UP)))      && (analogInputs[0].held & ANALOG_TRIGGER_RIGHT)     ) )
+#define REPEAT_LOCAL_UP (     ((up) || (analogInputs[0].repeat & (PAD_BUTTON_UP)))  || (         ((controllerInfo[0].held.button & (PAD_BUTTON_UP)) || (analogInputs[0].held & (PAD_BUTTON_UP)))      && (analogInputs[0].held & ANALOG_TRIGGER_RIGHT)     ) )
+
+int lbl_0000D084(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000D084.s"
+    u8 *p = lbl_10003BF8;
+    u16 rep = controllerInfo[0].repeat.button;
+    int up;
+    int r = 0;
+
+    if (REPEAT_LOCAL_UP_SET)
+    {
+        *(int *)(p + 0x50) = 1;
+        r = -1;
+    }
+    else if (REPEAT_LOCAL(PAD_BUTTON_DOWN))
+    {
+        *(int *)(p + 0x50) = 2;
+        r = -1;
+    }
+    else if (REPEAT_LOCAL(PAD_BUTTON_LEFT))
+    {
+        *(int *)(p + 0x50) = 3;
+        r = -1;
+    }
+    else if (REPEAT_LOCAL(PAD_BUTTON_RIGHT))
+    {
+        *(int *)(p + 0x50) = 4;
+        r = -1;
+    }
+    if (r == -1)
+    {
+        *(int *)(p + 0xC4) = 30;
+        return *(int *)(p + 0x50);
+    }
+    if (--*(int *)(p + 0xC4) > 0)
+        return 0;
+    if (REPEAT_LOCAL_UP && *(int *)(p + 0x50) == 1)
+        r = -1;
+    else if (REPEAT_LOCAL(PAD_BUTTON_DOWN) && *(int *)(p + 0x50) == 2)
+        r = -1;
+    else if (REPEAT_LOCAL(PAD_BUTTON_LEFT) && *(int *)(p + 0x50) == 3)
+        r = -1;
+    else if (REPEAT_LOCAL(PAD_BUTTON_RIGHT) && *(int *)(p + 0x50) == 4)
+        r = -1;
+    if (r == -1)
+    {
+        *(int *)(p + 0xC4) = 4;
+        return *(int *)(p + 0x50);
+    }
+    *(int *)(p + 0x50) = 0;
+    *(int *)(p + 0xC4) = 0;
+    return 0;
 }
+
 #pragma force_active reset

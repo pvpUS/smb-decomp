@@ -1533,10 +1533,35 @@ void lbl_000101BC(s8 *alive, struct Sprite *sprite)
     else
         sprite->opacity = other->opacity;
 }
-asm void lbl_00010214(struct Sprite *sprite)
+void lbl_00010214(struct Sprite *sprite)
 {
-    nofralloc
-#include "../asm/nonmatchings/sel_ngc_rel/lbl_00010214.s"
+    f32 *g;
+    int n;
+    int i;
+    int ab[2];
+    f32 t;
+    int c;
+    f32 u;
+
+    ab[0] = 0;
+    ab[1] = 0;
+    if (modeCtrl.gameType == GAMETYPE_MINI_BILLIARDS && (s32)lbl_802F1BF4.unk4 == 0)
+        ab[1] = 1;
+    if (ab[1] && modeCtrl.playerCount == 1)
+        ab[0] = 1;
+    n = ab[0] ? 2 : modeCtrl.playerCount;
+    g = (f32 *)lbl_100009D8;
+    for (i = 0; i < n; i++)
+    {
+        c = playerCharacterSelection[i];
+        t = *(f32 *)(lbl_00017048 + (c + 8) * 0x18);
+        u = t * sprite->scaleX;
+        u = u + ((f32 *)lbl_00017420)[(n - 1) * 4 + i];
+        g[0] = u;
+        g[1] = g[0];
+        g[2] = ((f32 *)lbl_00011CB8)[0];
+        g += 4;
+    }
 }
 #pragma peephole on
 asm void lbl_00010438(void)

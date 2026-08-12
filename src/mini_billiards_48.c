@@ -44,6 +44,15 @@
 #include "nl2ngc.h"
 #include "string.h"
 
+struct BilliardsPlayerC48
+{
+    s8 unk0;
+    s8 unk1;
+    s8 unk2;
+    u8 filler3;
+    s16 unk4;
+};                     /* 6 */
+
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_billiards.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0001C2B8[];
@@ -126,7 +135,7 @@ extern u8 lbl_10000061[];
 extern u8 lbl_10000062[];
 extern u8 lbl_10000064[];
 extern u8 lbl_100000A4[];
-extern u8 lbl_10000A64[];
+extern struct BilliardsPlayerC48 lbl_10000A64[];
 extern u8 lbl_10000A70[];
 extern u8 lbl_10009710[];
 extern u8 lbl_10009878[];
@@ -216,7 +225,7 @@ void lbl_000186EC(void);
 void lbl_000189B4(void);
 void lbl_00018A98(void);
 void lbl_00018C78(void);
-void lbl_00018F4C(void);
+void lbl_00018F4C(struct Ape *, f32);
 void lbl_00019264(void);
 void lbl_0001968C(void);
 void lbl_00019F5C(void);
@@ -227,9 +236,74 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm void lbl_00018F4C(void)
+void lbl_00018F4C(struct Ape *ape, f32 f)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00018F4C.s"
+    u8 *p = lbl_00020B58;
+    int b = 0;
+    u32 a;
+
+    if ((u8)((u8)*(s8 *)lbl_1000000A - 14) <= 3
+        && *(s8 *)lbl_10000049 == ape->ballId) {
+        a = 5;
+        b = 0xc;
+    } else if (ape->flags & 0x80000) {
+        a = 5;
+        if (*(s8 *)lbl_1000000A == 0x17) {
+            if (ape->ballId == 0)
+                b = lbl_10000A64[lbl_802F1C32].unk4 % 6 * 2;
+            else
+                b = 0;
+        } else {
+            b = 6;
+        }
+    } else if ((*(s8 *)lbl_1000000A != 0x16
+                && (ape->unk24 == 0xf
+                    || (ape->unk24 == 0xa && ape->unkC2 < 3)))
+               || (*(s8 *)lbl_1000000A == 0x16 && (ape->flags & 0x800000))) {
+        a = 0xa;
+        b = 4;
+        if (ape->unk24 == 0xa)
+            ape->flags &= ~0x1000;
+    } else if ((*(s8 *)lbl_1000000A == 0x12 || *(s8 *)lbl_1000000A == 9)
+               && *(s32 *)lbl_10000020 == 0 && ape->ballId == 0) {
+        a = 0xf;
+        if (*(f32 *)lbl_10000038 < *(f32 *)(p + 0xb0))
+            b = 2;
+        else if ((*(s8 *)lbl_10000048 == 0
+                  && *(f32 *)lbl_10000038 < *(f32 *)(p + 0xbc))
+                 || (*(s8 *)lbl_10000048 == 1
+                     && *(f32 *)lbl_10000038 < *(f32 *)(p + 0xc0)))
+            b = 1;
+        else
+            b = 0;
+        ape->flags |= 0x1000;
+    } else if (*(s8 *)lbl_1000000A == 9 && *(s32 *)lbl_10000020 == 0
+               && ape->ballId == 1) {
+        a = 0xf;
+        if (*(f32 *)lbl_1000003C < *(f32 *)(p + 0xb0))
+            b = 2;
+        else if (*(f32 *)lbl_1000003C < *(f32 *)(p + 0xbc))
+            b = 1;
+        else
+            b = 0;
+        ape->flags |= 0x1000;
+    } else if (ape->flags & 2) {
+        a = 3;
+    } else if (ape->flags & 0x200000) {
+        a = 9;
+        b = 3;
+    } else if (ape->flags & 1) {
+        a = 1;
+        if (ape->ballId == 0 && (u8)((u8)*(s8 *)lbl_1000000A - 7) <= 4
+            && ape->ballId == 1)
+            f = *(f32 *)(p + 0x18);
+        else
+            f = (f32)ape->unk54++;
+    } else {
+        a = 0;
+    }
+    if (a != 1 || ape->unk24 != 0xa)
+        ape->unk54 = 0;
+    new_ape_stat_motion(ape, a, b, 0, f);
 }
 #pragma force_active reset

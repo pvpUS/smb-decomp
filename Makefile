@@ -1027,7 +1027,7 @@ SOURCES := \
 	src/mini_billiards_33b.c \
 	src/mini_billiards_33c.c \
 	src/mini_billiards_34.c \
-	asm/mini_billiards_d3.s \
+	asm/mini_billiards_d3a.s \
 	src/mini_billiards_36.c \
 	src/mini_billiards_37.c \
 	src/mini_billiards_37b.c \
@@ -1044,6 +1044,7 @@ SOURCES := \
 	src/mini_billiards_46.c \
 	src/mini_billiards_47.c \
 	src/mini_billiards_48.c \
+	asm/mini_billiards_d3b.s \
 	src/mini_billiards_49.c \
 	src/mini_billiards_50.c \
 	asm/mini_billiards_d4.s

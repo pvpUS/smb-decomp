@@ -279,9 +279,42 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-static asm void lbl_00002684(void)
+#pragma opt_propagation off
+struct TestObjListEntry
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00002684.s"
+    /*0x00*/ s32 unk0;
+    /*0x04*/ char *unk4;
+    /*0x08*/ char *unk8;
+};
+
+static void lbl_00002684(void)
+{
+    u8 *p = lbl_10000000;
+    struct TPL **tpl = (struct TPL **)(p + 0x78);
+    u32 *idx = (u32 *)(p + 0x70);
+    struct GMA **gma;
+
+    *(int *)(p + 0x6C) = 0;
+    *(int *)(p + 0x70) = 0;
+    if (*tpl != NULL)
+    {
+        bitmap_free_tpl(*tpl);
+        *tpl = NULL;
+    }
+    gma = (struct GMA **)(p + 0x74);
+    if (*gma != NULL)
+    {
+        OSFreeToHeap(__OSCurrHeap, *gma);
+        *gma = NULL;
+    }
+    nlObjModelListLoad(gma, tpl,
+                       ((struct TestObjListEntry *)lbl_00012330)[*idx].unk4,
+                       ((struct TestObjListEntry *)lbl_00012330)[*idx].unk8);
+    event_finish_all();
+    event_start(15);
+    camera_set_state_all(2);
+    gameSubmodeRequest = 0x70;
 }
+
+#pragma opt_propagation reset
 #pragma force_active reset

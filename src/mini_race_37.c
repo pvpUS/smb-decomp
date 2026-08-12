@@ -91,7 +91,6 @@ extern u8 lbl_000140AC[];
 extern u8 lbl_000140B8[];
 extern u8 lbl_000140F8[];
 extern u8 lbl_00014108[];
-extern u8 lbl_00015768[];
 extern u8 lbl_00015918[];
 extern u8 lbl_00015934[];
 extern u8 lbl_0001593C[];
@@ -266,7 +265,7 @@ void lbl_000061D0(void);
 void lbl_00006248(void);
 void lbl_000062F8(void);
 void lbl_000065A0(void);
-void lbl_000069D0(void);
+void lbl_000069D0(struct Ball *ball, Vec *v);
 Vec *lbl_00006CF0(struct Ball *ball);
 Vec *lbl_00006FF4(struct Ball *ball);
 void lbl_000070FC(void);
@@ -377,7 +376,13 @@ struct RaceSub
     u8 filler1F4[0x1FC - 0x1F4];
     Vec unk1FC[4];
     f32 unk22C[4];
-    u8 filler23C[0x262 - 0x23C];
+    Vec unk23C;
+    s16 unk248;
+    u8 filler24A[0x24C - 0x24A];
+    f32 unk24C;
+    u8 filler250[0x254 - 0x250];
+    Vec unk254;
+    u8 filler260[0x262 - 0x260];
     u8 unk262;
     u8 unk263;
     u8 filler264[0x26A - 0x264];
@@ -476,11 +481,97 @@ void lbl_000098A8(void);
 void lbl_0000A088(void);
 void lbl_0000A31C(u8 *, struct Ball *);
 
-#pragma force_active on
-asm void lbl_000069D0(void)
+// INVENTED -- 0x14-byte path-interpolation node walked by lbl_000070FC.  UNVERIFIED.
+struct RacePathNode
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_000069D0.s"
+    f32 unk0;
+    f32 unk4;
+    f32 unk8;
+    s16 unkC;
+    u8 fillerE[0x10 - 0xE];
+    f32 unk10;
+};
+// INVENTED -- 0x48-byte row at lbl_00015768, one per stage.  UNVERIFIED.
+struct RaceTableRow
+{
+    u8 filler0[0x18];
+    struct RacePathNode *unk18[4];
+    u8 filler28[0x48 - 0x28];
+};
+extern struct RaceTableRow lbl_00015768[];
+// INVENTED -- 8 sound ids at lbl_00013740 + 0x29C, copied whole.  UNVERIFIED.
+struct RaceSndIds
+{
+    s32 unk0[8];
+};
+
+#pragma force_active on
+void lbl_000069D0(struct Ball *ball, Vec *v)
+{
+    u8 *cfg = lbl_00013740;
+    u8 *w = lbl_10000028;
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+    Vec acc;
+    Vec dir;
+    Vec d;
+    f32 s;
+    f64 lim;
+    f32 q;
+    f32 dot;
+
+    acc = *(Vec *)(cfg + 0x240);
+    if (!(st->unk14 & 0x40000))
+    {
+        acc = *v;
+        if (st->unk1CE < 5)
+        {
+            s = *(f32 *)(cfg + 0x20)
+              - (f32)st->unk1D0 / *(f32 *)(cfg + 0x1F4);
+            if (s < *(f32 *)(cfg + 8))
+                s = *(f32 *)(cfg + 8);
+            else if (s > *(f32 *)(cfg + 0x20))
+                s = *(f32 *)(cfg + 0x20);
+            acc.x = acc.x * (*(f32 *)(cfg + 0x24C) * s);
+            acc.z = acc.z * (*(f32 *)(cfg + 0x24C) * s);
+        }
+    }
+    if (ball->flags & 0x200)
+        acc.y = ball->accel;
+    else if (ball->flags & 0x100)
+        acc.y = *(f32 *)(cfg + 8);
+    else
+        acc.y = -ball->accel;
+    if (!(st->unk14 & 0x20) && st->unk1CE > 5 && !(st->unk14 & 0x10)
+        && mathutil_vec_len(&ball->vel) > *(f32 *)(cfg + 0x250))
+    {
+        dir = st->unk4;
+        dir.x = dir.x - ball->pos.x;
+        dir.y = dir.y - ball->pos.y;
+        dir.z = dir.z - ball->pos.z;
+        mathutil_vec_normalize_len(&dir);
+        dot = mathutil_vec_dot_prod(&ball->vel, &dir);
+        if (dot < *(f32 *)(cfg + 8))
+        {
+            lim = *(f64 *)(cfg + 0x258) * *(f32 *)(w + 0xC);
+            q = st->unk1D4;
+            if (q < lim)
+                dot = dot * (q / lim);
+            else if (q > *(f64 *)(cfg + 0x260) - lim)
+                dot = dot * ((*(f64 *)(cfg + 0x260) - q) / lim);
+            d.x = dir.x * (*(f32 *)(cfg + 0x268) * -dot);
+            d.y = dir.y * (*(f32 *)(cfg + 0x268) * -dot);
+            d.z = dir.z * (*(f32 *)(cfg + 0x268) * -dot);
+            ball->vel.x = ball->vel.x + d.x;
+            ball->vel.y = ball->vel.y + d.y;
+            ball->vel.z = ball->vel.z + d.z;
+        }
+    }
+    ball->vel.x = ball->vel.x + acc.x;
+    ball->vel.y = ball->vel.y + acc.y;
+    ball->vel.z = ball->vel.z + acc.z;
+    ball->vel.x = ball->vel.x * *(f32 *)((u8 *)st + 0x1F8);
+    ball->vel.y = ball->vel.y * *(f32 *)((u8 *)st + 0x1F8);
+    ball->vel.z = ball->vel.z * *(f32 *)((u8 *)st + 0x1F8);
 }
 asm Vec *lbl_00006CF0(struct Ball *ball)
 {
