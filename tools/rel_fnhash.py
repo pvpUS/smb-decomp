@@ -72,8 +72,33 @@ def read(path):
     return d
 
 
+def _read_checked(path):
+    """read(), but REFUSE a file with no hash lines.
+
+    Run 28 (mini_pilot): this tool needs an OUTPUT-FILE argument, and
+    `rel_fnhash.py <module> > out.txt` writes the usage to stderr and leaves
+    out.txt EMPTY.  `--compare old.txt out.txt` then read the empty file as a
+    valid hash set and printed `0/118 identical, 0 changed, 118 gone, 0 new` --
+    indistinguishable from a catastrophic regression, on a tree where nothing
+    had changed at all.  A comparator that cannot tell "no data" from "all data
+    lost" is worse than no comparator.
+    """
+    if not os.path.exists(path):
+        sys.exit('rel_fnhash --compare: no such file: %s' % path)
+    d = read(path)
+    if not d:
+        sys.exit(
+            'rel_fnhash --compare: %s contains NO hash lines.\n'
+            '  This is almost always an empty capture: the emit form needs an\n'
+            '  OUTPUT-FILE argument, and `rel_fnhash.py <module> > out.txt`\n'
+            '  writes usage to stderr and leaves out.txt empty.\n'
+            '  Correct:  python tools/rel_fnhash.py <module> out.txt\n'
+            '  Refusing rather than reporting every function "gone".' % path)
+    return d
+
+
 def compare(a, b):
-    A, B = read(a), read(b)
+    A, B = _read_checked(a), _read_checked(b)
     gone = sorted(set(A) - set(B))
     new = sorted(set(B) - set(A))
     moved = sorted(n for n in set(A) & set(B) if A[n][0] != B[n][0])
