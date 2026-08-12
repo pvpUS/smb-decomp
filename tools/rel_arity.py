@@ -59,9 +59,18 @@ under-report **inverts the diagnostic silently.**  The whole function is now
 scanned by default and every argument carries the instruction index where it
 was first read, with anything past the entry window flagged `late`.
 
-  ** STILL PATH-INSENSITIVE. **  The scan is linear, so a register written on
-  one branch and read on another is judged by TEXTUAL order.  A `late` argument
-  is a prompt to read the `.s`, not a verdict.
+  ** THE SCAN IS PATH-SENSITIVE. **  It is a CFG liveness analysis
+  (`arity_cfg`): a register counts as an argument when some path reaches a READ
+  of it without an intervening write, with `bl` clobbering the volatiles.  A
+  linear scan cannot see `lbl_00016CC8`'s `r3` at ANY window size, because the
+  entry block branches PAST the `lis r3` to a block that stores through it --
+  and the self-test asserts the linear scan still says 0 on that input, so this
+  gate cannot go vacuous.
+
+  This paragraph used to read "STILL PATH-INSENSITIVE / the scan is linear",
+  describing the pre-run-28 implementation.  mini_bowling found it stale in run
+  29 and handed it over rather than patching it.  **A `late` argument is still a
+  prompt to read the `.s`, not a verdict.**
 
 usage:
   python tools/rel_arity.py <module> <label> [<label> ...]
