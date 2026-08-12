@@ -390,6 +390,10 @@ struct RaceSub
     s16 unk26C;
     s16 unk26E;
     f32 unk270;
+    u8 filler274[0x294 - 0x274];
+    s16 unk294;
+    u8 filler296[0x298 - 0x296];
+    s32 unk298;
 };
 void lbl_000031C0(struct DecodedStageLzPtr_child5 *, Vec *, f32);
 f32 lbl_00003238(f32);

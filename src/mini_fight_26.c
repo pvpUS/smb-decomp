@@ -154,10 +154,8 @@ extern u8 lbl_10018FD4[];
 extern u8 lbl_10019040[];
 extern u8 backgroundInfo[];
 extern u8 g_bgLightInfo[];
-extern u8 g_stobjInfo[];
 extern u8 infoWork[];
 extern u8 lbl_801EED98[];
-extern u8 lbl_8028C0B0[];
 extern u8 pauseMenuState[];
 extern u8 polyDisp[];
 extern u8 worldInfo[];
@@ -188,7 +186,6 @@ extern void mathutil_tan();
 extern void mathutil_vec_normalize_len();
 extern void mathutil_vec_set_len();
 extern void mini_commend_free_data();
-extern void spawn_stobj();
 extern void u_math_unk15();
 extern void ape_skel_anim_main();
 extern void avdisp_draw_model_culled_sort_all();
@@ -391,10 +388,31 @@ void lbl_0001A554(void);
 void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
+#include "stobj.h"
+#pragma opt_loop_invariants off
 #pragma force_active on
-asm void lbl_0000E0C4(void)
+void lbl_0000E0C4(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000E0C4.s"
+    struct Stobj st;
+    s32 id;
+    u8 *p;
+
+    memset(&st, 0, sizeof(st));
+    memset(lbl_10017664 + 0x68, 0, 0x6d0);
+    st.type = 7;
+    st.animGroupId = 0;
+    BALL_FOREACH(
+        id = ball->playerId;
+        p = lbl_10017664 + id * 0x1b4 + 0x68;
+
+        *(s32 *)p = id;
+        *(s32 *)(p + 0x28) = -1;
+        *(s32 *)(p + 0x2c) = -1;
+        *(s16 *)&st.filler6[0] = ball->playerId;
+        st.extraData = p;
+        spawn_stobj(&st);
+    )
 }
 #pragma force_active reset
+#pragma opt_loop_invariants reset
+

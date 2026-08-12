@@ -377,14 +377,45 @@ void lbl_00012D50(void);
 // INVENTED (UNVERIFIED) -- fields of ballInfo[].unk144 used by lbl_000062F8.
 struct RaceSub
 {
-    u8 filler0[0x14];
-    /*0x14*/ u32 unk14;
-    u8 filler18[0x263 - 0x18];
-    /*0x263*/ u8 unk263;
-    u8 filler264[0x26C - 0x264];
-    /*0x26C*/ s16 unk26C;
-    u8 filler26E[0x270 - 0x26E];
-    /*0x270*/ f32 unk270;
+    u8 filler0[0x4];
+    Vec unk4;
+    f32 unk10;
+    u32 unk14;
+    u8 filler18[0x22 - 0x18];
+    s16 unk22;
+    u8 filler24[0x1CE - 0x24];
+    s16 unk1CE;
+    s16 unk1D0;
+    u8 filler1D2[0x1D4 - 0x1D2];
+    f32 unk1D4;
+    f32 unk1D8;
+    f32 unk1DC;
+    f32 unk1E0;
+    f32 unk1E4;
+    f32 unk1E8;
+    u8 filler1EC[0x1F0 - 0x1EC];
+    f32 unk1F0;
+    u8 filler1F4[0x1FC - 0x1F4];
+    Vec unk1FC[4];
+    f32 unk22C[4];
+    Vec unk23C;
+    s16 unk248;
+    u8 filler24A[0x24C - 0x24A];
+    f32 unk24C;
+    u8 filler250[0x254 - 0x250];
+    Vec unk254;
+    u8 filler260[0x262 - 0x260];
+    u8 unk262;
+    u8 unk263;
+    u8 filler264[0x26A - 0x264];
+    s16 unk26A;
+    s16 unk26C;
+    s16 unk26E;
+    f32 unk270;
+    u8 filler274[0x294 - 0x274];
+    s16 unk294;
+    u8 filler296[0x298 - 0x296];
+    s32 unk298;
 };
 
 #pragma force_active on

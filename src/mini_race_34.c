@@ -398,12 +398,27 @@ struct RaceSub
     f32 unk1E8;
     u8 filler1EC[0x1F0 - 0x1EC];
     f32 unk1F0;
-    u8 filler1F4[0x262 - 0x1F4];
+    u8 filler1F4[0x1FC - 0x1F4];
+    Vec unk1FC[4];
+    f32 unk22C[4];
+    Vec unk23C;
+    s16 unk248;
+    u8 filler24A[0x24C - 0x24A];
+    f32 unk24C;
+    u8 filler250[0x254 - 0x250];
+    Vec unk254;
+    u8 filler260[0x262 - 0x260];
     u8 unk262;
     u8 unk263;
     u8 filler264[0x26A - 0x264];
     s16 unk26A;
     s16 unk26C;
+    s16 unk26E;
+    f32 unk270;
+    u8 filler274[0x294 - 0x274];
+    s16 unk294;
+    u8 filler296[0x298 - 0x296];
+    s32 unk298;
 };
 
 #pragma force_active on
