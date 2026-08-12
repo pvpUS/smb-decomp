@@ -278,9 +278,29 @@ void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 #pragma force_active on
-asm void lbl_00008008(void)
+void lbl_00008008(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_00008008.s"
+    u16 buf[32];
+    int i;
+    s32 j;
+    s32 v;
+    u32 c;
+
+    window_set_cursor_pos(1, 1);
+    u_debug_print((char *)lbl_0001468C);
+    window_printf_2((char *)lbl_0001469C, (*(u16 *)lbl_10000D60 << 8) + 0x8140);
+    DEMOInitCaption(2, 0x280, 0x1C0);
+    for (i = 0; i < 16; i++)
+    {
+        v = *(u16 *)lbl_10000D60;
+        c = (v << 8) + 0x8140;
+        if ((c >= 0x8100U && c <= 0x9F00U) || (c >= 0xE000U && c <= 0xFC00U))
+        {
+            for (j = 0; j < 16; j++)
+                buf[j] = j + 0x10000 + i * 16 + (v << 8) - 0x7EC0;
+            buf[j] = 0;
+            DEMORFPrintf(0x88, (i + 1) * 0x17 + 0x28, 10, (char *)buf);
+        }
+    }
 }
 #pragma force_active reset

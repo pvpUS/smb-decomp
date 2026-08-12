@@ -31,6 +31,7 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "stcoli.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_race.s) or imported.  Declared so mwcc accepts `@ha/@l`.
@@ -170,7 +171,6 @@ extern u8 worldInfo[];
 extern u8 lbl_802F1F10[];
 extern u8 pauseMenuState[];
 extern u8 g_currPlayerButtons[];
-extern u8 controllerInfo[];
 extern u8 lbl_802F16BC[];
 extern u8 backgroundInfo[];
 
@@ -178,11 +178,8 @@ extern u8 backgroundInfo[];
 extern void item_replace_type_funcs();
 extern void u_load_minigame_graphics();
 extern void u_ball_init_1();
-extern void raycast_stage_down();
 extern void vibration_control();
-extern void func_800246F4();
 extern void mot_ape_set_quat_from_vec();
-extern void avdisp_get_eff_vertices();
 extern void item_create();
 extern void avdisp_draw_model_unculled_sort_translucent();
 extern void avdisp_draw_model_culled_sort_translucent();
@@ -195,7 +192,6 @@ extern void func_8002BB20();
 extern void fade_color_base_default();
 extern void func_800AB6F8();
 extern void stcoli_sub33();
-extern void avdisp_get_eff_vtxinfo();
 extern void lens_flare_draw();
 extern void avdisp_set_bound_sphere_scale();
 extern void avdisp_set_post_mult_color();
@@ -254,8 +250,6 @@ void lbl_00002FA4(void);
 void lbl_00003094(void);
 void lbl_000030DC(void);
 void lbl_00003120(void);
-void lbl_000031C0(void);
-void lbl_00003238(void);
 void lbl_0000326C(void);
 void lbl_00003398(void);
 void lbl_0000340C(void);
@@ -272,28 +266,10 @@ void lbl_000061D0(void);
 void lbl_00006248(void);
 void lbl_000062F8(void);
 void lbl_000065A0(void);
-void lbl_000068E8(void);
 void lbl_000069D0(void);
 Vec *lbl_00006CF0(struct Ball *ball);
-void lbl_00006FF4(void);
+Vec *lbl_00006FF4(struct Ball *ball);
 void lbl_000070FC(void);
-void lbl_00007688(void);
-void lbl_00007710(void);
-void lbl_00007800(void);
-void lbl_00007900(void);
-void lbl_00007950(void);
-void lbl_000079B8(void);
-void lbl_00007A9C(void);
-void lbl_00007D4C(void);
-void lbl_00007F88(void);
-void lbl_00008160(void);
-void lbl_00008324(void);
-void lbl_000084A0(void);
-void lbl_000085D8(void);
-void lbl_00008A10(void);
-void lbl_00008B60();
-void lbl_00008C4C(void);
-void lbl_0000A364(void);
 void lbl_0000A9C4(void);
 void lbl_0000A9EC(void);
 void lbl_0000AC30(void);
@@ -374,6 +350,132 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+extern int func_800246F4(struct Ball *);
+int lbl_00007688(struct Ball *ball);
+struct RaceSub
+{
+    u8 filler0[0x4];
+    Vec unk4;
+    f32 unk10;
+    u32 unk14;
+    u8 filler18[0x22 - 0x18];
+    s16 unk22;
+    u8 filler24[0x1CE - 0x24];
+    s16 unk1CE;
+    s16 unk1D0;
+    u8 filler1D2[0x1D4 - 0x1D2];
+    f32 unk1D4;
+    f32 unk1D8;
+    f32 unk1DC;
+    f32 unk1E0;
+    f32 unk1E4;
+    f32 unk1E8;
+    u8 filler1EC[0x1F0 - 0x1EC];
+    f32 unk1F0;
+    u8 filler1F4[0x1FC - 0x1F4];
+    Vec unk1FC[4];
+    f32 unk22C[4];
+    u8 filler23C[0x262 - 0x23C];
+    u8 unk262;
+    u8 unk263;
+    u8 filler264[0x26A - 0x264];
+    s16 unk26A;
+    s16 unk26C;
+    s16 unk26E;
+    f32 unk270;
+};
+void lbl_000031C0(struct DecodedStageLzPtr_child5 *, Vec *, f32);
+f32 lbl_00003238(f32);
+void lbl_00007710(struct Ball *ball);
+void lbl_00007800(struct Ball *ball);
+struct RaceSub2
+{
+    u8 filler0[0x14];
+    u32 unk14;
+    u8 filler18[0x1E - 0x18];
+    u16 unk1E;
+    u8 filler20[0x1DC - 0x20];
+    f32 unk1DC;
+    u8 filler1E0[0x1E4 - 0x1E0];
+    f32 unk1E4;
+    u8 filler1E8[0x1F8 - 0x1E8];
+    f32 unk1F8;
+};
+void lbl_00007900(struct Ball *ball);
+struct RaceApe
+{
+    u8 filler0[0x274];
+    Quaternion unk274;
+    Quaternion unk284;
+};
+void lbl_00007950(struct Ball *ball);
+void lbl_000079B8(struct Ball *ball, Quaternion *out);
+struct RaceRayHit
+{
+    u32 flags;
+    Point3d pos;
+    Vec normal;
+    u8 pad[4];
+};
+struct RaceGmaEnt
+{
+    /*0x00*/ void *model;
+    void *unk4;
+};
+struct RaceGma
+{
+    u8 filler0[8];
+    /*0x08*/ struct RaceGmaEnt *modelEntries;
+};
+struct RaceEffVtx
+{
+    /*0x00*/ Vec pos;
+    u8 filler0C[0x40 - 0x0C];
+};
+extern struct RaceEffVtx *avdisp_get_eff_vertices();
+extern u32 *avdisp_get_eff_vtxinfo();
+void lbl_00007A9C(struct Ball *ball);
+void lbl_00007D4C(struct Ball *ball);
+void lbl_00007F88(struct Ball *ball);
+void lbl_00008160(struct Ball *ball);
+void lbl_00008324(struct Ball *ball);
+void lbl_000068E8(struct Ball *);
+void lbl_000084A0(struct Ball *ball);
+void lbl_000085D8(struct Ball *ball, s16 type);
+void lbl_00008A10(struct Ball *ball, s16 subType);
+struct RaceItemSlot
+{
+    s32 unk0;
+    s32 unk4;
+    s16 unk8;
+    s16 unkA;
+    s16 unkC;
+    u8 fillerE[2];
+};
+struct ControllerInfo
+{
+    PADStatus held;
+    PADStatus prevHeld;
+    PADStatus pressed;
+    PADStatus released;
+    PADStatus repeat;
+};
+extern struct ControllerInfo controllerInfo[];
+void lbl_00008B60(struct Ball *ball, Vec *out);
+void lbl_00008C4C(u8 *, struct Ball *);
+void lbl_00009A08(void);
+void lbl_00009D3C(void);
+void lbl_0000A364(u8 *, struct Ball *);
+void lbl_00009BF8(void);
+void lbl_00008CC8(void);
+void lbl_00008EC8(void);
+void lbl_0000933C(void);
+void lbl_000098A8(void);
+void lbl_0000A088(void);
+void lbl_0000A31C(u8 *, struct Ball *);
+
 #pragma force_active on
 asm void lbl_000069D0(void)
 {
@@ -385,14 +487,707 @@ asm Vec *lbl_00006CF0(struct Ball *ball)
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_00006CF0.s"
 }
-asm void lbl_00006FF4(void)
+#pragma peephole on
+#pragma opt_propagation off
+Vec *lbl_00006FF4(struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_00006FF4.s"
+    f64 dead;
+    Vec *v = lbl_10001AF0;
+    u8 *cfg = lbl_00013740;
+    f32 *pz = &v[1].z;
+    f32 *py = &v[1].y;
+
+    v[1].x = (f32)controllerInfo[playerControllerIDs[ball->playerId]].held.stickX
+             / *(f32 *)(cfg + 0x298);
+    *py = *(f32 *)(cfg + 8);
+    *pz = *(f32 *)(cfg + 8);
+    lbl_00008B60(ball, &v[1]);
+    *py = *pz = *(f32 *)(cfg + 8);
+    v[1].x = v[1].x * *(f32 *)(cfg + 0x28C);
+    mathutil_mtxA_from_rotate_y(cameraInfo[ball->playerId].rotY);
+    mathutil_mtxA_tf_vec(&v[1], &v[1]);
+    return &v[1];
 }
+#pragma opt_propagation reset
 asm void lbl_000070FC(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_000070FC.s"
 }
+#pragma peephole on
+int lbl_00007688(struct Ball *ball)
+{
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+    u8 *cfg = lbl_00013740;
+
+    if (st->unk14 & 0x40)
+    {
+        ball->pos.x = *(f32 *)(cfg + 0x8);
+        ball->pos.y = *(f32 *)(cfg + 0x2C8);
+        ball->pos.z = *(f32 *)(cfg + 0x8);
+        return 0;
+    }
+    if (func_800246F4(ball))
+    {
+        st->unk14 |= 0x20000;
+        return 1;
+    }
+    return 0;
+}
+void lbl_00007710(struct Ball *ball)
+{
+    u8 *cfg = lbl_00013740;
+    struct DecodedStageLzPtr_child5 *path;
+    struct RaceSub *st;
+    f32 t;
+    Vec b;
+    Vec a;
+
+    t = *(f32 *)(cfg + 0x68)
+      * (*(f32 *)(cfg + 0x9C) / *(f32 *)(lbl_10000028 + 8));
+    st = (struct RaceSub *)ball->unk144;
+    path = decodedStageLzPtr->unk78;
+    lbl_000031C0(path, &b, st->unk1D4);
+    lbl_000031C0(path, &a, lbl_00003238(st->unk1D4 + t));
+    a.x = a.x - b.x;
+    a.y = a.y - b.y;
+    a.z = a.z - b.z;
+    a.y = *(f32 *)(cfg + 8);
+    mathutil_vec_normalize_len(&a);
+    mot_ape_set_quat_from_vec(ball->ape, &a);
+}
+#pragma peephole on
+void lbl_00007800(struct Ball *ball)
+{
+    struct RaceSub2 *st = (struct RaceSub2 *)ball->unk144;
+    u8 *cfg = lbl_00013740;
+    struct RaceSub2 *other;
+    f32 k;
+
+    st->unk1F8 = *(f32 *)(cfg + 0x6C);
+    if (!(*(u16 *)(lbl_10000028 + 2) & 2))
+        return;
+    if (st->unk14 & 0x20)
+        return;
+    if (st->unk14 & 1)
+        return;
+    if (st->unk1DC < *(f32 *)(cfg + 8))
+        return;
+    if (st->unk1E <= 1 && (other = ((struct RaceSub2 **)lbl_10000054)[1]) != NULL)
+    {
+        if (st->unk1E4 - other->unk1E4 > *(f32 *)(cfg + 0x64))
+        {
+            k = *(f32 *)(cfg + 0x20);
+            st->unk1F8 = st->unk1F8 + *(f32 *)(cfg + 0x2CC);
+        }
+        else
+            k = (st->unk1E4 - other->unk1E4) / ((f32 *)cfg)[0x19];
+        st->unk1F8 = st->unk1F8 + *(f32 *)(cfg + 0x2CC) * k;
+    }
+    else
+    {
+        other = ((struct RaceSub2 **)lbl_10000054)[0];
+        if (other->unk1E4 - st->unk1E4 > *(f32 *)(cfg + 0x64))
+            k = *(f32 *)(cfg + 0x20);
+        else
+            k = (other->unk1E4 - *(f32 *)((u8 *)st + 0x1E4)) / ((f32 *)cfg)[0x19];
+        st->unk1F8 = st->unk1F8 + *(f32 *)(cfg + 0x2D0) * k;
+    }
+}
+
+void lbl_00007900(struct Ball *ball)
+{
+    struct RaceApe *obj = (struct RaceApe *)ball->unk144;
+    lbl_000079B8(ball, &obj->unk274);
+    obj->unk284 = obj->unk274;
+}
+void lbl_00007950(struct Ball *ball)
+{
+    Quaternion local;
+    struct RaceApe *obj = (struct RaceApe *)ball->unk144;
+    obj->unk284 = obj->unk274;
+    lbl_000079B8(ball, &local);
+    mathutil_quat_slerp(&obj->unk274, &obj->unk284, &local, *(f32 *)lbl_00013A14);
+}
+void lbl_000079B8(struct Ball *ball, Quaternion *out)
+{
+    struct RaycastHit hit;
+    Vec dir;
+    Quaternion base;
+    Quaternion rot;
+    volatile Vec up;
+    char pad4[4];
+
+    base = *(Quaternion *)((u8 *)ball->ape + 0x60);
+    raycast_stage_down(&ball->pos, &hit, NULL);
+    if (hit.flags & 1)
+    {
+        up = *(volatile Vec *)lbl_00013A18;
+        dir = *(Vec *)&up;
+        mathutil_quat_from_dirs(&rot, &dir, &hit.normal);
+        mathutil_quat_mult(out, &rot, &base);
+    }
+    else
+        *out = base;
+}
+#pragma peephole on
+void lbl_00007A9C(struct Ball *ball)
+{
+    u8 *cfg = lbl_00013740;
+    struct Ball_child *st = ball->unk144;
+    u32 *vtxinfo;
+    struct RaceEffVtx *verts;
+    f32 best;
+    f32 out;
+    f32 h;
+    f32 d;
+    s16 i;
+    s16 j;
+    Vec tri[3];
+    Vec e1;
+    Vec e2;
+    Vec n;
+
+    vtxinfo = avdisp_get_eff_vtxinfo(((struct RaceGma *)minigameGma)->modelEntries[21].model);
+    verts = avdisp_get_eff_vertices(((struct RaceGma *)minigameGma)->modelEntries[21].model);
+    out = best = *(f32 *)(cfg + 0x70);
+    mathutil_mtxA_from_mtx(ball->unk30);
+    mathutil_mtxA_scale_s(ball->modelScale);
+    for (i = 0; i < *vtxinfo; i += 3)
+    {
+        mathutil_mtxA_tf_vec(&verts[i].pos, &tri[0]);
+        mathutil_mtxA_tf_vec(&verts[i + 1].pos, &tri[1]);
+        mathutil_mtxA_tf_vec(&verts[i + 2].pos, &tri[2]);
+        if (tri[0].y > *(f32 *)(cfg + 8))
+            continue;
+        if (tri[1].y > *(f32 *)(cfg + 8))
+            continue;
+        if (tri[2].y > *(f32 *)(cfg + 8))
+            continue;
+        e1.x = tri[1].x - tri[0].x;
+        e1.y = tri[1].y - tri[0].y;
+        e1.z = tri[1].z - tri[0].z;
+        e2.x = tri[2].x - tri[0].x;
+        e2.y = tri[2].y - tri[0].y;
+        e2.z = tri[2].z - tri[0].z;
+        mathutil_vec_normalize_len(&e1);
+        mathutil_vec_normalize_len(&e2);
+        mathutil_vec_cross_prod(&e1, &e2, &n);
+        if (*(f32 *)(cfg + 8) == n.y)
+            continue;
+        h = -(tri[0].y + (n.x * tri[0].x + n.z * tri[0].z) / n.y);
+        if (!(best < *(f32 *)(cfg + 8)
+              || (h > *(f32 *)(cfg + 8) && best > h)))
+            continue;
+        best = h;
+        h = tri[0].y;
+        for (j = 1; j < 3; j++)
+        {
+            if (tri[j].y < h)
+                h = tri[j].y;
+        }
+        out = -h;
+    }
+    if (best <= *(f32 *)(cfg + 8))
+        return;
+    d = out - ball->currRadius;
+    if (st->unk1CE == 1)
+        u_play_sound_0(0x133);
+    if (st->unk1CE > 5)
+    {
+        if (d > *(f32 *)(cfg + 8))
+            ball->pos.y = ball->pos.y + *(f32 *)(cfg + 0x2E4) * d;
+        else
+            ball->pos.y = ball->pos.y + d;
+    }
+    else
+    {
+        ball->pos.y = ball->pos.y + d;
+    }
+    ball->currRadius = out;
+}
+
+
+struct RacePathHdr
+{
+    u8 filler0[0x20];
+    /*0x20*/ s32 unk20;
+    /*0x24*/ struct StageGoal *unk24;
+    /*0x28*/ s32 unk28;
+    /*0x2C*/ struct StageGoal *unk2C;
+    /*0x30*/ s32 unk30;
+    /*0x34*/ struct StageGoal *unk34;
+    u8 filler38[0x40 - 0x38];
+    /*0x40*/ s32 unk40;
+    /*0x44*/ struct StageGoal *unk44;
+    u8 filler48[0x60 - 0x48];
+    /*0x60*/ s32 unk60;
+    /*0x64*/ struct StageGoal *unk64;
+};
+
+
+void lbl_00007D4C(struct Ball *ball)
+{
+    u8 *cfg = lbl_00013740;
+    Vec *p;
+    Vec *q;
+    struct RacePathHdr *path;
+    struct StageGoal *e;
+    struct RaceSub *st;
+    s16 i;
+    Vec out;
+    Vec v;
+
+    st = (struct RaceSub *)ball->unk144;
+    path = (struct RacePathHdr *)decodedStageLzPtr->unk78;
+    e = path->unk24;
+    v = *(Vec *)(cfg + 0x2E8);
+    if (st->unk14 & 0x200000)
+        st->unk14 |= 0x400000;
+    else
+        st->unk14 &= ~0x400000;
+    st->unk14 &= ~0x200000;
+    p = &ball->pos;
+    for (i = 0; i < path->unk20; i++, e++)
+    {
+        if (mathutil_vec_sq_distance(p, &e->pos) <= *(f32 *)(cfg + 0x2F4))
+        {
+            mathutil_mtxA_from_translate(&e->pos);
+            mathutil_mtxA_rotate_z(e->rotZ);
+            mathutil_mtxA_rotate_y(e->rotY);
+            mathutil_mtxA_rotate_x(e->rotX);
+            mathutil_mtxA_rigid_inv_tf_point(p, &out);
+            out.z = out.z * *(f64 *)(cfg + 0x2F8);
+            if (*(f32 *)(cfg + 0x70) <= out.x && out.x <= *(f32 *)(cfg + 0x20)
+             && *(f32 *)(cfg + 0x70) <= out.z && out.z <= *(f32 *)(cfg + 0x20))
+            {
+                st->unk14 |= 0x200000;
+                q = &ball->vel;
+                v.z = v.z * (*(f32 *)(cfg + 0x300) * mathutil_vec_len(q));
+                mathutil_mtxA_tf_vec(&v, &v);
+                if (!(st->unk14 & 0x400000))
+                {
+                    if (mathutil_vec_dot_normalized_safe(q, &v) >= *(f32 *)(cfg + 8))
+                    {
+                        u_play_sound_0(0x5052);
+                        u_play_sound_0(0x3B0D2);
+                    }
+                    else
+                    {
+                        u_play_sound_0(0x3B0DD);
+                    }
+                }
+                ball->vel.x += v.x;
+                ball->vel.y += v.y;
+                ball->vel.z += v.z;
+                break;
+            }
+        }
+    }
+}
+
+
+
+void lbl_00007F88(struct Ball *ball)
+{
+    u8 *cfg = lbl_00013740;
+    Vec *p;
+    struct RacePathHdr *path;
+    struct StageGoal *e;
+    struct RaceSub *st;
+    s16 i;
+    Vec out;
+    Vec v;
+
+    p = &ball->pos;
+    path = (struct RacePathHdr *)decodedStageLzPtr->unk78;
+    st = (struct RaceSub *)ball->unk144;
+    e = path->unk2C;
+    v = *(Vec *)(cfg + 0x304);
+    for (i = 0; i < path->unk28; i++, e++)
+    {
+        if (mathutil_vec_sq_distance(p, &e->pos) > *(f32 *)(cfg + 0x310))
+            continue;
+        mathutil_mtxA_from_translate(&e->pos);
+        mathutil_mtxA_rotate_z(e->rotZ);
+        mathutil_mtxA_rotate_y(e->rotY);
+        mathutil_mtxA_rotate_x(e->rotX);
+        mathutil_mtxA_rigid_inv_tf_point(p, &out);
+        out.x = out.x * *(f64 *)(cfg + 0x318);
+        out.z = out.z * *(f64 *)(cfg + 0x320);
+        if (out.x < *(f32 *)(cfg + 0x70))
+            continue;
+        if (out.x > *(f32 *)(cfg + 0x20))
+            continue;
+        if (out.z < *(f32 *)(cfg + 0x70))
+            continue;
+        if (out.z > *(f32 *)(cfg + 8))
+            continue;
+        v.z = v.z * (*(f32 *)(cfg + 0x20) + out.z);
+        v.z = v.z * ((*(f32 *)(cfg + 0x20) + out.x)
+                     * ((out.x - *(f32 *)(cfg + 0x20)) * (-out.x * out.x)));
+        v.z = v.z * (*(f32 *)(cfg + 0x1F8) / st->unk10);
+        mathutil_mtxA_tf_vec(&v, &v);
+        ball->vel.x += v.x;
+        ball->vel.y += v.y;
+        ball->vel.z += v.z;
+        break;
+    }
+}
+
+
+
+void lbl_00008160(struct Ball *ball)
+{
+    struct RaceSub *st;
+    u8 *cfg = lbl_00013740;
+    Vec *p;
+    struct RacePathHdr *path;
+    struct StageGoal *e;
+    int found;
+    s16 i;
+    Vec out;
+    Vec v;
+    u32 a;
+    u32 b;
+
+    p = &ball->pos;
+    found = 0;
+    st = (struct RaceSub *)ball->unk144;
+    path = (struct RacePathHdr *)decodedStageLzPtr->unk78;
+    e = path->unk44;
+    v = *(Vec *)(cfg + 0x328);
+    for (i = 0; i < path->unk40; i++, e++)
+    {
+        if (mathutil_vec_sq_distance(p, &e->pos) > *(f32 *)(cfg + 0x2F4))
+            continue;
+        mathutil_mtxA_from_translate(&e->pos);
+        mathutil_mtxA_rotate_z(e->rotZ);
+        mathutil_mtxA_rotate_y(e->rotY);
+        mathutil_mtxA_rotate_x(e->rotX);
+        mathutil_mtxA_rigid_inv_tf_point(p, &out);
+        out.z = out.z * *(f64 *)(cfg + 0x2F8);
+        if (out.x < *(f32 *)(cfg + 0x70))
+            continue;
+        if (out.x > *(f32 *)(cfg + 0x20))
+            continue;
+        if (out.z < *(f32 *)(cfg + 0x70))
+            continue;
+        if (out.z > *(f32 *)(cfg + 0x20))
+            continue;
+        found = 1;
+        break;
+    }
+    if (found)
+    {
+        switch ((u8)e->type)
+        {
+        case 'R':
+            st->unk14 &= ~0xC00;
+            a = 0x200;
+            b = 0x100;
+            break;
+        case 'B':
+        default:
+            st->unk14 &= ~0x300;
+            a = 0x800;
+            b = 0x400;
+            break;
+        }
+        if (!(st->unk14 & a))
+            st->unk14 |= b;
+        else
+            st->unk14 &= ~b;
+        st->unk14 |= a;
+    }
+    else
+    {
+        st->unk14 &= ~0xF00;
+    }
+}
+
+
+
+void lbl_00008324(struct Ball *ball)
+{
+    struct RaceSub *st;
+    u8 *cfg = lbl_00013740;
+    Vec *p;
+    struct RacePathHdr *path;
+    struct StageGoal *e;
+    int found;
+    s16 i;
+    Vec out;
+    Vec v;
+
+    p = &ball->pos;
+    found = 0;
+    st = (struct RaceSub *)ball->unk144;
+    path = (struct RacePathHdr *)decodedStageLzPtr->unk78;
+    e = path->unk64;
+    v = *(Vec *)(cfg + 0x334);
+    for (i = 0; i < path->unk60; i++, e++)
+    {
+        if (mathutil_vec_sq_distance(p, &e->pos) > *(f32 *)(cfg + 0x2F4))
+            continue;
+        mathutil_mtxA_from_translate(&e->pos);
+        mathutil_mtxA_rotate_z(e->rotZ);
+        mathutil_mtxA_rotate_y(e->rotY);
+        mathutil_mtxA_rotate_x(e->rotX);
+        mathutil_mtxA_rigid_inv_tf_point(p, &out);
+        out.z = out.z * *(f64 *)(cfg + 0x2F8);
+        if (out.x < *(f32 *)(cfg + 0x70))
+            continue;
+        if (out.x > *(f32 *)(cfg + 0x20))
+            continue;
+        if (out.z < *(f32 *)(cfg + 0x70))
+            continue;
+        if (out.z > *(f32 *)(cfg + 0x20))
+            continue;
+        found = 1;
+        break;
+    }
+    if (found)
+    {
+        if (!(st->unk14 & 0x2000))
+            st->unk14 |= 0x1000;
+        else
+            st->unk14 &= ~0x1000;
+        st->unk14 |= 0x2000;
+    }
+    else
+    {
+        st->unk14 &= ~0x3000;
+    }
+}
+
+
+
+void lbl_000084A0(struct Ball *ball)
+{
+    u8 *cfg = lbl_00013740;
+    Vec *p;
+    struct RacePathHdr *path;
+    struct StageGoal *g;
+    struct RaceSub *st;
+    s16 i;
+    Vec out;
+
+    path = (struct RacePathHdr *)decodedStageLzPtr->unk78;
+    p = &ball->pos;
+    g = path->unk34;
+    for (i = 0; i < path->unk30; i++, g++)
+    {
+        if (mathutil_vec_sq_distance(p, &g->pos) > *(f32 *)(cfg + 0x340))
+            continue;
+        mathutil_mtxA_from_translate(&g->pos);
+        mathutil_mtxA_rotate_z(g->rotZ);
+        mathutil_mtxA_rotate_y(g->rotY);
+        mathutil_mtxA_rotate_x(g->rotX);
+        mathutil_mtxA_rigid_inv_tf_point(p, &out);
+        if (out.x < *(f32 *)(cfg + 0x70))
+            continue;
+        if (out.x > *(f32 *)(cfg + 0x20))
+            continue;
+        if (out.z < *(f32 *)(cfg + 0x70))
+            continue;
+        if (out.z > *(f32 *)(cfg + 0x20))
+            continue;
+        st = (struct RaceSub *)ball->unk144;
+        if (st->unk14 & 0x10)
+        {
+            u_play_sound_0(0x52);
+            if (!(st->unk14 & 0x20))
+                u_play_sound_0(0xDC);
+            lbl_000068E8(ball);
+        }
+        return;
+    }
+}
+// INVENTED -- per-racer state hanging off struct Ball::unk144.  UNVERIFIED.
+
+// INVENTED -- 16-byte slot array at lbl_10000000 + 0x64.  UNVERIFIED.
+
+void lbl_000085D8(struct Ball *ball, s16 type)
+{
+    u8 *cfg = lbl_00013740;
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+    struct RaceItemSlot *slot;
+    struct Ball *b;
+    Vec *v;
+    Vec *ps;
+    s16 who;
+    s16 i;
+    int blocked;
+    s16 idx;
+    f32 best;
+    f32 sc;
+    struct Item item;
+    Vec d;
+    Vec c;
+    Vec bb;
+    Vec a;
+
+    idx = -1;
+    for (i = 0; i < 0x100; i++)
+    {
+        if (((struct RaceItemSlot *)lbl_10000064)[i].unk0 == 0)
+        {
+            idx = i;
+            break;
+        }
+    }
+    if (idx == -1)
+    {
+        if (debugFlags & 4)
+            printf((char *)lbl_00015AC8);
+        return;
+    }
+    u_play_sound_0(0xE2);
+    memset(&item, 0, sizeof(item));
+    item.type = 2;
+    item.subType = type;
+    item.animGroupId = 0;
+    v = &ball->vel;
+    if (mathutil_vec_len(v) > *(f32 *)(cfg + 8))
+    {
+        mathutil_vec_set_len(v, &d, *(f32 *)(cfg + 0x1D8) * ball->currRadius);
+        item.pos.x = ball->pos.x + d.x;
+        item.pos.y = ball->pos.y + d.y;
+        item.pos.z = ball->pos.z + d.z;
+        mathutil_vec_set_len(v, &item.vel, *(f32 *)(cfg + 0x35C));
+        item.vel.x = ball->vel.x + item.vel.x;
+        item.vel.y = ball->vel.y + item.vel.y;
+        item.vel.z = ball->vel.z + item.vel.z;
+    }
+    else
+    {
+        mathutil_mtxA_from_quat((Quaternion *)((u8 *)ball->ape + 0x60));
+        bb = *(Vec *)(cfg + 0x344);
+        bb.x = *(f32 *)(cfg + 0x1D8) * -ball->currRadius;
+        ps = &bb;
+        d = *ps;
+        mathutil_mtxA_tf_vec(&d, &d);
+        item.pos.x = ball->pos.x + d.x;
+        item.pos.y = ball->pos.y + d.y;
+        item.pos.z = ball->pos.z + d.z;
+        mathutil_vec_set_len(&d, &item.vel, *(f32 *)(cfg + 0x35C));
+    }
+    blocked = 0;
+    if (st->unk14 & 0x20)
+    {
+        c = item.vel;
+        mathutil_vec_normalize_len(&c);
+    }
+    else
+    {
+        a = *(Vec *)(cfg + 0x350);
+        ps = &a;
+        c = *ps;
+        mathutil_mtxA_from_rotate_y(cameraInfo[ball->playerId].rotY);
+        mathutil_mtxA_tf_vec(&c, &c);
+        if (mathutil_vec_dot_prod(&c, &item.vel) < *(f32 *)(cfg + 8))
+            blocked = 1;
+    }
+    who = -1;
+    if (!blocked)
+    {
+        best = *(f32 *)(cfg + 0x70);
+        b = ballInfo;
+        for (i = 0; i < 4; i++, b++)
+        {
+            if ((s8)b->unk0 != 2)
+                continue;
+            if (b->playerId == ball->playerId)
+                continue;
+            if (((struct RaceSub *)b->unk144)->unk14 & 0x40)
+                continue;
+            if (st->unk22C[b->playerId] > *(f32 *)(cfg + 0x1B8))
+                continue;
+            if (mathutil_vec_dot_normalized_safe(
+                    &c, &st->unk1FC[b->playerId]) < *(f32 *)(cfg + 8))
+                continue;
+            sc = mathutil_vec_dot_normalized_safe(&c,
+                                                  &st->unk1FC[b->playerId]);
+            sc = sc * (*(f32 *)(cfg + 0x20) -
+                       st->unk22C[b->playerId] / *(f32 *)(cfg + 0x1B8));
+            if (sc > best)
+            {
+                who = b->playerId;
+                best = sc;
+            }
+        }
+    }
+    slot = &((struct RaceItemSlot *)lbl_10000064)[idx];
+    slot->unk0 = 1;
+    slot->unk4 = 0;
+    slot->unk8 = ball->playerId;
+    slot->unkA = who;
+    slot->unkC = 0xB4;
+    item.stageBanana = (struct StageBanana *)slot;
+    item_create(&item);
+}
+
+void lbl_00008A10(struct Ball *ball, s16 subType)
+{
+    struct Item item;
+    struct RaceItemSlot *slot;
+    s32 j;
+    int i;
+    s16 idx;
+
+    j = -1;
+    for (i = 0; (s16)i < 0x100; i++)
+    {
+        if (((struct RaceItemSlot *)lbl_10000064)[i].unk0 == 0)
+        {
+            j = i;
+            break;
+        }
+    }
+    idx = j;
+    if (idx == -1)
+    {
+        if (debugFlags & 4)
+            printf((char *)lbl_00015AC8);
+        return;
+    }
+    u_play_sound_0(0xE2);
+    memset(&item, 0, sizeof(item));
+    item.type = 2;
+    item.subType = subType;
+    item.animGroupId = 0;
+    item.pos = ball->pos;
+    mathutil_vec_set_len(&ball->vel, &item.vel, *(f32 *)lbl_00013A9C);
+    slot = &((struct RaceItemSlot *)lbl_10000064)[idx];
+    slot->unk0 = 1;
+    slot->unk4 = 0;
+    slot->unk8 = ball->playerId;
+    slot->unkA = -1;
+    slot->unkC = 0xB4;
+    item.stageBanana = (struct StageBanana *)slot;
+    item_create(&item);
+}
+#pragma peephole on
+void lbl_00008B60(struct Ball *ball, Vec *out)
+{
+    u8 *cfg = lbl_00013740;
+    s32 sx;
+    s32 sy;
+
+    sx = controllerInfo[playerControllerIDs[ball->playerId]].held.stickX;
+    sy = controllerInfo[playerControllerIDs[ball->playerId]].held.stickY;
+    out->x = (f32)sx / *(f32 *)(cfg + 0x298);
+    out->y = *(f32 *)(cfg + 8);
+    out->z = (f32)-sy / *(f32 *)(cfg + 0x298);
+    if (mathutil_vec_sq_len(out) > *(f32 *)(cfg + 0x20))
+        mathutil_vec_normalize_len(out);
+}
+// INVENTED -- per-racer state hanging off struct Ball::unk144.  UNVERIFIED.
+struct RaceSub49
+{
+    u8 filler0[0x14];
+    /*0x14*/ u32 unk14;
+};
+
 #pragma force_active reset

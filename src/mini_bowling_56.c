@@ -599,11 +599,131 @@ int lbl_0000A138(void)
     }
     return ret;
 }
-asm void lbl_0000A23C(int kind, Vec *pos)
+// lbl_0000A23C (0xA23C): spawn `n` particles of the given kind at `pos` -- the
+// producer for lbl_00009AA8's update and lbl_00009D18's draw.  Kinds 0..3 read
+// their per-sheet x/y tables and count out of the 0x13dc-stride sheet array at
+// work + 0x10000; kinds 4/5 scatter along a rotated axis instead.  The tail
+// arms whichever of the four spark slots is free.
+// Three things this needed, each measured against the original in run 28:
+//   - work's initialiser must be a COMMA expression.  Without one mwcc stages
+//     lbl_100004E0 through r0 (`addi r0,r3,@l ... mr r28,r0`) and the function
+//     is one instruction long.  The comma's LEFT OPERAND IS IRRELEVANT -- `0`,
+//     `(void)0` and `t = lbl_00011490` are byte-identical -- so this is the
+//     comma node, not an embedded assignment.
+//   - ix: the sheet index must be bound to an ALREADY-DECLARED, LATER-USED
+//     local.  Anonymous, it lets mwcc sink +0x10000 onto the index
+//     (`addis r3,r3,1 ; add r3,r28,r3`); bound, mwcc forms work + 0x10000 as
+//     its own value in the anonymous temp, which is golden's
+//     `addis r0,r28,1 ; add r3,r0,r3`.  A FRESH local is byte-identical to no
+//     local at all in all 16 declaration slots -- mwcc coalesces it -- so ix
+//     also has to be the spark loop's counter.  Carrying it on j or k2 works
+//     equally at the `st` site but rotates that loop's own registers.
+//   - the pragma pair below.  The ix assignment is dead (ix is reassigned in
+//     the spark loop), and eliminating it leaves one extra 4-byte home slot,
+//     so the frame is 0x78 against the original's 0x70 and 14 stack
+//     displacements shift by 8.  It is balanced with a reset.  Twenty source
+//     shapes were tried instead of it and none reaches 0x70.
+#pragma opt_dead_assignments off
+void lbl_0000A23C(int kind, Vec *pos)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_0000A23C.s"
+    u8 *t;
+    u8 *work = (t = lbl_00011490, (u8 *)lbl_100004E0);
+    u8 *st;
+    f32 *xs;
+    f32 *ax;
+    f32 *ys;
+    int k2;
+    int ix;
+    u8 *p2;
+    u8 *p;
+    struct BowlSpark *b;
+    int j;
+    int i;
+    int n;
+    Vec v;
+    Vec out;
+
+    switch (kind)
+    {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+        st = (u8 *)((u8 (*)[0x13dc])(work + 0x10000)) + (ix = kind * 0x13dc);
+        xs = (f32 *)(st + 0x1ce4);
+        n = *(s32 *)(st + 0x30bc);
+        ys = xs;
+        ys += 635;
+        break;
+    default:
+        n = 0x80;
+    }
+    if (0xa28 - *(s32 *)(work + 0x11ce0) < n)
+        return;
+    i = 0;
+    if (kind == 4 || kind == 5)
+    {
+        v.x = *(f32 *)(t + 0x3300);
+        v.y = *(f64 *)(t + 0x3340) * mathutil_sin(0x4800);
+        v.z = *(f64 *)(t + 0x3340) * mathutil_sin(0x800);
+        mathutil_mtxA_from_rotate_x((rand() & 0xfff) + 0x3800);
+        mathutil_mtxA_rotate_y(rand() & 0x7fff);
+        p = work;
+        for (j = 0; j < 0xa28; j++, p += 0x1c)
+        {
+            if (*(s16 *)(p + 0x18) > 0)
+                continue;
+            mathutil_mtxA_rotate_x(0x1000);
+            mathutil_mtxA_tf_vec(&v, &out);
+            *(f32 *)(p + 0xc) = (*(f64 *)(t + 0x3348) + out.x) -
+                *(f64 *)(t + 0x3350) * (rand() / *(f32 *)(t + 0x3320));
+            *(f32 *)(p + 0x10) = (*(f64 *)(t + 0x3348) + out.y) -
+                *(f64 *)(t + 0x3350) * (rand() / *(f32 *)(t + 0x3320));
+            *(f32 *)(p + 0x14) = (*(f64 *)(t + 0x3348) + out.z) -
+                *(f64 *)(t + 0x3350) * (rand() / *(f32 *)(t + 0x3320));
+            *(s16 *)(p + 0x18) = 0x78;
+            *(s8 *)(p + 0x1a) = (s8)kind;
+            *(Vec *)p = *pos;
+            *(s32 *)(work + 0x11ce0) += 1;
+            i++;
+            if (i % 16 == 0)
+                mathutil_mtxA_rotate_z(0x1000);
+            if (i >= n)
+                break;
+        }
+    }
+    else
+    {
+        ax = xs;
+        p2 = work;
+        for (k2 = 0; k2 < 0xa28; k2++, p2 += 0x1c)
+        {
+            if (*(s16 *)(p2 + 0x18) > 0)
+                continue;
+            *(s16 *)(p2 + 0x18) = 0x78;
+            i++;
+            *(s8 *)(p2 + 0x1a) = (s8)kind;
+            *(Vec *)p2 = *pos;
+            *(f32 *)(p2 + 0xc) = *(f64 *)(t + 0x3358) * *ax++;
+            *(f32 *)(p2 + 0x10) = *(f64 *)(t + 0x3358) * *ys++;
+            *(f32 *)(p2 + 0x14) = *(f32 *)(t + 0x3300);
+            *(s32 *)(work + 0x11ce0) += 1;
+            if (i >= n)
+                break;
+        }
+    }
+    b = (struct BowlSpark *)(work + 0x11ca0);
+    for (ix = 0; ix < 4; ix++, b++)
+    {
+        if (b->timer > 0)
+            continue;
+        b->pos = *pos;
+        b->timer = 0x78;
+        b->kind = (s8)kind;
+        return;
+    }
 }
+#pragma opt_dead_assignments reset
 #pragma peephole on
 void lbl_0000A610(int kind, Vec *pos)
 {

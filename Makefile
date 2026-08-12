@@ -521,21 +521,6 @@ SOURCES := \
 	src/mini_race_35.c \
 	src/mini_race_36.c \
 	src/mini_race_37.c \
-	src/mini_race_38.c \
-	src/mini_race_39.c \
-	src/mini_race_40.c \
-	src/mini_race_41.c \
-	src/mini_race_42.c \
-	src/mini_race_43.c \
-	src/mini_race_44.c \
-	src/mini_race_44b.c \
-	src/mini_race_44c.c \
-	src/mini_race_44d.c \
-	src/mini_race_45.c \
-	src/mini_race_46.c \
-	src/mini_race_47.c \
-	src/mini_race_48.c \
-	src/mini_race_49.c \
 	asm/mini_race_d1.s \
 	src/mini_race_49b.c \
 	src/mini_race_49c.c \
