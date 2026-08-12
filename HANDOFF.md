@@ -158,7 +158,293 @@ it. `_scratch_<MOD>/run<N>/pristine/` is the convention.**
 
 ---
 
-## 0.36 — RUN 30 DONE (2026-08-12): +633 insn, 48.27% -> 48.60%. START HERE.
+## 0.37 — RUN 31 DONE (2026-08-12): +355 insn, 48.60% -> 48.79%. START HERE.
+
+Nine module agents plus **three read-only corpus agents** — the run-31 method
+experiment. **NINETEENTH consecutive run with no module agent spawning
+anything.** One of nine gained.
+
+| module | still-asm | insn | % | gained |
+|---|---|---|---|---|
+| mini_pilot | 6 fns | 10999/12137 | 90.62% | 0 |
+| test_mode | 16 fns | 12061/16231 | 74.31% | 0 |
+| **mini_race** | 29 fns | 14910/19817 | **75.24%** | **+355 / +1** |
+| mini_bowling | 14 fns | 10432/15313 | 68.13% | 0 |
+| option | 12 fns | 5405/12375 | 43.68% | 0 |
+| sel_ngc | 9 fns | 7726/18084 | 42.72% | 0 |
+| mini_billiards | 17 fns | 10714/28793 | 37.21% | 0 |
+| mini_fight | 72 fns | 9565/28588 | 33.46% | 0 |
+| mini_golf | 17 fns | 11007/38919 | 28.28% | 0 |
+| **TOTAL** | **192 fns** | **92816/190254** | **48.79%** | **+355 / +1** |
+
+**Verified in the main tree, not taken on report**: nine trees diffed before
+merging (**ONE changed path and nothing else** — no `tools/`, no `asm/`, no
+`Makefile`, hygiene clean, CRLF preserved, and every module's changed-file list
+matched its own report); all nine `--gate` **GOLDEN from deleted objects with
+every hash matching its agent's, including the eight that changed nothing**;
+all nine `rel_structcheck` **CLEAN, run by the orchestrator**; a clean build
+from **0 objects** gives `sha1sum -c` **12/12 OK including the DOL**; object
+metrics unchanged at **896 / 1,066 / 899**. Reconciles three ways:
+190,254 − 97,438 = **92,816**, 193 − 1 = **192**, 97,793 − 97,438 = **355**.
+
+### ★★★ THE CLOSURE-RUN HYPOTHESIS IS FALSIFIED. READ THIS BEFORE PLANNING.
+
+§0.36 set the condition itself: *"If run 31 lands near 617 anyway, the
+process-loss hypothesis is falsified."* **It landed 355 — well below the
+617 average it was designed to beat, and the worst result in nine runs.**
+**Eight of nine closure targets did not close**, and the inventory of "2,819
+instructions, one per module, all parallel" converted **12.6% of itself**.
+
+Worse for the premise: **three of the nine closure entries were MIS-STATED**,
+and each module found it by printing its own residual in the first hour:
+
+| module | the brief said | what it is |
+|---|---|---|
+| mini_pilot `3BDC` | 80-in-49 callee-saved **rank permutation** | **2 in 1, positional 272/274** — two words of **volatile-temp** numbering. The 80-in-49 is what run 30's candidate *fix* costs |
+| option `2704` | **ONE** callee-saved swap | **TWO** independent swaps — 33 words callee-saved **plus a 9-word 3-cycle in volatile scratch**. Fixing one alone banks nothing |
+| test_mode `A7FC` | mwcc keeps a **CSE temp** | **forward COPY PROPAGATION**, proven by build: `opt_common_subs off` is byte-identical, `opt_propagation off` moves the copy to golden's index and form |
+
+**Fifteenth consecutive run with a §11 error, and three at once.** The pattern
+is now diagnosed: **the closure table records the state of a candidate FIX, not
+the state of the near-miss, because nobody prints the residual before writing
+it down.** A brief that asserts a residual it did not measure sends nine agents
+at the wrong axis.
+
+> **THE HONEST CONCLUSION: the allocator tie-break class is not reachable by
+> source spelling at the rate this project needs.** Run 31 spent roughly **700
+> real links across nine modules on nine functions and converted one.**
+> mini_fight is 21 axes deep on one function; test_mode is ~170 links across 23
+> axis-runs on **one instruction**; option has twelve dead axes on a two-swap
+> residual. **Stop buying instructions here.**
+
+### ★★★ AND THE RUN FOUND WHERE TO BUY THEM INSTEAD — 13,313 INSTRUCTIONS
+
+**mini_golf resolved every `lfd` site by hand and found `rel_census` is
+under-reporting its module by 14,239 instructions.** Verified by ADDRESS, not
+taken off `rel_reach`:
+
+| function | insn | blocker |
+|---|---|---|
+| **mini_golf `lbl_0001B5B8`** | **7,131** | **NONE — no carve, no merge** |
+| **mini_golf `lbl_00015520`** | **6,182** | **NONE — no carve, no merge** |
+
+**That is 34% of mini_golf sitting behind nothing but the writing, and it is
+the largest census under-report recorded in the project** (option's was 2,445).
+Both are among the five >3,000-insn bodies §0.36 identified as 30% of what
+remains, **and neither has ever been attempted.**
+
+**mini_golf's own recommendation, and it is the right one**: open
+**`lbl_00015520` (6,182) first, not `lbl_0001B5B8` (7,131)** — frame `0x270`,
+`stmw r25` (7 saved GPRs) + 1 `stfd`, **104 calls across only 3 distinct
+callees.** A repetitive body, which is what made mini_billiards' 296 tractable.
+`1B5B8` is frame `0x4a8`, five `stfd`, **454 calls across 19 callees** — a
+multi-run target.
+
+⚠ **sel_ngc's `lbl_000030F4` (6,621) is DECLINED, permanently, and the reason
+is the READER not the hole.** Run 30's "there is no third hole to cut" was
+wrong — the hole is cuttable (`0x11BC0` is 8-aligned, `asm/sel_ngc_rel.s` has
+no `.text`). But the emitter must sit at SOURCES position 393 and the reader is
+at 415, so feeding it means **merging 23 files**, for a body with 17 callee-saved
+GPRs and **three** jump tables — ~10× the largest conversion ever landed here.
+**Record it declined and leave the module's honest ceiling at 954 in three.**
+
+### ★★ THE CORPUS PHASE: KEEP IT, WITH ITS SCOPE CORRECTED
+
+It did **not** convert into instructions, and the run total says so. But judged
+on what it produced it is the clearest win of the run, because **it corrected
+things builds had got wrong**:
+
+- **Corpus A overturned run 30's own headline correction.** The `addi rD,rS,0`
+  census that "corrected" run 24's 15 sites to 116 treats `addi rD,rS,0` and
+  `mr` as distinct source shapes; A's compiles emit **both in the same function
+  for ordinary copies**. It is peephole residue, not a source axis. **That
+  promotion was pulled from the run-32 queue rather than shipped.**
+- **Corpus C joined up two halves of run 30's own report that run 30 never
+  connected**, deriving that mini_bowling's 4 "structural" preheader words are
+  a **consequence** of its `t`/`th` numbering via a WAR edge — one input, not
+  two axes.
+- **Corpus B built the instrument** (below) and **re-diagnosed test_mode's
+  target** from a CSE problem to a rank problem; test_mode then proved it was
+  neither, and B's diagnosis is why it looked in the right place.
+
+⚠ **But the corpus agents were wrong wherever they did not diff the draft.**
+C censused a mini_race loop head that was **already byte-identical in the
+inherited draft**; A censused the wrong words for the same module and its
+5.3×-enrichment correlate did not apply to the real residual. **Put "diff the
+draft before censusing golden" in the run-32 corpus brief, first line.**
+
+### ★★★ THE INSTRUMENT — a candidate scored in ~3 seconds, no tree write
+
+**`_corpus_run31/Bscratch/probe2/`.** Splices a candidate body into the
+module's **real owner TU**, compiles with mwcc 1.1 and the Makefile flags (cwd,
+TMP and object all in scratch), diffs **positionally** against golden's `.s`.
+**No install, no `make`, no restore — so no revert hazard, no poisoned
+baseline, and the run-30 same-second recompile trap cannot occur.**
+
+**Validated twice, independently**: by its author (three already-matched
+siblings at 211/211, 20/20, 6/6) and by **mini_fight, which ported it and
+reproduced its own real-link scores exactly** (256/268 and 257/268, first-diff
+index 28 = the real-link span start).
+
+⚠ **It does not link** — it proves nothing about relocations or the gate, which
+remains the only proof. ⚠ **Porting it exposed two normaliser defects worth 22
+of 268 positional words**: objdump prints local branches as two tokens where
+the `.s` prints one, and the `bl` path returned a string with a space while the
+fallthrough stripped whitespace. **Re-validate any port against a known
+real-link score before quoting a number.**
+
+### ★★ THE SCHEDULE-VS-ALLOCATION CONTRADICTION — RESOLVED, AND IT IS A LEVER
+
+Two modules ran `#pragma scheduling off` and reached **opposite** conclusions:
+**sel_ngc** — the unallocated entry block is already one-scratch SERIAL, so
+*"mwcc schedules before it allocates"*; **mini_bowling** — allocation is
+**bit-for-bit unchanged**, so *"mwcc allocates before it schedules, never the
+reverse."*
+
+**mini_fight settled it with a third build.** Both are right, and neither
+general claim is: **scheduling feeds allocation only where the schedule changes
+a LIVE RANGE.** In its own target, golden's `lha` sits at insn 32 (range
+[32,44]); the draft hoists the identical `lha` to insn 28, so the range now
+overlaps two other values and the register is forced. **A linear scan over the
+SCHEDULED code, assigning intervals in order of last use to the lowest
+non-conflicting volatile, reproduces all four measured rows with no free
+parameters.**
+
+> **So `#pragma scheduling off` is a ONE-LINK DIAGNOSTIC that tells you which
+> régime a function is in**: if the allocation moves, the schedule is upstream
+> and the registers are a symptom; if it does not, rank is decided
+> independently. **Run it before any register sweep.** It also means
+> mini_fight's `16CC8` is a **schedule** problem — the brief's "register choice
+> pins the schedule" is backwards, and 21 axes of register sweeps could not
+> reach it because none of them changes the hoist.
+
+### ★★ WHAT SURVIVED AS A POSITIVE — the local-set / product idiom, in 3 modules
+
+**Give the PRODUCT a home distinct from its OPERANDS, and the count of temps
+follows the count of SIMULTANEOUSLY-LIVE products, not the count of sites.**
+mini_golf needed three `f64` temps in run 30 for three live products; mini_race
+closed a 355-instruction cluster with **one `f32` temp at the accumulator**;
+mini_billiards took `35 in 27 → 31 in 26` with a **shared** temp across two
+sequential sites. **`f64` where golden wants `f32` costs exactly one LONG** —
+measured in three modules now.
+⚠ **Scope, measured**: it is **FPR-specific**. The exact analogue on a GPR
+address tree is worse (mini_race, 8 in 6 in a different span), it is inert when
+the value lands in the f1 temp pool (mini_bowling), and on mini_fight it works
+**only when embedded** — as a separate statement it costs a frame slot.
+
+### ⚠ HAZARDS AND CORRECTIONS
+
+- **NEW, and it nearly cost 337 banked instructions: a run-30 installer
+  restores from `run30/pristine/`, which for any module that BANKED in run 30
+  is PRE-CONVERSION.** mini_golf caught it before it fired; the `finally` would
+  have silently un-banked its own run-30 MATCH and left a green-looking tree.
+  **Every module that banked last run has this landmine in its own harness.**
+- **A better ALIGNED score can be a worse draft.** mini_billiards found a
+  variant at 34 in 27 against a 35-in-27 control whose **positional collapsed
+  333 → 296** — an insertion. **Quote aligned AND positional.**
+- **Test pragma REMOVAL, not just addition.** option's inherited `//@WRAP`
+  pragmas are **load-bearing** (removing both → 346 / 82 in 55), so run 30's
+  19-pragma sweep, which added pragmas on top of them, was **vacuous on those
+  two**. test_mode proved the same from the other end on `lbl_00002790`.
+- **A liveness rule can flip a verdict.** mini_pilot's image check of run 30's
+  `lbz`/`extsb` trigger gives **46% or 91%** depending on whether the scan is
+  address-order or any-later-mention; it **nearly reported the trigger
+  falsified** on its own scanner's false negatives. **Nothing in `tools/` does
+  real control-flow liveness. State your rule.**
+- **A record form is a different mnemonic — three more instances.** Corpus A's
+  first miner reported *"0 functions save FPRs across 8,936"* because `stfd`
+  prints `f31,` not `r31,` (true count **359**); corpus B found **the record
+  form carries 45 of the 55 splits out of r3**; mini_fight measured
+  `lha`+`extsh.` at **42 SPLIT / 1 IN-PLACE** against `lha`+`extsh` at 10/11 —
+  **asking for one form alone inverts the picture.**
+- **"This draft does not compile" is now 0-for-131** across three modules
+  (0-for-63, 0-for-58, 0-for-10). **Every such claim this run was the harness.**
+  A run-30 draft whose conversion landed will fail with `tag redefined` because
+  it carries a struct block that is now in the owner.
+- **`rel_census`'s REACHABLE column is wrong by 14,239 in mini_golf, 751 in
+  sel_ngc, and marks mini_fight's `16CC8` a-BLOCKED when it is not.**
+  **Run `rel_reach` and resolve the `lfd` sites BY ADDRESS before believing any
+  reachability figure.**
+
+### TOOLS LANDED — all after the ninth agent closed, commit `7c14af2`
+
+- **`tools/rel_symoracle.py` (NEW)** — promotes mini_billiards' data-symbol
+  oracle to all nine modules. Its still-asm derivation reproduces `rel_census`
+  exactly, module for module; **signal in seven of nine.** ⚠ Gating it against
+  mini_fight found what its 16-case selftest could not: `void lbl_X()` with
+  **empty parens** ranked as a typed signature off sixteen identical sites.
+- **`tools/rel_arity.py`** — **the stale-asm callee read, open since run 30.**
+  `asm/nonmatchings/…/<label>.s` survives conversion, so the old "no `.s`"
+  check could never fire and the tool read dead asm **silently**. A 0-arg
+  reading **inverts** the whole diagnostic. Now answered from the C signature,
+  with disagreeing sites reported (36 of them for `lbl_00004260`) and `()`
+  reported UNKNOWN, not 0. A latent second defect fell out: `strip_comments()`
+  dropped newlines inside block comments, shifting every later line number.
+- **`tools/rel_reach.py` + `tools/rel_census.py`** — **staleness.** test_mode
+  reproduced a **333-instruction swing** and showed the trigger is **the
+  close-out sequence every agent runs**; mini_golf found a stale artifact
+  **INVERTS** `rel_census`'s magic split (4s+5u vs 5s+4u on the identical tree).
+- **`tools/rel_mergeprice.py`** — **TWO HOSTS rows never compared the two magic
+  ADDRESSES to each other.** One TU emits ONE contiguous 16-byte block, so a
+  reader wanting magics 88 or 48 bytes apart cannot be served by any span —
+  **28 rows across nine modules were priced live and are structurally dead.**
+  Gated: mini_race's two hand-verified families survive untouched.
+
+### STILL OPEN (orchestrator)
+
+- **`rel_scanpair` needs a DEF-USE mode.** Three modules could not use the tool
+  this run. **Five one-off dataflow scanners now exist** — the harvest README's
+  own rule is that the fourth is the signal to generalise. ⚠ **Two of the five
+  were wrong in ways their authors caught; a shared mode must track
+  redefinition.** Also wanted: schedule **distance** and a **destination-register
+  histogram** (corpus C), both ~8 lines.
+- **`sel_ngc__ivcopy30.py` — DO NOT PROMOTE.** Corpus A overturned its premise.
+- Promote `option__keep_probe30.py`; `_harvest_run27/mini_billiards__seg.py`
+  is **un-promoted for a fifth run**.
+- **Let `rel_carve` ADD holes to an already-carved worktree** — three carves in
+  two runs, **not one used `rel_carve.py`.**
+
+### RUN-32 PREP — DONE. What is on disk, and what run 32 should do.
+
+- **`C:/tmp/smbm/RUN31_RESULTS.md`** — all nine reports (1,513 lines), each
+  under an **ORCHESTRATOR VERIFIED** block written from tree measurements.
+- **`C:/tmp/smbm/RUN31_PLAYBOOK.md`** — the corpus phase assembled **with the
+  module corrections folded in**, since four of its headlines came back
+  falsified, bounded or re-scoped by a real build.
+- **`C:/tmp/smbm/_harvest_run31/`** — **137 scripts** with a README indexing
+  them by purpose. ⚠ The collector's first pass copied 137 and left **113**;
+  it now namespaces by full path and **asserts copied == on-disk** (the same
+  defect run 30 reported).
+- **`C:/tmp/smbm/_orch_run31/`** — `predmerge_diff.sh`, `postmerge_verify.sh`
+  (baselines 896/1,066/899, census stage now totals and computes the gain
+  itself), `hygiene.py`, `BASELINE.md`, `MERGE_LOG.md`, `assemble_results.py`,
+  the nine reports.
+- **All nine warm copies reset and re-gated GOLDEN from deleted objects**;
+  `diff -rq tools` **0 lines in all nine**, source trees differ only by `.o`.
+
+**THE RUN-32 RECOMMENDATION, and it follows from the falsification above:**
+
+1. **Stop running closure runs on allocator tie-breaks.** Six of the nine
+   targets are one class and the class has now consumed ~700 links for 355
+   instructions. Carry each residual as a **decline with a printed cause** —
+   several are already written that way (mini_pilot's 20-exemplar retirement,
+   sel_ngc's priced `+2`-or-`−1`, test_mode's named pass).
+2. **Put mini_golf on `lbl_00015520` (6,182), reachable today, 3 distinct
+   callees.** It is the single largest tractable body in the project and
+   nobody has opened it. `lbl_0001B5B8` (7,131) is the follow-on.
+3. **Give every module `rel_reach` + a by-address `lfd` resolution as its FIRST
+   act.** It found 14,239 instructions in one module in four minutes, and the
+   census is wrong in at least three modules.
+4. **Keep the corpus phase but re-scope it** to *"diff the draft first, then
+   census"*, and point it at the giants' shapes rather than at tie-breaks.
+5. **mini_race has a 0-instruction, gate-verified de-risking step ready**:
+   widen `struct RaceSub` in `_35.c`/`_36.c` to `_37.c`'s 35-member form, after
+   which the span-3 merge has no conflicting tag and unlocks `65A0` (210), span
+   8 adding `5DDC` (**332**). **Cheapest thing on the board.**
+
+---
+
+## 0.36 — RUN 30 DONE (2026-08-12): +633 insn, 48.27% -> 48.60%. Superseded by §0.37.
 
 Nine parallel agents, one per module, **no workers — EIGHTEENTH consecutive run
 under the standing rule.** Two of nine gained. **The run's structural result is
