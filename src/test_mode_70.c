@@ -276,6 +276,10 @@ void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+void lbl_0000A440(int q1);
+
 #pragma force_active on
 void lbl_0000A440(int q1)
 {
@@ -314,5 +318,28 @@ void lbl_0000A440(int q1)
     }
     GXInitTexObj((GXTexObj *)(w + 0x138), *(void **)(w + 0x158), 0x20, 4, 1, 0,
                  0, 0);
+}
+void lbl_0000A78C(void)
+{
+    if (*(void **)lbl_10000F58 != NULL)
+    {
+        OSFreeToHeap(__OSCurrHeap, *(void **)lbl_10000F58);
+        *(void **)lbl_10000F58 = NULL;
+    }
+}
+void lbl_0000A7DC(void)
+{
+}
+void lbl_0000A7E0(void)
+{
+}
+void lbl_0000A7E4(void)
+{
+    (*(u32 *)lbl_10000F5C)++;
+}
+asm void lbl_0000A7FC(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/test_mode/lbl_0000A7FC.s"
 }
 #pragma force_active reset

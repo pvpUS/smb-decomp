@@ -956,7 +956,9 @@ SOURCES := \
 	src/mini_golf_29.c \
 	asm/mini_golf_d2.s \
 	src/mini_golf_30.c \
+	asm/mini_golf_d3a.s \
 	src/mini_golf_31.c \
+	asm/mini_golf_d3b.s \
 	src/mini_golf_32.c \
 	src/mini_golf_33.c \
 	src/mini_golf_34.c \
@@ -966,7 +968,6 @@ SOURCES := \
 	src/mini_golf_38.c \
 	src/mini_golf_39.c \
 	src/mini_golf_40.c \
-	asm/mini_golf_d3.s \
 	src/mini_golf_41.c \
 	asm/mini_golf_d4.s \
 	src/mini_golf_46.c \
@@ -1027,12 +1028,13 @@ SOURCES := \
 	src/mini_billiards_33b.c \
 	src/mini_billiards_33c.c \
 	src/mini_billiards_34.c \
-	asm/mini_billiards_d3a.s \
+	asm/mini_billiards_d3a1.s \
 	src/mini_billiards_36.c \
 	src/mini_billiards_37.c \
 	src/mini_billiards_37b.c \
 	src/mini_billiards_38.c \
 	src/mini_billiards_39.c \
+	asm/mini_billiards_d3a2.s \
 	src/mini_billiards_40.c \
 	src/mini_billiards_41.c \
 	src/mini_billiards_41h.c \
@@ -1140,11 +1142,6 @@ SOURCES := \
 	src/test_mode_69.c \
 	src/test_mode_70.c \
 	asm/test_mode_d1.s \
-	src/test_mode_71.c \
-	src/test_mode_72.c \
-	src/test_mode_73.c \
-	src/test_mode_74.c \
-	src/test_mode_75.c \
 	src/test_mode_76.c \
 	src/test_mode_77.c \
 	src/test_mode_78.c \

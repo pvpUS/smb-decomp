@@ -193,7 +193,7 @@ void lbl_00009C50(void);
 void lbl_0000B280(void);
 void lbl_0000B36C(void);
 void lbl_0000B754(void);
-void lbl_0000B8A8(void);
+void lbl_0000B8A8(struct Camera *camera, struct Ball *ball);
 void lbl_0000BDEC(void);
 void lbl_0000C128(void);
 void lbl_0000C230(void);
@@ -257,9 +257,175 @@ void lbl_0002609C(void);
 void lbl_000260C0(void);
 
 #pragma force_active on
-asm void lbl_0000B8A8(void)
+// Variant A -- lbl_0000B8A8 (337), drafted off the 1.00-cover matched twin
+// mini_pilot_30c.c lbl_00007444 / lbl_00006F94 (the "follow the ball" camera
+// family).  The lbl_00026378 pool is the REL's stand-in for the float literals
+// camera_func_level_main spells inline in the DOL.
+struct GolfCamMain
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_0000B8A8.s"
+    /*0x00*/ u8 filler0[0x10];
+    /*0x10*/ f64 ballTop;   // 0.5
+    /*0x18*/ f32 zeroF;     // 0.0f
+    /*0x1C*/ f32 oneF;      // 1.0f
+    /*0x20*/ f32 threeF;    // 3.0f
+    /*0x24*/ f32 epsilon;   // FLT_EPSILON
+    /*0x28*/ f64 lead;      // 0.75
+    /*0x30*/ f64 lerp;      // 0.2
+};
+
+void lbl_0000B8A8(struct Camera *camera, struct Ball *ball)
+{
+    struct GolfCamMain *k = (struct GolfCamMain *)lbl_00026378;
+    s16 pitch;
+    s16 yaw;
+    s16 tilt;
+    Vec sp34;
+    Vec prevEyePos;
+    Vec prevLookAt;
+    Vec prevUnkAC;
+    float distFromBall;
+    int yawDiff;
+    int r4;
+    f64 t;
+    f64 t2;
+    f64 t3;
+
+    if (debugFlags & 0xA)
+        return;
+
+    prevEyePos.x = camera->eye.x;
+    prevEyePos.y = camera->eye.y;
+    prevEyePos.z = camera->eye.z;
+
+    prevLookAt.x = camera->lookAt.x;
+    prevLookAt.y = camera->lookAt.y;
+    prevLookAt.z = camera->lookAt.z;
+
+    camera->lookAt.x = ball->pos.x;
+    camera->lookAt.y = k->ballTop + ball->pos.y;
+    camera->lookAt.z = ball->pos.z;
+
+    mathutil_mtxA_from_translate(&camera->lookAt);
+    mathutil_mtxA_rotate_y(ball->unk92);
+    sp34.x = k->zeroF;
+    sp34.y = k->oneF;
+    sp34.z = k->threeF;
+    mathutil_mtxA_tf_point(&sp34, &camera->eye);
+    sp34.x = k->zeroF;
+    sp34.y = k->zeroF;
+    sp34.z = k->threeF;
+    mathutil_mtxA_tf_point(&sp34, &camera->unkAC);
+
+    sp34.x = camera->unkAC.x - prevLookAt.x;
+    sp34.y = camera->unkAC.y - prevLookAt.y;
+    sp34.z = camera->unkAC.z - prevLookAt.z;
+
+    distFromBall = mathutil_sum_of_sq_3(sp34.x, sp34.y, sp34.z);
+    if (distFromBall > k->epsilon)
+    {
+        distFromBall = mathutil_rsqrt(distFromBall);
+        sp34.x *= distFromBall;
+        sp34.y *= distFromBall;
+        sp34.z *= distFromBall;
+    }
+    else
+    {
+        sp34.x = k->oneF;
+        sp34.y = k->zeroF;
+        sp34.z = k->zeroF;
+    }
+
+    t = k->lead * sp34.x;
+    sp34.x = t + prevLookAt.x;
+    t2 = k->lead * sp34.y;
+    sp34.y = t2 + prevLookAt.y;
+    t3 = k->lead * sp34.z;
+    sp34.z = t3 + prevLookAt.z;
+
+    camera->lookAt.x = ball->pos.x;
+    camera->lookAt.y = k->ballTop + ball->pos.y;
+    camera->lookAt.z = ball->pos.z;
+
+    sp34.x = camera->lookAt.x - sp34.x;
+    sp34.y = camera->lookAt.y - sp34.y;
+    sp34.z = camera->lookAt.z - sp34.z;
+
+    if (ball->unk80 < 60)
+        pitch = 0;
+    else
+        pitch = mathutil_atan2(sp34.y, mathutil_sqrt(mathutil_sum_of_sq_2(sp34.x, sp34.z)));
+
+    yaw = mathutil_atan2(sp34.x, sp34.z) - 32768;
+    yawDiff = (s16)(yaw - camera->rotY);
+    yaw = camera->rotY + CLAMP(yawDiff, -512, 512);
+    if (!(camera->flags & (1 << 1)) && !(ball->flags & BALL_FLAG_GOAL))
+    {
+        yawDiff = (s16)(ball->unk92 - yaw);
+        if (yawDiff > 0x800)
+            yawDiff -= 0x800;
+        else if (yawDiff < -0x800)
+            yawDiff += 0x800;
+        else
+            yawDiff = 0;
+        yawDiff >>= 7;
+        r4 = camera->unk10C;
+        if (yawDiff == 0)
+            r4 = 0;
+        else if ((r4 < 0 && yawDiff > 0) || (r4 > 0 && yawDiff < 0))
+            r4 = 0;
+        else if (yawDiff < 0)
+        {
+            if (yawDiff < r4 - 4)
+                r4 -= 4;
+            else
+                r4 = yawDiff;
+        }
+        else
+        {
+            if (yawDiff > r4 + 4)
+                r4 += 4;
+            else
+                r4 = yawDiff;
+        }
+
+        yaw += r4;
+        yawDiff = CLAMP((s16)(yaw - camera->rotY), -768, 768);
+        yaw = camera->rotY + yawDiff;
+    }
+
+    if (pitch < -6144)
+        pitch = -6144;
+    else if (pitch > 6144)
+        pitch = 6144;
+    tilt = camera->unkB8 + k->lerp * (pitch - camera->unkB8);
+    camera->unkB8 = tilt;
+
+    mathutil_mtxA_from_translate(&camera->lookAt);
+    mathutil_mtxA_rotate_y(yaw);
+    mathutil_mtxA_rotate_x(tilt);
+    sp34.x = k->zeroF;
+    sp34.y = k->zeroF;
+    sp34.z = k->threeF;
+    prevUnkAC = camera->unkAC;
+    mathutil_mtxA_tf_point(&sp34, &camera->unkAC);
+    camera->unk10C = yaw - camera->rotY;
+    camera->rotY = yaw;
+    camera->rotX = tilt + 62208;
+
+    mathutil_mtxA_from_translate(&camera->lookAt);
+    mathutil_mtxA_rotate_y(camera->rotY);
+    mathutil_mtxA_rotate_x(camera->rotX);
+    sp34.x = k->zeroF;
+    sp34.y = k->zeroF;
+    sp34.z = mathutil_sqrt(mathutil_sum_of_sq_2(k->threeF, k->oneF));
+    mathutil_mtxA_tf_point(&sp34, &camera->eye);
+
+    camera->eyeVel.x = camera->eye.x - prevEyePos.x;
+    camera->eyeVel.y = camera->eye.y - prevEyePos.y;
+    camera->eyeVel.z = camera->eye.z - prevEyePos.z;
+
+    camera->lookAtVel.x = camera->lookAt.x - prevLookAt.x;
+    camera->lookAtVel.y = camera->lookAt.y - prevLookAt.y;
+    camera->lookAtVel.z = camera->lookAt.z - prevLookAt.z;
 }
 #pragma force_active reset

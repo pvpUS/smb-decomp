@@ -1,28 +1,9 @@
-# mini_golf data segment 3 -- rodata continuation after a carved hole
+# mini_golf data segment 3b -- rodata from 0x263B8, after the hole
 .include "macros.inc"
-.global lbl_00026390
-.global lbl_000263B0
 .global lbl_000264A8
 
 .section .rodata
 .balign 8
-lbl_00026388:
-    .4byte 0x3FE00000
-    .4byte 0x00000000
-lbl_00026390:
-    # 0x26390
-    .4byte 0x00000000
-    .4byte 0x3F800000
-    .4byte 0x40400000
-    .4byte 0x34000000
-    .4byte 0x3FE80000
-    .4byte 0x00000000
-    .4byte 0x3FC99999
-    .4byte 0x9999999A
-lbl_000263B0:
-    # 0x263B0
-    .4byte 0x43300000
-    .4byte 0x80000000
     .4byte 0x3FF75C28
     .4byte 0xF5C28F5C
     .4byte 0x40220000

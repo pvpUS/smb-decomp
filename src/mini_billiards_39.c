@@ -43,6 +43,28 @@
 #include "nl2ngc.h"
 #include "string.h"
 
+struct BilliardsRec
+{
+    /* +0 */
+    u32 unk0_0 : 11;
+    u32 unk0_11 : 6;
+    s32 unk0_17 : 12;
+    u32 unk0_29 : 1;
+    u32 unk0_30 : 2;
+    /* +4 */
+    s32 unk4_0 : 11;
+    u32 unk4_11 : 4;
+    u32 unk4_15 : 6;
+    s32 unk4_21 : 6;
+    s32 unk4_27 : 5;
+    /* +8 */
+    u32 unk8_0 : 4;
+    s32 unk8_4 : 7;
+    s32 unk8_11 : 7;
+    s32 unk8_18 : 7;
+    s32 unk8_25 : 7;
+};
+
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_billiards.s) or imported.  Declared so mwcc accepts `@ha/@l`.
 extern u8 lbl_0001C2B8[];
@@ -126,7 +148,7 @@ extern u8 lbl_10000062[];
 extern u8 lbl_10000064[];
 extern u8 lbl_100000A4[];
 extern u8 lbl_10000A64[];
-extern u8 lbl_10000A70[];
+extern struct BilliardsRec lbl_10000A70[];
 extern u8 lbl_10009710[];
 extern u8 lbl_10009878[];
 extern u8 lbl_10009C88[];
@@ -153,7 +175,7 @@ extern void func_8009DDC4();
 extern void mini_commend_free_data();
 extern void sqrt();
 extern void u_load_minigame_graphics();
-extern void window_printf_1();
+extern void window_printf_1(const char *, ...);
 
 // Forward declarations so mwcc accepts `<fn>@ha/@l` and cross-function
 // branches before each function is defined below.
@@ -204,7 +226,7 @@ void lbl_00010FD0(void);
 void lbl_000111B4(void);
 void lbl_000115F4(void);
 void lbl_00016D24(void);
-void lbl_00016D9C(void);
+void lbl_00016D9C(int, int);
 void lbl_0001723C(void);
 void lbl_00017408(void);
 void lbl_00017A00(void);
@@ -226,9 +248,67 @@ void lbl_0001A18C(void);
 void lbl_0001B880(void);
 
 #pragma force_active on
-asm void lbl_00016D9C(void)
+#pragma opt_common_subs off
+void lbl_00016D9C(int a, int b)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00016D9C.s"
+    f32 *cfg = (f32 *)lbl_00020AF0;
+    int m;
+    s32 sx;
+    s32 sy;
+
+    if (b > cfg[0])
+    {
+        b = 0x1fff;
+        if (dipSwitches & DIP_DISP)
+        {
+            window_set_cursor_pos(5, 30);
+            window_printf_1((char *)lbl_000215B0);
+        }
+    }
+    lbl_10000A70[*(s16 *)lbl_10000000].unk0_0 = b;
+    m = a * 0x68;
+    if (*(s8 *)(lbl_10009878 + m) == 0)
+        lbl_10000A70[*(s16 *)lbl_10000000].unk0_29 = 0;
+    else
+        lbl_10000A70[*(s16 *)lbl_10000000].unk0_29 = 1;
+    if (((s32 *)lbl_10000064)[a] != -1
+        && (*(struct Ape **)(lbl_10009878 + m + 0x64))->unk24 == 10)
+        lbl_10000A70[*(s16 *)lbl_10000000].unk0_30 = 1;
+    else
+        lbl_10000A70[*(s16 *)lbl_10000000].unk0_30 = 0;
+    lbl_10000A70[*(s16 *)lbl_10000000].unk4_11 = a;
+    lbl_10000A70[*(s16 *)lbl_10000000].unk8_4 =
+        (s32)(cfg[1] * *(f32 *)(lbl_10009878 + m + 0x44));
+    lbl_10000A70[*(s16 *)lbl_10000000].unk8_11 =
+        (s32)(cfg[1] * *(f32 *)(lbl_10009878 + m + 0x48));
+    lbl_10000A70[*(s16 *)lbl_10000000].unk8_18 =
+        (s32)(cfg[1] * *(f32 *)(lbl_10009878 + m + 0x4c));
+    lbl_10000A70[*(s16 *)lbl_10000000].unk8_25 =
+        (s32)(cfg[1] * *(f32 *)(lbl_10009878 + m + 0x50));
+    sx = cfg[2] * *(f32 *)(lbl_10009878 + m + 0x10);
+    sy = cfg[2] * *(f32 *)(lbl_10009878 + m + 0x18);
+    if ((s32)(cfg[2] * *(f32 *)(lbl_10009878 + m + 0x10)) > 0x7ff)
+        sx = 0x7ff;
+    else if (sx < -0x800)
+        sx = -0x800;
+    if (sy > 0x3ff)
+        sy = 0x3ff;
+    else if (sy < -0x400)
+        sy = -0x400;
+    lbl_10000A70[*(s16 *)lbl_10000000].unk0_17 = sx;
+    lbl_10000A70[*(s16 *)lbl_10000000].unk4_0 = sy;
+    lbl_10000A70[*(s16 *)lbl_10000000].unk8_0 =
+        (u8)(u32)(cfg[3]
+                  * (cfg[4] + *(f32 *)(lbl_10009878 + m + 0x14)));
+    lbl_10000A70[*(s16 *)lbl_10000000].unk0_11 =
+        (s32)(cfg[5] * *(f32 *)(lbl_10009878 + m + 0x54));
+    lbl_10000A70[*(s16 *)lbl_10000000].unk4_15 =
+        (s32)(cfg[5] * *(f32 *)(lbl_10009878 + m + 0x58));
+    lbl_10000A70[*(s16 *)lbl_10000000].unk4_21 =
+        (s32)(cfg[5] * *(f32 *)(lbl_10009878 + m + 0x5c));
+    lbl_10000A70[*(s16 *)lbl_10000000].unk4_27 =
+        (s32)(cfg[6] * *(f32 *)(lbl_10009878 + m + 0x60));
+    *(s16 *)lbl_10000000 = (*(s16 *)lbl_10000000 + 1) % 3000;
 }
+#pragma opt_common_subs reset
 #pragma force_active reset
