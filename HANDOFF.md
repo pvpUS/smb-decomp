@@ -69,11 +69,18 @@ the newer files in and re-ran everything deliberately. But:
 
 **Do tool work in scratch while agents are live; land it after the last one
 closes out.** Nothing was lost this time; that was luck, not process.
-**Run 27 is the SIXTH consecutive clean run**: both tool landings happened after
-the ninth agent closed and **all nine reported `diff -rq tools` empty at start
-and end**. **No module patched a tool at all** — the two defects found
-(`rel_census`'s REACHABLE column, the brief's `ABLIND_POS` contract) were
-diagnosed and handed over, which is the behaviour to ask for.
+**Run 28 is the SEVENTH consecutive clean run**: all three tool landings happened
+after the ninth agent closed and **all nine reported `diff -rq tools` clean at
+start and end**. **No module patched a tool at all** — and the three defects
+found were in `rel_arity.py`, **the tool the orchestrator itself had shipped one
+run earlier, broken in BOTH its modes with a passing self-test.** Two separate
+modules hit it, diagnosed it, and handed it over rather than patching it. That is
+the behaviour to ask for, and it is the only reason the fix is correct rather
+than local.
+
+**Run 27 was the sixth**: both tool landings happened after the ninth agent
+closed, all nine reported `diff -rq tools` empty at start and end, and the two
+defects found were diagnosed and handed over.
 
 > **★ AND THE SIGNAL IS NOW ACTUALLY CLEAN.** For several runs `diff -rq tools`
 > printed **14-16 lines of `__pycache__/*.pyc`** in every warm copy — the real
@@ -121,7 +128,196 @@ it. `_scratch_<MOD>/run<N>/pristine/` is the convention.**
 
 ---
 
-## 0.33 — RUN 27 DONE (2026-08-11): +1,461 insn, 46.86% -> 47.63%. START HERE.
+## 0.34 — RUN 28 DONE (2026-08-11): +420 insn, 47.63% -> 47.85%. START HERE.
+
+Nine parallel agents, one per module, **no workers — SIXTEENTH consecutive run
+under the standing rule.** Three of nine gained. **The run's structural result
+is that a tool THIS ORCHESTRATOR SHIPPED was broken in both of its modes from
+the day it landed, with a passing self-test — and that the project-level
+prologue question three modules have been grinding on is an ALLOCATION question
+that no source spelling reaches.**
+
+| module | still-asm | insn | % | gained |
+|---|---|---|---|---|
+| mini_pilot | 6 fns | 10999/12137 | 90.62% | 0 |
+| **test_mode** | 18 fns | 11799/16231 | **72.69%** | **+109 / +1** |
+| **mini_race** | 31 fns | 14355/19817 | **72.44%** | **+66 / +1** |
+| **mini_bowling** | 14 fns | 10432/15313 | **68.13%** | **+245 / +1** |
+| option | 12 fns | 5405/12375 | 43.68% | 0 |
+| sel_ngc | 10 fns | 7589/18084 | 41.97% | 0 |
+| mini_billiards | 19 fns | 10220/28793 | 35.49% | 0 |
+| mini_fight | 72 fns | 9562/28585 | 33.45% | 0 |
+| mini_golf | 18 fns | 10670/38919 | 27.42% | 0 |
+| **TOTAL** | **200 fns** | **91031/190254** | **47.85%** | **+420 / +3** |
+
+**Verified in the main tree, not taken on report**: nine trees diffed before
+merging (**19 changed paths — 3 modified `.c`, 15 deleted `.c`, 1 modified
+`Makefile`, and NOTHING else** — no `asm/`, no `tools/`, nothing created, and
+every changed-file list matched its own agent's report exactly); **zero hygiene
+problems** (no non-ASCII, every changed file keeping the CRLF it already had);
+all three merged modules rebuilt in the main tree to the **exact sha1 their
+agents reported**; all nine `rel_structcheck` **CLEAN, run by the orchestrator**;
+a clean build from **0 objects** gives `sha1sum -c` **12/12 OK including the
+DOL**; the census reproduces all nine still-asm figures. Reconciles both ways:
+190,254 − 99,223 = **91,031**, and 203 − 3 = **200**.
+
+> **★ EVERY OBJECT METRIC MOVED BY EXACTLY −15** — mini_race's TU merge absorbed
+> 15 files. **898** `*.o` under `src/`+`asm/`, **1,068** tree-wide, **901**
+> source files (**839** `.c` + 62 `.s`). First change to these numbers since
+> run 24, and the first TU merge to land since then.
+
+### ★★★ `rel_arity.py` — THE TOOL I SHIPPED IN RUN 27 WAS BROKEN IN BOTH MODES
+
+It landed on a 7-case self-test that gated against two real conversions, and
+**the self-test passed throughout while neither mode worked.** Both defects were
+found by modules that **diagnosed and handed over without patching**.
+
+- **`--calls <file>` audited what a file DECLARES, not what it calls.** Every
+  split REL owner forward-declares every label, so it printed an identical
+  ~250-row list for **every file** — and **run 28's own §11 sent mini_bowling to
+  run exactly that.** mini_bowling independently found it also matched inside
+  comments.
+- **It UNDER-REPORTED arity, which inverts its own headline diagnostic.** The
+  diagnostic is *"golden sets FEWER argument registers than the callee READS"*.
+  `lbl_00016CC8` reported 0 arguments where the truth is 1.
+- **The cause was NOT the scan window** — my first fix widened it to the whole
+  body and it still reported 0. It was **path-insensitivity**: the entry block
+  branches past the `lis r3` to a block that stores through it. Now **CFG
+  liveness**, with `bl` clobbering the volatiles. 16 self-test cases; the path
+  case asserts the LINEAR scan still says 0, so the gate cannot go vacuous.
+
+**Also fixed: `rel_fnhash --compare` accepted a file with NO hash lines** and
+printed `0/118 identical, 118 gone` — indistinguishable from catastrophic
+regression. Landed in `481847e`, after the ninth agent closed.
+
+### ★★★ RUN 22's PROLOGUE QUESTION IS ANSWERED — and no source spelling reaches it
+
+Three modules converged from three directions:
+
+- **option**: `#pragma scheduling off` empties the pre-`stwu` window completely
+  while the `addi → r0 → mr` staging **survives unchanged.** It is an
+  **allocation** decision, and it attaches to whichever local takes the highest
+  callee-saved register.
+- **mini_golf**: the `lis` count is decided by whether the allocator
+  **coalesces both `@ha` scratches onto one register**.
+- **mini_pilot**: perturbed a **MATCHED sibling that already has golden's
+  shape** — the easy direction, never tried — **five perturbations, all
+  byte-identical.** **Run-24 idiom 8 does not reach this.**
+
+### ★★★ `#pragma opt_dead_assignments off` IS A FIX, NOT ONLY A CANARY
+
+Two modules, independently, and it is in **no previous brief's pragma table**.
+mini_bowling **banked 245** on it (worth **8 frame bytes**; 16 in 12 → 2 in 1 in
+one build). sel_ngc took `lbl_00010214` from 17 in 11 to **10 in 5** and its `GF`
+from 5 in 4 to **0 in 0**. *Scope: option swept all 17 optimiser pragmas on
+`6AD0` with healthy canaries and every one was inert.*
+
+### ★★ A CARVE PROVEN TO A GOLDEN BUILD, AND A RULE THAT KILLS TWO TARGETS
+
+mini_golf split `d3.s` at `lbl_000263B0` and let `mini_golf_38.c` emit the 8
+bytes: **builds GOLDEN at the correct `.rel` size.** Worth **480 or 337**,
+reverted per §2, script harvested. ⚠ the second half **must carry
+`.global lbl_000263B0`** or `elf2rel` fails in a way that looks like a layout
+fault. Conversely **`11DAC` (144) and `11A6C` (208) are DEAD**: their magic is
+**88 bytes** from their TU's, and **a carve cannot manufacture adjacency.**
+
+### ★★ §11 WAS WRONG IN THREE OF NINE — a TWELFTH consecutive run
+
+It called mini_fight's carve that module's "best-priced position" while **657
+instructions sat reachable with no carve** (`16CC8` 268, `15E00` 389 — both
+mislabelled `a-BLOCKED` by `rel_census`, whose REACHABLE column is a lower
+bound). It listed mini_golf's `B8A8` as an open near-miss when it banks **zero**
+without a carve. And on test_mode's `E628` it **promoted a regression** —
+`rel_ascore` ranked two drafts backwards and only `rel_ablind`'s `GF` ranked them
+right, because **mwcc 1.1 does not normalise `a < b` against `b > a`.**
+**It was RIGHT about mini_bowling's `A23C`**, the run's largest conversion.
+
+### ⚠ A CARRIED CLAIM CORRECTED: TEN FILES, NOT TWO
+
+Every brief since run 27 and §0.33 below say "**two modules** ship an optimiser
+pragma in banked code". **It is ten files**, and was ten before run 28:
+`event.c`, `mini_golf_53.c`, `mini_golf_58.c`, `mini_billiards_34.c`,
+`mini_bowling_56.c`, `mini_fight_15ej.c`, `mini_fight_68.c`, `test_mode_110.c`,
+`mini_race_51.c`, `mini_race_9j.c`. All load-bearing.
+
+### ⚠ HAZARDS
+
+- **A silent false MATCH again — third run running, caught by the canary rule.**
+  mini_bowling's splicer had an off-by-one in leading-`#pragma` absorption.
+  **Corrected rule, superseding run 27's:** absorb every adjacent `#pragma`
+  *preceding* the definition, but on the trailing side **only `reset` closers**.
+- **New revert hazards**:
+  `_scratch_mini_bowling/run27/pristine/src/mini_bowling_56.c` **un-banks 245**;
+  `_scratch_test_mode/run27/keep/inst.py --restore test_mode_51.c` **un-banks
+  109**. Runs 23/25/26 hazards all still live.
+- **`_harvest_run16/pragmafix.py` DESTROYS CRLF** (1,235 of 1,236 lines).
+- **`#pragma optimize_for_size on … reset` is a hard build failure**, and
+  `optimize_for_size on` is an **unreliable canary** (second confirmation).
+- **An unroll-pragma sweep on a base mwcc does not unroll reads exactly like an
+  inert pragma** — run 27's mini_billiards verdict was measured on a `do/while`
+  and was vacuous. Canary the transform itself.
+- **`rel_ablind` reads the LINKED IMAGE and has no `--tree`**; its `plain`
+  column is **not** `rel_ascore`'s on call-heavy functions.
+- **`rel_xref.py` takes labels POSITIONALLY** — `--label X` is an argument error.
+- **`asm/nonmatchings/<mod>/*.s` is NOT the still-asm set** — the `.s` survives
+  conversion, it is just no longer `#include`d.
+- **One agent (option) died to a repeated API transport error mid-report.**
+  Nothing was lost: its tree was already restored clean and its findings were
+  already in its near-miss README. **The orchestrator closed it out** — ran its
+  gate (`GOLDEN 63112a80…`) and structcheck (CLEAN) and filed its report with a
+  provenance header. **Write as you go.**
+
+### STILL OPEN (orchestrator)
+
+- **Promote `mini_billiards__blind.py`** — §12 has demanded a plain/`F`/`G`/`GF`
+  table for four runs and no driver has ever shipped; every module hand-rolls it.
+- **Promote `test_mode__rodmap.py`** (which objects actually emit
+  `.rodata`/`.data`) and **`mini_race__mergeprice.py`** (minimal merge span per
+  reader). Together they turn TU-merge pricing into a measurement.
+- `_harvest_run27/mini_billiards__seg.py` is still the strongest un-promoted
+  candidate for wrong-length drafts; `option__regmap.py` is its counterpart for
+  exact-length ones.
+- **Let `rel_carve` ADD holes to an already-carved worktree directly.**
+- Fix `rel_merge_tu`'s duplicate-tag bug; fold `pragmafix.py` into it — and fix
+  its CRLF destruction while you are there.
+
+### RUN-29 PREP — COMPLETE. The next session launches nine agents directly.
+
+- **`C:/tmp/smbm/RUN29_BRIEF.md`** — written (**3,126 lines, 190 KB**) by
+  **`C:/tmp/smbm/_brief29/assemble.py`**, which locates sections by heading text,
+  asserts all 14 appear exactly once and in order, asserts the idiom blocks are
+  newest-first (**28 → 27 → … → 18**), and **hard-fails on ten claims run 28
+  falsified**. **All ten needles were verified present in RUN28_BRIEF.md via
+  `--audit`** — **four matched nothing on the first pass because of line
+  wrapping and were corrected rather than kept**, which is the dead-weight
+  failure every previous assembler has warned about.
+  - **Two new guards, both PARAGRAPH-SCOPED and both proven to fire**: `--calls`
+    may not be prescribed without its run-28 defect stated in the same
+    paragraph, and a stale object count (913 / 1,083) may not appear without its
+    correction. **My first version of the first one was document-wide and passed
+    while the entire tools-section head had been gutted** — exactly the mistake
+    run 28's assembler recorded. Caught only by testing that the guard FIRES.
+  - **★ §8 IS REWRITTEN EVERY RUN, NOT CARRIED**, and run 28 justified it a
+    seventh time — mini_golf's `B8A8` sat on target lists for five runs as an
+    open near-miss and is a-BLOCKED.
+- **`C:/tmp/smbm/RUN28_RESULTS.md`** — all nine sections (230 KB, 4,051 lines),
+  ordered by instructions gained, with **ORCHESTRATOR VERIFIED** lines.
+- **`C:/tmp/smbm/_harvest_run28/`** — **56 scripts** with a README indexing them
+  by purpose, naming the four worth promoting and flagging which installers and
+  scorers carry known defects.
+- **`C:/tmp/smbm/_orch_run28/`** — `predmerge_diff.sh`, `postmerge_verify.sh`,
+  `hygiene.py` (self-testing), `BASELINE.md`, and the nine per-module reports.
+- **All nine warm copies reset and re-gated GOLDEN from deleted objects**
+  (`warm_reset_run29.sh`, `fail=0`). **Verified independently of the script's own
+  gate**: each copy's built `.rel` hashed against `supermonkeyball.sha1` — **all
+  nine MATCH** — `src`/`asm`/`tools` diffs **0 for all nine**, **839 `.c` + 62
+  `.s` in every copy**, and the fixed `rel_arity.py` (with `arity_cfg`) present
+  **9/9**.
+- **ONE AGENT PER MODULE, NO WORKERS** — sixteenth consecutive run.
+
+---
+
+## 0.33 — RUN 27 DONE (2026-08-11): +1,461 insn, 46.86% -> 47.63%. Superseded by §0.34.
 
 Nine parallel agents, one per module, **no workers — FIFTEENTH consecutive run
 under the standing rule.** Four of nine gained. **The run's structural result is
