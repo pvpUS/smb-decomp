@@ -40,10 +40,35 @@ run 12's most valuable outputs were measurements and corrections, not
 conversions, and three modules that converted nothing changed the project's model
 of what is blocked.
 
-**Orchestrator:** launch the nine module agents and nothing else. Do the merge,
-gate, clean build, commit and handoff yourself. **Every run brief you write must
-restate this section** — the brief is regenerated per run and an agent only ever
-reads the brief, so a rule that lives only here will not reach it.
+**Orchestrator:** launch the nine module agents and, from run 31, the read-only
+corpus agents described below — and nothing else. Do the merge, gate, clean
+build, commit and handoff yourself. **Every run brief you write must restate
+this section** — the brief is regenerated per run and an agent only ever reads
+the brief, so a rule that lives only here will not reach it.
+
+#### AMENDMENT (run 31): READ-ONLY CORPUS AGENTS ARE PERMITTED. WORKERS ARE NOT.
+
+**This is the first change to this rule since run 13 and it is deliberately
+narrow.** The orchestrator may launch up to **three read-only corpus agents**
+alongside the nine. They are permitted because **not one of the rule's four
+justifications applies to them**:
+
+- **They own no tree and no worktree**, so there is nothing to diverge and
+  nothing to merge — the hazard that nearly cost mini_fight 10 instructions in
+  run 12 and did cost run 11 a 651-instruction MATCH.
+- **They bank no work**, so a death strands nothing. Run 12's losses were
+  module work that died with a spawn.
+- **They are ORCHESTRATOR-owned peers, not children of a module agent.** No
+  module agent may spawn anything; that half of the rule is unchanged and must
+  keep being restated in every brief.
+- **Twelve agents is inside the 20-way cap** with room to spare.
+
+They write only to `C:/tmp/smbm/_corpus_run31/` and may not touch `tools/`, any
+warm copy, or the main tree.
+
+**This is an experiment with a stated falsification condition** (see §0.36's
+run-31 section). If it does not pay for itself it comes out, and the rule
+reverts to nine and nothing else.
 
 ### DO NOT MODIFY `tools/` WHILE AGENTS ARE LIVE. (New in run 21 — my own error.)
 
@@ -312,7 +337,94 @@ the same words by retyping at the declaration, which costs a structural word.
 - **Let `rel_carve` ADD holes to an already-carved worktree directly** — three
   carves have now landed in two runs and **not one used `rel_carve.py`.**
 
-### RUN-31 PREP — COMPLETE. The next session launches nine agents directly.
+### ★★★ RUN 31 IS A METHOD EXPERIMENT — READ THIS BEFORE LAUNCHING
+
+Runs 28-30 averaged **617 insn/run**, down from ~2,400 over runs 16-25. The
+measured cause is **composition, not exhaustion**: the 193 remaining functions
+average **506 instructions** against roughly **95** for the ~983 converted, and
+
+| size | fns | insn | share |
+|---|---|---|---|
+| <250 | 101 | 13,406 | 13.7% |
+| 250-500 | 54 | 19,518 | 20.0% |
+| 500-1000 | 19 | 13,550 | 13.9% |
+| 1000-3000 | 14 | 22,117 | 22.6% |
+| **>3000** | **5** | **29,202** | **29.9%** |
+
+**Half the remaining work is 19 functions; 30% is five**, and the two largest
+(mini_golf `1B5B8` 7,131 and sel_ngc `030F4` 6,621) **have never been
+attempted.** So the headline percentage understates tractable progress.
+
+**The hypothesis run 31 tests: the METHOD is asymptoting, not the project.**
+Three changes, each with a reason and a way to be wrong.
+
+**1. RUN 31 IS A CLOSURE RUN.** Every module ended run 30 holding exactly one
+near-miss and they total **2,819 instructions** — 4.5x the recent per-run
+average, one per module, all parallel:
+
+| module | target | insn | state (agent-reported, NOT verified) |
+|---|---|---|---|
+| mini_bowling | `6F0C` | 387 | 16 in 11, carve proven and uncut |
+| mini_billiards | `17A00` | 386 | 35 in 27 |
+| mini_race | `70FC` | 355 | 8 words |
+| option | `2704` | 348 | one callee-saved swap, `GF` 0 in 0 |
+| test_mode | `A7FC` | 333 | **ONE instruction**, merge already cut+GOLDEN |
+| sel_ngc | `E778` | 279 | +1 LONG, seven shapes all 280 |
+| mini_pilot | `3BDC` | 274 | 80-in-49 rank permutation |
+| mini_fight | `16CC8` | 268 | 9 in 7 |
+| mini_golf | `22610` | 189 | 3 in 2 |
+
+The rule in each brief: **close it, or write down why it is structurally
+unreachable, before opening anything else.** Run 30 had seven modules bank zero
+and **four named their own targeting error** (~48 links on a 60-insn function;
+~62 links before pivoting and landing one instruction short of 333).
+
+**2. THREE READ-ONLY CORPUS AGENTS** mine the DOL's ~8,900 matched functions for
+the residual class **six of the nine closure targets share** — callee-saved
+rank, CSE temps and volatile choice, entry-block schedule. Brief:
+`C:/tmp/smbm/RUN31_CORPUS_BRIEF.md`. They deliver
+`C:/tmp/smbm/RUN31_PLAYBOOK.md` **mid-run**, as a handover — the shape that
+worked in run 30 when `rel_scanpair`'s gate output reached mini_pilot and
+overturned a stop sign. **See the amendment in STANDING RULES for why this does
+not break the no-workers rule.**
+
+**3. PER-MODULE BRIEF SLICES.** `RUN31_BRIEF_<mod>.md`, **1,886 lines vs 3,042**
+(1.61x). ⚠ **The 3x I first estimated was wrong** — sections 2, 5 and 6 are
+~780 lines of reference agents genuinely use, and cutting those to hit a number
+would trade capability for a smaller file. **Only section 7's *positive* idiom
+corpus from run 29 and earlier is compressed to an index; every `FALSIFIED`
+block is carried IN FULL**, because those are short and are what stop an agent
+re-spending on dead ground. The full brief stays on disk and every slice points
+at it.
+
+> **HOW TO KNOW THIS FAILED.** The closure table is **agent-reported, not
+> orchestrator-verified**, and run 30 proved an exact instruction count is not
+> evidence. **If run 31 lands near 617 anyway, the process-loss hypothesis is
+> falsified** and the honest conclusion is that the allocator tie-break class is
+> out of reach by source spelling. In that case: drop the corpus phase, revert
+> the standing rule to nine, and put the next run into the five >3,000-insn
+> bodies instead, which are 30% of what remains and have never been tried.
+
+### RUN-31 PREP — COMPLETE. Launch order for the next session.
+
+1. **Nine module agents**, each given **`C:/tmp/smbm/RUN31_BRIEF_<mod>.md`**
+   (not the full brief). Restate the standing rules in the launch prompt as
+   always.
+2. **Three corpus agents** (A/B/C), each given
+   **`C:/tmp/smbm/RUN31_CORPUS_BRIEF.md`** plus its own letter. Launch them in
+   the same message as the nine.
+3. When A/B/C return, assemble `C:/tmp/smbm/RUN31_PLAYBOOK.md` and **send it to
+   the nine that are still live** via SendMessage, flagged as a LEAD to be
+   corrected, not a fact.
+4. Then the usual close-out, unchanged: `predmerge_diff.sh`, merge, all nine
+   `--gate` from deleted objects, all nine `rel_structcheck`, clean build from
+   0 objects, `sha1sum -c`, census reconcile three ways.
+
+Regenerate the slices with `python C:/tmp/smbm/_brief31/slice.py` if the closure
+data in `_brief31/closure.py` changes; it gates that every slice keeps the
+standing rules, its own target, its own §11 bullet and **no other module's**.
+
+
 
 - **`C:/tmp/smbm/RUN31_BRIEF.md`** — written from RUN30_BRIEF plus this run's
   corrections; §8 rewritten from scratch (ninth run running) and §11 rebuilt
