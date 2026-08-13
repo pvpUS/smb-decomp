@@ -55,6 +55,17 @@ WHY THE SCORE IS TRUSTWORTHY (and how the last two ports got it wrong).
   instruction stream) has zero in exactly the same fields.  Local branches are
   resolved on both sides and are compared for real.
 
+  ** ⚠ A PERFECT SCORE HERE CAN COEXIST WITH EXTRA `.text` FROM A SIBLING. **
+  This tool reads ONLY the spliced function.  Anything the TU emits AROUND it
+  is outside the window, and that includes the out-of-line copy mwcc keeps of
+  an inlined helper.  MEASURED, test_mode, run 34: on the conversion it banked,
+  `static` on a helper made mwcc inline it AND emit it out-of-line as well,
+  `+0x14` of `.text` -- and this tool scored `0 in 0` in BOTH the `static` and
+  the `static inline` build.  Only `--gate` told them apart.  Same family as
+  run 32's `rel_objsect` finding, on the `.text` side instead of `.rodata`.
+  ** If your draft adds or changes a file-scope helper, a `0 in 0` here is not
+  evidence; link it. **
+
 usage -- RUN IT FROM THE MODULE TREE, like rel_ablind and rel_blindtable:
   cd C:/tmp/smbm/<module>
   python tools/rel_tuprobe.py <label>                  # CONTROL: owner as-is
@@ -65,6 +76,11 @@ usage -- RUN IT FROM THE MODULE TREE, like rel_ablind and rel_blindtable:
   --work DIR    scratch dir (default C:/tmp/rel_tuprobe_<module>_<pid>);
                 it may not be inside the module tree
   --show N      print up to N differing words (default 12; 0 for none)
+  --peephole X  `auto` (default) prepends `#pragma peephole on` when an asm
+                block precedes the splice point, restoring GOLDEN's regime;
+                `off` scores in the deoptimised one.  The regime is printed on
+                every run either way -- see peephole_regime().  MEASURED run 34
+                (mini_bowling): worth +17 and +29 instructions on two labels.
   --keep        do not delete the spliced .c/.o afterwards (they are kept
                 anyway; this flag exists so scripts can say what they mean)
   --selftest    run the internal parser/splicer checks and exit
@@ -243,6 +259,15 @@ def score(built, gold, show):
         lines.append('    %5d  gold %08X %-34s | built %08X %s'
                      % (i, gold[i][0], gold[i][1][:34], built[i][0],
                         built[i][1][:36]))
+    # ** RUN 34: THE TRUNCATION USED TO BE SILENT. **  mini_pilot found the
+    # tool showing 12 rows of a 40-row diff with nothing to say the other 28
+    # existed, so a reader reasonably concluded the diff WAS 12 rows.  Same
+    # family as the 500-character log tail above: hiding evidence is fine,
+    # hiding the fact that you are hiding it is not.
+    if len(diffs) > show:
+        lines.append('    ... %d MORE differing words not shown (%d total). '
+                     'Use --show %d for all of them.'
+                     % (len(diffs) - show, len(diffs), len(diffs)))
     return same, n, tot, len(ops), lo, hi, diffs, lines
 
 
@@ -328,6 +353,53 @@ def find_def(src, label):
     return None
 
 
+_ASM_BLOCK = re.compile(r'(?m)^[^\n]*(?:INCLUDE_ASM\s*\(|\basm\s*\{|'
+                        r'^\s*asm\s+[A-Za-z_][\w \t\*]*\([^;]*\)\s*\{)')
+_PEEP_ON = re.compile(r'(?m)^[ \t]*#pragma[ \t]+peephole[ \t]+on\b')
+
+
+def peephole_regime(src, start):
+    """Is the PEEPHOLE OPTIMISER on or off at offset `start` in this TU?
+
+    ** RUN 34 -- THE SIXTH FICTIONAL-MATCH MODE, AND IT LIVED HERE. **
+    Found by mini_bowling, bisected in six probes.  mwcc 1.1 turns the peephole
+    optimiser OFF for the rest of the translation unit after an ASM BLOCK -- the
+    run-12 deopt, which is peephole-only and post-block-only -- and a `#pragma
+    peephole on` turns it back on in place.
+
+    This tool splices a candidate body into the REAL owner TU, and in a module
+    that has been carved or merged the owner is full of `INCLUDE_ASM` stubs.
+    **The splice point lands squarely inside that window**, so the probe was
+    silently compiling a DIFFERENTLY-OPTIMISED program from the one golden is
+    and from the one a real link of a correct conversion would be -- and said
+    nothing about it.  MEASURED: mini_bowling's `lbl_00003A10` is worth +17
+    instructions and `lbl_00003574` +29 between the two regimes; both stored
+    figures read as garbage until the pragma is prepended, whereupon both
+    reproduce exactly.
+
+    ** A TU MERGE MANUFACTURES THE CONFIGURATION **, so every merged module
+    inherits it; four modules merged TUs in runs 33-34 alone, and 1,784 of
+    mini_bowling's 4,038 remaining instructions sit at an affected splice point.
+
+    -> (regime, why) with regime 'on' / 'off'.
+    """
+    before = src[:start]
+    m = None
+    for m in _ASM_BLOCK.finditer(before):
+        pass
+    if m is None:
+        return 'on', 'no asm block precedes the splice point'
+    p = None
+    for p in _PEEP_ON.finditer(before[m.end():]):
+        pass
+    if p is not None:
+        return 'on', ('an asm block precedes, but `#pragma peephole on` is '
+                      'restored after it')
+    return 'off', ('an asm block precedes the splice point at offset %d with '
+                   'no `#pragma peephole on` after it -- mwcc 1.1 has the '
+                   'peephole optimiser OFF here' % m.start())
+
+
 def pragmas_above(src, start):
     """The `#pragma` lines immediately preceding the definition at `start`.
 
@@ -345,6 +417,32 @@ def pragmas_above(src, start):
     return out
 
 
+def _unescape(s):
+    r"""Translate `\n`, `\t`, `\r`, `\\` and `\|` in a directive argument.
+
+    RUN 34, found by mini_golf: `//@SUB` had no escape translation at all.  The
+    directive is LINE-based and its separator is `|||`, so a substitution
+    spanning two lines, or one whose text contains a literal `|`, could not be
+    written at all -- and the only workaround is one `//@SUB` per line, which
+    is exactly the 12-directive hand-translation run 33 had to do.
+    """
+    out, i = [], 0
+    while i < len(s):
+        c = s[i]
+        if c == '\\' and i + 1 < len(s):
+            nxt = s[i + 1]
+            out.append({'n': '\n', 't': '\t', 'r': '\r', '\\': '\\',
+                        '|': '|'}.get(nxt, '\\' + nxt))
+            i += 2
+        else:
+            out.append(c)
+            i += 1
+    return ''.join(out)
+
+
+KNOWN_DIRECTIVES = ('//@SUB ', '//@PROTO ', '//@DROPRE ')
+
+
 def apply_directives(owner, body, where):
     keep = []
     for ln in body.split('\n'):
@@ -352,12 +450,40 @@ def apply_directives(owner, body, where):
             arg = ln[len('//@SUB '):]
             if '|||' not in arg:
                 die('%s: //@SUB needs `old|||new`' % where)
-            old, new = arg.split('|||', 1)
+            old, new = (_unescape(x) for x in arg.split('|||', 1))
             if old not in owner:
                 die('%s: //@SUB ANCHOR MISSING in the owner:\n    %r\n'
                     'A silently-ignored substitution means you score a program '
                     'you did not write.' % (where, old))
             owner = owner.replace(old, new, 1)
+        elif ln.startswith('//@DROPRE '):
+            # ** RUN 34: THIS DIRECTIVE USED TO FALL THROUGH TO THE `//@`
+            # CATCH-ALL BELOW AND BE SILENTLY DISCARDED. **
+            #
+            # `//@DROPRE <regex>` deletes every OWNER line matching the regex.
+            # Stored drafts use it (mini_fight's `lbl_00014BD4`).  Without it
+            # the owner's un-prototyped `extern void avdisp_X();` lines survive
+            # and collide with the draft's prototyped ones, and this tool
+            # reports COMPILE FAILED -- a verdict indistinguishable from a
+            # genuinely broken draft, and "this draft does not compile" is now
+            # 0-for-166.  Run 33 hand-translated one DROPRE into 12 `//@SUB`
+            # deletions and the same draft rebased to a clean 4 in 4.
+            pat = ln[len('//@DROPRE '):].strip()
+            try:
+                rx = re.compile(pat)
+            except re.error as e:
+                die('%s: //@DROPRE %r is not a valid regex: %s'
+                    % (where, pat, e))
+            lines = owner.split('\n')
+            kept = [l for l in lines if not rx.search(l)]
+            if len(kept) == len(lines):
+                die('%s: //@DROPRE MATCHED NOTHING in the owner: %r\n'
+                    'Same rule as //@SUB\'s missing anchor: a directive that '
+                    'quietly does nothing means you score a program you did '
+                    'not write.' % (where, pat))
+            sys.stderr.write('rel_tuprobe: //@DROPRE %r dropped %d owner '
+                             'line(s)\n' % (pat, len(lines) - len(kept)))
+            owner = '\n'.join(kept)
         elif ln.startswith('//@PROTO '):
             pr = ln[len('//@PROTO '):].strip()
             m = re.search(r'\b(\w+)\s*\(', pr)
@@ -369,7 +495,19 @@ def apply_directives(owner, body, where):
                     % (where, anchor))
             owner = owner.replace(anchor, pr, 1)
         elif ln.startswith('//@'):
-            continue
+            # ** AND THE CATCH-ALL NOW REFUSES INSTEAD OF DISCARDING. **
+            # Silently dropping an unrecognised directive is how `//@DROPRE`
+            # cost two runs: the draft was fine, the harness ignored half of
+            # it, and the tool blamed the draft.  Any future directive gets a
+            # loud refusal on its first use instead of a fictional verdict.
+            die('%s: UNKNOWN DIRECTIVE %r.\n'
+                'This tool implements %s.  It used to discard anything else '
+                'silently, which is how `//@DROPRE` produced two rounds of '
+                '"this draft does not compile" against drafts that were '
+                'correct.  Implement it or remove the line -- do not let it '
+                'be ignored.' % (where, ln.strip()[:60],
+                                 ', '.join(d.strip() for d in
+                                           KNOWN_DIRECTIVES)))
         else:
             keep.append(ln)
     return owner, '\n'.join(keep)
@@ -442,11 +580,12 @@ def main():
         return 0
     mod = owner = work = None
     show = 12
+    peep = 'auto'
     rest = []
     i = 0
     while i < len(argv):
         a = argv[i]
-        if a in ('--module', '--owner', '--work', '--show'):
+        if a in ('--module', '--owner', '--work', '--show', '--peephole'):
             if i + 1 >= len(argv):
                 die('%s needs a value' % a)
             v = argv[i + 1]
@@ -457,12 +596,18 @@ def main():
                 owner = v
             elif a == '--work':
                 work = v
+            elif a == '--peephole':
+                if v not in ('auto', 'off'):
+                    die('--peephole takes `auto` (default: restore golden\'s '
+                        'regime) or `off` (score in the deoptimised one)')
+                peep = v
             else:
                 if not v.isdigit():
                     die('--show needs a number, got %r' % v)
                 show = int(v)
             continue
-        if a.startswith(('--module=', '--owner=', '--work=', '--show=')):
+        if a.startswith(('--module=', '--owner=', '--work=', '--show=',
+                         '--peephole=')):
             k, v = a.split('=', 1)
             argv[i:i + 1] = [k, v]
             continue
@@ -608,6 +753,27 @@ def main():
                 die('after //@SUB///@PROTO, %s no longer defines %s'
                     % (owner, label))
             src = ow[:sp[0]] + body.rstrip('\n') + '\n' + ow[sp[1]:]
+        # ** THE PEEPHOLE REGIME, DECIDED AND PRINTED ON EVERY RUN. **
+        # See peephole_regime().  `auto` (the default) restores the regime
+        # golden was compiled in, which is also the regime the module has to
+        # write into the real TU for the conversion to link GOLDEN.  Scoring in
+        # the deoptimised regime is what produced the garbage figures.
+        sp3 = find_def(src, label)
+        regime, rwhy = peephole_regime(src, sp3[0] if sp3 else len(src))
+        injected = False
+        if regime == 'off' and peep != 'off':
+            src = src[:sp3[0]] + '#pragma peephole on\n' + src[sp3[0]:]
+            injected = True
+        print('%-24s PEEPHOLE %s -- %s%s'
+              % (tag, regime.upper(), rwhy,
+                 '\n%-24s   INJECTED `#pragma peephole on` before the body, so '
+                 'this score is in GOLDEN\'S regime.\n%-24s   Your real '
+                 'conversion MUST carry that pragma too or the link will not '
+                 'match (--peephole off to score without it).'
+                 % ('', '') if injected else
+                 '\n%-24s   --peephole off: scoring in the DEOPTIMISED regime. '
+                 'This is NOT golden\'s.' % ''
+                 if regime == 'off' else ''))
         sp2 = find_def(src, label)
         is_stub = sp2 is not None and stub_inc in src[sp2[0]:sp2[1]]
         c = os.path.join(work, tag + '.c')
@@ -615,16 +781,44 @@ def main():
         open(c, 'w', newline='\n').write(src)
         ok, log = compile_one(mwcc, tree, work, c, o)
         if not ok:
-            tail = '\n'.join(l for l in log.strip().splitlines()
-                             if l.strip())[-500:]
-            print('%-24s COMPILE FAILED\n%s' % (tag, tail))
+            # ** RUN 34: THIS KEPT THE LAST 500 CHARACTERS, WHICH ON A
+            # CASCADING C ERROR IS THE LEAST INFORMATIVE END. **
+            #
+            # mwcc's FIRST diagnostic is nearly always the real one; everything
+            # after it is downstream noise.  mini_fight lost two rounds to this
+            # -- the true message was `illegal use of incomplete struct 'struct
+            # Stobj'` and what the tool showed was a phantom redeclaration
+            # further down the cascade -- and mini_golf lost 25 minutes and
+            # published a structural claim it then had to retract.
+            #
+            # Both ends now, with an explicit elision marker.  A tool that
+            # hides evidence must say that it is hiding it.
+            lines = [l for l in log.strip().splitlines() if l.strip()]
+            txt = '\n'.join(lines)
+            if len(txt) <= 1200:
+                shown = txt
+            else:
+                head, tail = txt[:700], txt[-400:]
+                shown = ('%s\n   ... [%d characters elided -- full log at %s] '
+                         '...\n%s' % (head, len(txt) - 1100,
+                                      os.path.join(work, tag + '.log'), tail))
+                try:
+                    open(os.path.join(work, tag + '.log'), 'w',
+                         newline='\n').write(log)
+                except OSError:
+                    pass
+            print('%-24s COMPILE FAILED  (FIRST diagnostic first -- mwcc\'s '
+                  'first error is the real one)\n%s' % (tag, shown))
             rc = rc or 1
             continue
         syms = dict((k, v) for k, v in disasm_text(o))
         order = [k for k, _ in disasm_text(o)]
         if label not in syms:
-            die('%s compiled but its .text has no <%s>.  Symbols: %s'
-                % (c, label, ', '.join(order[:12]) or '(none)'))
+            # ...and the same rule for the symbol list: say what is hidden.
+            die('%s compiled but its .text has no <%s>.  Symbols: %s%s'
+                % (c, label, ', '.join(order[:12]) or '(none)',
+                   '  ... and %d more' % (len(order) - 12)
+                   if len(order) > 12 else ''))
         # Read forward from the label through the rest of .text, exactly as
         # rel_ablind reads n words at the label's address in the .plf: a `.s`
         # ROW can hold more than one function and golden covers the whole row.

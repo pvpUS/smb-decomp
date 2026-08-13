@@ -59,13 +59,38 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rel_census as C           # noqa: E402
 import rel_reach as R            # noqa: E402
+import rel_magicscan as MS       # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# mwcc emits ONE contiguous 16-byte magic block per TU: two doubles whose
-# addresses differ by exactly 8.  Two magics further apart than this can never
-# share a TU, however many emitters are merged into it.
-MAGIC_BLOCK_GAP = 8
+# RUN 34 -- `MAGIC_BLOCK_GAP = 8` USED TO LIVE HERE, AND IT ENCODED A FALSE RULE
+# -----------------------------------------------------------------------------
+# It read: "mwcc emits ONE contiguous 16-byte magic block per TU: two doubles
+# whose addresses differ by exactly 8.  Two magics further apart than this can
+# never share a TU, however many emitters are merged into it."
+#
+# The premise is false.  A TU's `.rodata` is its ENTIRE FP LITERAL POOL, the
+# magics are ordinary members, and other constants sit between them -- sel_ngc
+# reproduced golden's 456-byte separation TO THE BYTE with three compiles.  A
+# separation is a PRICE (that many bytes of pool must move into the merged TU),
+# not a death certificate.
+#
+# ** AND THE "ORDER" REPLACEMENT IS FALSIFIED TOO -- DO NOT PUT ONE BACK. **
+# Run 34 was briefed that "within one TU, signed low / unsigned high, source
+# order inert" survived; it does not.  MEASURED run 34 by three independent
+# probe families (corpus B, 16 fresh objects at these exact flags; corpus C, 7;
+# mini_billiards, 7): the pool is in CODEGEN FIRST-USE order, DECLARATION order
+# is inert, and EITHER orientation is producible.  Encoding an order verdict
+# would have newly killed 16,191 instructions.
+#
+# `rel_magicscan.pair_verdict` is the single copy of what remains, and it
+# returns exactly one DEAD: the SAME kind wanted at two addresses.
+# `rel_magicscan.orientation` reports which magic is low as an OBSERVATION with
+# the recipe attached -- "your merged TU must convert UNSIGNED first" -- and
+# this tool prints it, never acts on it.
+#
+# MEASURED, run 34, all nine modules: dropping the distance test re-opens 9,923
+# instructions across 16 functions and kills nothing.
 
 _LBL_ADDR = re.compile(r'lbl_([0-9A-Fa-f]{8})$')
 
@@ -85,6 +110,20 @@ def _addr_span(labels):
     if len(addrs) < 2:
         return None
     return max(addrs) - min(addrs)
+
+
+def _pool_gap(labels):
+    """Bytes strictly BETWEEN the two magics -- what `pair_verdict` wants.
+
+    `_addr_span` is centre-to-centre (an adjacent pair is 8), `pair_verdict`'s
+    `gap` is edge-to-edge (an adjacent pair is 0).  Feeding the first to the
+    second reports every ADJACENT pair as a POOL-GAP of 8 bytes: a merge that
+    needs nothing extra, priced as if it needed a carve.  Two units, one name.
+    """
+    d = _addr_span(labels)
+    return None if d is None else d - 8
+
+
 EMITTING = ('.rodata', '.data', '.sdata', '.sdata2')
 
 
@@ -207,6 +246,7 @@ def price(tree, mod, max_span):
             host_addr.setdefault(src, set()).add(lbl.lower())
 
     table, _bias, _magics = C.census(tree, stem, mod)
+    mkind = {k.lower(): v for k, v in _magics.items()}
     readers = []
     for t in table:
         if t['cat'] != 'a-BLOCKED':
@@ -251,26 +291,29 @@ def price(tree, mod, max_span):
 
     rows = []
     for fn, insn, own, need, naddr in readers:
-        # ** A READER WANTING TWO MAGICS MORE THAN 8 BYTES APART IS DEAD, AND
-        # NO MERGE CAN FIX IT. **  mwcc emits ONE contiguous 16-byte magic
-        # block per TU -- two doubles, 8 bytes apart.  Merging N emitters into
-        # one TU does not produce two blocks; it produces one.  So a reader
-        # referencing magics 88 or 48 bytes apart cannot be served by any span.
+        # ** WHAT KILLS A TWO-MAGIC READER IS THE ORDER, NOT THE DISTANCE. **
+        # See the note on the removed `MAGIC_BLOCK_GAP` at the top of the file.
+        # `rel_magicscan.pair_verdict` is the one copy of the rule.
         #
         # Run 30 fixed this tool from KIND to ADDRESS and the single-host path
         # is correct.  The HOST-PAIR path was never revisited: it checks that
-        # the pair's addresses are covered between two hosts, which is exactly
-        # the right question for two SEPARATE 8-byte magics and exactly the
-        # wrong one here, because after the merge they are no longer separate.
+        # the pair's addresses are covered between two hosts, which is the right
+        # question for two SEPARATE 8-byte magics and the wrong one here,
+        # because after the merge they are no longer separate.  That path is now
+        # decided below, at `len(host) > 1`, instead of merely warned about.
         #
-        # mini_golf found it in run 31: `lbl_00011A6C` (208) wants
-        # lbl_000266a0 + lbl_000266f8, 0x58 = 88 bytes apart, and
-        # `lbl_0000C33C` (1220) wants two 0x30 = 48 bytes apart.  Both were
-        # priced AVAILABLE, and 11A6C's row advertised "also unlocks ... = 622"
-        # on top -- 1,428 instructions of structurally dead work priced live.
-        gap = _addr_span(naddr)
-        if gap is not None and gap > MAGIC_BLOCK_GAP:
-            rows.append((10 ** 6 + 1, fn, insn, own, need, naddr, gap))
+        # mini_golf found the old defect in run 31: `lbl_00011A6C` (208) wants
+        # lbl_000266a0 + lbl_000266f8 and `lbl_0000C33C` (1220) wants two 0x30
+        # apart.  Both were priced AVAILABLE and both really are dead -- but
+        # because they are U-below-S, not because of the distance.  The tool got
+        # those two right for the wrong reason and got 8,495 instructions wrong
+        # for the same reason.
+        gap = _pool_gap(naddr)
+        vk = [mkind.get(l, '?') for l in sorted(naddr)]
+        verdict, vwhy = MS.pair_verdict(vk, gap)
+        if verdict == 'DUP-DEAD':
+            rows.append((10 ** 6 + 1, fn, insn, own, need, naddr,
+                         (verdict, vwhy, gap)))
             continue
         best = None
         for host, hk, ha in cands:
@@ -328,12 +371,14 @@ def price(tree, mod, max_span):
         want = ','.join(sorted(naddr)) if naddr else ('+'.join(sorted(need))
                                                       or '?')
         if nspan == 10 ** 6 + 1:
-            print('  %-14s %5d  %-24s wants %-22s DEAD: those magics are '
-                  '0x%X apart' % (fn, insn, os.path.basename(own), want, rest))
-            print('        one TU emits ONE contiguous 16-byte magic block '
-                  '(two doubles, 8 bytes apart), so NO merge and NO carve of '
-                  'a\n          single hole can serve both. This needs two '
-                  'separate holes, or the reader split across two TUs.')
+            verdict, vwhy, gap = rest
+            print('  %-14s %5d  %-24s wants %-22s DEAD (%s)'
+                  % (fn, insn, os.path.basename(own), want, verdict))
+            print('        %s.' % vwhy)
+            print('        The separation (0x%X) is NOT the reason and would '
+                  'not have been one: a TU\'s\n        .rodata is its whole FP '
+                  'literal pool. This needs two separate holes, or the reader\n'
+                  '        split across two TUs.' % (gap or 0))
             continue
         if rest is None:
             print('  %-14s %5d  %-24s wants %-22s NO HOST emits that ADDRESS '
@@ -343,8 +388,37 @@ def price(tree, mod, max_span):
         host, nonc, second, free, rodonly = rest
         if max_span and nspan > max_span:
             continue
+        # ** RUN 34: THE TWO-HOST PATH NOW DECIDES INSTEAD OF WARNING. **
+        # Absorbing two hosts into one TU produces ONE literal pool, and that
+        # pool is signed-low / unsigned-high -- SOURCES order does not enter
+        # into it, because source order is INERT (MEASURED run 33, mini_pilot
+        # and test_mode, by compiling both ways).  So the question is not "what
+        # order do the hosts appear in" -- which is what this used to print --
+        # but "what order are the two magics in AT GOLDEN'S ADDRESSES".  If
+        # golden has the unsigned one LOW, the merge cannot produce it, and no
+        # SOURCES rearrangement changes that.
+        #
+        # test_mode is the live case: `_16.c` owns 0xFEC8(u) and `_27.c` owns
+        # 0xFED0(s), and `rel_ledger` printed 840 instructions MERGEABLE off
+        # that pair.  U below S: order-dead -- and it is now caught at the
+        # READER test above, before this path is reached, because the reader
+        # references both addresses.  What is left for this path is the thing
+        # the old warning could never state: THE POOL PRICE, and the
+        # ORIENTATION RECIPE.  Neither is a verdict.
+        #
+        # ** RECOMPUTED HERE, NOT CARRIED. **  This is a SECOND loop, over
+        # `rows`; `vk` and `gap` from the pricing loop above are whatever the
+        # last reader left behind, and using them printed `S -> SINGLE` for a
+        # reader that wants an S+U pair 448 bytes apart.  Caught by reading the
+        # output, which is the only reason to print the derivation next to the
+        # verdict at all.
+        gap = _pool_gap(naddr)
+        vk = [mkind.get(l, '?') for l in sorted(naddr)]
+        pairv, pairwhy = MS.pair_verdict(vk, gap)
         verdict = 'AVAILABLE'
-        if second:
+        if pairv == 'DUP-DEAD':
+            verdict = 'DEAD: %s across the two hosts' % pairv
+        elif second:
             verdict = 'DEAD: 2nd emitter in span'
         elif nonc:
             verdict = 'DEAD: non-.c in span'
@@ -353,14 +427,20 @@ def price(tree, mod, max_span):
               % (fn, insn, os.path.basename(own), want,
                  nspan, hostname, verdict))
         if len(host) > 1:
-            # The absorbed emitters concatenate in SOURCES order, so the merged
-            # TU's pair reads in that order.  Golden's pair has ONE order at
-            # ONE address; if this row's order is the other one, the merge
-            # produces the right bytes in the wrong sequence and will not hash.
-            order = '+'.join(sorted(hosts[h])[0].upper() for h in host)
-            print('        TWO HOSTS   : merged .rodata reads %s in SOURCES '
-                  'order -- CHECK THIS AGAINST GOLDEN\'S PAIR ORDER AND '
-                  'ADDRESS before cutting' % order)
+            print('        TWO HOSTS   : the merged TU emits ONE literal pool, '
+                  'signed low / unsigned high.\n                      Golden '
+                  'has %s at these addresses -> %s.  SOURCES order is INERT '
+                  '(run 33)\n                      and does NOT need checking.'
+                  % ('+'.join(k.upper() for k in vk) or '?', pairv))
+            if pairv == 'POOL-GAP':
+                print('        POOL PRICE  : %d bytes of golden .rodata sit '
+                      'between the two magics. The merged TU\n'
+                      '                      must emit those bytes ITSELF, in '
+                      'golden\'s order, or its second magic\n'
+                      '                      lands 8 bytes after the first and '
+                      'every later address shifts. That is\n'
+                      '                      a CARVE OF THE GAP on top of the '
+                      'merge -- price both before cutting.' % gap)
         if second:
             print('        2nd emitter : %s'
                   % ', '.join(os.path.basename(f) for f in second[:6]))

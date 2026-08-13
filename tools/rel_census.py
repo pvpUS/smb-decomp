@@ -543,11 +543,94 @@ def census(tree, stem, mod):
     return table, (bias, hits, ntgt, runner), magics
 
 
+ASM_ONLY_CATS = ('c-FREE', 'b-POOL')
+
+
+def reachable_rows(tree, mod, table):
+    """Rows convertible TODAY -- derived from the BUILD when there is one.
+
+    -> (rows, how) with how in 'address' / 'asm'.
+
+    THIS LINE WAS THE DEFECT, FOR SEVEN RUNS, AND IT WAS ONE LINE
+    -------------------------------------------------------------
+    It used to read, verbatim:
+
+        reach = [t for t in table if t['cat'] in ('c-FREE', 'b-POOL')]
+
+    i.e. reachability was a property of the ASM ALONE -- "does this function
+    contain an inline `lis rN,0x4330` or a `bctr`" -- with the `.map` never
+    opened.  `a-BLOCKED` only means "needs its object to emit a magic double";
+    it says NOTHING about whether that object ALREADY EMITS ONE.  Deciding that
+    needs the map's TU -> `.rodata` ownership.
+
+    MEASURED, run 34, main tree, all nine modules: the old line under-reported
+    by 16,246 instructions (12,991 against the true 29,237), mini_golf alone by
+    8,057.  Every correction since run 19 has gone the same direction and three
+    of them were then PROVED by converting a function this line called blocked
+    and gating GOLDEN.
+
+    ** AND THE ERROR GREW WHENEVER THE PROJECT MADE PROGRESS. **  A TU merge
+    moves a magic's owner, so it WIDENS the gap: mini_bowling's column was
+    exactly right at the start of run 33 (1,869 == 1,869) and is now wrong by
+    2,678; test_mode's went 333 -> 454 in the same run.  A stale default that
+    decays as the tree improves is worse than a wrong constant, because the
+    figure people remember gets further from the truth every run.
+
+    Printing the pointer ("run rel_reach") was tried in run 27 and did not work
+    -- target lists kept quoting the number on the line above it.  So the
+    DEFAULT is now the corrected derivation and the asm-only figure is behind
+    `--asm-only`, which exists so historical figures stay reproducible.
+
+    WHY IT DELEGATES INSTEAD OF RE-DERIVING
+    ---------------------------------------
+    `rel_ledger.ledger()` already answers the strongest form of the question --
+    "for EVERY magic ADDRESS this function references, is the function's own TU
+    the object that owns that address in golden's `.rodata` layout" -- and
+    `rel_reach` answers the KIND form.  A fourth hand-maintained copy of the map
+    parser is exactly how this project acquires a silent skew between two tools
+    that are supposed to agree (see the note on `TARGETS` above).  So this
+    IMPORTS, as `rel_relscore` imports `rel_tuprobe`.
+
+    The import is deliberately INSIDE the function: `rel_reach` and `rel_ledger`
+    both import this module at their top level, so a module-level import here
+    would be a cycle.  Called from `main()` only, after this module is fully
+    initialised, it is not.  `sys.modules[__name__]` hands them the module
+    object that is already running, so `census()` is not compiled twice.
+
+    Any failure at all falls back to the old asm-only rule and SAYS SO, WITH THE
+    EXCEPTION TEXT.  A census that silently needs a build is worse than one that
+    names the gap -- and `rel_tuprobe` shipped with a selftest and a 45-row gate
+    and still raised on its first run outside a warm copy, because
+    `os.path.commonpath` throws across drives.  A silent `except` here would
+    have turned that class of bug back into the old wrong number with no tell.
+    """
+    old = [t for t in table if t['cat'] in ASM_ONLY_CATS]
+    here = os.path.dirname(os.path.abspath(__file__))
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    try:
+        import rel_ledger as L
+        import rel_reach as R
+        rows = L.ledger(tree, mod, sys.modules[__name__], R)
+    except Exception as e:                  # bad map, no objdump, cross-drive
+        print('      !! REACHABILITY FELL BACK TO THE ASM-ONLY BOUND: %s: %s'
+              % (type(e).__name__, e))
+        return old, 'asm'
+    if not rows:                            # ledger returns None with no .map
+        return old, 'asm'
+    live = {(r['fn'], r['addr']) for r in rows if r['reachable']}
+    return [t for t in table if (t['fn'], t['addr']) in live], 'address'
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('modules', nargs='*')
     ap.add_argument('--tree', help='defaults to this repo')
     ap.add_argument('--detail', action='store_true')
+    ap.add_argument('--asm-only', action='store_true',
+                    help='REACHABLE = the pre-run-34 asm-only lower bound '
+                         '(c-FREE + b-POOL). For reproducing historical '
+                         'figures ONLY -- it under-reported by 16,246 insn.')
     ap.add_argument('--json')
     a = ap.parse_args()
 
@@ -573,7 +656,14 @@ def main():
         for t in table:
             by.setdefault(t['cat'], []).append(t)
         tot = sum(t['insn'] for t in table)
-        reach = [t for t in table if t['cat'] in ('c-FREE', 'b-POOL')]
+        # RUN 34: THE ONE-LINE DEFAULT.  This used to be
+        #     reach = [t for t in table if t['cat'] in ('c-FREE', 'b-POOL')]
+        # which never opened the `.map` and under-reported the nine modules by
+        # 16,246 instructions.  See reachable_rows() for the whole story.
+        if a.asm_only:
+            reach, how = [t for t in table if t['cat'] in ASM_ONLY_CATS], 'asm'
+        else:
+            reach, how = reachable_rows(tree, mod, table)
         unsettled = [t for t in table if not t['settled']]
         ns = sum(1 for v in magics.values() if v == 's')
         nu = sum(1 for v in magics.values() if v == 'u')
@@ -613,36 +703,33 @@ def main():
             if sel:
                 print('      %-11s %3d fns / %6d insn'
                       % (cat, len(sel), sum(s['insn'] for s in sel)))
-        print('      %-11s %3d fns / %6d insn  = %d%% of what remains'
-              % ('REACHABLE', len(reach), sum(s['insn'] for s in reach),
-                 round(100.0 * sum(s['insn'] for s in reach) / tot) if tot else 0))
-        # RUN 27: this column is a LOWER BOUND and it must say so.
-        #
-        # `reach` above is `cat in ('c-FREE','b-POOL')`, i.e. it calls EVERY
-        # a-BLOCKED function unreachable.  But a-BLOCKED only means "does an
-        # inline int->float conversion, so it needs its object to emit a magic
-        # double" -- it says nothing about whether that object ALREADY EMITS
-        # ONE.  Deciding that needs the .map's TU->.rodata ownership, which
-        # this tool does not read; tools/rel_reach.py does, and was written in
-        # run 20 for exactly this reason.
-        #
-        # It stayed a silent under-report for seven runs anyway, because target
-        # lists kept quoting THIS number.  In run 27 two modules re-derived the
-        # correction by hand, independently, and one of them (option's
-        # lbl_00006C54, 719 insn) had been written off as blocked for THREE
-        # runs while carrying a draft at 719 EXACT / 37 in 24.  mini_bowling's
-        # A23C (245) was the other -- and run 19 had already hand-derived that
-        # exact +245, which is recorded in rel_reach's own docstring.
-        #
-        # Printing the pointer costs one line and removes the whole failure
-        # mode.  It deliberately does NOT print a corrected figure: doing that
-        # needs the .map, and a census that silently needs a build is worse
-        # than one that says which tool to run.
-        print('      %-11s a LOWER BOUND -- a-BLOCKED counts as unreachable '
-              'even when the function\'s\n%s own TU already emits the magic it '
-              'needs.  Run tools/rel_reach.py for\n%s the real figure; it '
-              'prints the delta.  Do NOT build a target list on this line.'
-              % ('', ' ' * 18, ' ' * 18))
+        oldn = sum(s['insn'] for s in table if s['cat'] in ASM_ONLY_CATS)
+        newn = sum(s['insn'] for s in reach)
+        print('      %-11s %3d fns / %6d insn  = %d%% of what remains  [%s]'
+              % ('REACHABLE', len(reach), newn,
+                 round(100.0 * newn / tot) if tot else 0,
+                 'BY ADDRESS, from the .map' if how == 'address'
+                 else 'asm-only LOWER BOUND'))
+        # RUN 27 printed a pointer here ("run rel_reach") and left the wrong
+        # number on the line above it.  Target lists went on quoting the wrong
+        # number for six more runs, so run 34 changed the DEFAULT instead.  The
+        # note below now describes whichever derivation actually ran.
+        if how == 'address':
+            if newn != oldn:
+                print('      %-11s the pre-run-34 asm-only rule said %d here '
+                      '(%+d). It called every a-BLOCKED\n%s function '
+                      'unreachable without asking whether its own TU already '
+                      'emits\n%s the magic. `--asm-only` reproduces it; do not '
+                      'quote it.'
+                      % ('', oldn, oldn - newn, ' ' * 18, ' ' * 18))
+        else:
+            print('      %-11s !! ASM-ONLY LOWER BOUND -- no usable %s.map, so '
+                  'a-BLOCKED counts as\n%s unreachable even when the '
+                  'function\'s own TU already emits the magic it\n%s needs. '
+                  'MEASURED run 34: that under-reports the nine modules by '
+                  '16,246\n%s instructions. Build the module, then re-run. Do '
+                  'NOT build a target list on this line.'
+                  % ('', TARGETS[mod], ' ' * 18, ' ' * 18, ' ' * 18))
         if unsettled:
             print('      %-11s %3d fns / %6d insn  -- no prologue and nothing '
                   'settles them. READ THESE;\n%s all 7 of test_mode\'s were real '
@@ -664,12 +751,27 @@ def main():
         gtot['insn'] = gtot.get('insn', 0) + tot
         for cat in ('c-FREE', 'b-POOL', 'a-BLOCKED', 'd-JUMPTBL'):
             gtot[cat] = gtot.get(cat, 0) + sum(s['insn'] for s in by.get(cat, []))
+        gtot['reach'] = gtot.get('reach', 0) + newn
+        gtot['how'] = gtot.get('how', set()) | {how}
 
     print('\nPROJECT TOTAL: %d still-asm functions / %d insn' % (gtot['fns'], gtot['insn']))
     for cat in ('c-FREE', 'b-POOL', 'a-BLOCKED', 'd-JUMPTBL'):
         print('  %-11s %6d insn' % (cat, gtot.get(cat, 0)))
-    print('  %-11s %6d insn  REACHABLE TODAY, no carve and no merge'
-          % ('c+b', gtot.get('c-FREE', 0) + gtot.get('b-POOL', 0)))
+    # The `c+b` line kept its old label -- "REACHABLE TODAY, no carve and no
+    # merge" -- for seven runs while being neither.  It is the asm-only bound,
+    # it is 16,246 low, and it is now labelled as what it is.  It stays because
+    # `c+b` is quoted in eleven runs of stored results and deleting it would
+    # make those unreadable.
+    cb = gtot.get('c-FREE', 0) + gtot.get('b-POOL', 0)
+    print('  %-11s %6d insn  asm-only lower bound (NOT a target list)'
+          % ('c+b', cb))
+    print('  %-11s %6d insn  REACHABLE TODAY -- %s%s'
+          % ('REACHABLE', gtot.get('reach', 0),
+             'by ADDRESS, from the .map' if gtot.get('how') == {'address'}
+             else 'MIXED: at least one module fell back to the asm-only bound'
+             if 'address' in gtot.get('how', set())
+             else 'asm-only; no .map was read',
+             '  (%+d vs c+b)' % (gtot.get('reach', 0) - cb) if cb else ''))
     if a.json:
         json.dump(allrows, open(a.json, 'w'), indent=1)
         print('\nwrote %s' % a.json)

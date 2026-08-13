@@ -293,7 +293,22 @@ def specificity(item):
     if k != 'func':
         return 0                                 # data: never ranked
     n = 0
-    if not re.match(r'^(extern\s+)?void\b', s):
+    # ** RUN 34: THE STAR BINDS TO THE NAME, AND THIS TEST DID NOT KNOW IT. **
+    #
+    # `void *lbl_X(int)` normalises to `void *lbl_X ( int )`, and `^void\b`
+    # MATCHES it -- the word boundary sits between `void` and the space, not
+    # between `void` and the `*`.  So a `void *` return ranked exactly as low as
+    # a bare `void`, the two tied, and the tie-break kept whichever form the
+    # base head happened to carry.  When that was the bare `void`, every call
+    # through the merged head silently lost its pointer type.
+    #
+    # Cost a build in run 33 and again in run 34 (test_mode) -- second run
+    # running.  ⚠ mini_race reported in run 34 that it "did not fire" on its two
+    # spans; that is a NON-OBSERVATION, not a clearance -- neither span had a
+    # `void *` retype in it to fire on.
+    #
+    # `(?!\s*\*)` is the whole fix: a pointer return is a real return type.
+    if not re.match(r'^(extern\s+)?void\b(?!\s*\*)', s):
         n += 2                                   # non-void return type
     m = re.search(r'\(([^)]*)\)', s)
     if m and m.group(1).strip() not in ('', 'void'):
