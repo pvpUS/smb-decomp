@@ -32,6 +32,11 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "mathutil.h"
+#include "stobj.h"
+#include "stcoli.h"
+#include "types.h"
+#include "vibration.h"
 #include "../data/common.nlobj.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
@@ -154,10 +159,8 @@ extern u8 lbl_10018FD4[];
 extern u8 lbl_10019040[];
 extern u8 backgroundInfo[];
 extern u8 g_bgLightInfo[];
-extern u8 g_stobjInfo[];
 extern u8 infoWork[];
 extern u8 lbl_801EED98[];
-extern u8 lbl_8028C0B0[];
 extern u8 pauseMenuState[];
 extern u8 polyDisp[];
 extern u8 worldInfo[];
@@ -172,24 +175,14 @@ extern void func_8006AD3C();
 extern void func_8006B3E8();
 extern void item_create();
 extern void item_replace_type_funcs();
-extern void mathutil_atan2();
-extern void mathutil_mtxA_from_rotate_y();
 extern void mathutil_mtxA_from_translate();
 extern void mathutil_mtxA_pop();
 extern void mathutil_mtxA_rotate_y();
 extern void mathutil_mtxA_tf_point();
 extern void mathutil_mtxA_tf_vec();
-extern void mathutil_mtxA_tf_vec_xyz();
 extern void mathutil_mtxA_to_mtx();
 extern void mathutil_mtxA_to_quat();
-extern void mathutil_mtxA_translate_xyz();
-extern void mathutil_sin();
-extern void mathutil_tan();
-extern void mathutil_vec_normalize_len();
-extern void mathutil_vec_set_len();
 extern void mini_commend_free_data();
-extern void spawn_stobj();
-extern void u_math_unk15();
 extern void ape_skel_anim_main();
 extern void avdisp_draw_model_culled_sort_all();
 extern void avdisp_draw_model_culled_sort_translucent();
@@ -201,14 +194,12 @@ extern void func_8009D8A4();
 extern void lens_flare_draw();
 extern void mathutil_mtxA_from_identity();
 extern void mathutil_mtxA_from_quat();
-extern void mathutil_mtxA_from_rotate_x();
 extern void mathutil_mtxA_push();
 extern void mathutil_mtxA_rigid_inv_tf_vec();
 extern void mathutil_mtxA_rotate_x();
 extern void mathutil_mtxA_rotate_z();
 extern void mathutil_mtxA_to_euler();
 extern void mathutil_mtxA_translate();
-extern void mathutil_sqrt();
 extern void mathutil_vec_to_euler();
 extern void mathutil_vec_to_euler_xy();
 extern void new_ape_stat_motion();
@@ -222,15 +213,12 @@ extern void avdisp_set_bound_sphere_scale();
 extern void avdisp_set_post_add_color();
 extern void avdisp_set_z_mode();
 extern void func_8009DB40();
-extern void mathutil_atan();
 extern void mathutil_mtxA_from_mtx();
 extern void mathutil_mtxA_from_mtxB_translate();
 extern void mathutil_mtxA_mult_left();
 extern void mathutil_mtxA_normalize_basis();
 extern void mathutil_mtxA_rigid_inv_tf_point();
-extern void mathutil_mtxA_scale_s();
 extern void ord_tbl_draw_nodes();
-extern void raycast_stage_down();
 extern void set_ape_model_lod();
 extern void thread_create();
 extern void unref_func_80039320();
@@ -239,12 +227,9 @@ extern void GXSetTevAlphaOp_cached();
 extern void ape_destroy();
 extern void avdisp_draw_model_unculled_sort_none();
 extern void mathutil_mtxA_from_mtxB();
-extern void mathutil_mtxA_from_translate_xyz();
 extern void mathutil_mtxA_rigid_inv_tf_tl();
 extern void mathutil_mtxA_sq_from_identity();
-extern void mathutil_mtxA_tf_point_xyz();
 extern void mathutil_mtxA_translate_neg();
-extern void mathutil_vec_dot_normalized_safe();
 extern void rend_efc_mirror_enable();
 extern void stobj_draw();
 extern void u_ball_init_1();
@@ -252,14 +237,12 @@ extern void GXSetTevAlphaIn_cached();
 extern void avdisp_set_alpha();
 extern void background_draw();
 extern void light_init();
-extern void mathutil_mtxA_from_mtxB_translate_xyz();
 extern void set_bg_ambient();
 extern void u_avdisp_set_some_func_1();
 extern void GXSetTevColorOp_cached();
 extern void alloc_pool_light();
 extern void avdisp_draw_model_culled_sort_none();
 extern void func_8009CD5C();
-extern void mathutil_mtxA_scale_xyz();
 extern void ord_tbl_set_depth_offset();
 extern void GXSetTevColorIn_cached();
 extern void draw_monkey();

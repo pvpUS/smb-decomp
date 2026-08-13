@@ -4,8 +4,8 @@
 # .rodata is zero-size and lbl_0000FED0 lands at the start of that hole.
 # asm/nonmatchings/test_mode/lbl_000010C4.s still loads from it.
 .include "macros.inc"
-.global lbl_0000FED0
 
+# RUN 35: lbl_0000FED0 is now an anchor `.set` in asm/test_mode.s;
+# this segment contributes nothing to any section and is inert.
 .section .rodata
 .balign 8
-lbl_0000FED0:

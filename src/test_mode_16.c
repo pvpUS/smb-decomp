@@ -167,7 +167,7 @@ extern void func_800A722C();
 extern void func_800A7314();
 extern void func_800A7370();
 extern void func_800A7440();
-extern void get_font_bitmap_id();
+extern int get_font_bitmap_id();
 extern void item_draw();
 extern void load_model();
 extern void mot_ape_8008BAA8();
@@ -179,7 +179,7 @@ extern void set_shape_flags_in_model();
 extern void stobj_draw();
 extern void u_draw_ball_shadow();
 extern void u_load_character_graphics();
-extern void u_make_ape_sub();
+extern void *u_make_ape_sub();
 
 // Forward declarations so mwcc accepts `<fn>@ha/@l` and cross-function
 // branches before each function is defined below.
@@ -197,7 +197,7 @@ void lbl_0000215C(void);
 void lbl_00002760(void);
 void lbl_000031B8(void);
 void lbl_00003A4C(void);
-void lbl_00003C34(void);
+void lbl_00003C34(struct Ape *ape, int status);
 void lbl_00003D94(void);
 void lbl_000040B4(void);
 void lbl_0000502C(void);
@@ -277,6 +277,38 @@ void lbl_0000F940(void);
 void lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+static void lbl_000024FC(void);
+static void lbl_0000253C(void);
+static void lbl_0000255C(void);
+static void lbl_00002590(void);
+static void lbl_000025B0(void);
+static void lbl_00002664(void);
+static void lbl_00002684(void);
+static void lbl_00002790(void);
+static void lbl_00002A30(void);
+struct TestDipEntry
+{
+    /*0x00*/ int type;
+    /*0x04*/ int unk4;
+    /*0x08*/ void *ptr;
+};
+static void lbl_000037B0(void);
+struct TestFontEntry
+{
+    s32 unk0;
+    char *unk4;
+};
+struct TestFontGroup
+{
+    struct TestFontEntry *entries;
+    char *title;
+    s32 unk8;
+};
+
+#define REPEAT_LOCAL(btn) (     ((rep & (btn)) || (analogInputs[0].repeat & (btn)))  || (         ((controllerInfo[0].held.button & (btn)) || (analogInputs[0].held & (btn)))      && (analogInputs[0].held & ANALOG_TRIGGER_RIGHT)     ) )
+
 #pragma force_active on
 void lbl_0000215C(void)
 {
@@ -340,4 +372,665 @@ void lbl_0000215C(void)
     GXSetZMode_cached(1, 1, 1);
     reset_camera_perspective();
 }
+static void lbl_000024FC(void)
+{
+    lbl_00009338();
+    event_finish_all();
+    event_start(15);
+    camera_set_state_all(2);
+    gameSubmodeRequest = 0x6A;
+}
+static void lbl_0000253C(void)
+{
+    lbl_00009560();
+}
+static void lbl_0000255C(void)
+{
+    lbl_0000B364();
+    camera_set_state_all(2);
+    gameSubmodeRequest = 0x6C;
+}
+static void lbl_00002590(void)
+{
+    lbl_0000B4A0();
+}
+static void lbl_000025B0(void)
+{
+    lbl_0000BEB8();
+    event_finish_all();
+    func_80044920();
+    load_stage(loadingStageIdRequest);
+    event_start(1);
+    event_start(2);
+    event_start(3);
+    event_start(4);
+    event_start(9);
+    event_start(5);
+    event_start(7);
+    event_start(15);
+    event_start(16);
+    event_start(18);
+    event_start(13);
+    event_start(20);
+    event_start(19);
+    camera_set_state_all(2);
+    gameSubmodeRequest = 0x6E;
+}
+static void lbl_00002664(void)
+{
+    lbl_0000BFE8();
+}
+#pragma opt_propagation off
+struct TestObjListEntry
+{
+    /*0x00*/ s32 unk0;
+    /*0x04*/ char *unk4;
+    /*0x08*/ char *unk8;
+};
+
+static void lbl_00002684(void)
+{
+    u8 *p = lbl_10000000;
+    struct TPL **tpl = (struct TPL **)(p + 0x78);
+    u32 *idx = (u32 *)(p + 0x70);
+    struct GMA **gma;
+
+    *(int *)(p + 0x6C) = 0;
+    *(int *)(p + 0x70) = 0;
+    if (*tpl != NULL)
+    {
+        bitmap_free_tpl(*tpl);
+        *tpl = NULL;
+    }
+    gma = (struct GMA **)(p + 0x74);
+    if (*gma != NULL)
+    {
+        OSFreeToHeap(__OSCurrHeap, *gma);
+        *gma = NULL;
+    }
+    nlObjModelListLoad(gma, tpl,
+                       ((struct TestObjListEntry *)lbl_00012330)[*idx].unk4,
+                       ((struct TestObjListEntry *)lbl_00012330)[*idx].unk8);
+    event_finish_all();
+    event_start(15);
+    camera_set_state_all(2);
+    gameSubmodeRequest = 0x70;
+}
+
+#pragma opt_propagation reset
+void lbl_00002760(void)
+{
+    u8 *p = lbl_1000006C;
+
+    nlObjModelListFree(p + 8, p + 0xC);
+}
+static asm void lbl_00002790(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/test_mode/lbl_00002790.s"
+}
+#pragma peephole on
+void lbl_00002990(void)
+{
+    u8 *k = lbl_0000FE78;
+    u8 *w = lbl_10000000;
+
+    if (debugFlags & 0xA)
+        return;
+    *(int *)(w + 0x7C) = 0;
+    *(int *)(w + 0x80) = 0;
+    *(int *)(w + 0x84) = 1;
+    w[0x88] = 0xFF;
+    w[0x89] = 0xFF;
+    w[0x8A] = 0xFF;
+    w[0x8B] = 0;
+    w[0x8C] = 0;
+    w[0x8D] = 0;
+    *(u16 *)(w + 0x8E) = 0;
+    *(f32 *)(w + 0x90) = *(f32 *)(k + 0xB8);
+    *(f32 *)(w + 0x94) = *(f32 *)(k + 0xB8);
+    *(f32 *)(w + 0x98) = *(f32 *)(k + 0xB8);
+    *(f32 *)(w + 0x9C) = *(f32 *)(k + 0xBC);
+    *(f32 *)(w + 0xA0) = *(f32 *)(w + 0xA4) = *(f32 *)(k + 0x60);
+    *(f32 *)(w + 0xA8) = *(f32 *)(w + 0xAC) = *(f32 *)(k + 0xB8);
+    *(int *)(w + 0xB0) = 0;
+    gameSubmodeRequest = 0x72;
+}
+static void lbl_00002A30(void)
+{
+    u8 *p = lbl_10000000;
+    u8 *k = lbl_0000FE78;
+    u8 *w = lbl_000102B0;
+    struct TestDipEntry *e;
+    s32 *ip;
+    s32 n;
+    u16 rep;
+
+    if (debugFlags & 0xA)
+        return;
+    if (controllerInfo[0].pressed.button & PAD_BUTTON_A)
+        *(s32 *)(p + 0xB0) ^= 1;
+    rep = controllerInfo[0].repeat.button;
+    if (REPEAT_LOCAL(PAD_BUTTON_UP))
+    {
+        ip = (s32 *)(p + 0x84);
+        if (--*ip < 0)
+        {
+            n = 0;
+            while (((struct TestDipEntry *)(w + 0x2894))[n].type != 0)
+                n++;
+            *ip = n - 1;
+        }
+    }
+    if (REPEAT_LOCAL(PAD_BUTTON_DOWN))
+    {
+        ip = (s32 *)(p + 0x84);
+        *ip += 1;
+        if (((struct TestDipEntry *)(w + 0x2894))[*ip].type == 0)
+            *ip = 0;
+    }
+    e = &((struct TestDipEntry *)(w + 0x2894))[*(s32 *)(p + 0x84)];
+    switch (e->type)
+    {
+    case 0:
+        break;
+    case 1:
+    {
+        s32 v = *(s32 *)e->ptr;
+
+        if (REPEAT_LOCAL(PAD_BUTTON_LEFT))
+        {
+            if (--v < 0)
+                v = 13;
+        }
+        if (REPEAT_LOCAL(PAD_BUTTON_RIGHT))
+        {
+            if (++v >= 14)
+                v = 0;
+        }
+        if (v != *(s32 *)(p + 0x7C))
+        {
+            if (*(s32 *)(p + 0x7C) != 0)
+                call_bitmap_free_group(*(s32 *)(p + 0x7C));
+            call_bitmap_load_group(v);
+            *(s32 *)e->ptr = v;
+            *(s32 *)(p + 0x80) = 0;
+        }
+        break;
+    }
+    case 2:
+    {
+        struct BitmapGroup *g = &bitmapGroups[*(s32 *)(p + 0x7C)];
+        s32 v = *(s32 *)e->ptr;
+
+        if (REPEAT_LOCAL(PAD_BUTTON_LEFT))
+        {
+            if (--v < 0)
+                v = (s16)(g->tpl->numTextures - 1);
+        }
+        if (REPEAT_LOCAL(PAD_BUTTON_RIGHT))
+        {
+            if (++v > g->tpl->numTextures - 1)
+                v = 0;
+        }
+        *(s32 *)e->ptr = v;
+        break;
+    }
+    case 4:
+    {
+        s32 step = (controllerInfo[0].held.button & PAD_TRIGGER_R) ? 10 : 1;
+        s32 v = *(u8 *)e->ptr;
+
+        if (REPEAT_LOCAL(PAD_BUTTON_RIGHT))
+            v += step;
+        if (REPEAT_LOCAL(PAD_BUTTON_LEFT))
+            v -= step;
+        *(u8 *)e->ptr = v < 0 ? 0 : (v > 255 ? 255 : v);
+        break;
+    }
+    case 5:
+    {
+        s32 v = *(s16 *)e->ptr;
+
+        if (REPEAT_LOCAL(PAD_BUTTON_RIGHT))
+            v += 128;
+        if (REPEAT_LOCAL(PAD_BUTTON_LEFT))
+            v -= 128;
+        *(s16 *)e->ptr = v;
+        break;
+    }
+    case 6:
+    {
+        f32 v = *(f32 *)e->ptr;
+
+        if (REPEAT_LOCAL(PAD_BUTTON_RIGHT))
+            v += *(f64 *)(k + 0xC0);
+        if (REPEAT_LOCAL(PAD_BUTTON_LEFT))
+            v -= *(f64 *)(k + 0xC0);
+        *(f32 *)e->ptr = v < *(f64 *)(k + 0xC8)
+                 ? *(f64 *)(k + 0xC8)
+                 : (v > *(f64 *)(k + 0xD0) ? *(f64 *)(k + 0xD0) : v);
+        break;
+    }
+    case 7:
+    {
+        f32 v = *(f32 *)e->ptr;
+
+        if (REPEAT_LOCAL(PAD_BUTTON_RIGHT))
+            v += *(f64 *)(k + 0xD8);
+        if (REPEAT_LOCAL(PAD_BUTTON_LEFT))
+            v -= *(f64 *)(k + 0xD8);
+        *(f32 *)e->ptr = v;
+        break;
+    }
+    case 8:
+    {
+        f32 v = *(f32 *)e->ptr;
+
+        if (REPEAT_LOCAL(PAD_BUTTON_RIGHT))
+            v += *(f32 *)(p + 0x9C);
+        if (REPEAT_LOCAL(PAD_BUTTON_LEFT))
+            v -= *(f32 *)(p + 0x9C);
+        *(f32 *)e->ptr = v;
+        break;
+    }
+    }
+}
+struct TestBmEntry
+{
+    /*0x0*/ s32 kind;
+    /*0x4*/ char *fmt;
+    /*0x8*/ void *val;
+};
+
+struct TestBmTile
+{
+    /*0x0*/ s32 x;
+    /*0x4*/ s32 y;
+};
+
+void lbl_000031B8(void)
+{
+    f32 *k = (f32 *)lbl_0000FE78;
+    u8 *p = lbl_10000000;
+    u8 *d = lbl_000102B0;
+    struct BitmapGroup *g = &bitmapGroups[*(int *)(p + 0x7C)];
+    u8 *q;
+    struct TPLTextureHeader *th = &g->tpl->texHeaders[*(int *)(p + 0x80)];
+    struct TestBmEntry *e;
+    int i;
+    int found = 0;
+    int id;
+    int *t;
+    int w;
+    int h;
+    f32 u0;
+    f32 v0;
+    f32 u1;
+    f32 v1;
+    f32 tr;
+    NLsprarg params;
+
+    q = p + 0x80;
+    if (!(controllerInfo[0].held.button & PAD_BUTTON_B))
+    {
+        window_set_cursor_pos(3, 5);
+        for (i = 0, e = (struct TestBmEntry *)(d + 0x2894); e->kind != 0; i++, e++)
+        {
+            if (i == *(int *)(p + 0x84))
+            {
+                window_move_cursor(-2, 0);
+                window_set_text_color(1);
+                u_debug_print((char *)(d + 0x2988));
+                window_set_text_color(0);
+            }
+            switch (e->kind)
+            {
+            case 1:
+                window_printf_2(e->fmt, g->name);
+                break;
+            case 2:
+                window_printf_2(e->fmt, *(int *)e->val,
+                                bitmapNames[*(int *)(p + 0x7C)][*(int *)e->val],
+                                th->width, th->height);
+                break;
+            case 4:
+                window_printf_2(e->fmt, *(u8 *)e->val);
+                break;
+            case 5:
+                window_printf_2(e->fmt, *(s16 *)e->val);
+                break;
+            case 6:
+            case 7:
+            case 8:
+                window_printf_2(e->fmt, *(f32 *)e->val);
+                break;
+            }
+        }
+    }
+    if (*(int *)(p + 0xB0) != 0)
+    {
+        id = *(int *)q | (*(int *)(p + 0x7C) << 8);
+        for (t = (int *)(d + 0x2984); *(int *)t != -1; t++)
+        {
+            if (*t == id)
+            {
+                found = 1;
+                break;
+            }
+        }
+    }
+    if (found)
+    {
+        params.z = k[27];
+        params.zm_x = k[46];
+        params.zm_y = k[46];
+        params.u0 = k[24];
+        params.v0 = k[24];
+        params.u1 = k[46];
+        params.v1 = k[46];
+        params.ang = 0;
+        tr = *(f32 *)(p + 0x90);
+        params.trnsl = tr;
+        params.listType = -1;
+        params.attr = 0x2100A;
+        params.base_color = ((int)(k[56] * tr) << 24) |
+                            (p[0x88] * 0x10000) | (p[0x89] * 0x100) | p[0x8A];
+        params.offset_color = (p[0x8B] << 16) | (p[0x8C] << 8) | p[0x8D];
+        for (i = 0; i < 8; i++)
+        {
+            params.sprno = (*(int *)(p + 0x7C) << 8) | (*(int *)q + i);
+            params.x = ((struct TestBmTile *)spriteTileOffsets)[i].x + 0x140;
+            params.y = ((struct TestBmTile *)spriteTileOffsets)[i].y + 0xF0;
+            nlSprPut(&params);
+        }
+    }
+    else if (th->width != 0 && th->height != 0)
+    {
+        params.sprno = *(int *)q | (*(int *)(p + 0x7C) << 8);
+        params.x = k[57];
+        params.y = k[58];
+        params.z = k[27];
+        u1 = *(f32 *)(p + 0xA8);
+        u0 = *(f32 *)(p + 0xA0);
+        params.zm_x = *(f32 *)(p + 0x94) * (u1 - u0);
+        v1 = *(f32 *)(p + 0xAC);
+        v0 = *(f32 *)(p + 0xA4);
+        params.zm_y = *(f32 *)(p + 0x98) * (v1 - v0);
+        params.u0 = u0;
+        params.v0 = v0;
+        params.u1 = u1;
+        params.v1 = v1;
+        params.ang = *(s16 *)(p + 0x8E);
+        tr = *(f32 *)(p + 0x90);
+        params.trnsl = tr;
+        params.listType = -1;
+        params.attr = 0x2100A;
+        params.base_color = ((int)(k[56] * tr) << 24) |
+                            (p[0x88] * 0x10000) | (p[0x89] * 0x100) | p[0x8A];
+        params.offset_color = (p[0x8B] << 16) | (p[0x8C] << 8) | p[0x8D];
+        nlSprPut(&params);
+    }
+    if (!(controllerInfo[0].held.button & PAD_BUTTON_B))
+    {
+        w = th->width;
+        h = th->height;
+        reset_text_draw_settings();
+        set_text_pos(params.x - w / 2 - k[59], params.y - h / 2 - *(f32 *)((u8 *)k + 0xEC));
+        sprite_puts((char *)(d + 0x298C));
+        set_text_pos(params.x + w / 2, params.y - h / 2 - k[59]);
+        sprite_puts((char *)(d + 0x298C));
+        set_text_pos(params.x - w / 2 - k[59], params.y + h / 2);
+        sprite_puts((char *)(d + 0x298C));
+        set_text_pos(params.x + w / 2, params.y + h / 2);
+        sprite_puts((char *)(d + 0x298C));
+    }
+}
+#pragma peephole on
+void lbl_00003774(void)
+{
+    if (debugFlags & 0xA)
+        return;
+    *(int *)lbl_100000B4 = 0;
+    *(int *)lbl_100000B8 = 0;
+    gameSubmodeRequest = 0x74;
+}
+struct TestBmGroup
+{
+    s32 id;
+    s32 pad[2];
+};
+
+static void lbl_000037B0(void)
+{
+    u8 *p = lbl_10000000;
+    u8 *d = lbl_000102B0;
+    struct TestFontEntry *e;
+    int grp;
+    int ent;
+
+    if (debugFlags & 0xA)
+        return;
+    grp = *(int *)(p + 0xB8);
+    if (REPEAT_WITH_R_ACCEL(0, PAD_BUTTON_RIGHT))
+    {
+        struct TestBmGroup *bg = (struct TestBmGroup *)(d + 0x2C70);
+        struct TestBmGroup *q;
+
+        q = bg;
+        q += grp;
+        if (q->id != 0)
+            call_bitmap_free_group(q->id);
+        grp++;
+        if (((struct TestFontGroup *)(d + 0x2C68))[grp].entries == NULL)
+            grp = 0;
+        q = bg;
+        q += grp;
+        if (q->id != 0)
+            call_bitmap_load_group(q->id);
+    }
+    if (REPEAT_WITH_R_ACCEL(0, PAD_BUTTON_LEFT))
+    {
+        struct TestBmGroup *bg = (struct TestBmGroup *)(d + 0x2C70);
+        struct TestBmGroup *q;
+
+        q = bg;
+        q += grp;
+        if (q->id != 0)
+            call_bitmap_free_group(q->id);
+        grp--;
+        if (grp < 0)
+        {
+            grp = 0;
+            while (((struct TestFontGroup *)(d + 0x2C68))[grp].entries != NULL)
+                grp++;
+            grp--;
+        }
+        q = bg;
+        q += grp;
+        if (q->id != 0)
+            call_bitmap_load_group(q->id);
+    }
+    if (grp != *(int *)(p + 0xB8))
+    {
+        *(int *)(p + 0xB4) = 0;
+        *(int *)(p + 0xB8) = grp;
+    }
+    ent = *(int *)(p + 0xB4);
+    e = ((struct TestFontGroup *)(d + 0x2C68))[*(int *)(p + 0xB8)].entries;
+    if (REPEAT_WITH_R_ACCEL(0, PAD_BUTTON_DOWN))
+    {
+        ent++;
+        if (e[ent].unk0 == -1)
+            ent = 0;
+    }
+    if (REPEAT_WITH_R_ACCEL(0, PAD_BUTTON_UP))
+    {
+        ent--;
+        if (ent < 0)
+        {
+            ent = 0;
+            while (e[ent].unk0 != -1)
+                ent++;
+            ent--;
+        }
+    }
+    *(int *)(p + 0xB4) = ent;
+}
+void lbl_00003A4C(void)
+{
+    f32 *k = (f32 *)lbl_0000FE78;
+    u8 *p = lbl_10000000;
+    u8 *d = lbl_000102B0;
+    struct TestFontEntry *f;
+    struct TestFontEntry *e;
+    int i;
+
+    window_set_cursor_pos(2, 2);
+    u_debug_print(((struct TestFontGroup *)(d + 0x2C68))[*(int *)(p + 0xB8)].title);
+    reset_text_draw_settings();
+    e = ((struct TestFontGroup *)(d + 0x2C68))[*(int *)(p + 0xB8)].entries;
+    for (i = 0; e->unk0 >= 0; e++, i++)
+    {
+        if (i == *(int *)(p + 0xB4))
+        {
+            window_set_text_color(2);
+            window_set_cursor_pos(1, i + 4);
+            window_printf_2((char *)(d + 0x2CBC), fontStrArray[e->unk0]);
+            window_set_text_color(0);
+        }
+        else
+        {
+            window_set_cursor_pos(1, i + 4);
+            window_printf_2((char *)(d + 0x2CC4), fontStrArray[e->unk0]);
+        }
+    }
+    f = &((struct TestFontGroup *)(d + 0x2C68))[*(int *)(p + 0xB8)].entries[*(int *)(p + 0xB4)];
+    set_text_font(f->unk0);
+    set_text_pos(k[60], k[61]);
+    sprite_puts(f->unk4);
+    if (!(controllerInfo[0].held.button & PAD_BUTTON_B))
+    {
+        NLsprarg params;
+
+        params.sprno = get_font_bitmap_id(((struct TestFontGroup *)(d + 0x2C68))[*(int *)(p + 0xB8)].entries[*(int *)(p + 0xB4)].unk0);
+        params.x = k[62];
+        params.y = k[63];
+        params.z = k[46];
+        params.zm_x = k[46];
+        params.zm_y = k[46];
+        params.u0 = k[24];
+        params.v0 = k[24];
+        params.u1 = k[46];
+        params.v1 = k[46];
+        params.ang = 0;
+        params.trnsl = k[46];
+        params.listType = -1;
+        params.attr = 10;
+        params.base_color = -1;
+        params.offset_color = 0;
+        nlSprPut(&params);
+    }
+}
+void lbl_00003C34(struct Ape *ape, int status)
+{
+    u8 *p = lbl_10000000;
+    u8 *q;
+    float s;
+    s32 t;
+
+    t = (status == 3);
+    t = t | (*(s32 *)(p + 0x150) == 1);
+    t = t | (gameMode != 3);
+    t = t | (gameSubmode != 0x77 && gameSubmode != 0x78);
+    if (t)
+    {
+        ape_destroy(ape);
+        if (status != 3)
+            thread_exit();
+        return;
+    }
+    if (debugFlags & 0xA)
+        return;
+    if (ape->unk74 != 0)
+    {
+        s = *(f32 *)lbl_0000FF78;
+        q = ((u8 **)(p + 0xB8))[ape->unk74];
+        if (ape->unk74 & 1)
+            s = s * *(f32 *)lbl_0000FF00;
+        ape->pos = *(Vec *)(q + 0x30);
+        ape->pos.x = ape->pos.x + s * ape->unk74;
+        ape->unk60 = *(Quaternion *)(q + 0x60);
+    }
+    ape->unk0->u_someDeltaTime = *(f32 *)(p + 0x140);
+    ape_skel_anim_main(ape);
+}
+#pragma peephole on
+#define AP(i) (*(u8 **)((q = p + (i) * 4) + 0xBC))
+#define TH(i) (*(u8 **)((q = p + (i) * 4) + 0xFC))
+#define EL(i) (*(u8 **)&((u8 (*)[4])(p + 0xBC))[i][0])
+#pragma peephole on
+void lbl_00003D94(void)
+{
+    u8 *k = lbl_0000FE78;
+    u8 *p = lbl_10000000;
+    s32 c;
+    u8 *q;
+    u8 *r;
+    Vec v3;
+    Vec v2;
+    Vec v1;
+    Vec v0;
+
+    if (*(s32 *)(p + 0x13C) >= 0x10)
+        return;
+    u_load_character_graphics(*(s32 *)(p + 0x158), 0);
+    if (*(s32 *)(p + 0x154) < 0)
+        *(s32 *)(p + 0x154) = motsklFileData->skeletonsCount - 1;
+    else if (*(u32 *)(p + 0x154) >= motsklFileData->skeletonsCount)
+        *(s32 *)(p + 0x154) = 0;
+    {
+        struct SkeletonFileData *m = motsklFileData;
+        void *sk = m->skeletons[*(s32 *)(p + 0x154)].name;
+
+        if (*(s32 *)(p + 0x158) < 0)
+            *(s32 *)(p + 0x158) = m->unkC - 1;
+        else if (*(u32 *)(p + 0x158) >= m->unkC)
+            *(s32 *)(p + 0x158) = 0;
+        AP(*(s32 *)(p + 0x13C)) = (u8 *)u_make_ape_sub(sk,
+            *(void **)((u8 *)m->unk8 + *(s32 *)(p + 0x158) * 0x1C));
+    }
+    *(s32 *)(*(u8 **)(q + 0xBC) + 0x10) = *(s32 *)(p + 0x158);
+    *(s32 *)(AP(*(s32 *)(p + 0x13C)) + 0x74) = *(s32 *)(p + 0x13C);
+    TH(*(s32 *)(p + 0x13C)) = (u8 *)thread_create((ThreadCallback)lbl_00003C34,
+                              (struct Ape *)AP(*(s32 *)(p + 0x13C)), 5);
+    *(Vec *)(p + 0x144) = v3 = *(Vec *)(k + 0x104);
+    mathutil_mtxA_from_identity();
+    mathutil_mtxA_rotate_y(0x4000);
+    mathutil_mtxA_to_quat((Quaternion *)(AP(*(s32 *)(p + 0x13C)) + 0x60));
+    c = *(s32 *)(p + 0x13C);
+    if (c != 0)
+    {
+        float s = *(f32 *)(k + 0x100);
+
+        *(u16 *)(*(u8 **)AP(c) + 0x38) =
+            *(u16 *)(*(u8 **)(((u8 **)(r = p + 0xB8))[c]) + 0x38) + 1;
+        if (*(s32 *)(p + 0x13C) & 1)
+            s = s * *(f32 *)(k + 0x88);
+        *(Vec *)(AP(*(s32 *)(p + 0x13C)) + 0x30) =
+            *(Vec *)((((u8 **)r)[*(s32 *)(p + 0x13C)]) + 0x30);
+        *(f32 *)(AP(*(s32 *)(p + 0x13C)) + 0x30) =
+            *(f32 *)(AP(*(s32 *)(p + 0x13C)) + 0x30) +
+            s * *(s32 *)(p + 0x13C);
+    }
+    else if (*(s32 *)(p + 0x158) == 3)
+        *(Vec *)(EL(c) + 0x30) = v2 = *(Vec *)(k + 0x110);
+    else
+        *(Vec *)(EL(c) + 0x30) = v1 = *(Vec *)(k + 0x11C);
+    func_8008BFD8(AP(*(s32 *)(p + 0x13C)), lbl_00012F7C, 8);
+    *(s32 *)(p + 0x13C) = *(s32 *)(p + 0x13C) + 1;
+}
+#undef AP
+#undef TH
+#undef EL
 #pragma force_active reset

@@ -725,10 +725,194 @@ void lbl_000029A8(void)
     *(s32 *)p = 0x80;
     *(s32 *)(p + 4) = 0x60;
 }
-asm void lbl_00002DE0(void)
+// lbl_00002DE0 (0x2DE0): result-of-roll tick.  Advances the cut-scene timer and
+// drives the two camera pans, then -- once the player presses A (or the timer
+// runs out) -- rescores the current sheet, decides whether the frame is over
+// ("won"), and either advances the frame or the ball, finally resetting every
+// ball/world/camera for the next roll.
+//
+// NOTE the `- 1` placement in the sheet->idx line.  mwcc 1.1 reassociates
+// `ball + (frame-1)*2 - 1` into `ball + ((frame-1)*2 - 1)`; golden's tree is
+// `(ball - 1) + (frame-1)*2`.  Nine other spellings (explicit parens, reversed
+// addends, `<<1`, and four temp-local forms) all give the reassociated shape at
+// ALIGNED 3 in 2.  This one is 0 in 0.
+#pragma peephole on
+void lbl_00002DE0(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00002DE0.s"
+    u8 *st = lbl_10000000;
+    u8 *cfg = lbl_0000F020;
+    u8 *p = lbl_00014F20;
+    struct BowlScore *sheet;
+    s8 won;
+    int tm;
+    f32 v;
+    int go;
+
+    if (!(currentBall->flags & 0x1000))
+    {
+        if (*(f64 *)(cfg + 0x1f38) == *(s32 *)st)
+            u_play_sound_0(0xc);
+    }
+    if (*(s8 *)((st + modeCtrl.currPlayer * 0x4c) + 0x13) == 1 ||
+        (*(s8 *)((st + modeCtrl.currPlayer * 0x4c) + 0x13) == 2 &&
+         (s8)*(u8 *)((st + modeCtrl.currPlayer * 0x4c) + 0x12) == 10))
+    {
+        if (stageInfo.unk0 < 0x1770)
+            stageInfo.unk0 += 0x14;
+        if (stageInfo.unk0 == 0xbb8 && *(u16 *)(st + 0x13c) == 0)
+            lbl_00004D10();
+        if (stageInfo.unk0 > 0x528 && stageInfo.unk0 < 0x12c0)
+        {
+            if (*(u16 *)(st + 0x13c) == 0 && stageInfo.unk0 < 0xe10)
+                lbl_0000B0AC(animGroups[1].pos.y - *(f64 *)(cfg + 0x1f40)
+                             + (0xe10 - stageInfo.unk0) / *(f64 *)(cfg + 0x1f48));
+            else
+                lbl_0000B0AC(animGroups[1].pos.y - *(f64 *)(cfg + 0x1f40));
+        }
+        else
+        {
+            lbl_0000B0AC(*(f32 *)(cfg + 0x1c24));
+        }
+        if (stageInfo.unk0 > 0x258 && stageInfo.unk0 < 0xbb8)
+            lbl_0000B1BC(animGroups[2].pos.z - *(f64 *)(cfg + 0x1f50));
+    }
+    else
+    {
+        if (stageInfo.unk0 < 0x2ee0)
+            stageInfo.unk0 += 0x14;
+        if (stageInfo.unk0 == 0x2580)
+            lbl_00004D10();
+        if (stageInfo.unk0 >= 0x2580 && stageInfo.unk0 < 0x2a30)
+        {
+            if (stageInfo.unk0 < 0x27d8)
+                v = animGroups[1].pos.y - *(f64 *)(cfg + 0x1f40)
+                    + (0x27d8 - stageInfo.unk0) / *(f64 *)(cfg + 0x1f48);
+            else
+                v = animGroups[1].pos.y - *(f64 *)(cfg + 0x1f40);
+            lbl_0000B0AC(v);
+        }
+        if (stageInfo.unk0 == 0x1c20)
+            lbl_0000AF18();
+        if (stageInfo.unk0 > 0x1c20 && stageInfo.unk0 < 0x2328)
+            lbl_0000B1BC(animGroups[2].pos.z - *(f64 *)(cfg + 0x1f50));
+    }
+
+    tm = *(s32 *)st;
+    if (tm < 0)
+        go = 1;
+    else if (!(controllerInfo[playerControllerIDs[currentBall->playerId]]
+                   .pressed.button & PAD_BUTTON_A))
+        go = 0;
+    else if (currentBall->flags & 0x1000)
+    {
+        if (tm < *(f64 *)(cfg + 0x1f58))
+            go = 1;
+        else
+            go = 0;
+    }
+    else
+    {
+        if (tm < *(f64 *)(cfg + 0x1f60))
+            go = 1;
+        else
+            go = 0;
+    }
+
+    if (go)
+    {
+        won = 0;
+        sheet = (struct BowlScore *)(st + 0xc) + modeCtrl.currPlayer;
+        lbl_00007740();
+        event_finish(0x12);
+        *(s32 *)(p + 0xc) = -1;
+        event_start(0x12);
+        lbl_000051E0(sheet);
+        lbl_000051E0(sheet);
+        lbl_00005128((struct BowlSheet *)sheet);
+        if (sheet->frame == 10)
+        {
+            if (sheet->ball >= 3)
+                won = 1;
+            else if (sheet->ball == 2)
+            {
+                if (sheet->state[0x12] != 2 && sheet->state[0x13] != 2 &&
+                    sheet->state[0x13] != 3)
+                    won = 1;
+            }
+        }
+        else
+        {
+            if (sheet->ball >= 2)
+                won = 1;
+            else if (sheet->state[sheet->idx] == 2)
+                won = 1;
+        }
+        *(s32 *)(st + 0x144) = 0;
+        destroy_sprite_with_tag(0x6b);
+        if (won)
+        {
+            u_init_player_data_2();
+            sheet->ball = 1;
+            sheet->frame += 1;
+            lbl_00004D10();
+            *(s16 *)(st + 0x13c) = lbl_0000AD8C(st + 0x13e);
+        }
+        else
+        {
+            sheet->ball += 1;
+        }
+        sheet->idx = sheet->ball - 1 + (sheet->frame - 1) * 2;
+        if (modeCtrl.currPlayer == 0 && *(s8 *)(st + 0x12) > 10)
+        {
+            *(s8 *)(p + 8) = 0;
+            BALL_FOREACH(
+                ball->state = 1;
+            )
+            WORLD_FOREACH(
+                world->state = 1;
+            )
+            {
+                struct Camera *camera;
+                struct Camera *cameraBackup = currentCamera;
+                int i;
+                camera = &cameraInfo[0];
+                for (i = 0; i < 4; i++, camera++)
+                {
+                    currentCamera = camera;
+                    camera->subState = 0;
+                    currentCamera->unk26 = 9;
+                }
+                currentCamera = cameraBackup;
+            }
+            *(s32 *)st = 0xe10;
+            *(s32 *)p = 0x100;
+            *(s32 *)(p + 4) = 0x801;
+        }
+        else
+        {
+            BALL_FOREACH(
+                ball->state = 1;
+            )
+            WORLD_FOREACH(
+                world->state = 1;
+            )
+            {
+                struct Camera *camera;
+                struct Camera *cameraBackup = currentCamera;
+                int i;
+                camera = &cameraInfo[0];
+                for (i = 0; i < 4; i++, camera++)
+                {
+                    currentCamera = camera;
+                    camera->subState = 0;
+                    currentCamera->unk26 = 9;
+                }
+                currentCamera = cameraBackup;
+            }
+            *(s32 *)st = 0x2710;
+            *(s32 *)p = 1;
+        }
+    }
 }
 asm void lbl_00003574(void)
 {

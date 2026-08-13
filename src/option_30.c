@@ -180,7 +180,7 @@ void lbl_0000A600(s8 *, struct Sprite *);
 void lbl_0000A688(struct Sprite *sprite, int u1, int u2);
 void lbl_0000B040(void);
 void lbl_0000B10C(s8 *, struct Sprite *);
-void lbl_0000B218(void);
+void lbl_0000B218(struct Sprite *sprite, int u1, int u2, int u3);
 void lbl_0000C148(void);
 
 //@SUB void lbl_00003FF0(void);|void lbl_00003FF0(s8 *, struct Sprite *);
@@ -1590,10 +1590,250 @@ void lbl_0000B10C(s8 *arg0, struct Sprite *sprite)
     }
 }
 #pragma peephole on
-asm void lbl_0000B218(void)
+void lbl_0000B218(struct Sprite *sprite, int u1, int u2, int u3)
 {
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_0000B218.s"
+    u8 *c = lbl_0000C370;
+    u8 *f = lbl_0000C8F0;
+    NLsprarg *q;
+    struct OptPage *t;
+    int i;
+    struct Sprite sp;
+    s8 *p;
+    f32 tw;
+    u32 col;
+
+    p = lbl_00003F6C(sprite->tag);
+    if (p != NULL)
+    {
+        mathutil_mtxA_from_translate_xyz(*(f32 *)(p + 4) + *(f32 *)(p + 8),
+                                         *(f32 *)c, *(f32 *)c);
+        mathutil_mtxA_to_mtx((void *)(lbl_10000000 + 0x184));
+        GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+    }
+    nlSprPut((NLsprarg *)f);
+
+    sp.depth = *(f32 *)(c + 0x88);
+    sp.scaleX = *(f32 *)(c + 0x60);
+    sp.scaleY = *(f32 *)(c + 0x60);
+    sp.fontId = 0xB3;
+    sp.addR = 0;
+    sp.addG = 0;
+    sp.addB = 0;
+    sp.flags = 0x200000;
+    strcpy(sp.text, (char *)(lbl_0000C8F0 + 0x1918));
+
+    u_txt_setup(&sp);
+    func_80071B1C(sp.depth);
+    set_text_mul_color(RGBA(sp.mulR, sp.mulG, sp.mulB, 0));
+    set_text_add_color(RGBA(sp.addR, sp.addG, sp.addB, 0));
+    tw = u_get_text_width(sp.text);
+    sp.x = *(f64 *)(c + 0xA8) - *(f64 *)(c + 0x58) * tw;
+    sp.y = *(f32 *)(c + 0x90);
+    sp.mulR = 0xFF;
+    sp.mulG = 0xFF;
+    sp.mulB = 0;
+    u_txt_shadow(&sp, c);
+
+    ((NLsprarg *)(lbl_0000C8F0 + 0x150C))->x = *(f32 *)(c + 0x64);
+    ((NLsprarg *)(lbl_0000C8F0 + 0x150C))->y = *(f32 *)(c + 0x21C);
+    ((NLsprarg *)(lbl_0000C8F0 + 0x150C))->zm_x = *(f32 *)(c + 0x60);
+    lbl_000042BC((NLsprarg *)(lbl_0000C8F0 + 0x150C), *(f32 *)(c + 0x148),
+                 *(f32 *)(c + 0x9C));
+
+    q = (NLsprarg *)(lbl_0000C8F0 + 0x50);
+    q->x = *(f32 *)(c + 0x218);
+    q->y = *(f32 *)(lbl_10000000 + 0x128);
+    nlSprPut(q);
+
+    for (i = 0; (u32)i < 4; i++)
+    {
+        sp.x = *(f32 *)(c + 0x21C);
+        sp.y = *(f64 *)(c + 0x270) + *(f64 *)(c + 0x80) * (f64)i;
+        if (i == ((s32 *)lbl_10000000)[0x4C]
+            || (i == 3 && ((s32 *)lbl_10000000)[0x4C] > 3))
+        {
+            sp.mulR = 0xFF;
+            sp.mulG = 0xFF;
+            sp.mulB = 0;
+        }
+        else
+        {
+            sp.mulR = 0x8F;
+            sp.mulG = 0x8F;
+            sp.mulB = 0;
+        }
+        strcpy(sp.text, ((char **)(lbl_0000C8F0 + 0x167C))[i]);
+        u_txt_shadow(&sp, c);
+    }
+
+    sp.fontId = 0xB0;
+    if (*(s32 *)(lbl_10000000 + 0x130) == 2)
+    {
+        nlSprPut((NLsprarg *)(lbl_0000C8F0 + 0x155C));
+        sp.mulR = 0xFF;
+        sp.mulG = 0xFF;
+        sp.mulB = 0;
+        sp.x = *(f32 *)(c + 0x278);
+        sp.y = *(f32 *)(c + 0x27C);
+        sp.scaleX = *(f32 *)(c + 0x158);
+        strcpy(sp.text, (char *)(lbl_0000C8F0 + 0x1924));
+        u_txt_shadow(&sp, c);
+        sp.scaleX = *(f32 *)(c + 0x60);
+    }
+
+    if (*(s32 *)(lbl_10000000 + 0x130) == 2)
+    {
+        sp.mulR = 0xFF;
+        sp.mulG = 0xFF;
+        sp.mulB = 0;
+    }
+    else
+    {
+        sp.mulR = 0x8F;
+        sp.mulG = 0x8F;
+        sp.mulB = 0;
+    }
+    if (func_8009F4C4() == 1)
+    {
+        sp.x = *(f32 *)(c + 0xDC);
+        sp.y = *(f32 *)(c + 0x27C);
+        strcpy(sp.text, (char *)(lbl_0000C8F0 + 0x1948));
+    }
+    else
+    {
+        sp.x = *(f32 *)(c + 0x280);
+        sp.y = *(f32 *)(c + 0x27C);
+        strcpy(sp.text, (char *)(lbl_0000C8F0 + 0x194C));
+    }
+    u_txt_shadow(&sp, c);
+
+    sp.fontId = 0xB3;
+    ((NLsprarg *)(lbl_0000C8F0 + 0x15AC))->y = *(f32 *)(c + 0x284);
+    ((NLsprarg *)(lbl_0000C8F0 + 0x15AC))->zm_y = *(f32 *)(c + 0x288);
+    lbl_000042BC((NLsprarg *)(lbl_0000C8F0 + 0x15AC), *(f32 *)(c + 0x28C),
+                 *(f32 *)(c + 0x290));
+
+    sp.scaleX = *(f32 *)(c + 0x294);
+    sp.mulR = 0xFF;
+    sp.mulG = 0xFF;
+    sp.mulB = 0;
+    t = &((struct OptPage *)(f + 0x18E8))[
+            *(s32 *)(lbl_10000000 + 0x130) < 3 ? *(s32 *)(lbl_10000000 + 0x130) : 3];
+    for (i = 0; i < t->count; i++)
+    {
+        strcpy(sp.text, t->items[i].text);
+        u_txt_setup(&sp);
+        func_80071B1C(sp.depth);
+        set_text_mul_color(RGBA(sp.mulR, sp.mulG, sp.mulB, 0));
+        set_text_add_color(RGBA(sp.addR, sp.addG, sp.addB, 0));
+        tw = u_get_text_width(sp.text);
+        sp.x = *(f64 *)(c + 0xA8) - *(f64 *)(c + 0x58) * tw;
+        sp.y = (*(f64 *)(c + 0x298) - *(f64 *)(c + 0xB8) * (f64)(t->count - 1))
+               + *(f64 *)(c + 0x80) * (f64)i;
+        u_txt_shadow(&sp, c);
+    }
+
+    q = (NLsprarg *)(lbl_0000C8F0 + 0x15FC);
+    q->x = *(f32 *)(lbl_10000000 + 0x18);
+    q->zm_x = *(f32 *)(c + 0x2A0);
+    lbl_000042BC(q, *(f32 *)(c + 0x28C), *(f32 *)(c + 0x290));
+
+    sp.mulR = 0x8F;
+    sp.mulG = 0x8F;
+    sp.mulB = 0;
+    sp.addR = 0;
+    sp.addG = 0;
+    sp.addB = 0;
+    sp.scaleX = *(f32 *)(c + 0xA4);
+    sp.mulR = 0xFF;
+    sp.mulG = 0xFF;
+    sp.mulB = 0;
+    t = &((struct OptPage *)(f + 0x18E8))[*(s32 *)(lbl_10000000 + 0x12C)];
+    for (i = 0; i < t->count; i++)
+    {
+        if (*(s32 *)(lbl_10000000 + 0x12C) == 4)
+        {
+            sp.mulR = 0xEF;
+            sp.mulG = 0x9A;
+            sp.mulB = 0;
+        }
+        else
+        {
+            sp.mulR = 0xFF;
+            sp.mulG = 0xFF;
+            sp.mulB = 0;
+        }
+        strcpy(sp.text, t->items[i].text);
+        u_txt_setup(&sp);
+        func_80071B1C(sp.depth);
+        set_text_mul_color(RGBA(sp.mulR, sp.mulG, sp.mulB, 0));
+        set_text_add_color(RGBA(sp.addR, sp.addG, sp.addB, 0));
+        tw = u_get_text_width(sp.text);
+        sp.x = *(f32 *)(lbl_10000000 + 0x18)
+               + (*(f64 *)(c + 0xA8) - *(f64 *)(c + 0x58) * tw)
+               - ((f64 *)c)[0x15];
+        sp.y = (*(f64 *)(c + 0x2A8) - *(f64 *)(c + 0xB8) * (f64)(t->count - 1))
+               + *(f64 *)(c + 0x80) * (f64)i;
+        u_txt_shadow(&sp, c);
+    }
+
+    if (*(s32 *)(lbl_10000000 + 0x130) == 4)
+    {
+        col = *(f64 *)(c + 0x248)
+              * ((f32)abs((s32)((f64)(s32)(f32)(globalAnimTimer % 60)
+                                - *(f64 *)(c + 0x250)))
+                 / *(f64 *)(c + 0x250));
+        sp.x = *(f64 *)(c + 0x2B0) + *(f32 *)(lbl_10000000 + 0x18)
+               - *(f64 *)(c + 0xA8);
+        sp.y = *(f32 *)(c + 0x2B8);
+        if (*(s32 *)(lbl_10000000 + 0x138) == 0)
+        {
+            sp.mulR = 0x8F;
+            sp.mulG = 0x8F;
+            sp.mulB = 0;
+            sp.addR = 0;
+            sp.addG = 0;
+            sp.addB = 0;
+        }
+        else
+        {
+            sp.mulR = 0xFF;
+            sp.mulG = 0xFF;
+            sp.mulB = 0;
+            sp.addR = col;
+            sp.addG = col;
+            sp.addB = col;
+        }
+        strcpy(sp.text, (char *)(lbl_0000C8F0 + 0x3C8));
+        u_txt_shadow(&sp, c);
+
+        sp.x = *(f64 *)(c + 0x2C0) + *(f32 *)(lbl_10000000 + 0x18)
+               - *(f64 *)(c + 0xA8);
+        sp.y = *(f32 *)(c + 0x2B8);
+        if (*(s32 *)(lbl_10000000 + 0x138) == 0)
+        {
+            sp.mulR = 0xFF;
+            sp.mulG = 0xFF;
+            sp.mulB = 0;
+            sp.addR = col;
+            sp.addG = col;
+            sp.addB = col;
+        }
+        else
+        {
+            sp.mulR = 0x8F;
+            sp.mulG = 0x8F;
+            sp.mulB = 0;
+            sp.addR = 0;
+            sp.addG = 0;
+            sp.addB = 0;
+        }
+        strcpy(sp.text, (char *)(lbl_0000C8F0 + 0x3D0));
+        u_txt_shadow(&sp, c);
+    }
+
+    mathutil_mtxA_from_identity();
+    GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
 }
 #pragma peephole on
 void lbl_0000C148(void)

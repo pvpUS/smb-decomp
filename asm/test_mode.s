@@ -11,6 +11,7 @@
 .include "macros.inc"
 .global lbl_0000FE78
 .global lbl_0000FEC8
+.global lbl_0000FED0
 # exported so the split-out .text (now in the .c) can link against these:
 # offset: 0x00000000	length: 0x00000000	flags: 0
 # offset: 0x000000D0	length: 0x0000FD9C	flags: 1
@@ -68,3 +69,8 @@ lbl_0000FE78:
     .4byte 0x400BAC08
     .4byte 0x3126E979
 lbl_0000FEC8:
+# RUN 35 ANCHOR.  The 16 bytes at 0xFEC8 (unsigned magic) and 0xFED0
+# (signed magic) are BOTH emitted by the merged src/test_mode_16.c, so no
+# asm object can define a symbol 8 bytes INSIDE that span.  This `.set`
+# names it without contributing a byte -- run-34 idiom 1, sel_ngc shape.
+.set lbl_0000FED0, lbl_0000FEC8 + 0x8

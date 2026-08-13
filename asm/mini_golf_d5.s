@@ -14,6 +14,7 @@
 .global lbl_000265F8
 .global lbl_0002660C
 .global lbl_000266A0
+.global lbl_000266F8
 
 .section .rodata
 .balign 8
@@ -143,3 +144,8 @@ lbl_0002660C:
     .4byte 0x3FC00000
     .4byte 0x00000000
 lbl_000266A0:
+# anchor: the 8 bytes at 0x000266F8 are now this TU-merge partner
+# src/mini_golf_53.c.o's own signed int->float magic (@587).  An anchor
+# needs no section contribution and may point past the end of this
+# object's .rodata -- sel_ngc run 34, gated GOLDEN.
+.set lbl_000266F8, lbl_000266A0 + 0x58

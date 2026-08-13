@@ -537,26 +537,6 @@ SOURCES := \
 	src/mini_race_60.c \
 	src/mini_race_61.c \
 	src/mini_race_62.c \
-	src/mini_race_63.c \
-	src/mini_race_64.c \
-	src/mini_race_65.c \
-	src/mini_race_66.c \
-	src/mini_race_67.c \
-	src/mini_race_68.c \
-	src/mini_race_69.c \
-	src/mini_race_70.c \
-	src/mini_race_71.c \
-	src/mini_race_72.c \
-	src/mini_race_73.c \
-	src/mini_race_74.c \
-	src/mini_race_75.c \
-	src/mini_race_76.c \
-	src/mini_race_77.c \
-	src/mini_race_78.c \
-	src/mini_race_79.c \
-	src/mini_race_80.c \
-	src/mini_race_81.c \
-	src/mini_race_82.c \
 	src/mini_race_113.c \
 	src/mini_race_114.c \
 	src/mini_race_115.c \
@@ -939,10 +919,6 @@ SOURCES := \
 	src/mini_golf_51.c \
 	src/mini_golf_52.c \
 	src/mini_golf_53.c \
-	asm/mini_golf_d6.s \
-	src/mini_golf_56.c \
-	src/mini_golf_57.c \
-	src/mini_golf_58.c \
 	asm/mini_golf_d7.s \
 	src/mini_golf_63.c \
 	src/mini_golf_64.c \
@@ -1044,21 +1020,9 @@ SOURCES := \
 	src/test_mode_13.c \
 	src/test_mode_14.c \
 	src/test_mode_15.c \
-	src/test_mode_16.c \
 	asm/test_mode_dA.s \
-	src/test_mode_17.c \
-	src/test_mode_18.c \
-	src/test_mode_19.c \
-	src/test_mode_20.c \
-	src/test_mode_21.c \
-	src/test_mode_22.c \
-	src/test_mode_23.c \
-	src/test_mode_24.c \
-	src/test_mode_25.c \
-	src/test_mode_25b.c \
 	asm/test_mode_d7.s \
-	src/test_mode_26.c \
-	src/test_mode_27.c \
+	src/test_mode_16.c \
 	asm/test_mode_dB.s \
 	src/test_mode_32.c \
 	src/test_mode_33.c \

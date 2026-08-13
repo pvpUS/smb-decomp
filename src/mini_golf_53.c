@@ -173,13 +173,13 @@ void lbl_00009414(void);
 void lbl_00009424(void);
 void lbl_00009458(void);
 u8 lbl_00009478(void);
-void lbl_00009488(void);
-void lbl_00009538(void);
-void lbl_000095C4(void);
+f32 lbl_00009488(void);
+f32 lbl_00009538(void);
+f32 lbl_000095C4(void);
 u8 lbl_000097D8(void);
 void lbl_0000982C(void);
 void lbl_00009880(void);
-void lbl_00009968(void);
+u8 lbl_00009968(u8 a);
 void lbl_000099B4(void);
 void lbl_000099E0(void);
 void lbl_00009B68(void);
@@ -216,19 +216,19 @@ void lbl_00011254(s32 idx, u8 mode, f32 x, f32 y);
 void lbl_000115F8(s32 idx, u8 mode, f32 x, f32 y);
 void lbl_0001199C(void);
 void lbl_00011A6C(void);
-void lbl_00011DAC(void);
+void lbl_00011DAC(s32 x, s32 y, s32 n, char *s);
 void lbl_00011FEC(u32 t);
 void lbl_000123B4(s16 a, u32 b);
-void lbl_00012A14(void);
-void lbl_00012C80(void);
+void lbl_00012A14(int a);
+void lbl_00012C80(int a);
 void lbl_00012EEC(void);
-void lbl_00013664(void);
+void lbl_00013664(f32 a, f32 b, f32 c);
 void lbl_00015520(void);
 void lbl_0001B5B8(void);
 void lbl_00022524(void);
 void lbl_00022610(void);
-void lbl_00022904(void);
-void lbl_00022D4C(void);
+void lbl_00022904(s16 *p, f32 scale, f32 t);
+void lbl_00022D4C(s16 *p, float f);
 void lbl_000230E4(void);
 void lbl_00023AB4(void);
 void lbl_00023C68(void);
@@ -506,18 +506,63 @@ void lbl_0001199C(void)
         break;
     }
 }
+/* The FP literal pool that used to live in asm/mini_golf_d6.s -- 80 bytes at
+ * 0x000266A8, between this TU's unsigned magic (0x000266A0) and its signed one
+ * (0x000266F8).  mwcc lays .rodata in strict source order, interleaving
+ * file-scope objects with its own literal pool, so this definition must stay
+ * BETWEEN the last unsigned-magic user above and the first signed-magic user
+ * below.  Decoded: double 30.0; float 65535,36,32768,25,320,72,240,96;
+ * double 320.0, 2.5, 8589934592.0, 7.0, 0.3.
+ */
+const u32 lbl_000266A8[20] = {
+    0x403E0000, 0x00000000, 0x477FFF00, 0x42100000,
+    0x47000000, 0x41C80000, 0x43A00000, 0x42900000,
+    0x43700000, 0x42C00000, 0x40740000, 0x00000000,
+    0x40040000, 0x00000000, 0x42000000, 0x00000000,
+    0x401C0000, 0x00000000, 0x3FD33333, 0x33333333,
+};
 asm void lbl_00011A6C(void)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_golf/lbl_00011A6C.s"
 }
-asm void lbl_00011DAC(void)
+#pragma peephole on
+void lbl_00011DAC(s32 x, s32 y, s32 n, char *s)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_00011DAC.s"
+    NLsprarg params;
+    u8 *tbl = (u8 *)lbl_00026E28;
+    u8 *pool = (u8 *)lbl_00026550;
+    s32 i;
+    s32 left;
+
+    params = *(NLsprarg *)(tbl + 0x3700);
+    left = x - n * 12;
+    params.x = (f32)(left - 16);
+    params.y = (f32)y;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x37a0);
+    params.x = (f32)(x + n * 12);
+    params.y = (f32)y;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x3750);
+    params.x = (f32)left;
+    params.y = (f32)y;
+    for (i = 0; i < n; i++)
+    {
+        nlSprPut(&params);
+        params.x = params.x + *(f32 *)(pool + 0x1b0);
+    }
+    reset_text_draw_settings();
+    set_text_font(0xb1);
+    set_text_mul_color(0);
+    func_80071B1C(*(f32 *)(pool + 0x1b4));
+    set_text_scale(*(f32 *)(pool + 0x1b8), *(f32 *)(pool + 0x134));
+    set_text_pos((f32)(left - 2), (f32)(y + 9));
+    sprite_puts(s);
 }
 #pragma peephole on
 #pragma opt_propagation off
+#pragma peephole on
 void lbl_00011FEC(u32 t)
 {
     NLsprarg sp;
@@ -712,4 +757,1824 @@ void lbl_000123B4(s16 a, u32 b)
     }
 }
 #pragma opt_common_subs reset
+void lbl_00012A14(int a)
+{
+    NLsprarg params;
+    u8 *tbl = (u8 *)lbl_00026E28;
+    u8 *pool = (u8 *)lbl_00026550;
+
+    params = *(NLsprarg *)(tbl + 0x3250);
+    params.ang = -0x4000;
+    params.x = *(f32 *)(pool + 0x270) + (*(f32 *)(tbl + 0x32a4) - *(f32 *)(pool + 0x274));
+    params.y = *(f32 *)(tbl + 0x32a8);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    nlSprPut(&params);
+    nlSprPut((NLsprarg *)(tbl + 0x3250));
+    nlSprPut((NLsprarg *)(tbl + 0x32a0));
+    if (a < 10)
+    {
+        params = ((NLsprarg *)(tbl + 0x3390))[a];
+        params.x = params.x + *(f32 *)(pool + 0x280);
+        params.y = params.y + *(f32 *)(pool + 0x284);
+        nlSprPut(&params);
+        params = *(NLsprarg *)(tbl + 0x3340);
+        params.x = params.x + *(f32 *)(pool + 0x288);
+        params.y = params.y + *(f32 *)(pool + 0x284);
+        nlSprPut(&params);
+    }
+    else
+    {
+        params = *(NLsprarg *)(tbl + 0x33e0);
+        params.x = params.x + *(f32 *)(pool + 0x28c);
+        params.y = params.y + *(f32 *)(pool + 0x284);
+        params.z = params.z + *(f64 *)(pool + 0x290);
+        nlSprPut(&params);
+        params = ((NLsprarg *)(tbl + 0x3070))[a];
+        params.x = params.x + *(f32 *)(pool + 0x298);
+        params.y = params.y + *(f32 *)(pool + 0x284);
+        nlSprPut(&params);
+        params = *(NLsprarg *)(tbl + 0x3340);
+        params.x = params.x + *(f32 *)(pool + 0x29c);
+        params.y = params.y + *(f32 *)(pool + 0x284);
+        nlSprPut(&params);
+    }
+}
+void lbl_00012C80(int a)
+{
+    NLsprarg params;
+    u8 *tbl = (u8 *)lbl_00026E28;
+    u8 *pool = (u8 *)lbl_00026550;
+
+    nlSprPut((NLsprarg *)(tbl + 0x2c10));
+    nlSprPut((NLsprarg *)(tbl + 0x2c60));
+    nlSprPut((NLsprarg *)(tbl + 0x2ee0));
+    if (a > 9)
+        a = 9;
+    params = ((NLsprarg *)(tbl + 0x2f30))[a];
+    params.base_color = ((u32 *)(tbl + 0x39ac))[a];
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x290);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = ((NLsprarg *)(tbl + 0x2f30))[a];
+    params.base_color = ((u32 *)(tbl + 0x39ac))[a];
+    nlSprPut(&params);
+    params = *(NLsprarg *)((u8 *)tbl + 0x3020);
+    params.x = params.x + *(f32 *)(pool + 0x2a0);
+    params.y = params.y + *(f32 *)(pool + 0x2a4);
+    params.zm_x = params.zm_x * *(f64 *)(pool + 0x2a8);
+    params.zm_y = params.zm_y * *(f64 *)(pool + 0x2a8);
+    params.base_color = 0xFB5302;
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x290);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = *(NLsprarg *)((u8 *)tbl + 0x3020);
+    params.x = params.x + *(f32 *)(pool + 0x2a0);
+    params.y = params.y + *(f32 *)(pool + 0x2a4);
+    params.zm_x = params.zm_x * *(f64 *)(pool + 0x2a8);
+    params.zm_y = params.zm_y * *(f64 *)(pool + 0x2a8);
+    params.base_color = 0xFB5302;
+    nlSprPut(&params);
+}
+asm void lbl_00012EEC(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_golf/lbl_00012EEC.s"
+}
+#pragma peephole on
+void lbl_00013664(f32 a, f32 b, f32 c)
+{
+    NLsprarg params;
+    u8 *tbl = (u8 *)lbl_00026E28;
+    u8 *pool = (u8 *)lbl_00026550;
+    f32 t;
+    f32 v;
+    s16 w;
+    s32 n;
+
+    v = lbl_00009538();
+    if (v >= *(f64 *)(pool + 0x2d0))
+        w = 196;
+    else if (v >= *(f64 *)(pool + 0x2d8))
+        w = 215;
+    else
+        w = 234;
+    t = lbl_00009538();
+    if (t >= *(f64 *)(pool + 0x2d0)) {
+    n = (s32)t; n = n / 100;
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f32 *)(pool + 0x2e0);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f32 *)(pool + 0x2e0);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    t = t - (f32)(n * 100);
+    n = (s32)t; n = n / 10;
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f32 *)(pool + 0x2e8);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f32 *)(pool + 0x2e8);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    t = t - (f32)(n * 10);
+    n = (s32)t;
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f32 *)(pool + 0x2ec);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f32 *)(pool + 0x2ec);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x28f0);
+    params.x = *(f32 *)(pool + 0x2f0);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x28f0);
+    params.x = *(f32 *)(pool + 0x2f0);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    t = t - (f32)n;
+    n = (s32)(*(f32 *)(pool + 0x238) * t);
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f64 *)(pool + 0x2f8);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f64 *)(pool + 0x2f8);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    t = t - (f32)n / *(f32 *)(pool + 0x238);
+    n = (s32)(*(f32 *)(pool + 0x300) * t);
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f64 *)(pool + 0x308);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f64 *)(pool + 0x308);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x28a0);
+    params.x = *(f64 *)(pool + 0x310);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x28a0);
+    params.x = *(f64 *)(pool + 0x310);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x2e40);
+    params.x = *(f64 *)(pool + 0x318);
+    params.y = *(f32 *)(pool + 0x320);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x2cb0);
+    params.x = *(f64 *)(pool + 0x328);
+    params.y = *(f32 *)(pool + 0x320);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x2e90);
+    params.x = *(f64 *)(pool + 0x330);
+    params.y = *(f32 *)(pool + 0x320);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    } else if (t >= *(f64 *)(pool + 0x2d8)) {
+    n = (s32)t; n = n / 10;
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f32 *)(pool + 0x2e0);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f32 *)(pool + 0x2e0);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    t = t - (f32)(n * 10);
+    n = (s32)t;
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f32 *)(pool + 0x2e8);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f32 *)(pool + 0x2e8);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x28f0);
+    params.x = *(f32 *)(pool + 0x2ec);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x28f0);
+    params.x = *(f32 *)(pool + 0x2ec);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    t = t - (f32)n;
+    n = (s32)(*(f32 *)(pool + 0x238) * t);
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f64 *)(pool + 0x338);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f64 *)(pool + 0x338);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    t = t - (f32)n / *(f32 *)(pool + 0x238);
+    n = (s32)(*(f32 *)(pool + 0x300) * t);
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f64 *)(pool + 0x2f8);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f64 *)(pool + 0x2f8);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x28a0);
+    params.x = *(f64 *)(pool + 0x308);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x28a0);
+    params.x = *(f64 *)(pool + 0x308);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x2e40);
+    params.x = *(f64 *)(pool + 0x340);
+    params.y = *(f32 *)(pool + 0x320);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x2cb0);
+    params.x = *(f64 *)(pool + 0x348);
+    params.y = *(f32 *)(pool + 0x320);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x2e90);
+    params.x = *(f64 *)(pool + 0x350);
+    params.y = *(f32 *)(pool + 0x320);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    } else {
+    n = (s32)t;
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f32 *)(pool + 0x2e0);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f32 *)(pool + 0x2e0);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x28f0);
+    params.x = *(f32 *)(pool + 0x2e8);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x28f0);
+    params.x = *(f32 *)(pool + 0x2e8);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    t = t - (f32)n;
+    n = (s32)(*(f32 *)(pool + 0x238) * t);
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f64 *)(pool + 0x358);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f64 *)(pool + 0x358);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    t = t - (f32)n / *(f32 *)(pool + 0x238);
+    n = (s32)(*(f32 *)(pool + 0x300) * t);
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f64 *)(pool + 0x338);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = ((NLsprarg *)(tbl + 0x2490))[n];
+    params.x = *(f64 *)(pool + 0x338);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x28a0);
+    params.x = *(f64 *)(pool + 0x2f8);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    params.x = params.x + *(f32 *)(pool + 0x274);
+    params.y = params.y + *(f32 *)(pool + 0x274);
+    params.z = params.z + *(f64 *)(pool + 0x278);
+    params.base_color = 0;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x28a0);
+    params.x = *(f64 *)(pool + 0x2f8);
+    params.y = *(f32 *)(pool + 0x2e4);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x2e40);
+    params.x = *(f64 *)(pool + 0x360);
+    params.y = *(f32 *)(pool + 0x320);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x2cb0);
+    params.x = *(f64 *)(pool + 0x368);
+    params.y = *(f32 *)(pool + 0x320);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x2e90);
+    params.x = *(f64 *)(pool + 0x370);
+    params.y = *(f32 *)(pool + 0x320);
+    params.x = params.x + (f32)(w - 252);
+    params.y = params.y + *(f32 *)(pool + 0x200);
+    params.base_color = 0xFFFFE300;
+    nlSprPut(&params);
+    }
+}
+#pragma opt_common_subs off
+#pragma opt_propagation off
+#pragma peephole on
+void lbl_00015520(void)
+{
+    NLsprarg params;
+    u8 *tbl = (u8 *)lbl_00026E28;
+    u8 *pool = (u8 *)lbl_00026550;
+    f32 t;
+    f32 v;
+    s32 n;
+    s32 i;
+    s16 w;
+    s16 u;
+    u32 col;
+    s32 y1;
+    s32 y2;
+
+    v = lbl_00009488();
+    if (v >= *(f64 *)(pool + 0x2d0)) {
+        w = -44;
+    } else {
+        if (v >= *(f64 *)(pool + 0x2d8)) {
+            w = -25;
+        } else {
+            w = -6;
+        }
+    }
+    v = lbl_000095C4();
+    t = v * *(f32 *)(pool + 0x300);
+    t = mathutil_floor(t) / *(f32 *)(pool + 0x300);
+    if (*(f64 *)(pool + 0x378) < t && t < *(f64 *)(pool + 0x278)) {
+        u = -6;
+    } else {
+        if (*(f64 *)(pool + 0x380) < t && t < *(f64 *)(pool + 0x2d8)) {
+            u = -25;
+        } else {
+            u = -44;
+        }
+    }
+    params = *(NLsprarg *)(tbl + 0x2940);
+    params.x = params.x + *(f32 *)(pool + 0x388);
+    params.y = params.y + *(f32 *)(pool + 0x38c);
+    nlSprPut(&params);
+    params = *(NLsprarg *)(tbl + 0x2990);
+    params.x = params.x + *(f32 *)(pool + 0x388);
+    params.y = params.y + *(f32 *)(pool + 0x390);
+    nlSprPut(&params);
+    i = 0;
+    t = lbl_00009488();
+    if (t >= *(f64 *)(pool + 0x2d0)) {
+        n = (s32)t;
+        n = n / 100;
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = (f32)(i * 19 + 304);
+        params.y = *(f32 *)(pool + 0x2e4);
+        params.x = params.x + (f32)(w - 252);
+        y1 = 100;
+        params.y = params.y + (f32)y1;
+        params.base_color = 0xFFFFE300;
+        params.x = params.x + *(f32 *)(pool + 0x274);
+        params.y = params.y + *(f32 *)(pool + 0x274);
+        params.z = params.z + *(f64 *)(pool + 0x278);
+        params.base_color = 0;
+        nlSprPut(&params);
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = (f32)(i * 19 + 304);
+        params.y = *(f32 *)(pool + 0x2e4);
+        params.x = params.x + (f32)(w - 252);
+        y1 = 100;
+        params.y = params.y + (f32)y1;
+        params.base_color = 0xFFFFE300;
+        nlSprPut(&params);
+        i = 1;
+        t = t - (f32)(n * 100);
+        n = (s32)t;
+        n = n / 10;
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = (f32)(i * 19 + 304);
+        params.y = *(f32 *)(pool + 0x2e4);
+        params.x = params.x + (f32)(w - 252);
+        y1 = 100;
+        params.y = params.y + (f32)y1;
+        params.base_color = 0xFFFFE300;
+        params.x = params.x + *(f32 *)(pool + 0x274);
+        params.y = params.y + *(f32 *)(pool + 0x274);
+        params.z = params.z + *(f64 *)(pool + 0x278);
+        params.base_color = 0;
+        nlSprPut(&params);
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = (f32)(i * 19 + 304);
+        params.y = *(f32 *)(pool + 0x2e4);
+        params.x = params.x + (f32)(w - 252);
+        y1 = 100;
+        params.y = params.y + (f32)y1;
+        params.base_color = 0xFFFFE300;
+        nlSprPut(&params);
+        i = 2;
+        t = t - (f32)(n * 10);
+        n = (s32)t;
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = (f32)(i * 19 + 304);
+        params.y = *(f32 *)(pool + 0x2e4);
+        params.x = params.x + (f32)(w - 252);
+        y1 = 100;
+        params.y = params.y + (f32)y1;
+        params.base_color = 0xFFFFE300;
+        params.x = params.x + *(f32 *)(pool + 0x274);
+        params.y = params.y + *(f32 *)(pool + 0x274);
+        params.z = params.z + *(f64 *)(pool + 0x278);
+        params.base_color = 0;
+        nlSprPut(&params);
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = (f32)(i * 19 + 304);
+        params.y = *(f32 *)(pool + 0x2e4);
+        params.x = params.x + (f32)(w - 252);
+        y1 = 100;
+        params.y = params.y + (f32)y1;
+        params.base_color = 0xFFFFE300;
+        nlSprPut(&params);
+        i = 3;
+        params = *(NLsprarg *)(tbl + 0x28f0);
+        params.x = (f32)(i * 19 + 304);
+        params.y = *(f32 *)(pool + 0x2e4);
+        params.x = params.x + (f32)(w - 252);
+        y1 = 100;
+        params.y = params.y + (f32)y1;
+        params.base_color = 0xFFFFE300;
+        params.x = params.x + *(f32 *)(pool + 0x274);
+        params.y = params.y + *(f32 *)(pool + 0x274);
+        params.z = params.z + *(f64 *)(pool + 0x278);
+        params.base_color = 0;
+        nlSprPut(&params);
+        params = *(NLsprarg *)(tbl + 0x28f0);
+        params.x = (f32)(i * 19 + 304);
+        params.y = *(f32 *)(pool + 0x2e4);
+        params.x = params.x + (f32)(w - 252);
+        y1 = 100;
+        params.y = params.y + (f32)y1;
+        params.base_color = 0xFFFFE300;
+        nlSprPut(&params);
+        t = t - (f32)n;
+        n = (s32)(*(f32 *)(pool + 0x238) * t);
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+        params.y = *(f32 *)(pool + 0x2e4);
+        params.x = params.x + (f32)(w - 252);
+        y1 = 100;
+        params.y = params.y + (f32)y1;
+        params.base_color = 0xFFFFE300;
+        params.x = params.x + *(f32 *)(pool + 0x274);
+        params.y = params.y + *(f32 *)(pool + 0x274);
+        params.z = params.z + *(f64 *)(pool + 0x278);
+        params.base_color = 0;
+        nlSprPut(&params);
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+        params.y = *(f32 *)(pool + 0x2e4);
+        params.x = params.x + (f32)(w - 252);
+        y1 = 100;
+        params.y = params.y + (f32)y1;
+        params.base_color = 0xFFFFE300;
+        nlSprPut(&params);
+        i = 4;
+        t = t - ((f32)n / *(f32 *)(pool + 0x238));
+        n = (s32)(*(f32 *)(pool + 0x300) * t);
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+        params.y = *(f32 *)(pool + 0x2e4);
+        params.x = params.x + (f32)(w - 252);
+        y1 = 100;
+        params.y = params.y + (f32)y1;
+        params.base_color = 0xFFFFE300;
+        params.x = params.x + *(f32 *)(pool + 0x274);
+        params.y = params.y + *(f32 *)(pool + 0x274);
+        params.z = params.z + *(f64 *)(pool + 0x278);
+        params.base_color = 0;
+        nlSprPut(&params);
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+        params.y = *(f32 *)(pool + 0x2e4);
+        params.x = params.x + (f32)(w - 252);
+        y1 = 100;
+        params.y = params.y + (f32)y1;
+        params.base_color = 0xFFFFE300;
+        nlSprPut(&params);
+        i = 5;
+        params = *(NLsprarg *)(tbl + 0x28a0);
+        params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+        params.y = *(f32 *)(pool + 0x2e4);
+        params.x = params.x + (f32)(w - 252);
+        y1 = 100;
+        params.y = params.y + (f32)y1;
+        params.base_color = 0xFFFFE300;
+        params.x = params.x + *(f32 *)(pool + 0x274);
+        params.y = params.y + *(f32 *)(pool + 0x274);
+        params.z = params.z + *(f64 *)(pool + 0x278);
+        params.base_color = 0;
+        nlSprPut(&params);
+        params = *(NLsprarg *)(tbl + 0x28a0);
+        params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+        params.y = *(f32 *)(pool + 0x2e4);
+        params.x = params.x + (f32)(w - 252);
+        y1 = 100;
+        params.y = params.y + (f32)y1;
+        params.base_color = 0xFFFFE300;
+        nlSprPut(&params);
+        i = 6;
+        params = *(NLsprarg *)(tbl + 0x2e40);
+        params.x = (f32)(*(f64 *)(pool + 0x3a0) + (*(f64 *)(pool + 0x398) + (f64)((i * 19) + 304)));
+        params.y = *(f32 *)(pool + 0x320);
+        params.x = params.x + (f32)(w - 252);
+        y1 = 100;
+        params.y = params.y + (f32)y1;
+        params.base_color = 0xFFFFE300;
+        nlSprPut(&params);
+        params = *(NLsprarg *)(tbl + 0x2cb0);
+        params.x = (f32)(*(f64 *)(pool + 0x2d8) + (*(f64 *)(pool + 0x398) + (f64)((i * 19) + 304)));
+        params.y = *(f32 *)(pool + 0x320);
+        params.x = params.x + (f32)(w - 252);
+        y1 = 100;
+        params.y = params.y + (f32)y1;
+        params.base_color = 0xFFFFE300;
+        nlSprPut(&params);
+        params = *(NLsprarg *)(tbl + 0x2e90);
+        params.x = (f32)(*(f64 *)(pool + 0x3a8) + (*(f64 *)(pool + 0x398) + (f64)((i * 19) + 304)));
+        params.y = *(f32 *)(pool + 0x320);
+        params.x = params.x + (f32)(w - 252);
+        y1 = 100;
+        params.y = params.y + (f32)y1;
+        params.base_color = 0xFFFFE300;
+        nlSprPut(&params);
+    } else {
+        if (t >= *(f64 *)(pool + 0x2d8)) {
+            n = (s32)t;
+            n = n / 10;
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            nlSprPut(&params);
+            i = 1;
+            t = t - (f32)(n * 10);
+            n = (s32)t;
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            nlSprPut(&params);
+            i = 2;
+            params = *(NLsprarg *)(tbl + 0x28f0);
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = *(NLsprarg *)(tbl + 0x28f0);
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            nlSprPut(&params);
+            t = t - (f32)n;
+            n = (s32)(*(f32 *)(pool + 0x238) * t);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            nlSprPut(&params);
+            i = 3;
+            t = t - ((f32)n / *(f32 *)(pool + 0x238));
+            n = (s32)(*(f32 *)(pool + 0x300) * t);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            nlSprPut(&params);
+            i = 4;
+            params = *(NLsprarg *)(tbl + 0x28a0);
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = *(NLsprarg *)(tbl + 0x28a0);
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            nlSprPut(&params);
+            i = 5;
+            params = *(NLsprarg *)(tbl + 0x2e40);
+            params.x = (f32)(*(f64 *)(pool + 0x3a0) + (*(f64 *)(pool + 0x398) + (f64)((i * 19) + 304)));
+            params.y = *(f32 *)(pool + 0x320);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            nlSprPut(&params);
+            params = *(NLsprarg *)(tbl + 0x2cb0);
+            params.x = (f32)(*(f64 *)(pool + 0x2d8) + (*(f64 *)(pool + 0x398) + (f64)((i * 19) + 304)));
+            params.y = *(f32 *)(pool + 0x320);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            nlSprPut(&params);
+            params = *(NLsprarg *)(tbl + 0x2e90);
+            params.x = (f32)(*(f64 *)(pool + 0x3a8) + (*(f64 *)(pool + 0x398) + (f64)((i * 19) + 304)));
+            params.y = *(f32 *)(pool + 0x320);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            nlSprPut(&params);
+        } else {
+            n = (s32)t;
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            nlSprPut(&params);
+            i = 1;
+            params = *(NLsprarg *)(tbl + 0x28f0);
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = *(NLsprarg *)(tbl + 0x28f0);
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            nlSprPut(&params);
+            t = t - (f32)n;
+            n = (s32)(*(f32 *)(pool + 0x238) * t);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            nlSprPut(&params);
+            i = 2;
+            t = t - ((f32)n / *(f32 *)(pool + 0x238));
+            n = (s32)(*(f32 *)(pool + 0x300) * t);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            nlSprPut(&params);
+            i = 3;
+            params = *(NLsprarg *)(tbl + 0x28a0);
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = *(NLsprarg *)(tbl + 0x28a0);
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x2e4);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            nlSprPut(&params);
+            i = 4;
+            params = *(NLsprarg *)(tbl + 0x2e40);
+            params.x = (f32)(*(f64 *)(pool + 0x3a0) + (*(f64 *)(pool + 0x398) + (f64)((i * 19) + 304)));
+            params.y = *(f32 *)(pool + 0x320);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            nlSprPut(&params);
+            params = *(NLsprarg *)(tbl + 0x2cb0);
+            params.x = (f32)(*(f64 *)(pool + 0x2d8) + (*(f64 *)(pool + 0x398) + (f64)((i * 19) + 304)));
+            params.y = *(f32 *)(pool + 0x320);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            nlSprPut(&params);
+            params = *(NLsprarg *)(tbl + 0x2e90);
+            params.x = (f32)(*(f64 *)(pool + 0x3a8) + (*(f64 *)(pool + 0x398) + (f64)((i * 19) + 304)));
+            params.y = *(f32 *)(pool + 0x320);
+            params.x = params.x + (f32)(w - 252);
+            y1 = 100;
+            params.y = params.y + (f32)y1;
+            params.base_color = 0xFFFFE300;
+            nlSprPut(&params);
+        }
+    }
+    i = 0;
+    v = lbl_000095C4();
+    t = v * *(f32 *)(pool + 0x300);
+    t = mathutil_floor(t) / *(f32 *)(pool + 0x300);
+    if (*(f64 *)(pool + 0x378) < t && t < *(f64 *)(pool + 0x278)) {
+        t = *(f32 *)(pool + 0x3b0);
+    }
+    if (__fabs(t) >= *(f64 *)(pool + 0x2d0)) {
+        if (t > *(f64 *)(pool + 0x3b8)) {
+            col = 0xFF1F9CFF;
+        } else {
+            if (*(f64 *)(pool + 0x3b8) == t) {
+                col = 0xFFFFFFFF;
+            } else {
+                col = 0xFFFF0900;
+            }
+        }
+        t = __fabs(t);
+        t = (f32)t;
+        n = (s32)t;
+        n = n / 100;
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = (f32)(i * 19 + 304);
+        params.y = *(f32 *)(pool + 0x3c0);
+        params.x = params.x + (f32)(u - 252);
+        y2 = 132;
+        params.y = params.y + (f32)y2;
+        params.base_color = col;
+        params.x = params.x + *(f32 *)(pool + 0x274);
+        params.y = params.y + *(f32 *)(pool + 0x274);
+        params.z = params.z + *(f64 *)(pool + 0x278);
+        params.base_color = 0;
+        nlSprPut(&params);
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = (f32)(i * 19 + 304);
+        params.y = *(f32 *)(pool + 0x3c0);
+        params.x = params.x + (f32)(u - 252);
+        y2 = 132;
+        params.y = params.y + (f32)y2;
+        params.base_color = col;
+        nlSprPut(&params);
+        i = 1;
+        t = t - (f32)(n * 100);
+        n = (s32)t;
+        n = n / 10;
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = (f32)(i * 19 + 304);
+        params.y = *(f32 *)(pool + 0x3c0);
+        params.x = params.x + (f32)(u - 252);
+        y2 = 132;
+        params.y = params.y + (f32)y2;
+        params.base_color = col;
+        params.x = params.x + *(f32 *)(pool + 0x274);
+        params.y = params.y + *(f32 *)(pool + 0x274);
+        params.z = params.z + *(f64 *)(pool + 0x278);
+        params.base_color = 0;
+        nlSprPut(&params);
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = (f32)(i * 19 + 304);
+        params.y = *(f32 *)(pool + 0x3c0);
+        params.x = params.x + (f32)(u - 252);
+        y2 = 132;
+        params.y = params.y + (f32)y2;
+        params.base_color = col;
+        nlSprPut(&params);
+        i = 2;
+        t = t - (f32)(n * 10);
+        n = (s32)t;
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = (f32)(i * 19 + 304);
+        params.y = *(f32 *)(pool + 0x3c0);
+        params.x = params.x + (f32)(u - 252);
+        y2 = 132;
+        params.y = params.y + (f32)y2;
+        params.base_color = col;
+        params.x = params.x + *(f32 *)(pool + 0x274);
+        params.y = params.y + *(f32 *)(pool + 0x274);
+        params.z = params.z + *(f64 *)(pool + 0x278);
+        params.base_color = 0;
+        nlSprPut(&params);
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = (f32)(i * 19 + 304);
+        params.y = *(f32 *)(pool + 0x3c0);
+        params.x = params.x + (f32)(u - 252);
+        y2 = 132;
+        params.y = params.y + (f32)y2;
+        params.base_color = col;
+        nlSprPut(&params);
+        i = 3;
+        params = *(NLsprarg *)(tbl + 0x28f0);
+        params.x = (f32)(i * 19 + 304);
+        params.y = *(f32 *)(pool + 0x3c0);
+        params.x = params.x + (f32)(u - 252);
+        y2 = 132;
+        params.y = params.y + (f32)y2;
+        params.base_color = col;
+        params.x = params.x + *(f32 *)(pool + 0x274);
+        params.y = params.y + *(f32 *)(pool + 0x274);
+        params.z = params.z + *(f64 *)(pool + 0x278);
+        params.base_color = 0;
+        nlSprPut(&params);
+        params = *(NLsprarg *)(tbl + 0x28f0);
+        params.x = (f32)(i * 19 + 304);
+        params.y = *(f32 *)(pool + 0x3c0);
+        params.x = params.x + (f32)(u - 252);
+        y2 = 132;
+        params.y = params.y + (f32)y2;
+        params.base_color = col;
+        nlSprPut(&params);
+        t = t - (f32)n;
+        n = (s32)(*(f32 *)(pool + 0x238) * t);
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+        params.y = *(f32 *)(pool + 0x3c0);
+        params.x = params.x + (f32)(u - 252);
+        y2 = 132;
+        params.y = params.y + (f32)y2;
+        params.base_color = col;
+        params.x = params.x + *(f32 *)(pool + 0x274);
+        params.y = params.y + *(f32 *)(pool + 0x274);
+        params.z = params.z + *(f64 *)(pool + 0x278);
+        params.base_color = 0;
+        nlSprPut(&params);
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+        params.y = *(f32 *)(pool + 0x3c0);
+        params.x = params.x + (f32)(u - 252);
+        y2 = 132;
+        params.y = params.y + (f32)y2;
+        params.base_color = col;
+        nlSprPut(&params);
+        i = 4;
+        t = t - ((f32)n / *(f32 *)(pool + 0x238));
+        n = (s32)(*(f32 *)(pool + 0x300) * t);
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+        params.y = *(f32 *)(pool + 0x3c0);
+        params.x = params.x + (f32)(u - 252);
+        y2 = 132;
+        params.y = params.y + (f32)y2;
+        params.base_color = col;
+        params.x = params.x + *(f32 *)(pool + 0x274);
+        params.y = params.y + *(f32 *)(pool + 0x274);
+        params.z = params.z + *(f64 *)(pool + 0x278);
+        params.base_color = 0;
+        nlSprPut(&params);
+        params = ((NLsprarg *)(tbl + 0x2490))[n];
+        params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+        params.y = *(f32 *)(pool + 0x3c0);
+        params.x = params.x + (f32)(u - 252);
+        y2 = 132;
+        params.y = params.y + (f32)y2;
+        params.base_color = col;
+        nlSprPut(&params);
+        i = 5;
+        params = *(NLsprarg *)(tbl + 0x28a0);
+        params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+        params.y = *(f32 *)(pool + 0x3c0);
+        params.x = params.x + (f32)(u - 252);
+        y2 = 132;
+        params.y = params.y + (f32)y2;
+        params.base_color = col;
+        params.x = params.x + *(f32 *)(pool + 0x274);
+        params.y = params.y + *(f32 *)(pool + 0x274);
+        params.z = params.z + *(f64 *)(pool + 0x278);
+        params.base_color = 0;
+        nlSprPut(&params);
+        params = *(NLsprarg *)(tbl + 0x28a0);
+        params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+        params.y = *(f32 *)(pool + 0x3c0);
+        params.x = params.x + (f32)(u - 252);
+        y2 = 132;
+        params.y = params.y + (f32)y2;
+        params.base_color = col;
+        nlSprPut(&params);
+        i = 6;
+        params = *(NLsprarg *)(tbl + 0x2e40);
+        params.x = (f32)(*(f64 *)(pool + 0x3a0) + (*(f64 *)(pool + 0x398) + (f64)((i * 19) + 304)));
+        params.y = *(f32 *)(pool + 0x210);
+        params.x = params.x + (f32)(u - 252);
+        y2 = 132;
+        params.y = params.y + (f32)y2;
+        params.base_color = col;
+        nlSprPut(&params);
+        params = *(NLsprarg *)(tbl + 0x2cb0);
+        params.x = (f32)(*(f64 *)(pool + 0x2d8) + (*(f64 *)(pool + 0x398) + (f64)((i * 19) + 304)));
+        params.y = *(f32 *)(pool + 0x210);
+        params.x = params.x + (f32)(u - 252);
+        y2 = 132;
+        params.y = params.y + (f32)y2;
+        params.base_color = col;
+        nlSprPut(&params);
+        params = *(NLsprarg *)(tbl + 0x2e90);
+        params.x = (f32)(*(f64 *)(pool + 0x3a8) + (*(f64 *)(pool + 0x398) + (f64)((i * 19) + 304)));
+        params.y = *(f32 *)(pool + 0x210);
+        params.x = params.x + (f32)(u - 252);
+        y2 = 132;
+        params.y = params.y + (f32)y2;
+        params.base_color = col;
+        nlSprPut(&params);
+    } else {
+        if (__fabs(t) >= *(f64 *)(pool + 0x2d8)) {
+            if (t > *(f64 *)(pool + 0x3b8)) {
+                params = *(NLsprarg *)(tbl + 0x2800);
+                params.x = (f32)(i * 19 + 304);
+                params.y = *(f32 *)(pool + 0x3c0);
+                params.x = params.x + (f32)(u - 252);
+                col = 0xFF1F9CFF;
+                y2 = 132;
+                params.y = params.y + (f32)y2;
+                params.base_color = col;
+                params.x = params.x + *(f32 *)(pool + 0x274);
+                params.y = params.y + *(f32 *)(pool + 0x274);
+                params.z = params.z + *(f64 *)(pool + 0x278);
+                params.base_color = 0;
+                nlSprPut(&params);
+                params = *(NLsprarg *)(tbl + 0x2800);
+                params.x = (f32)(i * 19 + 304);
+                params.y = *(f32 *)(pool + 0x3c0);
+                params.x = params.x + (f32)(u - 252);
+                col = 0xFF1F9CFF;
+                y2 = 132;
+                params.y = params.y + (f32)y2;
+                params.base_color = col;
+                nlSprPut(&params);
+                i = 1;
+            } else {
+                if (*(f64 *)(pool + 0x3b8) == t) {
+                    col = 0xFFFFFFFF;
+                } else {
+                    params = *(NLsprarg *)(tbl + 0x2850);
+                    params.x = (f32)(i * 19 + 304);
+                    params.y = *(f32 *)(pool + 0x3c0);
+                    params.x = params.x + (f32)(u - 252);
+                    col = 0xFFFF0900;
+                    y2 = 132;
+                    params.y = params.y + (f32)y2;
+                    params.base_color = col;
+                    params.x = params.x + *(f32 *)(pool + 0x274);
+                    params.y = params.y + *(f32 *)(pool + 0x274);
+                    params.z = params.z + *(f64 *)(pool + 0x278);
+                    params.base_color = 0;
+                    nlSprPut(&params);
+                    params = *(NLsprarg *)(tbl + 0x2850);
+                    params.x = (f32)(i * 19 + 304);
+                    params.y = *(f32 *)(pool + 0x3c0);
+                    params.x = params.x + (f32)(u - 252);
+                    col = 0xFFFF0900;
+                    y2 = 132;
+                    params.y = params.y + (f32)y2;
+                    params.base_color = col;
+                    nlSprPut(&params);
+                    i = 1;
+                }
+            }
+            t = __fabs(t);
+            t = (f32)t;
+            n = (s32)t;
+            n = n / 10;
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            nlSprPut(&params);
+            i = (i + 1);
+            t = t - (f32)(n * 10);
+            n = (s32)t;
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            nlSprPut(&params);
+            i = (i + 1);
+            params = *(NLsprarg *)(tbl + 0x28f0);
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = *(NLsprarg *)(tbl + 0x28f0);
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            nlSprPut(&params);
+            t = t - (f32)n;
+            n = (s32)(*(f32 *)(pool + 0x238) * t);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            nlSprPut(&params);
+            i = (i + 1);
+            t = t - ((f32)n / *(f32 *)(pool + 0x238));
+            n = (s32)(*(f32 *)(pool + 0x300) * t);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            nlSprPut(&params);
+            i = (i + 1);
+            params = *(NLsprarg *)(tbl + 0x28a0);
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = *(NLsprarg *)(tbl + 0x28a0);
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            nlSprPut(&params);
+            i = (i + 1);
+            params = *(NLsprarg *)(tbl + 0x2e40);
+            params.x = (f32)(*(f64 *)(pool + 0x3a0) + (*(f64 *)(pool + 0x398) + (f64)((i * 19) + 304)));
+            params.y = *(f32 *)(pool + 0x210);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            nlSprPut(&params);
+            params = *(NLsprarg *)(tbl + 0x2cb0);
+            params.x = (f32)(*(f64 *)(pool + 0x2d8) + (*(f64 *)(pool + 0x398) + (f64)((i * 19) + 304)));
+            params.y = *(f32 *)(pool + 0x210);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            nlSprPut(&params);
+            params = *(NLsprarg *)(tbl + 0x2e90);
+            params.x = (f32)(*(f64 *)(pool + 0x3a8) + (*(f64 *)(pool + 0x398) + (f64)((i * 19) + 304)));
+            params.y = *(f32 *)(pool + 0x210);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            nlSprPut(&params);
+        } else {
+            if (t > *(f64 *)(pool + 0x3b8)) {
+                params = *(NLsprarg *)(tbl + 0x2800);
+                params.x = (f32)(i * 19 + 304);
+                params.y = *(f32 *)(pool + 0x3c0);
+                params.x = params.x + (f32)(u - 252);
+                col = 0xFF1F9CFF;
+                y2 = 132;
+                params.y = params.y + (f32)y2;
+                params.base_color = col;
+                params.x = params.x + *(f32 *)(pool + 0x274);
+                params.y = params.y + *(f32 *)(pool + 0x274);
+                params.z = params.z + *(f64 *)(pool + 0x278);
+                params.base_color = 0;
+                nlSprPut(&params);
+                params = *(NLsprarg *)(tbl + 0x2800);
+                params.x = (f32)(i * 19 + 304);
+                params.y = *(f32 *)(pool + 0x3c0);
+                params.x = params.x + (f32)(u - 252);
+                col = 0xFF1F9CFF;
+                y2 = 132;
+                params.y = params.y + (f32)y2;
+                params.base_color = col;
+                nlSprPut(&params);
+                i = 1;
+            } else {
+                if (*(f64 *)(pool + 0x3b8) == t) {
+                    col = 0xFFFFFFFF;
+                } else {
+                    params = *(NLsprarg *)(tbl + 0x2850);
+                    params.x = (f32)(i * 19 + 304);
+                    params.y = *(f32 *)(pool + 0x3c0);
+                    params.x = params.x + (f32)(u - 252);
+                    col = 0xFFFF0900;
+                    y2 = 132;
+                    params.y = params.y + (f32)y2;
+                    params.base_color = col;
+                    params.x = params.x + *(f32 *)(pool + 0x274);
+                    params.y = params.y + *(f32 *)(pool + 0x274);
+                    params.z = params.z + *(f64 *)(pool + 0x278);
+                    params.base_color = 0;
+                    nlSprPut(&params);
+                    params = *(NLsprarg *)(tbl + 0x2850);
+                    params.x = (f32)(i * 19 + 304);
+                    params.y = *(f32 *)(pool + 0x3c0);
+                    params.x = params.x + (f32)(u - 252);
+                    col = 0xFFFF0900;
+                    y2 = 132;
+                    params.y = params.y + (f32)y2;
+                    params.base_color = col;
+                    nlSprPut(&params);
+                    i = 1;
+                }
+            }
+            t = __fabs(t);
+            t = (f32)t;
+            n = (s32)t;
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            t = __fabs(t);
+            t = (f32)t;
+            n = (s32)t;
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            nlSprPut(&params);
+            i = (i + 1);
+            params = *(NLsprarg *)(tbl + 0x28f0);
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = *(NLsprarg *)(tbl + 0x28f0);
+            params.x = (f32)(i * 19 + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            nlSprPut(&params);
+            t = t - (f32)n;
+            n = (s32)(*(f32 *)(pool + 0x238) * t);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            nlSprPut(&params);
+            i = (i + 1);
+            t = t - ((f32)n / *(f32 *)(pool + 0x238));
+            n = (s32)(*(f32 *)(pool + 0x300) * t);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = ((NLsprarg *)(tbl + 0x2490))[n];
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            nlSprPut(&params);
+            i = (i + 1);
+            params = *(NLsprarg *)(tbl + 0x28a0);
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            params.x = params.x + *(f32 *)(pool + 0x274);
+            params.y = params.y + *(f32 *)(pool + 0x274);
+            params.z = params.z + *(f64 *)(pool + 0x278);
+            params.base_color = 0;
+            nlSprPut(&params);
+            params = *(NLsprarg *)(tbl + 0x28a0);
+            params.x = *(f64 *)(pool + 0x398) + (f64)((i * 19) + 304);
+            params.y = *(f32 *)(pool + 0x3c0);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            nlSprPut(&params);
+            i = (i + 1);
+            params = *(NLsprarg *)(tbl + 0x2e40);
+            params.x = (f32)(*(f64 *)(pool + 0x3a0) + (*(f64 *)(pool + 0x398) + (f64)((i * 19) + 304)));
+            params.y = *(f32 *)(pool + 0x210);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            nlSprPut(&params);
+            params = *(NLsprarg *)(tbl + 0x2cb0);
+            params.x = (f32)(*(f64 *)(pool + 0x2d8) + (*(f64 *)(pool + 0x398) + (f64)((i * 19) + 304)));
+            params.y = *(f32 *)(pool + 0x210);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            nlSprPut(&params);
+            params = *(NLsprarg *)(tbl + 0x2e90);
+            params.x = (f32)(*(f64 *)(pool + 0x3a8) + (*(f64 *)(pool + 0x398) + (f64)((i * 19) + 304)));
+            params.y = *(f32 *)(pool + 0x210);
+            params.x = params.x + (f32)(u - 252);
+            y2 = 132;
+            params.y = params.y + (f32)y2;
+            params.base_color = col;
+            nlSprPut(&params);
+        }
+    }
+    t = t;
+}
+#pragma opt_propagation reset
+#pragma opt_common_subs reset
+asm void lbl_0001B5B8(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_golf/lbl_0001B5B8.s"
+}
+#pragma peephole on
+void lbl_00022524(void)
+{
+    u8 *tbl = (u8 *)lbl_00026E28;
+
+    nlSprPut((NLsprarg *)(tbl + 0x690));
+    nlSprPut((NLsprarg *)(tbl + 0x6e0));
+    if ((s8)lbl_802F1BE8.unk4 == 0) {
+        if ((s32)lbl_802F1BE8.unk0 == 0) {
+            nlSprPut((NLsprarg *)(tbl + 0x730));
+        } else if ((s32)lbl_802F1BE8.unk0 == 1) {
+            nlSprPut((NLsprarg *)(tbl + 0x7d0));
+        }
+        nlSprPut((NLsprarg *)(tbl + 0x870));
+        nlSprPut((NLsprarg *)(tbl + 0x910));
+        nlSprPut((NLsprarg *)(tbl + 0x9b0));
+    } else if ((s8)lbl_802F1BE8.unk4 != 0) {
+        if ((s32)lbl_802F1BE8.unk0 == 0) {
+            nlSprPut((NLsprarg *)(tbl + 0x780));
+        } else if ((s32)lbl_802F1BE8.unk0 == 1) {
+            nlSprPut((NLsprarg *)(tbl + 0x820));
+        }
+        nlSprPut((NLsprarg *)(tbl + 0x8c0));
+        nlSprPut((NLsprarg *)(tbl + 0x960));
+        nlSprPut((NLsprarg *)(tbl + 0xa00));
+    }
+    nlSprPut((NLsprarg *)(tbl + 0xa50));
+    nlSprPut((NLsprarg *)(tbl + 0xaa0));
+}
+asm void lbl_00022610(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_golf/lbl_00022610.s"
+}
+#pragma opt_propagation off
+#pragma peephole on
+void lbl_00022904(s16 *p, f32 scale, f32 t)
+{
+    NLsprarg params;
+    NLsprarg params2;
+    u8 *tbl = (u8 *)lbl_00026E28;
+    u8 *pool = (u8 *)lbl_00026550;
+    f32 dy;
+    s32 m;
+    s32 n;
+
+    params = *(NLsprarg *)(tbl + 0x2d0);
+    params.y = params.y + (dy = *(f32 *)(pool + 0x474) * t);
+    nlSprPut(&params);
+    params = *(NLsprarg *)tbl;
+    params.y = params.y + dy;
+    nlSprPut(&params);
+    params = ((NLsprarg *)(tbl + 0x370))[*p];
+    params.y = params.y + dy;
+    nlSprPut(&params);
+    params = ((NLsprarg *)(tbl + 0x190))[modeCtrl.currPlayer];
+    params.y = params.y + dy;
+    nlSprPut(&params);
+    m = modeCtrl.currPlayer;
+    if (lbl_00009968(m) == 0)
+        lbl_00010E74(ballInfo[m].ape->charaId, 1, *(f32 *)(pool + 0x454), *(f32 *)(pool + 0x468) + dy);
+    else if (lbl_00009968(m) == 1)
+        lbl_000115F8(ballInfo[m].ape->charaId, 1, *(f32 *)(pool + 0x454), *(f32 *)(pool + 0x468) + dy);
+    else if (lbl_00009968(m) == 2)
+        lbl_00011254(ballInfo[m].ape->charaId, 1, *(f32 *)(pool + 0x454), *(f32 *)(pool + 0x468) + dy);
+    params = ((NLsprarg *)(tbl + 0x50))[*p];
+    params.y = params.y + dy;
+    nlSprPut(&params);
+    params = ((NLsprarg *)(tbl + 0x2d00))[*p];
+    params.y = params.y + dy;
+    nlSprPut(&params);
+    if (*p == 0)
+        params2 = *(NLsprarg *)(tbl + 0x5a0);
+    else if (*p == 1)
+        params2 = *(NLsprarg *)(tbl + 0x550);
+    else if (*p == 2)
+        params2 = *(NLsprarg *)(tbl + 0x500);
+    else if (*p == 3)
+        params2 = *(NLsprarg *)(tbl + 0x4b0);
+    params2.zm_x = params2.u1 = scale;
+    params2.y = params2.y + dy;
+    nlSprPut(&params2);
+    n = *(f32 *)(pool + 0x46c) * scale;
+    params2 = *(NLsprarg *)(tbl + 0x320);
+    params2.y = params2.y + dy;
+    while (n >= 14)
+    {
+        nlSprPut(&params2);
+        params2.x = params2.x + *(f32 *)(pool + 0x470);
+        n -= 14;
+    }
+    if (n > 0)
+    {
+        params2.zm_x = params2.u1 = n / *(f32 *)(pool + 0x470);
+        nlSprPut(&params2);
+    }
+}
+#pragma opt_propagation reset
+#pragma opt_propagation off
+#pragma peephole on
+void lbl_00022D4C(s16 *p, float f)
+{
+    NLsprarg b;
+    NLsprarg a;
+    u8 *tbl = (u8 *)lbl_00026E28;
+    u8 *pool = (u8 *)lbl_00026550;
+    float d;
+    int cp;
+
+    b = *(NLsprarg *)(tbl + 0x2d0);
+    b.y = b.y + (d = *(f32 *)(pool + 0x478) * f);
+    nlSprPut(&b);
+    b = *(NLsprarg *)tbl;
+    b.y = b.y + d;
+    nlSprPut(&b);
+    b = ((NLsprarg *)(tbl + 0x370))[*p];
+    b.y = b.y + d;
+    nlSprPut(&b);
+    b = ((NLsprarg *)(tbl + 0x50))[*p];
+    b.y = b.y + d;
+    nlSprPut(&b);
+    b = ((NLsprarg *)(tbl + 0x2d00))[*p];
+    b.y = b.y + d;
+    nlSprPut(&b);
+    b = ((NLsprarg *)(tbl + 0x190))[modeCtrl.currPlayer];
+    b.y = b.y + d;
+    nlSprPut(&b);
+    cp = modeCtrl.currPlayer;
+    if ((u8)lbl_00009968(cp) == 0)
+        lbl_00010E74(ballInfo[cp].ape->charaId, 1, *(f32 *)(pool + 0x454), *(f32 *)(pool + 0x468) + d);
+    else if ((u8)lbl_00009968(cp) == 1)
+        lbl_000115F8(ballInfo[cp].ape->charaId, 1, *(f32 *)(pool + 0x454), *(f32 *)(pool + 0x468) + d);
+    else if ((u8)lbl_00009968(cp) == 2)
+        lbl_00011254(ballInfo[cp].ape->charaId, 1, *(f32 *)(pool + 0x454), *(f32 *)(pool + 0x468) + d);
+    *(s8 *)lbl_100001CA = *p;
+    if (*p == 0)
+        a = *(NLsprarg *)(tbl + 0x5a0);
+    else if (*p == 1)
+        a = *(NLsprarg *)(tbl + 0x550);
+    else if (*p == 2)
+        a = *(NLsprarg *)(tbl + 0x500);
+    else if (*p == 3)
+        a = *(NLsprarg *)(tbl + 0x4b0);
+    a.y = a.y + d;
+    nlSprPut(&a);
+}
+#pragma opt_propagation reset
+asm void lbl_000230E4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_golf/lbl_000230E4.s"
+}
+asm void lbl_00023AB4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_golf/lbl_00023AB4.s"
+}
 #pragma force_active reset

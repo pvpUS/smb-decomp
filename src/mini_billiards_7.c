@@ -1507,10 +1507,242 @@ void lbl_00005DD0(void)
     }
 }
 #pragma peephole on
-asm void lbl_00006DC0(void)
+void lbl_00006DC0(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_billiards/lbl_00006DC0.s"
+    u8 *p = lbl_0001C2B8;
+    u8 *q = lbl_10000000;
+    Vec sp24;
+    Vec d;
+    s8 sp10[5];
+    s8 sp8[5];
+    int i;
+    int j;
+    int ok;
+    s8 cnt;
+    s8 flag;
+    s8 hit;
+    f32 t;
+    cnt = 0;
+    sp24 = *(Vec *)(p + 0xAD8);
+    flag = ((ok = (*(s16 *)(q + 0xA68) < *(s8 *)(q + 0x11) / 2 + 1 &&
+                   *(s16 *)(q + 0xA6E) < *(s8 *)(q + 0x11) / 2 + 1)) != 0 ||
+            *(s8 *)(q + 0x11) == -1);
+    if (flag != 0) {
+        if (*(s32 *)(q + 0x20) == 1) {
+            cameraInfo[0].eye.x = *(f32 *)(p + 0x9C4);
+            cameraInfo[0].eye.y = *(f32 *)(p + 0xA1C);
+            cameraInfo[0].eye.z = *(f32 *)(p + 0x8B4);
+            *(f32 *)(q + 0x9C34) = *(f32 *)(p + 0x8C0);
+            for (i = 0; i < 2; i++) {
+                *(f32 *)&((u8 *)(q + 0x98CC))[i * 0x68] = *(f32 *)(p + 0x8B4);
+                *(f32 *)&((u8 *)(q + 0x98D0))[i * 0x68] = *(f32 *)(p + 0x8B4);
+                *(f32 *)&((u8 *)(q + 0x98D4))[i * 0x68] = *(f32 *)(p + 0x8B4);
+                *(f32 *)&((u8 *)(q + 0x98D8))[i * 0x68] = *(f32 *)(p + 0x8B8);
+            }
+        }
+        *(s8 *)(q + 0x9878) = 0;
+        *(f32 *)(q + 0x9880) = *(f32 *)(p + 0x8B4);
+        *(f32 *)(q + 0x9884) = *(f32 *)(p + 0x8B4);
+        for (i = 1; i < 10; i++) {
+            *(s8 *)&((u8 *)(q + 0x9878))[i * 0x68] = 1;
+            *(f32 *)&((u8 *)(q + 0x9880))[i * 0x68] = *(f32 *)(p + 0x8B8);
+            *(f32 *)&((u8 *)(q + 0x9884))[i * 0x68] = *(f32 *)(p + 0x8B4);
+            if (*(f32 *)&((u8 *)(q + 0x988C))[i * 0x68] < *(f32 *)(p + 0xAE4)) {
+                *(f32 *)&((u8 *)(q + 0x988C))[i * 0x68] += *(f32 *)(p + 0x9EC);
+                if (*(f32 *)&((u8 *)(q + 0x988C))[i * 0x68] >= *(f32 *)(p + 0x8C0))
+                    *(f32 *)&((u8 *)(q + 0x988C))[i * 0x68] = *(f32 *)(p + 0x8C0);
+            } else {
+                Vec *v = (Vec *)&((u8 *)(q + 0x98AC))[i * 0x68];
+                f32 s;
+
+                *(f32 *)&((u8 *)(q + 0x988C))[i * 0x68] = *(f32 *)(p + 0x8C0);
+                *(f32 *)&((u8 *)(q + 0x98AC))[i * 0x68] = *(f32 *)&((u8 *)(q + 0x98A0))[i * 0x68] - *(f32 *)&((u8 *)(q + 0x9888))[i * 0x68];
+                *(f32 *)&((u8 *)(q + 0x98B0))[i * 0x68] = *(f32 *)(p + 0x8B4);
+                *(f32 *)&((u8 *)(q + 0x98B4))[i * 0x68] = *(f32 *)&((u8 *)(q + 0x98A8))[i * 0x68] - *(f32 *)&((u8 *)(q + 0x9890))[i * 0x68];
+                s = mathutil_vec_sq_len(v);
+                if (s > *(f32 *)(p + 0x944)) {
+                    if (s > *(f32 *)(p + 0x9E8)) {
+                        mathutil_vec_normalize_len(v);
+                        *(f32 *)&((u8 *)(q + 0x98AC))[i * 0x68] *= *(f32 *)(p + 0x9EC);
+                        *(f32 *)&((u8 *)(q + 0x98B4))[i * 0x68] *= *(f32 *)(p + 0x9EC);
+                    } else {
+                        cnt++;
+                    }
+                    *(f32 *)&((u8 *)(q + 0x9888))[i * 0x68] += *(f32 *)&((u8 *)(q + 0x98AC))[i * 0x68];
+                    *(f32 *)&((u8 *)(q + 0x9890))[i * 0x68] += *(f32 *)&((u8 *)(q + 0x98B4))[i * 0x68];
+                    if (i != 0) {
+                        Quaternion *qq = (Quaternion *)&((u8 *)(q + 0x98CC))[i * 0x68];
+
+                        u_math_unk8(qq, (Vec *)&((u8 *)(q + 0x98AC))[i * 0x68], &sp24,
+                                    *(f32 *)(p + 0x8C0));
+                    }
+                } else {
+                    cnt++;
+                    *(f32 *)&((u8 *)(q + 0x98CC))[i * 0x68] = *(f32 *)(p + 0x8B4);
+                    *(f32 *)&((u8 *)(q + 0x98D0))[i * 0x68] = *(f32 *)(p + 0x8B4);
+                    *(f32 *)&((u8 *)(q + 0x98D4))[i * 0x68] = *(f32 *)(p + 0x8B4);
+                    *(f32 *)&((u8 *)(q + 0x98D8))[i * 0x68] = *(f32 *)(p + 0x8B8);
+                }
+            }
+        }
+        if (cnt == 9 && *(s32 *)(q + 0x20) < 0x1A4)
+            *(s32 *)(q + 0x20) = 0x1A4;
+        cnt = 0;
+        do {
+            hit = 0;
+            for (i = 0; i < 9; i++) {
+                if ((s8)*(u8 *)&((u8 *)(q + 0x9878))[i * 0x68] != 1)
+                    continue;
+                for (j = i + 1; j < 10; j++) {
+                    if ((s8)*(u8 *)&((u8 *)(q + 0x9878))[j * 0x68] != 1)
+                        continue;
+                    d.x = *(f32 *)&((u8 *)(q + 0x9888))[i * 0x68] - *(f32 *)&((u8 *)(q + 0x9888))[j * 0x68];
+                    d.y = *(f32 *)&((u8 *)(q + 0x988C))[i * 0x68] - *(f32 *)&((u8 *)(q + 0x988C))[j * 0x68];
+                    d.z = *(f32 *)&((u8 *)(q + 0x9890))[i * 0x68] - *(f32 *)&((u8 *)(q + 0x9890))[j * 0x68];
+                    if (d.x * d.x + d.y * d.y + d.z * d.z < *(f32 *)(p + 0x8B8)) {
+                        t = mathutil_sqrt(*(f32 *)(p + 0x8B8) - d.x * d.x - d.z * d.z);
+                        *(f32 *)&((u8 *)(q + 0x988C))[i * 0x68] = t + *(f32 *)&((u8 *)(q + 0x988C))[j * 0x68];
+                        hit = 1;
+                    }
+                }
+            }
+            cnt++;
+        } while (hit != 0 && cnt < 0x64);
+    } else {
+        if (*(s32 *)(q + 0x20) == 1) {
+            lbl_802F1DFC = 0;
+            u_somePlayerId = 0;
+            u_play_sound_0(0x1E0);
+        }
+        *(f32 *)(q + 0x98F0) = *(f32 *)(p + 0x954);
+        *(f32 *)(q + 0x98F8) = *(f32 *)(p + 0xAE8);
+        *(f32 *)(q + 0x9958) = *(f32 *)(p + 0x8DC);
+        *(f32 *)(q + 0x9960) = *(f32 *)(p + 0xAE8);
+        *(f32 *)(q + 0x99C0) = *(f32 *)(p + 0x954);
+        *(f32 *)(q + 0x99C8) = *(f32 *)(p + 0x8E4);
+        *(f32 *)(q + 0x9A28) = *(f32 *)(p + 0x8DC);
+        *(f32 *)(q + 0x9A30) = *(f32 *)(p + 0x8E4);
+        *(f32 *)(q + 0x98E8) = *(f32 *)(p + 0x8B8);
+        *(f32 *)(q + 0x9950) = *(f32 *)(p + 0x8B8);
+        *(f32 *)(q + 0x99B8) = *(f32 *)(p + 0x8B8);
+        *(f32 *)(q + 0x9A20) = *(f32 *)(p + 0x8B8);
+        *(f32 *)(q + 0x98EC) = *(f32 *)(p + 0x8B4);
+        *(f32 *)(q + 0x9954) = *(f32 *)(p + 0x8B4);
+        *(f32 *)(q + 0x99BC) = *(f32 *)(p + 0x8B4);
+        *(f32 *)(q + 0x9A24) = *(f32 *)(p + 0x8B4);
+    }
+    if ((flag != 0 && (*(s32 *)(q + 0x20) > 0x1E0 || lbl_0000939C(0) != 0)) ||
+        (flag == 0 && *(s32 *)(q + 0x20) > 0xB4 && lbl_0000939C(0) != 0)) {
+        if (*(s8 *)(q + 0x11) != -1 &&
+            ((*(s8 *)(q + 0x1E) == 0 &&
+              (*(s16 *)(q + 0xA68) >= *(s8 *)(q + 0x11) / 2 + 1 ||
+               *(s16 *)(q + 0xA6E) >= *(s8 *)(q + 0x11) / 2 + 1)) ||
+             ((s8)*(u8 *)(q + 0x1E) == 4 &&
+              *(s16 *)(q + 0xA68) >= *(s8 *)(q + 0x11) / 2 + 1) ||
+             (*(s8 *)(q + 0x1E) > 0 &&
+              *(s16 *)(q + 0xA6E) >= *(s8 *)(q + 0x11) / 2 + 1))) {
+            for (i = 15; i >= 0; i--) {
+                if (*(s32 *)&((u8 *)(q + 0x64))[i * 4] != -1) {
+                    thread_kill(*(s32 *)&((u8 *)(q + 0x64))[i * 4]);
+                    *(s32 *)&((u8 *)(q + 0x64))[i * 4] = -1;
+                }
+            }
+            for (i = 0; i < 10; i++)
+                *(s8 *)&((u8 *)(q + 0x9878))[i * 0x68] = 0;
+            camera_set_state_all(0x46);
+            *(s8 *)(q + 0xB) = *(s8 *)(q + 0xA);
+            *(s32 *)(q + 0x20) = 0;
+            *(s8 *)(q + 0xA) = 0x19;
+            *(s8 *)(q + 0x17) = 0;
+            event_finish(0x12);
+            event_start(0x12);
+            u_play_music(0x64, 8);
+            event_start(0xD);
+            if ((s8)*(u8 *)(q + 0x1E) == 4 &&
+                *(s16 *)(q + 0xA68) >= *(s8 *)(q + 0x11) / 2 + 1) {
+                sp10[4] = *(u8 *)(q + 0xA65);
+                sp10[0] = 0x40;
+                sp10[1] = 0x41;
+                sp10[2] = 0x42;
+                sp10[3] = 0x43;
+                sp8[4] = 0;
+                sp8[0] = 3;
+                sp8[1] = 3;
+                sp8[2] = 3;
+                sp8[3] = 3;
+                pauseMenuState.unk4 |= 2;
+                *(s8 *)(q + 0x1E) = 5;
+                func_8009CAE0(sp10, sp8, 0);
+            } else {
+                sp10[0] = *(u8 *)(q + 0xA65);
+                if (*(s8 *)(q + 0xA66) != 0)
+                    sp10[0] |= 0x40;
+                sp10[1] = *(u8 *)(q + 0xA6B);
+                if (*(s8 *)(q + 0xA6C) != 0)
+                    sp10[1] |= 0x40;
+                sp10[3] = -1;
+                sp10[2] = -1;
+                if (*(s16 *)(q + 0xA68) > *(s16 *)(q + 0xA6E)) {
+                    sp8[0] = 0;
+                    sp8[1] = 1;
+                    lbl_802F1C32 = 0;
+                } else {
+                    sp8[0] = 1;
+                    sp8[1] = 0;
+                    lbl_802F1C32 = 1;
+                }
+                pauseMenuState.unk4 |= 2;
+                func_8009C5E4(sp10, sp8);
+            }
+            lbl_00009EC4();
+            start_screen_fade(0x100, 0xFFFFFF, 4);
+        } else if (*(s8 *)(q + 0x1E) > 0 &&
+                   *(s16 *)(q + 0xA68) >= *(s8 *)(q + 0x11) / 2 + 1) {
+            *(s8 *)(q + 0x1E) = *(u8 *)(q + 0x1E) + 1;
+            if ((s8)*(u8 *)(q + 0x1E) == 4 &&
+                (*(s8 *)(q + 0x11) >= 0x5A ||
+                 (*(s16 *)(q + 0x9782) + *(s16 *)(q + 0x97CA) + *(s16 *)(q + 0x9812) == 0 &&
+                  (s8)*(u8 *)(q + 0x61) == 4 && *(s8 *)(q + 0x11) >= 3) ||
+                 (controllerInfo[playerControllerIDs[0]].held.triggerLeft > 0x14 &&
+                  controllerInfo[playerControllerIDs[0]].held.triggerLeft < 0x64 &&
+                  controllerInfo[playerControllerIDs[0]].held.triggerRight > 0x14 &&
+                  controllerInfo[playerControllerIDs[0]].held.triggerRight < 0x64)))
+                *(s8 *)(q + 4) = 1;
+            else
+                *(s8 *)(q + 4) = 0;
+            *(s8 *)(q + 0xB) = *(s8 *)(q + 0xA);
+            *(s32 *)(q + 0x20) = 0;
+            *(s8 *)(q + 0xA) = 7;
+            cameraInfo[0].eye.x = *(f32 *)(p + 0x958);
+            cameraInfo[0].eye.y = *(f32 *)(p + 0x8C0);
+            cameraInfo[0].eye.z = *(f32 *)(p + 0x95C);
+            for (i = 0; i < 10; i++) {
+                *(s8 *)&((u8 *)(q + 0x9878))[i * 0x68] = 0;
+                *(f32 *)&((u8 *)(q + 0x9880))[i * 0x68] = *(f32 *)(p + 0x8B4);
+                *(f32 *)&((u8 *)(q + 0x9884))[i * 0x68] = *(f32 *)(p + 0x8B4);
+            }
+            *(s8 *)(q + 0x9878) = 1;
+            *(s8 *)(q + 0x98E0) = 1;
+            *(s8 *)(q + 0xA6B) = *(s8 *)&((u8 *)(p + 0x8AF))[*(s8 *)(q + 0x1E)];
+            *(s16 *)(q + 0xA68) = 0;
+            *(s16 *)(q + 0xA6E) = 0;
+            lbl_00003CC8();
+            u_play_music(0x64, 8);
+        } else {
+            *(s32 *)(q + 0x20) = 0;
+            *(s8 *)(q + 0xB) = *(s8 *)(q + 0xA);
+            lbl_802F1C32 = 1 - lbl_802F1C32;
+            lbl_00000800();
+            lbl_802F1DFC = *(s8 *)&((u8 *)(q + 0xA65))[lbl_802F1C32 * 6];
+            u_somePlayerId = lbl_802F1C32;
+            u_play_sound_0(0x1E);
+            lbl_00008EC0(4, 1);
+            *(s8 *)(q + 0xA) = 0xC;
+            lbl_00003CC8();
+            u_set_global_skelanim_speed_scale(*(f32 *)(p + 0x8B8));
+            u_play_music(0x64, 8);
+        }
+    }
 }
 #pragma peephole on
 void lbl_000077D8(void)
