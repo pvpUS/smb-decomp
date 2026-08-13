@@ -172,8 +172,8 @@ extern void func_8006AD3C();
 extern void func_8006B3E8();
 extern void item_create();
 extern void item_replace_type_funcs();
-extern void mathutil_atan2();
-extern void mathutil_mtxA_from_rotate_y();
+s16 mathutil_atan2(double a, float b);
+void mathutil_mtxA_from_rotate_y(s16 angle);
 extern void mathutil_mtxA_from_translate();
 extern void mathutil_mtxA_pop();
 extern void mathutil_mtxA_rotate_y();
@@ -208,7 +208,7 @@ extern void mathutil_mtxA_rotate_x();
 extern void mathutil_mtxA_rotate_z();
 extern void mathutil_mtxA_to_euler();
 extern void mathutil_mtxA_translate();
-extern void mathutil_sqrt();
+float mathutil_sqrt(double n);
 extern void mathutil_vec_to_euler();
 extern void mathutil_vec_to_euler_xy();
 extern void new_ape_stat_motion();
@@ -242,7 +242,7 @@ extern void mathutil_mtxA_from_mtxB();
 extern void mathutil_mtxA_from_translate_xyz();
 extern void mathutil_mtxA_rigid_inv_tf_tl();
 extern void mathutil_mtxA_sq_from_identity();
-extern void mathutil_mtxA_tf_point_xyz();
+void mathutil_mtxA_tf_point_xyz(Vec *vec, float x, float y, float z);
 extern void mathutil_mtxA_translate_neg();
 extern void mathutil_vec_dot_normalized_safe();
 extern void rend_efc_mirror_enable();
@@ -360,7 +360,7 @@ void lbl_0001199C(void);
 void lbl_0001212C(void);
 void lbl_000121FC(void);
 void lbl_00012248(void);
-void lbl_000122C8(void);
+void lbl_000122C8(struct Camera *camera, struct Ball *ball);
 void lbl_00012E00(void);
 void lbl_000131C4(void);
 void lbl_000135DC(void);
@@ -398,12 +398,185 @@ void lbl_0001BA8C(void);
 void lbl_00012A48(void);
 void lbl_000133A0(void);
 void lbl_000130AC(void);
-#pragma force_active on
-asm void lbl_000122C8(void)
+static inline float mathutil_sum_of_sq_2(register float a, register float b)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000122C8.s"
+    asm
+    {
+        fmuls a, a, a
+        fmadds a, b, b, a
+    }
+    return a;
 }
+#pragma peephole on
+#pragma force_active on
+#pragma global_optimizer off
+void lbl_000122C8(struct Camera *camera, struct Ball *ball)
+{
+    Vec sp;
+    Vec oldEye;
+    Vec oldLookAt;
+    Vec vmin;
+    Vec vmax;
+    Vec v;
+    Vec b;
+    Vec a;
+    f32 *k = (f32 *)lbl_0001C430;
+
+    if ((s32)camera->unk204 != 0)
+    {
+        camera->rotY = cameraInfo[0].rotY;
+        camera->rotX = cameraInfo[0].rotX;
+        camera->rotZ = cameraInfo[0].rotZ;
+        camera->eye = cameraInfo[0].eye;
+        camera->eyeVel = cameraInfo[0].eyeVel;
+        camera->lookAt = cameraInfo[0].lookAt;
+        camera->lookAtVel = cameraInfo[0].lookAtVel;
+    }
+    else if (!(debugFlags & 0xA))
+    {
+        f32 sx;
+        f32 sy;
+        f32 r;
+        f32 t;
+        struct Ball *bp;
+        s8 *status;
+        int i;
+        u8 *p;
+        struct StageStartPos *q;
+
+        oldEye = camera->eye;
+        oldLookAt = camera->lookAt;
+        mathutil_mtxA_from_mtx(camera->unk144);
+        sy = k[0] * camera->sub28.unk38;
+        sx = sy * camera->sub28.aspect;
+        mathutil_mtxA_tf_point((Vec *)lbl_10018900, &sp);
+        vmin.x = k[1] + sp.x;
+        vmin.y = k[1] + sp.y;
+        vmax.x = sp.x - k[1];
+        vmax.y = sp.y - k[1];
+        vmax.z = sp.z - k[1];
+        a = vmax;
+        b = vmin;
+
+        p = lbl_10017664 + 8;
+        bp = ballInfo;
+        status = g_poolInfo.playerPool.statusList;
+        for (i = 0; i < g_poolInfo.playerPool.count; i++, bp++, status++, p += 0x18)
+        {
+            if (*status != STAT_NORMAL)
+                continue;
+            if (*(u16 *)(p + 0x12) & 2)
+                continue;
+            r = k[2] * bp->currRadius;
+            mathutil_mtxA_tf_point_xyz(&sp, bp->pos.x, bp->pos.y + r, bp->pos.z);
+            mathutil_mtxA_tf_vec(&bp->vel, &v);
+            v.x = *(f64 *)(k + 4) * __fabs(v.x);
+            v.y = *(f64 *)(k + 4) * __fabs(v.y);
+            if (v.z < k[6])
+                v.z = k[6];
+            else
+                v.z = v.z * k[7];
+            if (vmax.z < v.z + (sp.z + r))
+                vmax.z = v.z + (sp.z + r);
+            t = r + ((sp.y + v.y) + sy * sp.z);
+            if (vmax.y < t)
+                vmax.y = t;
+            t = ((sp.y - v.y) - sy * sp.z) - r;
+            if (vmin.y > t)
+                vmin.y = t;
+            t = r + ((sp.x + v.x) + sx * sp.z);
+            if (vmax.x < t)
+                vmax.x = t;
+            t = ((sp.x - v.x) - sx * sp.z) - r;
+            if (vmin.x > t)
+                vmin.x = t;
+        }
+
+        r = k[8];
+        mathutil_mtxA_tf_point((Vec *)lbl_10018900, &sp);
+        t = r + (sp.y + sy * sp.z);
+        if (vmax.y < t)
+            vmax.y = t;
+        t = (sp.y - sy * sp.z) - r;
+        if (vmin.y > t)
+            vmin.y = t;
+        t = r + (sp.x + sx * sp.z);
+        if (vmax.x < t)
+            vmax.x = t;
+        t = (sp.x - sx * sp.z) - r;
+        if (vmin.x > t)
+            vmin.x = t;
+
+        r = k[9];
+        q = decodedStageLzPtr->startPos;
+        for (i = decodedStageLzPtr->unk7C; i > 0; i--, q++)
+        {
+            mathutil_mtxA_tf_point(&q->pos, &sp);
+            if (a.z < sp.z + r)
+                a.z = sp.z + r;
+            t = r + (sp.y + sy * sp.z);
+            if (a.y < t)
+                a.y = t;
+            t = (sp.y - sy * sp.z) - r;
+            if (b.y > t)
+                b.y = t;
+            t = r + (sp.x + sx * sp.z);
+            if (a.x < t)
+                a.x = t;
+            t = (sp.x - sx * sp.z) - r;
+            if (b.x > t)
+                b.x = t;
+        }
+
+        if (vmax.x > a.x)
+            vmax.x = a.x;
+        if (vmax.y > a.y)
+            vmax.y = a.y;
+        if (vmin.x < b.x)
+            vmin.x = b.x;
+        if (vmin.y < b.y)
+            vmin.y = b.y;
+        t = k[10] * (vmax.x - vmin.x) / sx;
+        if (vmax.z < t)
+            vmax.z = t;
+        t = k[10] * (vmax.y - vmin.y) / sy;
+        if (vmax.z < t)
+            vmax.z = t;
+        sp.x = k[10] * (vmax.x + vmin.x);
+        sp.y = k[10] * (vmax.y + vmin.y);
+        sp.z = vmax.z;
+        sp.x = sp.x * k[8];
+        sp.y = sp.y * k[8];
+        if (sp.z < k[6])
+            sp.z = sp.z * k[11];
+        else
+            sp.z = sp.z * k[12];
+        mathutil_mtxA_rigid_inv_tf_point(&sp, &sp);
+        camera->eye = sp;
+        sp.x = k[6];
+        sp.y = k[6];
+        sp.z = k[13];
+        mathutil_mtxA_from_rotate_y(lbl_802F1EA0);
+        mathutil_mtxA_rotate_x(lbl_802F1EA2);
+        mathutil_mtxA_tf_vec(&sp, &sp);
+        camera->lookAt.x = camera->eye.x + sp.x;
+        camera->lookAt.y = camera->eye.y + sp.y;
+        camera->lookAt.z = camera->eye.z + sp.z;
+        camera->eyeVel.x = camera->eye.x - oldEye.x;
+        camera->eyeVel.y = camera->eye.y - oldEye.y;
+        camera->eyeVel.z = camera->eye.z - oldEye.z;
+        camera->lookAtVel.x = camera->lookAt.x - oldLookAt.x;
+        camera->lookAtVel.y = camera->lookAt.y - oldLookAt.y;
+        camera->lookAtVel.z = camera->lookAt.z - oldLookAt.z;
+        sp.x = camera->lookAt.x - camera->eye.x;
+        sp.y = camera->lookAt.y - camera->eye.y;
+        sp.z = camera->lookAt.z - camera->eye.z;
+        camera->rotY = mathutil_atan2(sp.x, sp.z) - 0x8000;
+        camera->rotX = mathutil_atan2(sp.y, mathutil_sqrt(mathutil_sum_of_sq_2(sp.x, sp.z)));
+        camera->rotZ = 0;
+    }
+}
+#pragma global_optimizer reset
 asm void lbl_00012A48(void)
 {
     nofralloc

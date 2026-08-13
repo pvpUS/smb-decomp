@@ -229,9 +229,10 @@ void lbl_0000A754(void);
 void lbl_0000AE94(void);
 void lbl_0000AEE0(void);
 void lbl_0000AF68(void);
-void lbl_0000B130(void);
-void lbl_0000B624(void);
-void lbl_0000BACC(void);
+struct PilotSpray;
+void lbl_0000B130(Vec *pos, Vec *vel, struct PilotSpray *e);
+void lbl_0000B624(Vec *pos, Vec *vel, struct PilotSpray *e);
+void lbl_0000BACC(Vec *pos, Vec *vel, u32 idx);
 
 // Carried over from the heads of the absorbed files (merged by
 // tools/rel_merge_tu.py -- these are what the tool used to drop).

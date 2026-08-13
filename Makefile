@@ -892,13 +892,6 @@ SOURCES := \
 	asm/mini_golf_d3a.s \
 	src/mini_golf_31.c \
 	asm/mini_golf_d3b.s \
-	src/mini_golf_32.c \
-	src/mini_golf_33.c \
-	src/mini_golf_34.c \
-	src/mini_golf_35.c \
-	src/mini_golf_36.c \
-	src/mini_golf_37.c \
-	src/mini_golf_38.c \
 	src/mini_golf_39.c \
 	src/mini_golf_40.c \
 	src/mini_golf_41.c \

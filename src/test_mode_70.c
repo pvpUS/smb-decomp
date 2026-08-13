@@ -225,7 +225,7 @@ void lbl_00009560(void);
 void lbl_000095F8(void);
 void lbl_00009998(void);
 void lbl_00009A0C(void);
-void lbl_0000A304(void);
+void lbl_0000A304(Mtx, GXTexMtx);
 void lbl_0000A78C(void);
 void lbl_0000A7DC(void);
 void lbl_0000A7E0(void);

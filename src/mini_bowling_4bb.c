@@ -179,7 +179,7 @@ void lbl_00004DF8(struct BowlScore *p);
 void lbl_00005128(struct BowlSheet *sheet);
 void lbl_000051E0(struct BowlScore *p);
 char *lbl_000054BC(void);
-void lbl_00005564(void);
+void lbl_00005564(f32 arg);
 void lbl_00005B0C(void);
 void lbl_000066C4(struct Ape *ape, int status);
 void lbl_000068C4(struct Ape *ape, float speed);
@@ -1593,11 +1593,128 @@ char *lbl_000054BC(void)
             return cfg->arr2[i].name;
     return (char *)lbl_00015380;
 }
-asm void lbl_00005564(void)
+/*
+ * mini_bowling lbl_00005564 (362 insn) -- run 37 blind draft.
+ * "draw the bowling gauge/meter": eight NLsprarg templates copied out of the
+ * config blob at lbl_0000F020, angles poked in, then dispatched to nlSprPut
+ * in an order that depends on the meter angle, followed by a 5-step trail.
+ */
+
+#pragma opt_propagation off
+void lbl_00005564(f32 arg)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00005564.s"
+    u8 *k = lbl_0000F020;
+    u8 *w = lbl_10000000;
+    NLsprarg spA;
+    NLsprarg spB;
+    NLsprarg spC;
+    NLsprarg spD;
+    NLsprarg spE;
+    NLsprarg spF;
+    NLsprarg spG;
+    NLsprarg spH;
+    NLsprarg *pg;
+    NLsprarg *ph;
+    int i;
+    int h;
+    s16 old;
+    f32 t;
+    f64 dd;
+
+    spA = *(NLsprarg *)(k + 0x190);
+    spB = *(NLsprarg *)(k + 0x1e0);
+    spC = ((NLsprarg *)(k + 0x410))[currentBall->colorId];
+    spD = ((NLsprarg *)(k + 0x550))[currentBall->ape->charaId];
+    if (!(debugFlags & 0xa)) {
+        old = *(s16 *)(w + 0x174);
+        *(s16 *)(w + 0x174) = old + *(f32 *)(k + 0x20a4) * arg;
+        if (*(f64 *)(k + 0x1dc0) != arg && *(s16 *)(w + 0x174) >= 0 && old < 0) {
+            h = u_play_sound_1_dupe(0x9c);
+            if (h != -1) {
+                SoundVol(h, *(f64 *)(k + 0x20a8)
+                                + *(f64 *)(k + 0x20b0) * __fabs(*(f32 *)(w + 0x170)));
+                SoundDop(h, *(f64 *)(k + 0x20b8)
+                                + *(f64 *)(k + 0x20c0) * __fabs(*(f32 *)(w + 0x170)));
+            }
+        }
+    }
+    spD.ang = spC.ang = *(s16 *)(w + 0x174);
+    if (arg >= *(f64 *)(k + 0x1dc0)) {
+        spE = *(NLsprarg *)(k + 0x2d0);
+        spF = *(NLsprarg *)(k + 0x320);
+    } else {
+        spE = *(NLsprarg *)(k + 0x370);
+        spF = *(NLsprarg *)(k + 0x3c0);
+    }
+    spE.ang = spF.ang = *(f32 *)(k + 0x20c8) * arg;
+    if (spE.ang < -32768) {
+        spB.z = *(f32 *)(k + 0x20cc);
+        spF.z = *(f32 *)(k + 0x20d0);
+        spA.z = *(f32 *)(k + 0x20d4);
+        spE.z = *(f32 *)(k + 0x20d8);
+        nlSprPut(&spB);
+        nlSprPut(&spF);
+        nlSprPut(&spA);
+        nlSprPut(&spE);
+    } else if (spE.ang < 0) {
+        spB.z = *(f32 *)(k + 0x20cc);
+        spE.z = *(f32 *)(k + 0x20d0);
+        spA.z = *(f32 *)(k + 0x20d4);
+        nlSprPut(&spB);
+        nlSprPut(&spE);
+        nlSprPut(&spA);
+    } else if (spE.ang == 0) {
+        nlSprPut(&spA);
+        nlSprPut(&spB);
+    } else if (spE.ang < 32768) {
+        spA.z = *(f32 *)(k + 0x20cc);
+        spE.z = *(f32 *)(k + 0x20d0);
+        spB.z = *(f32 *)(k + 0x20d4);
+        nlSprPut(&spA);
+        nlSprPut(&spE);
+        nlSprPut(&spB);
+    } else {
+        spA.z = *(f32 *)(k + 0x20cc);
+        spF.z = *(f32 *)(k + 0x20d0);
+        spB.z = *(f32 *)(k + 0x20d4);
+        spE.z = *(f32 *)(k + 0x20d8);
+        nlSprPut(&spA);
+        nlSprPut(&spF);
+        nlSprPut(&spB);
+        nlSprPut(&spE);
+    }
+    nlSprPut(&spC);
+    nlSprPut(&spD);
+
+    pg = (NLsprarg *)(k + 0x690);
+    ph = (NLsprarg *)(k + 0x820);
+    for (i = 0; i < 5; i++, pg++, ph++) {
+        dd = *(f64 *)(k + 0x1d28) - *(f32 *)(k + 0x20dc) * (globalAnimTimer & 0x1f)
+            + *(f64 *)(k + 0x1f50) * i;
+        t = dd;
+        if (t > *(f64 *)(k + 0x1d28))
+            t = t - *(f64 *)(k + 0x1d28);
+        if (arg <= *(f64 *)(k + 0x1dc0)) {
+            spG = *pg;
+        } else {
+            spG = ((NLsprarg *)(k + 0x690))[4 - i];
+            spG.ang += 32768;
+        }
+        spG.z = spA.z - *(f64 *)(k + 0x1d68);
+        spG.trnsl = t * t;
+        nlSprPut(&spG);
+        if (arg >= *(f64 *)(k + 0x1dc0)) {
+            spH = *ph;
+        } else {
+            spH = ((NLsprarg *)(k + 0x820))[4 - i];
+            spH.ang += 32768;
+        }
+        spH.z = spB.z - *(f64 *)(k + 0x1d68);
+        spH.trnsl = t * t;
+        nlSprPut(&spH);
+    }
 }
+#pragma opt_propagation reset
 
 asm void lbl_00005B0C(void)
 {

@@ -278,7 +278,7 @@ void lbl_00006248(void);
 void lbl_000062F8(void);
 void lbl_000065A0(void);
 void lbl_000068E8(void);
-void lbl_000069D0(void);
+void lbl_000069D0(struct Ball *, Vec *);
 void lbl_00006CF0(void);
 void lbl_00006FF4(void);
 void lbl_000070FC(void);

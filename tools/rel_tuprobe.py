@@ -353,51 +353,192 @@ def find_def(src, label):
     return None
 
 
-_ASM_BLOCK = re.compile(r'(?m)^[^\n]*(?:INCLUDE_ASM\s*\(|\basm\s*\{|'
-                        r'^\s*asm\s+[A-Za-z_][\w \t\*]*\([^;]*\)\s*\{)')
+# ---------------------------------------------------------------------------
+# THE PEEPHOLE REGIME.  Rewritten in run 37; see peephole_regime_ex() for the
+# state machine and the four defects it closes.  The old one-regex detector was
+# wrong in BOTH directions and its verdict is quoted in every module report.
+
+# Declaration specifiers that may precede the `asm` keyword on an asm FUNCTION
+# DEFINITION.
+#
+# ** RUN 37 DEFECT 2 -- FALSE `on`, THE DANGEROUS DIRECTION. **  The old third
+# alternative was anchored `^\s*asm`, so `static asm void lbl_XXXX(void)` was
+# NOT MATCHED AT ALL.  Nine owner files open their stub that way and eight of
+# them follow it with `#pragma force_active reset` and no `#pragma peephole
+# on`.  The detector walked straight past a real asm block, reported `on` for a
+# TU whose peephole optimiser is off, and -- unlike a false `off`, which makes
+# the tool inject a harmless pragma -- INJECTED NOTHING AND SAID NOTHING.
+_SPEC = (r'(?:static|extern|inline|register|volatile|const|__inline|'
+         r'__declspec[ \t]*\([^)]*\))')
+_ASM_START = re.compile(r'(?m)^[^\n]*?\bINCLUDE_ASM[ \t]*\('
+                        r'|^[ \t]*(?:' + _SPEC + r'[ \t]+)*asm\b')
+# `on` only -- retained because it is the historical name and reads clearly at
+# the call site.  The state machine uses _PEEP_ANY.
 _PEEP_ON = re.compile(r'(?m)^[ \t]*#pragma[ \t]+peephole[ \t]+on\b')
+_PEEP_ANY = re.compile(r'(?m)^[ \t]*#pragma[ \t]+peephole[ \t]+'
+                       r'(on|off|reset)\b')
+
+
+def asm_blocks(src):
+    r"""-> [(start, end)] of every construct that DEOPTIMISES the rest of the
+    TU: an asm FUNCTION DEFINITION, or an `INCLUDE_ASM(...)` row.  `end` is
+    exclusive.
+
+    ** RUN 37 DEFECT 1 -- FALSE `off`. **  The old regex tried to match a whole
+    asm block with `\([^;]*\)\s*\{`.  `[^;]*` excludes `;` but NOT newlines,
+    and an asm stub body contains no `;` at all, so the greedy scan ran past
+    the stub's `}` to the DECLARATOR OF A LATER C FUNCTION.  `m.end()` landed
+    past the `#pragma peephole on` that restores the regime, the pragma search
+    started after it, and the answer came out `off` when it was `on`.  The end
+    of a block is found here by BRACE MATCHING on comment-blanked text, which
+    cannot overrun.
+
+    ** RUN 37 DEFECT 4 -- ALSO FALSE `off`, AND IT SURVIVED INTO THE FIX THAT
+    WAS QUEUED TO LAND. **  A STATEMENT-level `asm { }` inside a C function
+    body DOES NOT deoptimise the translation unit.  MEASURED, mwcc 1.1, the
+    Makefile's own flags, an 80-instruction canary that becomes 85 when the
+    peephole optimiser is off (Bscratch/probe_stmt.py):
+
+        asm { nop }                                     80  ON
+        asm NEWLINE { nop }                             80  ON
+        src/mini_race_52.c's shape (register operands)  80  ON
+        src/mini_bowling_40.c's shape (7 ops)           80  ON
+        src/camera.c's static-inline shape              80  ON
+        asm void f(void){...}      -- a FUNCTION        85  OFF
+        static asm void f(void){...}                    85  OFF
+        extern asm void f(void){...}                    85  OFF
+        an asm stmt AFTER a pragma has restored `on`    80  ON
+
+    The old alternative `\basm\s*\{` matched all five statement shapes (`\s*`
+    spans the newline).  Four REL owner files use the statement form:
+    src/mini_bowling_40.c:254, src/mini_bowling_87.c:255,
+    src/mini_fight_13c.c:374, src/mini_race_52.c:381.
+
+    A PROTOTYPE (`asm void f(void);`) opens no block and is skipped: the scan
+    stops at the first `{` or `;` at paren depth 0 and a `;` means there is no
+    body.
+
+    SCOPE NOT TESTED: `INCLUDE_ASM` -- there are ZERO occurrences of it in
+    src/ or include/ today, so its deopt behaviour is inherited from the old
+    tool on faith rather than measured.  If one ever appears, probe it.
+    """
+    blank = strip_code(src)
+    n = len(blank)
+    out = []
+    for m in _ASM_START.finditer(blank):
+        if 'INCLUDE_ASM' in blank[m.start():m.end()]:
+            j = blank.find(')', m.end())
+            out.append((m.start(), (j + 1) if j >= 0 else n))
+            continue
+        # What follows the `asm` keyword decides what this is.
+        k = m.end()
+        while k < n and blank[k] in ' \t\r\n':
+            k += 1
+        if k < n and blank[k] == '{':
+            continue                      # DEFECT 4: a statement, not a deopt
+        # A declaration.  Walk to the first `{` or `;` at paren depth 0.
+        j, depth = m.end(), 0
+        while j < n:
+            c = blank[j]
+            if c == '(':
+                depth += 1
+            elif c == ')':
+                depth -= 1
+            elif depth == 0 and c in '{;':
+                break
+            j += 1
+        if j >= n or blank[j] == ';':
+            continue                      # a prototype opens no block
+        depth, k = 0, j
+        while k < n:
+            if blank[k] == '{':
+                depth += 1
+            elif blank[k] == '}':
+                depth -= 1
+                if depth == 0:
+                    k += 1
+                    break
+            k += 1
+        out.append((m.start(), k))
+    return out
+
+
+def peephole_regime_ex(src, start):
+    """Is the PEEPHOLE OPTIMISER on or off at offset `start`?
+
+    -> (regime, why, cause) with regime 'on'/'off' and cause in
+       'default' | 'asm' | 'pragma'.  `cause` is what the caller needs to know
+       before it INJECTS anything: see RUN 37 DEFECT 3 at the injection site.
+
+    ** RUN 34's finding, unchanged and still the reason this exists. **  mwcc
+    1.1 turns the peephole optimiser OFF for the rest of the translation unit
+    after an asm FUNCTION, and `#pragma peephole on` turns it back on in place.
+    This tool splices a candidate body into the REAL owner TU, and in a merged
+    or carved module the splice point lands squarely inside that window, so
+    without this the probe silently compiles a DIFFERENTLY-OPTIMISED program
+    from the one golden is.  MEASURED run 34 (mini_bowling): `lbl_00003A10` is
+    worth +17 instructions between the regimes and `lbl_00003574` +29.
+
+    ** `#pragma peephole reset` IS A STACK POP, not a return to the default. **
+    Six occurrences in src/ (all in mini_fight).  Neither the shipped detector
+    nor run 35's proposed fix modelled it.  MEASURED with 20 standalone probes,
+    twice, in runs 36 and 37 independently (Bscratch/probe_reset.py):
+
+        plain                   ON     asm ; on                ON
+        reset only              ON     asm ; reset             ON
+        off                     OFF    asm ; on ; reset        OFF
+        on                      ON     asm ; on ; on ; reset   ON
+        asm                     OFF    asm ; on ; reset;reset  ON
+        static asm              OFF    off ; reset             ON
+        extern asm              OFF    asm ; asm ; on          ON
+        asm PROTOTYPE only      ON     asm ; on ; asm          OFF
+        on ; asm                OFF    comment-only asm        ON
+
+    The only model that fits all twenty:
+
+        on / off   ->  push(current); current = that
+        reset      ->  current = pop(), or the DEFAULT `on` if the stack is
+                       empty
+        asm block  ->  current = off, pushing nothing
+
+    SCOPE NOT TESTED: mwcc 1.1 only, the Makefile's own CFLAGS only; `#pragma
+    push`/`#pragma pop`, which do not occur in this tree; and whether the deopt
+    begins at the asm function's first byte or its `}` -- every splice point is
+    outside every block, so no measurement here can distinguish them and this
+    uses the `}`.
+    """
+    blank = strip_code(src)
+    events = [(e, 'asm', s) for s, e in asm_blocks(src) if e <= start]
+    for m in _PEEP_ANY.finditer(blank[:start]):
+        events.append((m.start(), m.group(1).lower(), m.start()))
+    events.sort()
+    cur, stack = 'on', []
+    why = 'no asm block precedes the splice point'
+    cause = 'default'
+    for _pos, kind, at in events:
+        if kind == 'asm':
+            cur, cause = 'off', 'asm'
+            why = ('an asm function at offset %d precedes the splice point and '
+                   'nothing turns the peephole optimiser back on -- mwcc 1.1 '
+                   'has it OFF here' % at)
+        elif kind in ('on', 'off'):
+            stack.append(cur)
+            cur, cause = kind, 'pragma'
+            why = ('`#pragma peephole %s` at offset %d is the last thing to set '
+                   'the regime' % (kind, at))
+        else:
+            cur = stack.pop() if stack else 'on'
+            cause = 'pragma'
+            why = ('`#pragma peephole reset` at offset %d pops the regime back '
+                   'to %s' % (at, cur))
+    return cur, why, cause
 
 
 def peephole_regime(src, start):
-    """Is the PEEPHOLE OPTIMISER on or off at offset `start` in this TU?
-
-    ** RUN 34 -- THE SIXTH FICTIONAL-MATCH MODE, AND IT LIVED HERE. **
-    Found by mini_bowling, bisected in six probes.  mwcc 1.1 turns the peephole
-    optimiser OFF for the rest of the translation unit after an ASM BLOCK -- the
-    run-12 deopt, which is peephole-only and post-block-only -- and a `#pragma
-    peephole on` turns it back on in place.
-
-    This tool splices a candidate body into the REAL owner TU, and in a module
-    that has been carved or merged the owner is full of `INCLUDE_ASM` stubs.
-    **The splice point lands squarely inside that window**, so the probe was
-    silently compiling a DIFFERENTLY-OPTIMISED program from the one golden is
-    and from the one a real link of a correct conversion would be -- and said
-    nothing about it.  MEASURED: mini_bowling's `lbl_00003A10` is worth +17
-    instructions and `lbl_00003574` +29 between the two regimes; both stored
-    figures read as garbage until the pragma is prepended, whereupon both
-    reproduce exactly.
-
-    ** A TU MERGE MANUFACTURES THE CONFIGURATION **, so every merged module
-    inherits it; four modules merged TUs in runs 33-34 alone, and 1,784 of
-    mini_bowling's 4,038 remaining instructions sit at an affected splice point.
-
-    -> (regime, why) with regime 'on' / 'off'.
-    """
-    before = src[:start]
-    m = None
-    for m in _ASM_BLOCK.finditer(before):
-        pass
-    if m is None:
-        return 'on', 'no asm block precedes the splice point'
-    p = None
-    for p in _PEEP_ON.finditer(before[m.end():]):
-        pass
-    if p is not None:
-        return 'on', ('an asm block precedes, but `#pragma peephole on` is '
-                      'restored after it')
-    return 'off', ('an asm block precedes the splice point at offset %d with '
-                   'no `#pragma peephole on` after it -- mwcc 1.1 has the '
-                   'peephole optimiser OFF here' % m.start())
+    """(regime, why).  The historical two-value contract, unchanged: external
+    scripts import this name.  New code wants peephole_regime_ex()."""
+    r, w, _c = peephole_regime_ex(src, start)
+    return r, w
 
 
 def pragmas_above(src, start):
@@ -441,9 +582,100 @@ def _unescape(s):
 
 
 KNOWN_DIRECTIVES = ('//@SUB ', '//@PROTO ', '//@DROPRE ')
+_KNOWN_TOKENS = ('//@SUB', '//@PROTO', '//@DROPRE')
+
+
+def _diagnose_directive(ln):
+    """-> None if `ln` is a well-formed KNOWN directive, else why it is not.
+
+    ** RUN 37 DEFECT 6 -- THREE OF THIS RUN'S FAKE `COMPILE FAILED`s WERE THE
+    DIRECTIVE PARSER REFUSING, AND THE REFUSAL WAS READ AS THE DRAFT'S
+    FAILURE. **  `//@DROP` unimplemented (mini_fight), a `//@SUBST` header
+    (option, 24 drafts / 410 insn), a body whose function is named `pf`
+    (mini_billiards).  MEASURED run 37 over the nine `_scratch_<MOD>` corpora,
+    every `//@`-prefixed line in every stored draft:
+
+        //@SUB  MALFORMED, single `|`   19040     <- 13.7x the well-formed count
+        //@pre:                          9075
+        //@decl:                         3841
+        //@PROTO                         2772     implemented
+        //@SUB  well-formed `|||`        1394     implemented
+        //@SUBST                         1034
+        //@ENDSUBST                       534
+        //@PRELUDE / //@ENDPRELUDE        495 each
+        //@DROP                           383
+        //@WRAP                           302
+        //@TOP / //@ENDTOP                229 each
+        //@DROPRE                         120     implemented
+
+    THREE of fourteen tokens are implemented, and the single-pipe `//@SUB`
+    alone outnumbers the correct form 13.7 to 1.  So the message a draft author
+    sees is the product this tool ships most often, and `UNKNOWN DIRECTIVE`
+    told them nothing they could act on.
+
+    This does NOT start accepting anything new -- a directive that is quietly
+    ignored means you score a program you did not write, which is the whole
+    reason the catch-all exists.  It refuses exactly as before, and says what
+    to type instead.
+    """
+    tok = ln.split(' ', 1)[0].rstrip()
+    if tok in _KNOWN_TOKENS:
+        if not ln.startswith(tok + ' '):
+            return 'no space after `%s`.' % tok
+        if tok != '//@SUB':
+            return None
+        arg = ln[len(tok) + 1:]
+        if '|||' in arg:
+            return None
+        n = arg.count('|')
+        if n == 0:
+            return ('`//@SUB` has NO separator.  The form is '
+                    '`//@SUB old|||new` -- THREE pipes.')
+        parts = arg.split('|')
+        fixed = '//@SUB %s|||%s' % (parts[0], '|'.join(parts[1:]))
+        return ('`//@SUB`\'s separator is THREE pipes `|||`, not %d.  '
+                'Three, so that a `|` may appear in C code.\n'
+                '      THIS LINE, CORRECTED:\n      %s' % (n, fixed))
+    hint = ''
+    for k in _KNOWN_TOKENS:
+        if tok.startswith(k) or k.startswith(tok):
+            hint = ('  Did you mean `%s`?%s'
+                    % (k, '  Its separator is THREE pipes `|||`.'
+                       if k == '//@SUB' else ''))
+            break
+    return 'unknown directive `%s`.%s' % (tok, hint)
 
 
 def apply_directives(owner, body, where):
+    # ** EVERY malformed line, in ONE run. **  This used to die on the first
+    # one, so a draft carrying twelve of them cost twelve invocations to
+    # discover -- and option's 24 drafts for one label all carried the same
+    # bad header.
+    bad = []
+    for i, ln in enumerate(body.split('\n'), 1):
+        if ln.startswith('//@'):
+            d = _diagnose_directive(ln)
+            if d:
+                bad.append((i, ln, d))
+    if bad:
+        # ** AND A MARKER ON STDOUT. **  die() writes to STDERR, and the
+        # harnesses in this project capture STDOUT -- so what a caller saw was
+        # the header, no score row, and no explanation.  MEASURED run 37:
+        # `rel_relscore` on a body with one bad directive prints a header and
+        # nothing else on stdout.  A tool that refuses must say so where the
+        # reader is looking.
+        print('%s: %d MALFORMED DIRECTIVE LINE(S).  NOTHING WAS SCORED.  '
+              'Details on stderr.' % (where, len(bad)))
+        msg = ['%s: %d malformed directive line(s) -- ALL of them, so they can '
+               'be fixed in one pass:' % (where, len(bad))]
+        for i, ln, d in bad:
+            msg.append('  line %d: %s' % (i, ln.strip()[:110]))
+            msg.append('    %s' % d)
+        msg.append('This tool implements %s and nothing else.'
+                   % ', '.join(d.strip() for d in KNOWN_DIRECTIVES))
+        msg.append('It REFUSES rather than ignoring: a directive that quietly '
+                   'does nothing means you score a program you did not write.')
+        die('\n'.join(msg))
     keep = []
     for ln in body.split('\n'):
         if ln.startswith('//@SUB '):
@@ -568,7 +800,27 @@ def selftest():
     o, bd = apply_directives('void lbl_3(void);\nint x;\n',
                              '//@PROTO void lbl_3(int a);\nbody\n', 't')
     assert 'void lbl_3(int a);' in o and bd.strip() == 'body'
-    print('rel_tuprobe selftest: 8 checks OK')
+    # RUN 37: the four peephole defects, as cases.  A SELFTEST IS NOT A
+    # GATE -- these exist to fail fast on a typo, and the real proof is the
+    # three-sided canary in _corpus_run37/Bscratch/gate37.py.
+    _P = [('asm void a(void)\n{\n#include "x.s"\n}\n#pragma peephole on\n'
+           'void HERE(int a, int b)\n{\n}\n', 'on'),      # defect 1
+          ('static asm void a(void)\n{\n#include "x.s"\n}\n'
+           '#pragma force_active reset\nvoid HERE(void)\n{\n}\n', 'off'),
+          ('void f(void)\n{\n    asm\n    {\n        nop\n    }\n}\n'
+           'void HERE(void)\n{\n}\n', 'on'),              # defect 4
+          ('asm void a(void);\nvoid HERE(void)\n{\n}\n', 'on'),
+          ('asm void a(void)\n{\n#include "x.s"\n}\n#pragma peephole on\n'
+           '#pragma peephole reset\nvoid HERE(void)\n{\n}\n', 'off'),
+          ('asm void a(void)\n{\n#include "x.s"\n}\n'
+           '#pragma peephole reset\nvoid HERE(void)\n{\n}\n', 'on'),
+          ('/* asm void a(void)\n{\n} */\nvoid HERE(void)\n{\n}\n', 'on')]
+    for _t, _e in _P:
+        _o = _t.index('void HERE')
+        _g, _w, _c = peephole_regime_ex(_t, _o)
+        assert _g == _e, 'peephole case %r: expected %s got %s (%s)' % (
+            _t[:28], _e, _g, _w)
+    print('rel_tuprobe selftest: 8 checks + 7 peephole cases OK')
     print('A SELFTEST IS NOT A GATE.  Validate against a known real-link score '
           '(control mode on an already-matched label is the cheapest one).')
 
@@ -759,21 +1011,76 @@ def main():
         # write into the real TU for the conversion to link GOLDEN.  Scoring in
         # the deoptimised regime is what produced the garbage figures.
         sp3 = find_def(src, label)
-        regime, rwhy = peephole_regime(src, sp3[0] if sp3 else len(src))
-        injected = False
-        if regime == 'off' and peep != 'off':
-            src = src[:sp3[0]] + '#pragma peephole on\n' + src[sp3[0]:]
-            injected = True
-        print('%-24s PEEPHOLE %s -- %s%s'
-              % (tag, regime.upper(), rwhy,
-                 '\n%-24s   INJECTED `#pragma peephole on` before the body, so '
-                 'this score is in GOLDEN\'S regime.\n%-24s   Your real '
-                 'conversion MUST carry that pragma too or the link will not '
-                 'match (--peephole off to score without it).'
-                 % ('', '') if injected else
-                 '\n%-24s   --peephole off: scoring in the DEOPTIMISED regime. '
-                 'This is NOT golden\'s.' % ''
-                 if regime == 'off' else ''))
+        regime, rwhy, rcause = peephole_regime_ex(
+            src, sp3[0] if sp3 else len(src))
+        injected = refused = deopted = False
+        if peep == 'off':
+            # ** RUN 37 DEFECT 5 -- `--peephole off` DID NOT DEOPTIMISE
+            # ANYTHING.  IT ONLY DECLINED TO INJECT. **
+            #
+            # `peep` had exactly ONE use in this file:
+            #     if regime == 'off' and peep != 'off':
+            # so whenever the regime was ALREADY ON -- which is 139 of the 166
+            # still-asm rows -- the flag did nothing at all and returned a
+            # BYTE-IDENTICAL score, which reads as a confirmation.  The
+            # docstring's "`off` scores in the deoptimised one" was false in
+            # exactly the case a module reaches for it.  Found independently by
+            # mini_billiards (four targets identical with and without the flag)
+            # and mini_race in run 37.
+            #
+            # The flag now means what it says: it FORCES the deoptimised
+            # regime, by injecting `#pragma peephole off` when the regime is on
+            # and doing nothing when it is already off.  This is the two-arm
+            # instrument -- `auto` vs `off` on the same body -- that previously
+            # required copying the owner out of the tree and blanking its
+            # pragmas by hand.
+            if regime == 'on':
+                src = src[:sp3[0]] + '#pragma peephole off\n' + src[sp3[0]:]
+                deopted = True
+        elif regime == 'off':
+            # ** RUN 37 DEFECT 3 -- THE INJECTION POINT. **  The pragma goes in
+            # at the DEFINITION's first line, which is BELOW any pragma the
+            # spliced body carries above that definition.  So a candidate's own
+            # `#pragma peephole off` was silently overridden while the run
+            # still printed `INJECTED` -- and a peephole canary written that
+            # way measures NOTHING.  MEASURED run 37, mini_billiards
+            # lbl_00012D4C: 30 instructions with the override, 33 without.
+            #
+            # The rule: `auto` injects only to undo an ASM-BLOCK deopt, which
+            # is the only thing this tool ever claimed to do.  When the `off`
+            # was written by a human -- in the owner or in the body -- it is
+            # deliberate and is left alone, LOUDLY.
+            if rcause == 'pragma':
+                refused = True
+            else:
+                src = src[:sp3[0]] + '#pragma peephole on\n' + src[sp3[0]:]
+                injected = True
+        print('%-24s PEEPHOLE %s -- %s' % (tag, regime.upper(), rwhy))
+        if injected:
+            print('%-24s   INJECTED `#pragma peephole on` before the body, so '
+                  'this score is in GOLDEN\'S regime.\n'
+                  '%-24s   Your real conversion MUST carry that pragma too or '
+                  'the link will not match (--peephole off to score without '
+                  'it).' % ('', ''))
+        elif refused:
+            print('%-24s   NOT INJECTING.  That `off` is an explicit '
+                  '`#pragma peephole`, not an asm-block deopt, so it was '
+                  'written\n'
+                  '%-24s   on purpose (by the owner or by your body) and '
+                  'overriding it would score a program you did not write.\n'
+                  '%-24s   Remove the pragma, or pass --peephole off to say '
+                  'you meant it.' % ('', '', ''))
+        elif deopted:
+            print('%-24s   --peephole off: INJECTED `#pragma peephole off`.  '
+                  'This score is in the DEOPTIMISED regime,\n'
+                  '%-24s   which is NOT golden\'s.  It is the second arm of a '
+                  'two-arm comparison, not a result on its own.'
+                  % ('', ''))
+        elif peep == 'off':
+            print('%-24s   --peephole off: the regime was already OFF here, so '
+                  'nothing was injected.\n'
+                  '%-24s   This IS the deoptimised regime, and it is NOT '
+                  'golden\'s.' % ('', ''))
         sp2 = find_def(src, label)
         is_stub = sp2 is not None and stub_inc in src[sp2[0]:sp2[1]]
         c = os.path.join(work, tag + '.c')
