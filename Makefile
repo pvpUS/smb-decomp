@@ -510,13 +510,6 @@ SOURCES := \
 	src/mini_race_28m.c \
 	src/mini_race_29.c \
 	src/mini_race_30.c \
-	src/mini_race_31.c \
-	src/mini_race_32.c \
-	src/mini_race_33.c \
-	src/mini_race_34.c \
-	src/mini_race_35.c \
-	src/mini_race_36.c \
-	src/mini_race_37.c \
 	asm/mini_race_d1.s \
 	src/mini_race_49b.c \
 	src/mini_race_49c.c \
@@ -1024,18 +1017,6 @@ SOURCES := \
 	asm/test_mode_d7.s \
 	src/test_mode_16.c \
 	asm/test_mode_dB.s \
-	src/test_mode_32.c \
-	src/test_mode_33.c \
-	src/test_mode_34.c \
-	src/test_mode_34b.c \
-	src/test_mode_35.c \
-	src/test_mode_36.c \
-	src/test_mode_37.c \
-	src/test_mode_38.c \
-	src/test_mode_39.c \
-	src/test_mode_40.c \
-	src/test_mode_41.c \
-	src/test_mode_42.c \
 	src/test_mode_43.c \
 	src/test_mode_44.c \
 	src/test_mode_45.c \

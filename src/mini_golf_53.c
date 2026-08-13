@@ -168,7 +168,7 @@ void lbl_000093A4(void);
 void lbl_000093B4(void);
 void lbl_000093C4(void);
 u8 lbl_000093D4(int a, int b);
-void lbl_000093F0(void);
+u8 lbl_000093F0(int i);
 void lbl_00009414(void);
 void lbl_00009424(void);
 void lbl_00009458(void);
@@ -839,10 +839,122 @@ void lbl_00012C80(int a)
     params.base_color = 0xFB5302;
     nlSprPut(&params);
 }
-asm void lbl_00012EEC(void)
+void lbl_00012EEC(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_golf/lbl_00012EEC.s"
+    u16 sums[4];
+    u8 rank[4];
+    NLsprarg spr;
+    u8 ids[4];
+    u8 *st = (u8 *)lbl_100001C8;
+    u8 *tbl = (u8 *)lbl_00026E28;
+    u8 *pool = (u8 *)lbl_00026550;
+    u32 t;
+    f64 f;
+    s32 i;
+    s32 j;
+    s32 k;
+    s32 r;
+    s32 step;
+    s32 sv;
+
+    if ((s32)lbl_802F1BE8.unk0 == 1) {
+        if (lbl_000093F0(0) == lbl_000093F0(1)) {
+            spr = *(NLsprarg *)(tbl + 0x2b20);
+            spr.x = *(f64 *)(pool + 0x2b0) + *(f32 *)(st + 0xc);
+            spr.y = *(f64 *)(pool + 0x2b8) + *(f32 *)(st + 0x10);
+            nlSprPut(&spr);
+            spr = *(NLsprarg *)(tbl + 0x2b20);
+            spr.x = *(f64 *)(pool + 0x2b0) + *(f32 *)(st + 0x18);
+            spr.y = *(f64 *)(pool + 0x2b8) + *(f32 *)(st + 0x1c);
+            nlSprPut(&spr);
+        } else if (lbl_000093F0(0) > lbl_000093F0(1)) {
+            spr = *(NLsprarg *)(tbl + 0x2b70);
+            spr.x = *(f64 *)(pool + 0x2b0) + *(f32 *)(st + 0xc);
+            spr.y = *(f64 *)(pool + 0x2b8) + *(f32 *)(st + 0x10);
+            t = globalAnimTimer % 60;
+            if (t < 30) {
+                spr.zm_x *= (f = *(f64 *)(pool + 0x140) + (f32)(30 - t) / *(f64 *)(pool + 0x2c0));
+                spr.zm_y *= f;
+            } else {
+                spr.zm_x *= (f = *(f64 *)(pool + 0x140) + (f32)(t - 30) / *(f64 *)(pool + 0x2c0));
+                spr.zm_y *= f;
+            }
+            nlSprPut(&spr);
+            spr = *(NLsprarg *)(tbl + 0x2bc0);
+            spr.x = *(f64 *)(pool + 0x2b0) + *(f32 *)(st + 0x18);
+            spr.y = *(f64 *)(pool + 0x2b8) + *(f32 *)(st + 0x1c);
+            nlSprPut(&spr);
+        } else if (lbl_000093F0(0) < lbl_000093F0(1)) {
+            spr = *(NLsprarg *)(tbl + 0x2bc0);
+            spr.x = *(f64 *)(pool + 0x2b0) + *(f32 *)(st + 0xc);
+            spr.y = *(f64 *)(pool + 0x2b8) + *(f32 *)(st + 0x10);
+            nlSprPut(&spr);
+            spr = *(NLsprarg *)(tbl + 0x2b70);
+            spr.x = *(f64 *)(pool + 0x2b0) + *(f32 *)(st + 0x18);
+            spr.y = *(f64 *)(pool + 0x2b8) + *(f32 *)(st + 0x1c);
+            t = globalAnimTimer % 60;
+            if (t < 30) {
+                spr.zm_x *= (f = *(f64 *)(pool + 0x140) + (f32)(30 - t) / *(f64 *)(pool + 0x2c0));
+                spr.zm_y *= f;
+            } else {
+                spr.zm_x *= (f = *(f64 *)(pool + 0x140) + (f32)(t - 30) / *(f64 *)(pool + 0x2c0));
+                spr.zm_y *= f;
+            }
+            nlSprPut(&spr);
+        }
+    } else if ((s32)lbl_802F1BE8.unk0 == 0) {
+        for (i = 0; i < modeCtrl.playerCount; i++) {
+            sums[i] = 0;
+            ids[i] = i;
+            for (j = 0; j < 18; j++)
+                sums[i] = sums[i] + lbl_000093D4(i, j);
+        }
+        for (i = 0; i < modeCtrl.playerCount; i++) {
+            for (k = i; k < modeCtrl.playerCount; k++) {
+                if (sums[i] > sums[k]) {
+                    sv = sums[i];
+                    sums[i] = sums[k];
+                    sums[k] = sv;
+                    sv = ids[i];
+                    ids[i] = ids[k];
+                    ids[k] = sv;
+                }
+            }
+        }
+        r = 0;
+        step = 1;
+        for (i = 0; i < modeCtrl.playerCount; i++) {
+            rank[ids[i]] = r;
+            if (sums[i] != sums[i + 1]) {
+                r = r + step;
+                step = 1;
+            } else {
+                step++;
+            }
+        }
+        for (i = 0; i < modeCtrl.playerCount; i++) {
+            if (rank[i] == 0) {
+                spr = *(NLsprarg *)(tbl + 0x29e0);
+                t = globalAnimTimer % 60;
+                if (t < 30) {
+                    spr.zm_x *= (f = *(f64 *)(pool + 0x140) + (f32)(30 - t) / *(f64 *)(pool + 0x2c0));
+                    spr.zm_y *= f;
+                } else {
+                    spr.zm_x *= (f = *(f64 *)(pool + 0x140) + (f32)(t - 30) / *(f64 *)(pool + 0x2c0));
+                    spr.zm_y *= f;
+                }
+            } else if (rank[i] == 1) {
+                spr = *(NLsprarg *)(tbl + 0x2a30);
+            } else if (rank[i] == 2) {
+                spr = *(NLsprarg *)(tbl + 0x2a80);
+            } else if (rank[i] == 3) {
+                spr = *(NLsprarg *)(tbl + 0x2ad0);
+            }
+            spr.x = *(f64 *)(pool + 0x2c8) + ((Vec *)(st + 0xc))[i].x;
+            spr.y = *(f64 *)(pool + 0x2b8) + ((Vec *)(st + 0xc))[i].y;
+            nlSprPut(&spr);
+        }
+    }
 }
 #pragma peephole on
 void lbl_00013664(f32 a, f32 b, f32 c)

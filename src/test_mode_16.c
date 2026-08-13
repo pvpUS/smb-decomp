@@ -151,8 +151,8 @@ extern void GXPixModeSync();
 extern void PSMTXConcat();
 extern void PSMTXCopy();
 extern void PSMTXInverse();
-extern void avdisp_get_eff_vertices();
-extern void avdisp_get_eff_vtxinfo();
+extern void *avdisp_get_eff_vertices(struct GMAModel *model);
+extern struct GMAEffVtxInfo *avdisp_get_eff_vtxinfo(struct GMAModel *model);
 extern void avdisp_get_matrices();
 extern void draw_test_camera_target();
 extern void effect_draw();
@@ -169,7 +169,7 @@ extern void func_800A7370();
 extern void func_800A7440();
 extern int get_font_bitmap_id();
 extern void item_draw();
-extern void load_model();
+extern struct GMAModel *load_model(char *fileName, struct TPL *tpl);
 extern void mot_ape_8008BAA8();
 extern void nl2ngc_draw_model_sort_translucent_alt2();
 extern void nlObjModelListFree();
@@ -202,7 +202,7 @@ void lbl_00003D94(void);
 void lbl_000040B4(void);
 void lbl_0000502C(void);
 void lbl_00005384(void);
-void lbl_000055E8(void);
+void lbl_000055E8(u32 *arg);
 void lbl_000056BC(void);
 void lbl_000057C0(void);
 void lbl_000065F0(void);
@@ -308,6 +308,75 @@ struct TestFontGroup
 };
 
 #define REPEAT_LOCAL(btn) (     ((rep & (btn)) || (analogInputs[0].repeat & (btn)))  || (         ((controllerInfo[0].held.button & (btn)) || (analogInputs[0].held & (btn)))      && (analogInputs[0].held & ANALOG_TRIGGER_RIGHT)     ) )
+
+// From the head of src/test_mode_41.c.  rel_merge_tu.py DROPS #define lines
+// (tools defect, run-34 #2 -- detection-only by design) and it dropped this
+// one; the merged TU uses it at three sites in tm_count()/tm_nth().
+#define TM_ITEMS(d) ((struct TestModeItem *)((d) + 0x376C))
+
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+static void lbl_000040B8(void);
+static void lbl_000041C4(void);
+extern void OSFreeToHeap();
+static void lbl_000050A4(void);
+static void lbl_000051C4(void);
+struct TestModeItem
+{
+    /*0x00*/ int cat;
+    /*0x04*/ char *catName;
+    /*0x08*/ char *name;
+};
+struct TestModePair
+{
+    /*0x00*/ int unk0;
+    /*0x04*/ int unk4;
+};
+struct TestModeStageList
+{
+    /*0x00*/ int unk0;
+    /*0x04*/ int unk4;
+    /*0x08*/ struct TestModePair *unk8;
+};
+struct TestModeWork
+{
+    /*0x000*/ u8 filler0[0x190];
+    /*0x190*/ struct TestModeStageList *unk190;
+    /*0x194*/ u8 filler194[0x5A8 - 0x194];
+    /*0x5A8*/ int unk5A8;
+    /*0x5AC*/ int unk5AC;
+    /*0x5B0*/ u8 filler5B0[0xD44 - 0x5B0];
+    /*0xD44*/ s16 mode;
+    /*0xD46*/ s16 unkD46;
+    /*0xD48*/ s16 sel[3];
+    /*0xD4E*/ u8 unkD4E;
+};
+static inline int tm_count(u8 *d, int cat)
+{
+    int i;
+    int n = 0;
+
+    for (i = 0; i < 236; i++)
+    {
+        if (TM_ITEMS(d)[i].cat == cat)
+            n++;
+    }
+    return n;
+}
+static inline char *tm_nth(u8 *d, int cat, int n)
+{
+    int i;
+    int c = 0;
+
+    for (i = 0; i < 236; i++)
+    {
+        if (TM_ITEMS(d)[i].cat == cat)
+            c++;
+        if (n == c)
+            return TM_ITEMS(d)[i].name;
+    }
+    return NULL;
+}
 
 #pragma force_active on
 void lbl_0000215C(void)
@@ -1033,4 +1102,481 @@ void lbl_00003D94(void)
 #undef AP
 #undef TH
 #undef EL
+void lbl_000040B4(void)
+{
+}
+static void lbl_000040B8(void)
+{
+    f32 *k = (f32 *)lbl_0000FE78;
+    u8 *w = lbl_10000000;
+
+    if (!(debugFlags & 0xA))
+    {
+        event_start(15);
+        camera_set_state_all(3);
+        currentCamera->eye.x = k[24];
+        currentCamera->eye.y = k[46];
+        currentCamera->eye.z = k[74];
+        currentCamera->lookAt.x = k[24];
+        currentCamera->lookAt.y = k[30];
+        currentCamera->lookAt.z = k[24];
+        *(s32 *)(w + 0x13C) = *(s32 *)(w + 0x150) = *(s32 *)(w + 0x154) =
+            *(s32 *)(w + 0x158) = 0;
+        lbl_00003D94();
+        *(f32 *)(w + 0x140) = k[46];
+        modeCtrl.unk10 = 0;
+        submodeFinishFunc = lbl_000040B4;
+        gameSubmodeRequest = 0x78;
+        avdisp_set_ambient(k[75], k[75], k[75]);
+    }
+}
+static asm void lbl_000041C4(void)
+{
+    nofralloc
+#include "../asm/nonmatchings/test_mode/lbl_000041C4.s"
+}
+#pragma peephole on
+void lbl_0000500C(void)
+{
+    gameModeRequest = 0;
+    gameSubmodeRequest = 0xF;
+}
+void lbl_0000502C(void)
+{
+    OSHeapHandle old;
+    u8 *w = lbl_10000000;
+
+    old = OSSetCurrentHeap(stageHeap);
+    free_model(*(void **)(w + 0x160));
+    free_tpl(*(struct TPL **)(w + 0x15C));
+    OSFreeToHeap(__OSCurrHeap, *(void **)(w + 0x16C));
+    OSSetCurrentHeap(old);
+}
+static void lbl_000050A4(void)
+{
+    f32 *k = (f32 *)lbl_0000FE78;
+    u8 *w = lbl_10000000;
+    OSHeapHandle prev;
+
+    prev = OSSetCurrentHeap(stageHeap);
+    *(struct TPL **)(w + 0x15C) = load_tpl((char *)lbl_0001323C);
+    *(struct GMAModel **)(w + 0x160) =
+        load_model((char *)lbl_0001324C, *(struct TPL **)(w + 0x15C));
+    *(struct GMAEffVtxInfo **)(w + 0x168) =
+        avdisp_get_eff_vtxinfo(*(struct GMAModel **)(w + 0x160));
+    *(void **)(w + 0x164) =
+        avdisp_get_eff_vertices(*(struct GMAModel **)(w + 0x160));
+    *(void **)(w + 0x16C) =
+        OSAllocFromHeap(__OSCurrHeap,
+                        (*(s32 **)(w + 0x168))[0] * 12 + 0x1F & ~0x1F);
+    event_start(15);
+    camera_set_state_all(2);
+    submodeFinishFunc = lbl_0000502C;
+    gameSubmodeRequest = 0x7B;
+    avdisp_set_ambient(k[75], k[75], k[75]);
+    *(s32 *)(w + 0x170) = 0;
+    *(s32 *)(w + 0x174) = 0;
+    *(s32 *)(w + 0x178) = 0;
+    *(s32 *)(w + 0x17C) = 0;
+    *(s32 *)(w + 0x180) = 0;
+    *(s32 *)(w + 0x184) = 0;
+    OSSetCurrentHeap(prev);
+}
+static void lbl_000051C4(void)
+{
+    u8 *p = lbl_10000000;
+    u8 *d = lbl_000102B0;
+    u16 rep;
+    int i;
+
+    window_set_cursor_pos(2, 2);
+    window_printf_2((char *)(d + 0x2FA8));
+    window_set_cursor_pos(4, 5);
+    rep = controllerInfo[0].repeat.button;
+    if (rep & PAD_BUTTON_UP)
+        *(s32 *)(p + 0x170) += 4;
+    if (rep & PAD_BUTTON_DOWN)
+        *(s32 *)(p + 0x170) += 1;
+    *(s32 *)(p + 0x170) %= 5;
+    if (controllerInfo[0].pressed.button & PAD_BUTTON_A)
+    {
+        s32 sel = *(s32 *)(p + 0x170);
+
+        ((s32 *)(p + 0x174))[sel] ^= 1;
+        switch (sel)
+        {
+        case 0:
+            break;
+        case 1:
+            set_shape_flags_in_model(*(struct GMAModel **)(p + 0x160), 8);
+            break;
+        case 2:
+            set_shape_flags_in_model(*(struct GMAModel **)(p + 0x160), 1);
+            break;
+        case 3:
+            set_shape_flags_in_model(*(struct GMAModel **)(p + 0x160), 2);
+            break;
+        case 4:
+            set_shape_flags_in_model(*(struct GMAModel **)(p + 0x160), 4);
+            break;
+        }
+    }
+    for (i = 0; i < 5U; i++)
+    {
+        if (i == *(s32 *)(p + 0x170))
+        {
+            window_set_text_color(2);
+            u_debug_print((char *)(d + 0x2FC0));
+        }
+        else
+        {
+            window_set_text_color(0);
+            u_debug_print((char *)(d + 0x2FC4));
+        }
+        u_debug_print(((char **)(d + 0x2F64))[i * 2 + ((s32 *)(p + 0x174))[i]]);
+        u_debug_print((char *)(d + 0x140));
+    }
+}
+struct TestSpark
+{
+    /*0x00*/ Vec pos;
+    /*0x0C*/ Vec vel;
+    /*0x18*/ u8 filler18[0x40 - 0x18];
+};
+
+struct TestSparkWork
+{
+    /*0x000*/ u8 filler0[0x160];
+    /*0x160*/ struct GMAModel *model;
+    /*0x164*/ struct TestSpark *sparks;
+    /*0x168*/ u32 *count;
+    /*0x16C*/ Vec *saved;
+};
+
+void lbl_00005384(void)
+{
+    u8 *k = lbl_0000FE78;
+    struct TestSparkWork *w = (struct TestSparkWork *)lbl_10000000;
+    int i;
+    float amp;
+
+    mathutil_mtxA_from_mtxB();
+    mathutil_mtxA_translate(&currentCamera->lookAt);
+    gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+    mathutil_mtxA_scale_s(*(float *)(k + 0x78));
+    lbl_000056BC();
+    mathutil_mtxA_from_mtxB();
+    mathutil_mtxA_translate_xyz(*(float *)(k + 0x60), *(float *)(k + 0x6C),
+                                *(float *)(k + 0x88));
+    mathutil_mtxA_rotate_x(-0x4000);
+    mathutil_mtxA_rotate_z(-0x4000);
+    gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+    for (i = 0; i < *w->count; i++)
+    {
+        w->saved[i] = w->sparks[i].pos;
+        switch (i % 3)
+        {
+        case 0:
+            amp = *(double *)(k + 0x160) * mathutil_sin(powerOnTimer << 9);
+            break;
+        case 1:
+            amp = *(float *)(k + 0x168) * mathutil_sin(powerOnTimer << 8);
+            break;
+        case 2:
+            amp = *(float *)(k + 0x16C) * mathutil_sin(powerOnTimer << 10);
+            break;
+        }
+        w->sparks[i].pos.x += amp * w->sparks[i].vel.x;
+        w->sparks[i].pos.y += amp * w->sparks[i].vel.y;
+        w->sparks[i].pos.z += amp * w->sparks[i].vel.z;
+    }
+    avdisp_set_fog_params(2, *(float *)(k + 0x170), *(float *)(k + 0x174));
+    avdisp_set_fog_color(0, 0x59, 0x69);
+    u_gxutil_set_fog_enabled(1);
+    avdisp_draw_model_unculled_sort_translucent(w->model);
+    u_gxutil_fog_something_2();
+    for (i = 0; i < *w->count; i++)
+        w->sparks[i].pos = w->saved[i];
+}
+void lbl_000055E8(u32 *arg)
+{
+    u8 *p = lbl_10000000;
+    OSHeapHandle prevHeap;
+    char name[128];
+
+    prevHeap = OSSetCurrentHeap(stageHeap);
+    sprintf(name, (char *)lbl_000138AC, arg[0], arg[1]);
+    *(struct TPL **)(p + 0x18C) = load_tpl(name);
+    if (*(struct TPL **)(p + 0x18C) != NULL)
+    {
+        sprintf(name, (char *)lbl_000138B8, arg[0], arg[1]);
+        *(struct GMA **)(p + 0x190) = load_gma(name, *(struct TPL **)(p + 0x18C));
+        if (*(struct GMA **)(p + 0x190) == NULL)
+        {
+            free_tpl(*(struct TPL **)(p + 0x18C));
+            *(struct TPL **)(p + 0x18C) = NULL;
+        }
+    }
+    OSSetCurrentHeap(prevHeap);
+}
+void lbl_000056BC(void)
+{
+    u8 *p = lbl_0000FE78;
+    GXColor amb;
+
+    amb = *(GXColor *)(p + 0x180);
+    GXSetChanMatColor(GX_COLOR0, *(GXColor *)(p + 0x17C));
+    GXSetChanAmbColor(GX_COLOR0, amb);
+    GXSetChanCtrl(GX_COLOR0A0, GX_FALSE, GX_SRC_REG, GX_SRC_REG, 0, GX_DF_NONE, GX_AF_NONE);
+    GXSetNumChans(1);
+    GXSetTevOrder_cached(GX_TEVSTAGE0, GX_TEXCOORD_NULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+    GXSetTevOp_cached(GX_TEVSTAGE0, GX_PASSCLR);
+    GXSetNumTexGens(0);
+    GXSetNumTevStages_cached(1);
+    mathutil_mtxA_from_mtxB_translate(&currentCamera->lookAt);
+    mathutil_mtxA_scale_s(*(float *)(p + 0x184));
+    GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
+    GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+    GXSetCurrentMtx(GX_PNMTX0);
+    GXDrawSphere(8, 8);
+}
+void lbl_000057C0(void)
+{
+    struct TestModeWork *w = (struct TestModeWork *)lbl_10000000;
+    u8 *d = lbl_000102B0;
+    struct TestModeStageList *q;
+    s16 m = w->mode;
+    int i;
+
+    if (m == 0)
+    {
+        s16 rep = controllerInfo[0].repeat.button;
+
+        if (REPEAT_LOCAL(PAD_BUTTON_UP))
+        {
+            w->sel[m]--;
+            if (w->sel[m] < 0)
+                w->sel[m] = 5;
+        }
+        if (REPEAT_LOCAL(PAD_BUTTON_DOWN))
+        {
+            w->sel[m]++;
+            if (w->sel[m] >= 6U)
+                w->sel[m] = 0;
+        }
+    }
+    if (m == 1)
+    {
+        s16 rep = controllerInfo[0].repeat.button;
+
+        if (REPEAT_LOCAL(PAD_BUTTON_UP))
+        {
+            w->sel[m]--;
+            if (w->sel[m] < 0)
+                w->sel[m] = tm_count(d, w->sel[0]) - 1;
+        }
+        if (REPEAT_LOCAL(PAD_BUTTON_DOWN))
+        {
+            w->sel[m]++;
+            if (w->sel[m] >= tm_count(d, w->sel[0]))
+                w->sel[m] = 0;
+        }
+    }
+
+    window_set_cursor_pos(1, 1);
+    window_set_text_color(4);
+    window_printf_2((char *)(d + 0x427C));
+    window_set_text_color(0);
+    if (w->mode < 2)
+    {
+        window_set_cursor_pos(1, 0x22);
+        window_printf_2((char *)(d + 0x428C));
+        window_printf_2((char *)(d + 0x429C));
+        window_printf_2((char *)(d + 0x42AC));
+    }
+    else
+    {
+        window_set_cursor_pos(1, 0x22);
+        window_printf_2((char *)(d + 0x42C4));
+        window_printf_2((char *)(d + 0x42DC));
+    }
+    if (w->unkD4E != 0)
+    {
+        window_set_cursor_pos(0x22, 0x22);
+        window_printf_2((char *)(d + 0x42F0));
+        window_set_text_color(2);
+        window_printf_2((char *)(d + 0x42F8));
+        window_set_text_color(0);
+    }
+    else
+    {
+        window_set_cursor_pos(0x22, 0x22);
+        window_printf_2((char *)(d + 0x4304));
+    }
+    if (w->unk5AC != 0)
+    {
+        window_set_cursor_pos(0x22, 0x23);
+        window_set_text_color(2);
+        window_printf_2((char *)(d + 0x4318));
+        window_set_text_color(0);
+        window_printf_2((char *)(d + 0x432C));
+    }
+    else
+    {
+        window_set_cursor_pos(0x22, 0x24);
+        window_printf_2((char *)(d + 0x4340));
+    }
+
+    if (w->mode >= 0)
+    {
+        for (i = 0; i < 6U; i++)
+        {
+            window_set_cursor_pos(1, (i - w->sel[0] + 6U) % 6U + 3);
+            if (i == w->sel[0])
+            {
+                if (w->mode == 0)
+                    window_set_text_color(2);
+                else
+                    window_set_text_color(0);
+                window_printf_2((char *)(d + 0x4354), ((char **)(d + 0x3690))[i]);
+            }
+            else if (w->mode == 0)
+            {
+                window_printf_2((char *)(d + 0x435C), ((char **)(d + 0x3690))[i]);
+            }
+            window_set_text_color(0);
+        }
+    }
+
+    if (w->mode >= 1)
+    {
+        if (tm_count(d, w->sel[0]) < 20)
+        {
+            s16 *cur = &w->sel[1];
+            int j;
+
+            for (j = 0; j < tm_count(d, w->sel[0]); j++)
+            {
+                window_set_cursor_pos(10,
+                    (j - *cur + tm_count(d, w->sel[0])) % tm_count(d, w->sel[0]) + 3);
+                if (j == *cur)
+                {
+                    if (w->mode == 1)
+                        window_set_text_color(2);
+                    else
+                        window_set_text_color(0);
+                    window_printf_2((char *)(d + 0x4354), tm_nth(d, w->sel[0], j + 1));
+                }
+                else if (w->mode == 1)
+                {
+                    window_printf_2((char *)(d + 0x435C), tm_nth(d, w->sel[0], j + 1));
+                }
+                window_set_text_color(0);
+            }
+        }
+        else
+        {
+            int j;
+            s16 *cur = &w->sel[1];
+
+            for (j = 0; j < tm_count(d, w->sel[0]); j++)
+            {
+                if ((j - *cur + tm_count(d, w->sel[0])) % tm_count(d, w->sel[0]) < 20)
+                {
+                    window_set_cursor_pos(10,
+                        (j - *cur + tm_count(d, w->sel[0])) % tm_count(d, w->sel[0]) + 3);
+                    if (j == *cur)
+                    {
+                        window_set_text_color(2);
+                        window_printf_2((char *)(d + 0x4354), tm_nth(d, w->sel[0], j + 1));
+                    }
+                    else if (w->mode == 1)
+                    {
+                        window_printf_2((char *)(d + 0x435C), tm_nth(d, w->sel[0], j + 1));
+                        window_set_cursor_pos(0xD, 2);
+                        window_printf_2((char *)(d + 0x4364));
+                        window_set_cursor_pos(0xD, 0x17);
+                        window_printf_2((char *)(d + 0x4368));
+                    }
+                    window_set_text_color(0);
+                }
+            }
+        }
+    }
+
+    if (w->mode >= 2)
+    {
+        window_set_cursor_pos(0x13, 3);
+        q = w->unk190;
+        if (q == NULL)
+            window_printf_2((char *)(d + 0x436C));
+        else
+            window_printf_2((char *)(d + 0x4378), w->unk5A8, q->unk0,
+                            q->unk8[w->unk5A8].unk4);
+    }
+}
+void lbl_000065F0(void)
+{
+    f32 *k = (f32 *)lbl_0000FE78;
+    GXColor matColor = *(GXColor *)&k[103];
+    GXColor ambColor = *(GXColor *)&k[104];
+    GXColor color3 = *(GXColor *)&k[105];
+    GXColor color1 = *(GXColor *)&k[106];
+    GXColor color2 = *(GXColor *)&k[107];
+    GXLightObj lightObj;
+    Vec p1;
+    Vec p2;
+    Vec p3;
+    Vec pos;
+
+    mathutil_mtxA_from_translate(&currentCamera->lookAt);
+    mathutil_mtxA_rotate_y((s32)(k[108] * (powerOnTimer << 8)));
+    mathutil_unk_inline(k[39], &p1);
+
+    mathutil_mtxA_from_translate(&currentCamera->lookAt);
+    mathutil_mtxA_rotate_x(powerOnTimer << 8);
+    mathutil_unk_inline(k[109], &p2);
+
+    mathutil_mtxA_from_translate(&currentCamera->lookAt);
+    mathutil_mtxA_rotate_z((s32)(k[110] * (powerOnTimer << 8)));
+    mathutil_mtxA_tf_point_xyz(&p3, k[24], k[39], k[24]);
+
+    GXInitLightSpot(&lightObj, k[24], GX_SP_OFF);
+    GXInitLightDistAttn(&lightObj, k[99], k[111], GX_DA_STEEP);
+    mathutil_mtxA_tf_point(&p1, &pos);
+    GXInitLightPos(&lightObj, pos.x, pos.y, pos.z);
+    GXInitLightColor(&lightObj, color1);
+    GXLoadLightObjImm(&lightObj, GX_LIGHT2);
+
+    GXInitLightSpot(&lightObj, k[24], GX_SP_OFF);
+    GXInitLightDistAttn(&lightObj, k[99], k[111], GX_DA_STEEP);
+    mathutil_mtxA_tf_point(&p2, &pos);
+    GXInitLightPos(&lightObj, pos.x, pos.y, pos.z);
+    GXInitLightColor(&lightObj, color2);
+    GXLoadLightObjImm(&lightObj, GX_LIGHT3);
+
+    GXInitLightSpot(&lightObj, k[24], GX_SP_OFF);
+    GXInitLightDistAttn(&lightObj, k[99], k[111], GX_DA_STEEP);
+    mathutil_mtxA_tf_point(&p3, &pos);
+    GXInitLightPos(&lightObj, pos.x, pos.y, pos.z);
+    GXInitLightColor(&lightObj, color3);
+    GXLoadLightObjImm(&lightObj, GX_LIGHT4);
+
+    GXSetChanMatColor(GX_COLOR0, matColor);
+    GXSetChanAmbColor(GX_COLOR0, ambColor);
+    GXSetChanCtrl(GX_COLOR0A0, GX_TRUE, GX_SRC_REG, GX_SRC_REG,
+                  GX_LIGHT2 | GX_LIGHT3 | GX_LIGHT4, GX_DF_CLAMP, GX_AF_NONE);
+    GXSetNumChans(1);
+    GXSetTevOrder_cached(GX_TEVSTAGE0, GX_TEXCOORD_NULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+    GXSetTevOp_cached(GX_TEVSTAGE0, GX_PASSCLR);
+    GXSetNumTexGens(0);
+    GXSetNumTevStages_cached(1);
+
+    mathutil_mtxA_from_mtxB_translate(&currentCamera->lookAt);
+    mathutil_mtxA_scale_s(k[112]);
+    GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
+    GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+    GXSetCurrentMtx(GX_PNMTX0);
+    GXDrawSphere(8, 8);
+}
 #pragma force_active reset

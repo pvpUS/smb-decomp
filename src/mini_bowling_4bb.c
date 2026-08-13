@@ -301,10 +301,181 @@ void u_play_sound_0(int arg0);
 void u_play_music(u32 arg0, s8 arg1);
 
 #pragma force_active on
-asm void lbl_000009EC(void)
+// lbl_000009EC (0x9EC): the bowling scene draw.  Spins the two lane-side
+// signboards by an angle derived from the shot timer at st+0x144, then draws
+// either the multi-view result screen (p[4] & 0x1000) or the single active
+// player's view.  The tail is the ball-trail: one solid pass plus a
+// 19-iteration alpha-fade of the same model.
+//
+// TWO SHAPES ARE LOAD-BEARING AND BOTH WERE MEASURED HERE (run 36):
+//  * `s8 stat` must be READ BEFORE the `if`.  Spelled as an && operand,
+//    `g_poolInfo.playerPool.statusList[0]`'s load sits in the block AFTER the
+//    first float compare; golden has it in the entry block.  Hoisting it into
+//    a block-scoped local moves ALIGNED 18 in 9 -> 6 in 5 and costs no frame.
+//    ** The SECOND branch must NOT be hoisted ** -- golden loads that one after
+//    its compares, and it is `lbzx`, not `lbz`.
+//  * `if (!(w > K) || !(h > K)) return;` is NOT the same program as
+//    `if (w > K && h > K && ...)`.  The last operand of an `||` guard emits
+//    `bgt <skip> / b <target>` -- branch-on-TRUE to the continuation plus an
+//    unconditional -- where an `&&` chain emits ONE branch-on-FALSE.  That
+//    extra branch is golden's, and it is the whole -1.  All five nesting
+//    splits of the `&&` chain (1|3, 2|2, 3|1, 1|1|2, 2|1|1) are
+//    BYTE-IDENTICAL to the flat chain; `!(h <= K)` inside the chain builds the
+//    right COUNT with `cror eq,lt,eq / beq` instead (363, 2 in 1).
+void lbl_000009EC(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_000009EC.s"
+    u8 *st = lbl_10000000;
+    u8 *cfg = lbl_0000F020;
+    u8 *p = lbl_00014F20;
+    Mtx m;
+    s16 ang;
+    int i;
+    int t;
+
+    t = *(s32 *)(st + 0x144);
+    if (t == 0)
+        ang = 0;
+    else if (t < 0x3c)
+        ang = *(f32 *)(cfg + 0x1cb0) * t;
+    else if (t > *(f64 *)(cfg + 0x1cb8))
+        ang = *(f64 *)(cfg + 0x1cc0) * (*(f64 *)(cfg + 0x1cc8) - t);
+    else
+        ang = 0x6000;
+
+    mathutil_mtxA_from_mtxB();
+    mathutil_mtxA_translate_xyz(*(f32 *)(cfg + 0x1cd0), *(f32 *)(cfg + 0x1cd4),
+                                *(f32 *)(cfg + 0x1cd8));
+    mathutil_mtxA_rotate_y(-ang);
+    GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+    GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
+    avdisp_draw_model_culled_sort_translucent(minigameGma->modelEntries[3].model);
+
+    mathutil_mtxA_from_mtxB();
+    mathutil_mtxA_translate_xyz(*(f32 *)(cfg + 0x1cdc), *(f32 *)(cfg + 0x1cd4),
+                                *(f32 *)(cfg + 0x1cd8));
+    mathutil_mtxA_rotate_y(ang);
+    GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+    GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
+    avdisp_draw_model_culled_sort_translucent(minigameGma->modelEntries[4].model);
+
+    if (*(s32 *)(p + 4) & 0x1000)
+    {
+        if (polyDisp.flags & 4)
+            return;
+        {
+        s8 stat = g_poolInfo.playerPool.statusList[0];
+
+        if (cameraInfo[0].sub28.vp.width > *(f32 *)(cfg + 0x1c98)
+         && cameraInfo[0].sub28.vp.height > *(f32 *)(cfg + 0x1c98)
+         && stat != STAT_NULL && stat != STAT_FREEZE)
+        {
+            change_current_camera(0);
+            u_draw_ball_shadow();
+            background_light_assign();
+            reset_light_group(0);
+            func_8009CD5C();
+            if (eventInfo[EVENT_STAGE].state == EV_STATE_RUNNING
+             || eventInfo[EVENT_STAGE].state == EV_STATE_SUSPENDED)
+                stage_draw();
+            if (eventInfo[EVENT_BACKGROUND].state == EV_STATE_RUNNING)
+            {
+                ord_tbl_set_depth_offset(*(f32 *)(cfg + 0x1ce0));
+                background_draw();
+                ord_tbl_set_depth_offset(*(f32 *)(cfg + 0x1c98));
+            }
+            if (eventInfo[EVENT_REND_EFC].state == EV_STATE_RUNNING)
+                rend_efc_draw(0x10);
+            draw_test_camera_target();
+            if (eventInfo[EVENT_REND_EFC].state == EV_STATE_RUNNING)
+                rend_efc_draw(8);
+            lbl_00009D18();
+        }
+        }
+        default_camera_env();
+        return;
+    }
+
+    if (!(cameraInfo[modeCtrl.currPlayer].sub28.vp.width > *(f32 *)(cfg + 0x1c98)) || !(cameraInfo[modeCtrl.currPlayer].sub28.vp.height > *(f32 *)(cfg + 0x1c98)))
+        return;
+    if (g_poolInfo.playerPool.statusList[modeCtrl.currPlayer] != STAT_NULL
+     && g_poolInfo.playerPool.statusList[modeCtrl.currPlayer] != STAT_FREEZE)
+    {
+        change_current_camera(modeCtrl.currPlayer);
+        if (*(s32 *)(p + 4) & 0x4000)
+        {
+            mathutil_mtxA_from_quat(&currentBall->ape->unk60);
+            mathutil_mtxA_to_mtx(m);
+            mathutil_mtxA_from_mtxB();
+            mathutil_mtxA_translate(&currentBall->ape->pos);
+            mathutil_mtxA_mult_right(m);
+            if (currentBall->ape->charaId == 3)
+            {
+                mathutil_mtxA_translate_xyz(*(f32 *)(cfg + 0x1c98),
+                                            *(f32 *)(cfg + 0x1ce4),
+                                            *(f32 *)(cfg + 0x1c98));
+                mathutil_mtxA_mult_right(
+                    currentBall->ape->unk0->joints[0xF].transformMtx);
+                mathutil_mtxA_translate_xyz(*(f32 *)(cfg + 0x1ce8),
+                                            *(f32 *)(cfg + 0x1cec),
+                                            *(f32 *)(cfg + 0x1cf0));
+            }
+            else
+            {
+                mathutil_mtxA_translate_xyz(*(f32 *)(cfg + 0x1c98),
+                                            *(f32 *)(cfg + 0x1cf4),
+                                            *(f32 *)(cfg + 0x1c98));
+                mathutil_mtxA_mult_right(
+                    currentBall->ape->unk0->joints[0xF].transformMtx);
+                mathutil_mtxA_translate_xyz(*(f32 *)(cfg + 0x1cf8),
+                                            *(f32 *)(cfg + 0x1cec),
+                                            *(f32 *)(cfg + 0x1cf0));
+            }
+            mathutil_mtxA_scale_s(*(f32 *)(cfg + 0x1cfc));
+            GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+            GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
+            avdisp_draw_model_culled_sort_translucent(
+                minigameGma->modelEntries[1].model);
+        }
+        if (*(s32 *)(p + 4) & 4)
+        {
+            mathutil_mtxA_from_mtxB();
+            mathutil_mtxA_translate_xyz(currentBall->pos.x,
+                                        *(f32 *)(cfg + 0x1c98),
+                                        *(f32 *)(cfg + 0x1d00));
+            mathutil_mtxA_scale_s(*(f32 *)(cfg + 0x1d04));
+            mathutil_mtxA_rotate_y(*(f32 *)(cfg + 0x1d08) *
+                                   *(f32 *)(st + 0x168));
+            GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+            GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
+            avdisp_draw_model_culled_sort_translucent(
+                commonGma->modelEntries[0xb5].model);
+            mathutil_mtxA_translate_xyz(*(f32 *)(cfg + 0x1c98),
+                                        *(f32 *)(cfg + 0x1c98),
+                                        *(f64 *)(cfg + 0x1d10) -
+                                            *(f64 *)(cfg + 0x1d18) *
+                                                (globalAnimTimer & 0xf));
+            GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+            GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
+            avdisp_set_alpha(*(f32 *)(cfg + 0x1c9c));
+            avdisp_draw_model_culled_sort_translucent(
+                commonGma->modelEntries[0xbf].model);
+            for (i = 1; i < 20; i++)
+            {
+                mathutil_mtxA_translate_xyz(*(f32 *)(cfg + 0x1c98),
+                                            *(f32 *)(cfg + 0x1c98),
+                                            *(f32 *)(cfg + 0x1d20));
+                GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+                GXLoadNrmMtxImm(mathutilData->mtxA, GX_PNMTX0);
+                avdisp_set_alpha(*(f64 *)(cfg + 0x1d28) -
+                                 *(f64 *)(cfg + 0x1d30) * i);
+                avdisp_draw_model_culled_sort_translucent(
+                    commonGma->modelEntries[0xbf].model);
+            }
+        }
+        lbl_0000AAAC();
+        if (!(polyDisp.flags & 4))
+            draw_normal_game_scene();
+    }
 }
 asm void lbl_00000F98(void)
 {
