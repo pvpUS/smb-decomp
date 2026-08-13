@@ -94,6 +94,28 @@ re-derived the whole merge board by address and corrected four of its rows.
 **Three for three: a landed tool, a banked conversion, and a correction a build
 confirmed.**
 
+> ### ★★★ AMENDED IN RUN 37: A RELAY IS A MEASUREMENT **WITH ITS n**, AND "IT WORKED TWICE IN ONE MODULE" IS NOT A LEVER.
+>
+> Run 37 relayed sel_ngc's dead-4-byte-array-local frame result to four modules
+> as a cheap probe. **option falsified it at n=7**, printing the saved-register
+> count beside every score: every variant grew the frame and **not one moved
+> `stmw`.** The orchestrator retracted it to all four. **The measurement was
+> real; it was a property of two functions, and relaying it as a lever is the
+> run-33 corollary error one step further down.**
+>
+> ⚠ **The same run's relay chain also corrected the orchestrator's FRAMING of a
+> finding** (corpus B: the dominant `//@SUB` malformation is the single-pipe
+> form at 19,040 lines, not the `//@SUBST` form at 1,034, **and the two take
+> different code paths**). **State the site you measured, not the class you
+> think it belongs to.**
+>
+> ✔ **And it paid, inside the hour, in the other direction**: mini_pilot's
+> *"print the ref count and MISMATCHED together"* reached sel_ngc, which
+> **retracted the headline it was about to hand on** — its flattering `5 in 4`
+> carries two `FICTION-SYMBOL` rows, the identical word with the two symbols
+> **exchanged**. **A word scorer structurally credits a symbol exchange as a
+> match.**
+
 > ### ★★★ NEW STANDING ACT (run 33): THE ORCHESTRATOR MAY RELAY BETWEEN LIVE AGENTS — WITH ITS EVIDENCE AND ITS SAMPLE SIZE, NEVER ITS COROLLARY.
 >
 > Run 33 was the first run to relay findings between **live** agents, and it is
@@ -134,6 +156,30 @@ If a future corpus phase produces neither a landed tool nor a correction a
 build confirms, it comes out and the rule reverts to nine and nothing else.
 
 ### DO NOT MODIFY `tools/` WHILE AGENTS ARE LIVE — AND DO NOT LAND A FIX YOU CANNOT GATE. (New in run 21 — my own error. Widened in run 35 — also my own.)
+
+> ### ★★★ RUN 37 PAID THIS RULE OFF, AND THE PAYMENT WAS THE FIX IT REFUSED TO SHIP TWICE.
+>
+> The peephole-detector fix was **queued for three runs** and landed in run 37
+> with **six gates, re-run against the POST-merge tree**: 163 rows, 163
+> determinate, 0 INDETERMINATE, 0 ANOMALY, shipped fails 11, **FIXED fails 0**,
+> plus a control regression of 36 matched labels at 100% positional with **0
+> score changes**.
+>
+> ⚠⚠ **AND THE DRAFT RUN 36 TOLD RUN 37 TO LAND WAS ITSELF WRONG**: `peep36.py`
+> **fails all six of the statement-`asm` cases** the run-37 agent found while
+> building the gate. **Landing it unmodified — which is what the previous
+> handoff recommended — would have shipped a NEW defect into the tool all nine
+> modules depend on.**
+>
+> **A queued fix is a lead, not a patch. Re-gate it against today's tree, and
+> let the gate be capable of failing**: run 35's used *"it byte-matches golden
+> therefore the régime was ON"* — the conclusion as its own premise — and
+> filtered to the complement of the population it needed to test.
+>
+> ★ **Two mechanical points that cost real time**: convert the fix to the
+> repo's line endings **before** diffing it (an LF-vs-CRLF flip buried a
+> 456-line change in a 1,171-line file), and expect the gate's inputs to have
+> moved — **rebuild the row list from the tree's own census at gate time.**
 
 > ⚠⚠ **RUN 35 TESTED THE SECOND HALF OF THIS ON THE ORCHESTRATOR AND IT ONLY
 > JUST HELD.** After the twelfth agent closed — so the timing rule was
@@ -277,7 +323,235 @@ it. `_scratch_<MOD>/run<N>/pristine/` is the convention.**
 
 ---
 
-## 0.42 — RUN 36 DONE (2026-08-13): +1,398 insn, 54.55% -> 55.29%. **POWER LOSS MID-RUN; NOTHING BANKED WAS LOST.** START HERE.
+## 0.43 — RUN 37 DONE (2026-08-13): +1,322 insn, 55.29% -> 55.99%. **THE PEEPHOLE FIX LANDED, GATED, AFTER THREE RUNS QUEUED.** START HERE.
+
+Nine module agents plus three read-only corpus agents. **TWENTY-FIFTH
+consecutive run with no module agent spawning anything.**
+
+| module | still-asm | insn | % | gained |
+|---|---|---|---|---|
+| mini_pilot | 5 fns | 11204/12137 | **92.31%** | 0 |
+| **mini_bowling** | 7 fns | 12485/15313 | **81.53%** | **+362 / +1** |
+| mini_race | 22 fns | 15687/19817 | **79.16%** | 0 |
+| test_mode | 13 fns | 12495/16231 | **76.98%** | 0 |
+| option | 10 fns | 6999/12375 | 56.56% | 0 |
+| **mini_golf** | 13 fns | 18291/38919 | **47.00%** | **+480 / +1** |
+| sel_ngc | 8 fns | 7789/18084 | 43.07% | 0 |
+| mini_billiards | 16 fns | 11360/28793 | 39.45% | 0 |
+| **mini_fight** | 69 fns | 10200/28585 | **35.68%** | **+480 / +1** |
+| **TOTAL** | **163 fns** | **106510/190254** | **55.99%** | **+1,322 / +3** |
+
+**Verified in the main tree, not taken on report**: all nine gate **GOLDEN from
+deleted objects** with **every hash equal to its own agent's**; all nine
+`rel_structcheck` **CLEAN**, orchestrator-run; **clean build from 0 OBJECTS AND
+0 ARTIFACTS** gives **`make` exit status 0** and `sha1sum -c` **12/12 OK
+including the DOL**. Reconciles three ways: 166 − 3 = **163**, 85,066 − 1,322 =
+**83,744**, 190,254 − 83,744 = **106,510**.
+
+**Object metrics 791 / 961 / 796 → 784 / 954 / 789** (724 `.c` + 65 `.s`).
+**All three moved by exactly −7 = mini_golf's merge deletions.** The three
+deliberately-anomalous `.s` files are unchanged.
+
+### ★★★ 1. THE THREE CONVERSIONS ARE ALL `0 in 0` ON WORDS **AND** ON RELOCATIONS
+
+- **mini_fight +480**: `lbl_000122C8`, blank page → `0 in 0`, positional 480 of
+  480, refs 35/35 MISMATCHED 0, **no FICTION rows**. 37 real compiles.
+- **mini_golf +480**: `lbl_0000E99C`, **first draft ever written, closed the
+  same run**, behind an **8-object merge (`_31.._38`) that was GOLDEN first
+  try**. refs 80/80, MISMATCHED 0, FICTION 0. REACH 8,560 → 9,040.
+- **mini_bowling +362**: `lbl_00005564`, blind draft → `0 in 0`, refs 39/39.
+
+**Every one quoted both halves of `rel_relscore`** — which is a discipline this
+run's own relay chain produced (§4).
+
+### ★★★ 2. THE PEEPHOLE DETECTOR FIX LANDED — SIX DEFECTS, SIX GATES, RE-RUN AGAINST THE POST-MERGE TREE
+
+`tools/rel_tuprobe.py` is now **`d9a7c08c`** (was `878c3306` in all ten trees for
+sixteen runs). **364 insertions / 57 deletions, 4 hunks, CRLF preserved.**
+
+| gate | result |
+|---|---|
+| `gate37` | **163 rows, 163 determinate, 0 INDETERMINATE, 0 ANOMALY**; SHIPPED fails **11 / 3,322 insn**, **FIXED fails 0** |
+| `flaggate` | `--peephole off` moved **0/27** shipped, **26/27** fixed, 1 insensitive, **0 auto-arm regressions** |
+| `dirgate` | **7/7 PASS** |
+| `--defect3` | injection point, **30 vs 33 insn** |
+| control | **36 matched labels, 36 at 100% positional, 0 SCORE changes**, 1 régime verdict corrected (`mini_fight lbl_00006F44` OFF → ON) |
+
+> ★★★ **THE GROUND TRUTH IS A THREE-SIDED COMPILE, AND THAT IS WHY THIS GATE IS
+> THE FIRST VALID ONE.** Run 35's used *"it byte-matches golden therefore the
+> régime was ON"* — **the conclusion as the premise** — and filtered to files
+> *containing* a `#pragma peephole on`, **the complement of the population the
+> false-`ON` defect affects.** Run 36's could not run at all: a merge had deleted
+> 35 of its inputs. **This one rebuilds its row list from the tree's own census
+> at gate time and reports a vanished owner rather than skipping it.**
+
+⚠⚠ **AND RUN 36's QUEUED FIX WAS ITSELF WRONG.** `peep36.py` — the draft the
+run-36 handoff told this run to land — **fails all six of the new statement-`asm`
+cases (defect 4).** **Landing it unmodified would have shipped a new defect into
+the tool all nine modules depend on.** That is the third consecutive run in which
+*"do not land a fix you cannot gate"* has paid.
+
+★ **The orchestrator re-ran every gate against the POST-merge tree before
+landing** (run 35's lesson), and **converted the file from LF to CRLF first** —
+otherwise a 1,171-line whitespace flip would have buried a 456-line diff.
+
+### ★★★ 3. THE CANARY WAS CORRECTED THREE TIMES IN ONE RUN, BY THREE DIFFERENT SOURCES
+
+**Nobody on this machine had a sound peephole canary at the start of the run.**
+
+1. **`--peephole off` is a silent NO-OP when the régime reads ON** —
+   `rel_tuprobe.py:763`, `if regime == 'off' and peep != 'off':` is the flag's
+   only use, so it **merely declines to inject.** Found independently by
+   **mini_billiards, sel_ngc and mini_race.**
+2. **The one-sided injection canary is not sound** (corpus B): *"no move ⇒ the
+   pragma was already in force"* **also fires when the code is peephole-
+   INSENSITIVE.** It reports the trap bit it twice inside its own instruments.
+3. **A `#pragma peephole off` inside the candidate is not sound either**
+   (mini_golf, `rel_tuprobe.py:762-765`): when the candidate's OWN pragma is what
+   puts the banner at ON, flipping it to `off` **flips the banner to OFF, which
+   RE-ENABLES the injector.** MEASURED: `22610` reads `3 in 2` byte-identical —
+   **a fictional no-move** — and is `203 (+14) / 58 in 21` once `--peephole off`
+   is added too.
+
+> ## **THE SOUND CANARY IS THREE-SIDED: as-is / injected / forced-off, and the FORCED-OFF ARM MUST MOVE.** mini_fight and mini_bowling both ran it and got real +8 and +10 third arms.
+
+### ★★★ 4. THE RELAY CHAIN CORRECTED ITSELF IN BOTH DIRECTIONS — INCLUDING THE ORCHESTRATOR, TWICE
+
+- **PAID INSIDE THE HOUR**: mini_pilot's *"print the ref count and MISMATCHED
+  together"* reached sel_ngc, which **retracted the headline it was about to hand
+  on.** Its `5 in 4` carries **two `FICTION-SYMBOL` rows** — the identical word
+  `3C800000` with the two symbols **exchanged** — and the fiction-free `9 in 5` is
+  the better draft. **SIXTH "a better ALIGNED score is a worse draft", and the
+  first where the arbiter is the FICTION column.** mini_bowling then found a
+  second instance in its own `42A4`.
+- ⚠⚠ **THE ORCHESTRATOR RELAYED A TWO-FUNCTION MEASUREMENT AS A LEVER.**
+  sel_ngc's dead-4-byte-array-local frame result went to four modules; **option
+  falsified it at n=7**, printing the saved-register count beside every score.
+  **Retracted to all four.** *Relay the measurement and the sample size — never
+  the corollary — and "it worked twice in one module" is not a lever.*
+- ⚠ **The orchestrator's framing of option's `//@SUB` finding was also wrong**,
+  and corpus B corrected it: the dominant malformation is **single-pipe `//@SUB`
+  (19,040 lines, 13.7× the well-formed count)**, not `//@SUBST` (1,034), **and
+  the two take different code paths** — the single-pipe form already prints the
+  correct specific message.
+
+### ★★ 5. WHAT SIX ZERO-BANKING MODULES ACTUALLY DELIVERED
+
+**Four landed a declarator precondition that gates GOLDEN and banks nothing:**
+mini_pilot (3 lines → **26 drafts**, `3BDC` compiles with all `//@SUB` deleted),
+test_mode (3 lines → **29 drafts**; one was a **wrong RETURN TYPE**, not a K&R
+issue), mini_billiards (3 return types → `A054`'s 2,094-insn draft compiles with
+**zero directives**), mini_race (1 full prototype), option, mini_bowling.
+★ **`rel_objsect --compare` printed "0 section(s) differ" both times it was run
+— a third measurement that an asm stub's declarator is free currency.**
+
+- **option took `lbl_00005340` (1,498) from a blank page to EXACT LENGTH**,
+  `271 in 145`. ★★ **Golden's frame holds 24 bytes of UNREFERENCED stack below
+  `sp`** (`u32 zpad[6]` reproduces it; `f64 zpad[3]` does not — 8-alignment).
+  ⚠⚠ **The outgoing-parameter area is falsified a SECOND independent way**:
+  adding args to a real `sprintf` moves nothing **until a call exceeds 8 GPR
+  args.** **mwcc 1.1 sizes it from stack overflow only.**
+- **sel_ngc moved 1,609 instructions of near-miss by roughly half** —
+  `10438` **570 in 204 → 252 in 131**, `C970` **175 in 98 → 140 in 83**, both at
+  **zero instruction cost**, after falsifying its own §11 cause three ways.
+
+### ★★ 6. FIVE NEW "THE HARNESS MANUFACTURES A COMPILE FAILURE" MECHANISMS
+
+**All in the directive parser.** `//@DROP` unimplemented (mini_fight; workaround
+`//@DROPRE <re.escape(X)>`); a **garbled `//@SUB` header** (option, **24 drafts /
+410 insn**; the form is `old|||new`, THREE pipes); **a function named `pf`**
+(mini_billiards); **the owner's own K&R boilerplate returning `void`**
+(mini_fight); and the 62-char basename limit re-measured. ⚠ **Corpus B: only
+3 of 14 directive tokens are implemented**, and **`rel_vsplice` has ZERO
+directive support — it splices them through as comments and silently ignores
+them.** ★ **A well-formed body listed AFTER a bad one is never scored.**
+**The claim is now 0-for-181.**
+
+### ⚠ HAZARDS AND CORRECTIONS
+
+- ⚠⚠ **`rel_tuprobe` IS STRUCTURALLY BLIND TO AN OWNER-OBJECT `.rodata` SIDE
+  EFFECT, AND TWO MODULES HIT THE IDENTICAL PAIR INDEPENDENTLY.**
+  `#include <math.h>` adds **16 bytes of `.rodata`** (an `extern inline sqrtf`
+  that emits even unused) → **NOT GOLDEN**, scored `0 in 0`. And **`fabs` is
+  `#define fabs(x) __fabs(x)`**, so a hand-written prototype calls the *library*
+  function — also not golden, also `0 in 0`. **`__fabs(...)` with no include is
+  GOLDEN.** **Only `--gate`'s section banner caught either.**
+- ⚠⚠ **"DEAD BOILERPLATE IS HARMLESS" IS FALSE IN A FILE THAT STILL HAS ASM
+  BLOCKS** (mini_bowling, MEASURED): deleting two `void lbl_X();` lines **broke
+  the build** — **mwcc resolves an asm block's `bl <label>` as a C-scope label**,
+  so those declarations are load-bearing for the stub.
+- ⚠⚠ **§11 WAS WRONG ABOUT TIER-S, AND mini_fight FOUND IT BEFORE THE RELAY DID**
+  (from `rel_ledger --detail` at T+15): **all eleven Tier-S "closest to free"
+  rows are `a-BLOCKED`; there is not one `c-FREE` blank page left in the
+  project.** The run-36 table scored *difficulty* and carried **no reachability
+  column.** ★ And `0x1C138` has **fifteen claimants in nine TUs**, so
+  "732 insn of Tier-S" is really **419**.
+- ⚠ **`rel_ledger`'s merge span**: mini_race's non-minimality **does not
+  reproduce** in mini_golf, mini_billiards or test_mode — all three measured
+  their own and found the ledger already minimal. Corpus C put the lever at
+  **6 of 16 targets / 1,001 insn / 11.6%**, not the 8× one case suggested.
+  ⚠ **But two NEW ledger defects are real**: its **POOL PRICE can be wrong**
+  (mini_golf: "40 bytes" where the true price is **zero**), and it **excludes
+  `.rodata`-only asm objects from its object count** while never stating the
+  **`.rodata`-SIZE constraint** an intervening asm object imposes (test_mode:
+  the merged `.rodata` must be **exactly 0x10 bytes**).
+- ⚠ **Corpus A's consumer rule is scoped, not general.** Confirmed on real golden
+  bytes for the first time (sel_ngc `E778`, four consumer shapes, span 1-10 →
+  7..12) — **and its domain is the 2-SYMBOL entry block.** The "address passed to
+  a call" arm **does not reproduce** (mini_race and mini_golf, independently);
+  three-symbol and seven-symbol entry blocks are decided by **pigeonhole**
+  (mini_billiards, sel_ngc); **the MIRROR is 0-for-3** (test_mode 16 variants,
+  corpus A 22 probes, mini_race). ★ **"Before the next `lis`" is a DEPENDENCE
+  condition, not a source-order one** (mini_golf).
+- ⚠ **Corpus C's `1B5B8` figures were re-priced by mini_golf**: `ctr=10` on
+  **251 of 251** not 243; destinations `r1+0x348` 136× / `r1+0x398` 111×; **a
+  struct assignment costs 9 instructions, not 5**, so the idiom is
+  **28.9–31.7% of the function, not 17.6%**. ✔ The type is confirmed `NLsprarg`.
+  ⚠ **The by-value alternative is DEAD — `nlSprPut` takes a pointer.**
+- **Still open**: `rel_relscore` peephole; the `rel_tuprobe` multi-body abort
+  (**specified, deliberately not implemented** — it needs both body loops at
+  once or `rel_relscore` gets an uncaught traceback); `rel_vsplice`/`rel_pcmp`
+  directives; `rel_ascore`/`rel_sdiff` argument order (**and `rel_tuprobe`
+  carries it too**); `rel_merge_tu:445-446`; `rel_carve` refuses an
+  already-carved module (**eighth run**); `d3.py`'s missing `elif`;
+  **`rel_blindtable` silently scores the STILL-ASM STUB when the body is not
+  installed**; `rel_relscore` prints `words` before `TRUE` and the first is what
+  people quote.
+
+### RUN-38 PREP — DONE. What is on disk.
+
+- **`C:/tmp/smbm/_orch_run37/reports/INTERIM.md`** — written incrementally as
+  each agent closed, with the relay chain's corrections in order.
+- **`C:/tmp/smbm/_orch_run37/BASELINE.md`** — the launch board, per-target, with
+  a reachable-today column.
+- **`C:/tmp/smbm/_corpus_run37/`** — `A.md` (949 lines, family V answered),
+  `B.md` (742), `C.md` (810), **`DRAFT_INDEX.md` regenerated (250 pairs / 4,357
+  files / 166 live)**, and `Bscratch/` with all six gates.
+- **`_scratch_mini_golf/run37/lbl_0001B5B8_copystmts.txt`** — **all 251 copies
+  resolved, 0 unresolved**; 194 are `lbl_00026E28[n]` over 53 distinct elements,
+  ⚠ **the other 57 are POINTER sources nobody has priced.**
+- **All nine warm copies reset from `0c2e9fa` and re-gated GOLDEN from deleted
+  objects, with the FIXED `rel_tuprobe` (`d9a7c08c`) in all ten trees.**
+
+**THE RUN-38 RECOMMENDATION:**
+
+1. **DRAFT `mini_golf lbl_0001B5B8` (7,131).** It is characterised to the
+   statement, the type is settled, the template is in its own owner file, and
+   the copy list is on disk. **Price the 57 pointer sources first.**
+2. **SPEND THE NEW CANARY.** Every régime figure older than this run was taken
+   with a broken instrument; **11 rows / 3,322 insn were false `OFF`** and the
+   false-`ON` population was never visible at all.
+3. **mini_bowling `C1D0` IS ONE WORD OUT** (`4 in 4`, and the residual is a
+   4-vs-5 filler packing); **`F98` (572) is pre-cooked and every idiom from the
+   +362 transfers verbatim.**
+4. **option `5340` (1,498) IS AT EXACT LENGTH** and needs one answer: what makes
+   mwcc commit an **18th** callee-saved register.
+5. **mini_fight's real prize is the `0x1C138` carve (419) and 1,461 reachable
+   instructions §11 has never named**, not the Tier-S table.
+
+---
+
+## 0.42 — RUN 36 DONE (2026-08-13): +1,398 insn, 54.55% -> 55.29%. **POWER LOSS MID-RUN; NOTHING BANKED WAS LOST.** Superseded by §0.43.
 
 Nine module agents plus three read-only corpus agents. **TWENTY-FOURTH
 consecutive run with no module agent spawning anything.**
