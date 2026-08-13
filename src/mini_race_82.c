@@ -31,6 +31,7 @@
 #include "stage.h"
 #include "variables.h"
 #include "window.h"
+#include "avdisp.h"
 
 // Addresses loaded by the code that live in this module's data/rodata/bss
 // (defined in asm/mini_race.s) or imported.  Declared so mwcc accepts `@ha/@l`.
@@ -197,8 +198,6 @@ extern void func_800AB6F8();
 extern void stcoli_sub33();
 extern void avdisp_get_eff_vtxinfo();
 extern void lens_flare_draw();
-extern void avdisp_set_bound_sphere_scale();
-extern void avdisp_set_post_mult_color();
 extern void bitmap_init_tev();
 extern void avdisp_draw_model_unculled_sort_none();
 extern void ape_skel_anim_main();
@@ -206,9 +205,7 @@ extern void set_ape_model_lod();
 extern void func_800AB444();
 extern void func_8006AD3C();
 extern void ord_tbl_draw_nodes();
-extern void avdisp_set_alpha();
 extern void ape_destroy();
-extern void avdisp_set_z_mode();
 extern void func_800AB2A0();
 extern void func_8006AAEC();
 extern void draw_test_camera_target();
@@ -328,43 +325,43 @@ void lbl_0000D03C(void);
 void lbl_0000D0FC(void);
 void lbl_0000D19C(void);
 void lbl_0000D20C(void);
-void lbl_0000D2B8(void);
-void lbl_0000D41C(void);
-void lbl_0000D4E4(void);
-void lbl_0000D69C(void);
+void lbl_0000D2B8(struct Sprite *sprite);
+void lbl_0000D41C(s32 idx, f32 x, f32 y);
+void lbl_0000D4E4(struct Sprite *sprite);
+void lbl_0000D69C(struct Sprite *sprite);
 void lbl_0000D880(void);
 void lbl_0000D8E8(void);
 void lbl_0000D8EC(void);
-void lbl_0000DE5C(void);
-void lbl_0000DF6C(void);
-void lbl_0000E11C(void);
-void lbl_0000E1CC(void);
-void lbl_0000E520(void);
-void lbl_0000E7AC(void);
-void lbl_0000E7C4(void);
+void lbl_0000DE5C(s16 arg0, f32 x, f32 y);
+void lbl_0000DF6C(struct Sprite *sprite);
+void lbl_0000E11C(s16 idx, f32 x, f32 y);
+void lbl_0000E1CC(struct Sprite *sprite);
+void lbl_0000E520(s16 idx);
+void lbl_0000E7AC(s8 *str, struct Sprite *sprite);
+void lbl_0000E7C4(struct Sprite *sprite);
 void lbl_0000E900(void);
-void lbl_0000EC20(void);
-void lbl_0000F084(void);
-void lbl_0000F118(void);
-void lbl_0000F174(void);
-void lbl_0000F3D4(void);
-void lbl_0000FC8C(void);
-void lbl_0000FCC4(void);
-void lbl_0000FD48(void);
+void lbl_0000EC20(s16 idx);
+void lbl_0000F084(s8 *arg0, struct Sprite *sprite);
+void lbl_0000F118(s8 *status, struct Sprite *sprite);
+void lbl_0000F174(struct Sprite *sprite);
+void lbl_0000F3D4(int idx);
+void lbl_0000FC8C(u8 *arg0, struct RaceState *obj);
+void lbl_0000FCC4(s8 *arg0, struct Sprite *sprite);
+void lbl_0000FD48(s8 *arg0, struct Sprite *sprite);
 void lbl_0000FDD8(void);
-void lbl_0000FE90(void);
-void lbl_0000FEF8(void);
-void lbl_000100B4(void);
-void lbl_00010130(void);
-void lbl_00010218(void);
-void lbl_000102FC(void);
+void lbl_0000FE90(s8 *arg0, struct Sprite *sprite);
+void lbl_0000FEF8(s16 arg0);
+void lbl_000100B4(s8 *arg0, struct Sprite *sprite);
+void lbl_00010130(s16 arg0, f32 x, f32 y);
+void lbl_00010218(int idx);
+void lbl_000102FC(s8 *arg0, struct Sprite *sprite);
 void lbl_00010484(void);
-void lbl_0001053C(void);
+void lbl_0001053C(s8 *arg0, struct Sprite *sprite);
 void lbl_000106C4(void);
-void lbl_0001075C(void);
+void lbl_0001075C(u8 *arg0, struct RaceCfgObj *obj);
 void lbl_000107D0(void);
-void lbl_000108E8(void);
-void lbl_00010918(void);
+void lbl_000108E8(s8 *str, struct Sprite *sprite);
+void lbl_00010918(struct Sprite *sprite);
 void lbl_00010B70(void);
 void lbl_00010BC8(void);
 void lbl_00010DCC(void);
@@ -374,10 +371,1477 @@ void lbl_00012B10(void);
 void lbl_00012BC4(void);
 void lbl_00012D50(void);
 
+// Carried over from the heads of the absorbed files (merged by
+// tools/rel_merge_tu.py -- these are what the tool used to drop).
+struct RaceDrawArg;
+static void lbl_0000DB70(struct RaceDrawArg *arg);
+static void lbl_0000E9D4(struct Sprite *sprite);
+void lbl_0000F90C(s8 *arg0, struct Sprite *sprite);
+static void lbl_0000F9F4(struct Sprite *sprite);
+void lbl_0000FBA4(s8 *arg0, struct Sprite *sprite);
+struct RaceState
+{
+    u8 filler0[0x10];
+    s16 unk10;
+    u8 filler12[0x22];
+    void *unk34;
+};
+struct RaceCfgObj
+{
+    u8 filler0[0x48];
+    s32 unk48;
+    u8 filler4c[0x6c - 0x4c];
+    f32 unk6c;
+};
+struct RaceEnt
+{
+    /*0x00*/ s32 unk0;
+    /*0x04*/ f32 unk4;
+};
+struct RaceBallSub
+{
+    u8 filler0[0x1E];
+    u16 unk1E;
+    u8 filler20[0x22 - 0x20];
+    s16 unk22;
+    u8 filler24[0x28 - 0x24];
+    /*0x28*/ struct RaceEnt ent[51];
+    u8 filler1C0[0x1D2 - 0x1C0];
+    s16 unk1D2;
+};
+struct RaceUV
+{
+    f32 u0;
+    f32 v0;
+    f32 u1;
+    f32 v1;
+};
+struct RaceUVTbl
+{
+    struct RaceUV e[4];
+};
+
 #pragma force_active on
-asm void lbl_0000D2B8(void)
+#pragma peephole on
+#pragma opt_propagation off
+void lbl_0000D2B8(struct Sprite *sprite)
+{
+    struct RaceSprIds
+    {
+        s16 v[4];
+    };
+    u8 *cfg = lbl_00013C48;
+    NLsprarg params;
+    struct RaceSprIds ids = *(struct RaceSprIds *)(cfg + 0x100);
+
+    params.zm_x = *(f64 *)(cfg + 0x108) * sprite->scaleX;
+    params.zm_y = *(f64 *)(cfg + 0x108) * sprite->scaleY;
+    params.u0 = params.v0 = *(f32 *)(cfg + 0x18);
+    params.u1 = params.v1 = *(f32 *)(cfg + 0x8);
+    params.ang = 0;
+    params.listType = -1;
+    params.attr = 5;
+    params.trnsl = sprite->opacity;
+    params.base_color = 0xFFFFFF;
+    params.offset_color = 0;
+    params.u0 = *(f64 *)(cfg + 0x108) * (f32)sprite->userVar;
+    params.u1 = *(f64 *)(cfg + 0x108) + params.u0;
+    params.v0 = *(f64 *)(cfg + 0x108) * ids.v[sprite->userVar];
+    params.v1 = *(f64 *)(cfg + 0x108) + params.v0;
+    params.sprno = 0x715;
+    params.x = sprite->x;
+    params.y = sprite->y;
+    params.z = sprite->depth;
+    nlSprPut(&params);
+}
+#pragma opt_propagation reset
+asm void lbl_0000D41C(s32 idx, f32 x, f32 y)
 {
     nofralloc
-#include "../asm/nonmatchings/mini_race/lbl_0000D2B8.s"
+#include "../asm/nonmatchings/mini_race/lbl_0000D41C.s"
+}
+
+
+// Per-racer state hanging off struct Ball::unk144 inside this module.
+struct RaceSub
+{
+    u8 filler0[0x14];
+    u32 unk14;
+    u8 filler18[0x1D4 - 0x18];
+    f32 unk1D4;
+    u8 filler1D8[0x264 - 0x1D8];
+    u8 unk264[4];
+};
+
+struct RaceModelTbl
+{
+    s16 v[10];
+};
+
+#pragma peephole on
+void lbl_0000D4E4(struct Sprite *sprite)
+{
+    u8 *cfg = lbl_00013C48;
+    struct RaceModelTbl tblA = *(struct RaceModelTbl *)(cfg + 0x110);
+    struct RaceModelTbl tblB = *(struct RaceModelTbl *)(cfg + 0x124);
+    NLsprarg params;
+    struct RaceSub *st = (struct RaceSub *)ballInfo[sprite->userVar].unk144;
+    f32 x;
+    f32 y;
+    s16 i;
+
+    if (st->unk264[0] == 0)
+        return;
+    params.zm_x = *(f32 *)(cfg + 8);
+    params.zm_y = *(f32 *)(cfg + 8);
+    params.u0 = params.v0 = *(f32 *)(cfg + 0x18);
+    params.u1 = params.v1 = *(f32 *)(cfg + 8);
+    params.ang = 0;
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = NLSPR_DISP_LT;
+    params.trnsl = *(f32 *)(cfg + 8);
+    params.base_color = 0xFFFFFF;
+    params.offset_color = 0;
+    x = sprite->x;
+    y = sprite->y;
+    params.sprno = tblA.v[st->unk264[0]];
+    params.x = x;
+    params.y = y;
+    params.z = *(f32 *)(cfg + 0xD8);
+    nlSprPut(&params);
+    x = x + *(f32 *)(cfg + 0x138);
+    for (i = 1; i < 3; i++)
+    {
+        if (st->unk264[i] == 0)
+            return;
+        y = y - *(f32 *)(cfg + 0x34);
+        params.sprno = tblB.v[st->unk264[i]];
+        params.x = x;
+        params.y = y;
+        params.z = *(f32 *)(cfg + 0xD8);
+        nlSprPut(&params);
+    }
+}
+
+void lbl_0000D69C(struct Sprite *sprite)
+{
+    u8 *cfg = lbl_00013C48;
+    struct RaceModelTbl tblA = *(struct RaceModelTbl *)(cfg + 0x13C);
+    struct RaceModelTbl tblB = *(struct RaceModelTbl *)(cfg + 0x150);
+    NLsprarg params;
+    struct RaceSub *st = (struct RaceSub *)ballInfo[sprite->userVar].unk144;
+    f32 x;
+    f32 y;
+    s16 i;
+
+    if (st->unk264[0] == 0)
+        return;
+    params.zm_x = *(f32 *)(cfg + 0x14);
+    params.zm_y = *(f32 *)(cfg + 0x14);
+    params.u0 = params.v0 = *(f32 *)(cfg + 0x18);
+    params.u1 = params.v1 = *(f32 *)(cfg + 8);
+    params.ang = 0;
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = NLSPR_DISP_LT;
+    params.trnsl = *(f32 *)(cfg + 8);
+    params.base_color = 0xFFFFFF;
+    params.offset_color = 0;
+    x = sprite->x;
+    y = sprite->y;
+    params.sprno = tblA.v[st->unk264[0]];
+    params.x = x;
+    params.y = y;
+    params.z = *(f32 *)(cfg + 0xD8);
+    nlSprPut(&params);
+    x = x + *(f32 *)(cfg + 0x5C);
+    params.zm_x = *(f32 *)(cfg + 8);
+    params.zm_y = *(f32 *)(cfg + 8);
+    params.u0 = params.v0 = *(f32 *)(cfg + 0x18);
+    params.u1 = params.v1 = *(f32 *)(cfg + 8);
+    params.ang = 0;
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = NLSPR_DISP_LT;
+    params.trnsl = *(f32 *)(cfg + 8);
+    params.base_color = 0xFFFFFF;
+    params.offset_color = 0;
+    for (i = 1; i < 3; i++)
+    {
+        if (st->unk264[i] == 0)
+            return;
+        y = y - *(f32 *)(cfg + 0x164);
+        params.sprno = tblB.v[st->unk264[i]];
+        params.x = x;
+        params.y = y;
+        params.z = *(f32 *)(cfg + 0xD8);
+        nlSprPut(&params);
+    }
+}
+void lbl_0000D880(void)
+{
+    struct Sprite *sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    sprite->depth = *(f32 *)lbl_00013DB0;
+    sprite->flags = 0x40000;
+    sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000D8E8;
+    sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000D8EC;
+    sprintf(sprite->text, (char *)lbl_00015CE4);
+}
+void lbl_0000D8E8(void)
+{
+}
+
+// INVENTED -- the argument block lbl_0000D8EC fills in and hands to
+// lbl_0000DB70.  Offsets read off the asm; names are placeholders.
+struct RaceDrawArg
+{
+    /*0x00*/ s16 modelId;
+    /*0x02*/ u16 rotZ;
+    /*0x04*/ f32 scale;
+    /*0x08*/ Vec *pos;
+    /*0x0C*/ f32 alpha;
+    /*0x10*/ f32 apeAlpha;
+    /*0x14*/ s16 slot;
+};
+
+// INVENTED -- 0x48-byte per-course record at lbl_00015768; +0x10 points at the
+// banner layout table this function walks.
+struct RaceCourseInfo4
+{
+    u8 filler0[0x10];
+    u8 *unk10;
+    u8 filler14[0x48 - 0x14];
+};
+
+// Per-racer state hanging off struct Ball::unk144 inside this module.
+
+// INVENTED -- 4 model ids packed at lbl_00013C48 + 0x184.
+struct RaceModelIds
+{
+    s16 v[4];
+};
+
+void lbl_0000D8EC(void)
+{
+    u8 *cfg = lbl_00013C48;
+    u8 *p = (&((struct RaceCourseInfo4 *)lbl_00015768)[*(u16 *)lbl_10000028])->unk10;
+    Vec dead1;
+    struct RaceDrawArg arg;
+    s16 i;
+    s32 dead2;
+
+    if (p == NULL)
+        return;
+    arg.modelId = *(s32 *)p;
+    arg.rotZ = *(u16 *)(p + 4);
+    switch (modeCtrl.unk30)
+    {
+    case 1:
+        arg.scale = *(f32 *)(p + 8);
+        arg.pos = (Vec *)(p + 0xC);
+        arg.alpha = *(f32 *)(cfg + 8);
+        arg.apeAlpha = *(f32 *)(cfg + 8);
+        arg.slot = 0;
+        lbl_0000DB70(&arg);
+        break;
+    case 2:
+        arg.scale = *(f32 *)(p + 0x18);
+        arg.pos = (Vec *)(p + 0x1C);
+        arg.alpha = *(f32 *)(cfg + 0xD0);
+        arg.apeAlpha = *(f32 *)(cfg + 0x180);
+        arg.slot = 0;
+        for (i = 0; i < 2; i++)
+        {
+            lbl_0000DB70(&arg);
+            arg.pos = (Vec *)((u8 *)arg.pos + 0xC);
+            arg.slot = arg.slot + 1;
+        }
+        break;
+    case 3:
+        if (modeCtrl.splitscreenMode != 3)
+        {
+            arg.slot = modeCtrl.splitscreenMode;
+            arg.alpha = *(f32 *)(cfg + 0xD0);
+            arg.apeAlpha = *(f32 *)(cfg + 0x180);
+            arg.scale = *(f32 *)(p + 0x18);
+            arg.pos = (Vec *)(p + 0x1C);
+            if (modeCtrl.splitscreenMode == 2)
+                arg.pos = (Vec *)((u8 *)arg.pos + 0xC);
+            lbl_0000DB70(&arg);
+            arg.scale = *(f32 *)(p + 0x34);
+            arg.pos = (Vec *)(p + 0x38);
+            if (modeCtrl.splitscreenMode != 2)
+                arg.pos = (Vec *)((u8 *)arg.pos + 0x18);
+            for (i = 0; i < 3; i++)
+            {
+                if (i != modeCtrl.splitscreenMode)
+                {
+                    arg.slot = i;
+                    lbl_0000DB70(&arg);
+                    arg.pos = (Vec *)((u8 *)arg.pos + 0xC);
+                }
+            }
+            break;
+        }
+        /* fall through */
+    case 4:
+        arg.scale = *(f32 *)(p + 0x34);
+        arg.pos = (Vec *)(p + 0x38);
+        i = 0;
+        arg.alpha = *(f32 *)(cfg + 0xD0);
+        arg.apeAlpha = *(f32 *)(cfg + 0x180);
+        arg.slot = i;
+        for (; i < modeCtrl.unk30; i++)
+        {
+            arg.pos = (Vec *)(p + 0x38 + i * 0xC);
+            arg.slot = i;
+            lbl_0000DB70(&arg);
+        }
+        break;
+    }
+    bitmap_init_tev();
+    mathutil_mtxA_from_identity();
+    gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+}
+
+static void lbl_0000DB70(struct RaceDrawArg *arg)
+{
+    u8 *cfg = lbl_00013C48;
+    struct RaceModelIds tbl = *(struct RaceModelIds *)(cfg + 0x184);
+    struct Ball *balls[4];
+    Vec pos;
+    Vec dir;
+    Vec t;
+    Vec *pt;
+    struct Ball *bb;
+    struct Ball *tmp;
+    struct RaceSub *st;
+    f32 sc;
+    u16 ang;
+    s16 i;
+
+    if (ballInfo[arg->slot].unk148 == 0x10 || ballInfo[arg->slot].unk148 == 0x12)
+        return;
+    mathutil_mtxA_from_identity();
+    mathutil_mtxA_translate(arg->pos);
+    mathutil_mtxA_rotate_z(arg->rotZ);
+    mathutil_mtxA_rotate_x(0x4000);
+    mathutil_mtxA_scale_s(arg->scale);
+    avdisp_set_bound_sphere_scale(arg->scale);
+    mathutil_mtxA_push();
+    avdisp_set_alpha(arg->alpha);
+    gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+    avdisp_draw_model_unculled_sort_none(
+        decodedStageGmaPtr->modelEntries[arg->modelId].model);
+    for (i = 0; i < 4; i++)
+        balls[i] = &ballInfo[i];
+    tmp = balls[3];
+    balls[3] = &ballInfo[arg->slot];
+    balls[arg->slot] = tmp;
+    for (i = 0; i < 4; i++)
+    {
+        bb = balls[i];
+        if ((s8)bb->unk0 != 2)
+            continue;
+        st = (struct RaceSub *)bb->unk144;
+        if (st->unk14 & 0x40)
+            continue;
+        pos = bb->pos;
+        pos.y = *(f32 *)(cfg + 0x18);
+        dir.x = bb->pos.x - bb->prevPos.x;
+        dir.y = bb->pos.y - bb->prevPos.y;
+        dir.z = bb->pos.z - bb->prevPos.z;
+        if (mathutil_vec_sq_len(&dir) < *(f32 *)(cfg + 0x198))
+        {
+            mathutil_mtxA_from_quat(&bb->ape->unk60);
+            pt = &t;
+            t = *(Vec *)(cfg + 0x18C);
+            dir = *pt;
+            mathutil_mtxA_tf_vec(&dir, &dir);
+        }
+        ang = mathutil_atan2(dir.x, dir.z) + 0xC000;
+        mathutil_mtxA_peek();
+        mathutil_mtxA_translate(&pos);
+        mathutil_mtxA_rotate_y(ang);
+        if (i == 3)
+            sc = *(f32 *)(cfg + 0xE4);
+        else
+            sc = *(f32 *)(cfg + 0x19C);
+        sc = (*(f32 *)(cfg + 0x1A0) * sc) / arg->scale;
+        mathutil_mtxA_scale_s(sc);
+        avdisp_set_bound_sphere_scale(sc * arg->scale);
+        avdisp_set_alpha(arg->apeAlpha);
+        gxutil_load_pos_nrm_matrix(mathutilData->mtxA, 0);
+        avdisp_draw_model_unculled_sort_none(
+            minigameGma->modelEntries[tbl.v[bb->colorId]].model);
+    }
+    mathutil_incr_mtx_stack();
+}
+void lbl_0000DE5C(s16 arg0, f32 x, f32 y)
+{
+    u8 *cfg = lbl_00013C48;
+    struct Sprite *sprite = create_sprite();
+
+    if (sprite == NULL)
+        return;
+    sprite->tag = arg0 + 0x67;
+    sprite->type = 1;
+    sprite->x = x;
+    sprite->y = y;
+    sprite->textAlign = 4;
+    sprite->depth = *(f32 *)(cfg + 0xD8);
+    switch (modeCtrl.unk30)
+    {
+    case 1:
+        sprite->scaleX = sprite->scaleY = *(f32 *)(cfg + 0x8);
+        break;
+    case 2:
+        sprite->scaleX = sprite->scaleY = *(f32 *)(cfg + 0x180);
+        break;
+    case 3:
+    case 4:
+        sprite->scaleX = sprite->scaleY = *(f32 *)(cfg + 0x1A4);
+        break;
+    }
+    sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000DF6C;
+    sprite->userVar = arg0;
+    sprintf(sprite->text, (char *)lbl_00015CF4, arg0 + 1);
+}
+
+// Per-racer state hanging off struct Ball::unk144 inside this module.
+
+// INVENTED -- 0x48-byte per-course record at lbl_00015768.
+struct RaceCourseInfo3
+{
+    u8 filler0[0x2C];
+    struct RaceIconSpan *unk2C;
+    u8 filler30[0x48 - 0x30];
+};
+
+// INVENTED -- 12-byte span records; the list is terminated by unk8 == 0.
+struct RaceIconSpan
+{
+    f32 unk0;
+    f32 unk4;
+    u32 unk8;
+};
+
+// INVENTED -- 5 sprite ids packed at lbl_00013C48 + 0x1A8.
+struct RaceIconTbl
+{
+    s16 v[5];
+};
+
+void lbl_0000DF6C(struct Sprite *sprite)
+{
+    u8 *cfg = lbl_00013C48;
+    struct RaceCourseInfo3 *ci =
+        &((struct RaceCourseInfo3 *)lbl_00015768)[*(u16 *)lbl_10000028];
+    struct Ball *ball = &ballInfo[sprite->userVar];
+    struct RaceIconSpan *e = ci->unk2C;
+    struct RaceSub *st = (struct RaceSub *)ball->unk144;
+    NLsprarg params;
+    struct RaceIconTbl tbl = *(struct RaceIconTbl *)(cfg + 0x1A8);
+
+    if (globalAnimTimer & 8)
+        return;
+    if (st->unk14 & 1)
+        return;
+    if (mathutil_vec_sq_len(&ball->vel) < *(f32 *)(cfg + 0x1B4))
+        return;
+    for (; e->unk8 != 0; e++)
+    {
+        if (e->unk0 < st->unk1D4 && st->unk1D4 < e->unk4)
+        {
+            params.zm_x = sprite->scaleX;
+            params.zm_y = sprite->scaleY;
+            params.u0 = params.v0 = *(f32 *)(cfg + 0x18);
+            params.u1 = params.v1 = *(f32 *)(cfg + 8);
+            params.ang = 0;
+            params.listType = NLSPR_LISTTYPE_AUTO;
+            params.attr = 5;
+            params.trnsl = sprite->opacity;
+            params.base_color = 0xFFFFFF;
+            params.offset_color = 0;
+            params.attr = sprite->flags | 0xA;
+            if (e->unk8 & 0x10000)
+            {
+                params.attr |= 0x80000;
+                params.ang = 0x2000;
+            }
+            else
+                params.ang = 0xE000;
+            params.sprno = tbl.v[(u16)e->unk8 - 1];
+            params.x = sprite->x;
+            params.y = sprite->y;
+            params.z = sprite->depth;
+            nlSprPut(&params);
+            return;
+        }
+    }
+}
+void lbl_0000E11C(s16 idx, f32 x, f32 y)
+{
+    u8 *cfg = lbl_00013C48;
+    struct Sprite *sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    sprite->tag = idx + 0x67;
+    sprite->x = x;
+    sprite->y = y;
+    sprite->depth = *(f32 *)(cfg + 0xd0);
+    sprite->scaleX = *(f32 *)(cfg + 8);
+    sprite->scaleY = *(f32 *)(cfg + 8);
+    sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000E1CC;
+    sprite->userVar = idx;
+    sprintf(sprite->text, (char *)lbl_00015D00, idx + 1);
+}
+#pragma peephole on
+asm void lbl_0000E1CC(struct Sprite *sprite)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_0000E1CC.s"
+}
+
+#pragma peephole on
+void lbl_0000E520(s16 idx)
+{
+    char unused[8];
+    u8 *cfg = lbl_00013C48;
+    struct Sprite *sprite;
+    f32 x;
+    f32 y;
+
+    if (((struct Ball_child *)ballInfo[idx].unk144)->unk14 & 0x20)
+        return;
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    sprintf(sprite->text, (char *)lbl_00015D14, idx + 1);
+    sprite->tag = idx + 0x67;
+    sprite->type = 1;
+    sprite->bmpId = 0x72D;
+    sprite->textAlign = 4;
+    sprite->depth = *(f32 *)(cfg + 0xD0);
+    switch (modeCtrl.unk30)
+    {
+    case 1:
+        x = *(f32 *)(cfg + 0x0);
+        y = *(f32 *)(cfg + 0x4);
+        sprite->scaleX = *(f32 *)(cfg + 0x8);
+        sprite->scaleY = *(f32 *)(cfg + 0x8);
+        break;
+    case 2:
+        x = *(f32 *)(cfg + 0x0);
+        y = *(f32 *)(cfg + 0x1C4) + *(f32 *)(cfg + 0x4) * idx;
+        sprite->scaleX = *(f32 *)(cfg + 0x180);
+        sprite->scaleY = *(f32 *)(cfg + 0x180);
+        break;
+    case 3:
+        if (modeCtrl.splitscreenMode != 3)
+        {
+            sprite->scaleX = *(f32 *)(cfg + 0x180);
+            sprite->scaleY = *(f32 *)(cfg + 0x180);
+            if (idx == modeCtrl.splitscreenMode)
+            {
+                x = *(f32 *)(cfg + 0x0);
+                y = *(f32 *)(cfg + 0x1C4);
+                if (modeCtrl.splitscreenMode == 2)
+                    y += *(f32 *)(cfg + 0x4);
+            }
+            else
+            {
+                x = *(f32 *)(cfg + 0x54);
+                y = *(f32 *)(cfg + 0x1C4);
+                if (idx != 0 && (modeCtrl.splitscreenMode != 0 || idx != 1))
+                    x += *(f32 *)(cfg + 0x0);
+                if (modeCtrl.splitscreenMode != 2)
+                    y += *(f32 *)(cfg + 0x4);
+            }
+            break;
+        }
+        /* fall through */
+    case 4:
+        x = *(f32 *)(cfg + 0x54) + *(f32 *)(cfg + 0x0) * (idx % 2);
+        y = *(f32 *)(cfg + 0x1C4) + *(f32 *)(cfg + 0x4) * (idx / 2);
+        sprite->scaleX = *(f32 *)(cfg + 0x1C8);
+        sprite->scaleY = *(f32 *)(cfg + 0x1C8);
+        break;
+    }
+    sprite->x = x;
+    sprite->y = y;
+    sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000E7AC;
+    sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000E7C4;
+    sprite->userVar = 0x18;
+}
+#pragma peephole on
+void lbl_0000E7AC(s8 *str, struct Sprite *sprite)
+{
+    if (sprite->userVar > 0)
+        sprite->userVar--;
+}
+#pragma peephole on
+void lbl_0000E7C4(struct Sprite *sprite)
+{
+    NLsprarg params;
+    u8 *cfg = lbl_00013C48;
+    s16 n;
+    f32 u;
+    f32 d;
+    f32 x;
+
+    u = (f32)sprite->userVar / *(f32 *)(cfg + 0x3C);
+    d = *(f64 *)(cfg + 0x1D8) -
+        __fabs(*(f32 *)(cfg + 0xE8) * (u - *(f32 *)(cfg + 0x1C8)));
+    x = *(f32 *)(cfg + 0x1E0) * d;
+    n = (s16)x;
+    if ((s16)x > 0xFF)
+        n = 0xFF;
+    params.zm_x = sprite->scaleX;
+    params.zm_y = sprite->scaleY;
+    params.u0 = params.v0 = *(f32 *)(cfg + 0x18);
+    params.u1 = params.v1 = *(f32 *)(cfg + 0x8);
+    params.ang = 0;
+    params.listType = -1;
+    params.attr = 5;
+    params.trnsl = *(f32 *)(cfg + 0x8);
+    params.base_color = 0xFFFFFF;
+    params.offset_color = 0;
+    params.offset_color = (n << 16) | (n << 8) | n;
+    params.attr = 0xA;
+    params.sprno = sprite->bmpId;
+    params.x = sprite->x;
+    params.y = sprite->y;
+    params.z = sprite->depth;
+    nlSprPut(&params);
+}
+#pragma peephole on
+void lbl_0000E900(void)
+{
+    char unused[16];
+    struct Sprite *sprite;
+    s16 i;
+
+    for (i = 0; i < 4; i++)
+    {
+        if (((u8 **)lbl_10000054)[i] == NULL)
+            return;
+        sprite = create_sprite();
+        if (sprite == NULL)
+            return;
+        sprite->type = 0;
+        sprite->x = *(f32 *)lbl_00013E2C;
+        sprite->y = *(f32 *)lbl_00013E30 + i * 0x1C;
+        sprite->fontId = 0x45;
+        sprite->textAlign = 0;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000E9D4;
+        sprite->userVar = i;
+    }
+}
+#pragma peephole on
+static void lbl_0000E9D4(struct Sprite *sprite)
+{
+    NLsprarg params;
+    u8 *str = lbl_00015C08;
+    u8 *rec = ((u8 **)lbl_10000054)[sprite->userVar];
+    u8 *cfg = lbl_00013C48;
+    u8 *base = lbl_10000028;
+    f32 y;
+
+    reset_text_draw_settings();
+    func_80071B50(0x200000);
+    y = sprite->y;
+    params.zm_x = *(f32 *)(cfg + 0x8);
+    params.zm_y = *(f32 *)(cfg + 0x8);
+    params.u0 = params.v0 = *(f32 *)(cfg + 0x18);
+    params.u1 = params.v1 = *(f32 *)(cfg + 0x8);
+    params.ang = 0;
+    params.listType = -1;
+    params.attr = 5;
+    params.trnsl = *(f32 *)(cfg + 0x8);
+    params.base_color = 0xFFFFFF;
+    params.offset_color = 0;
+    params.base_color = 0xFFFF0000;
+    params.sprno = 0x717;
+    params.x = sprite->x;
+    params.y = y;
+    params.z = sprite->depth;
+    nlSprPut(&params);
+    func_80071B1C(sprite->depth - *(f32 *)(cfg + 0xEC));
+    set_text_font(0x48);
+    set_text_pos(*(f32 *)(cfg + 0xE4) + sprite->x, *(f32 *)(cfg + 0xE4) + y);
+    sprite_printf((char *)(str + 0xA0), *(u16 *)(rec + 0x1E));
+    set_text_font(0x45);
+    y = *(f32 *)(cfg + 0x1C) + y;
+    set_text_pos(*(f32 *)(cfg + 0xF0) + sprite->x, y);
+    if (*(u32 *)(rec + 0x14) & 0x20)
+    {
+        sprite_printf((char *)(str + 0x118), *(u16 *)rec + 1);
+    }
+    else
+    {
+        set_text_mul_color(((u32 *)str)[*(u16 *)rec]);
+        sprite_printf((char *)(str + 0x120), *(u16 *)rec + 1);
+    }
+    set_text_font(0x45);
+    set_text_pos(*(f32 *)(cfg + 0x1EC) + (*(f32 *)(cfg + 0xF0) + sprite->x), y);
+    if (*(u16 *)(base + 2) & 8)
+    {
+        sprite_printf((char *)(str + 0x12C), ((s16 *)lbl_10000048)[*(u16 *)rec]);
+        if (((s16 *)lbl_10000048)[*(u16 *)rec] != 1)
+            sprite_printf((char *)(str + 0x138));
+    }
+    else if (*(u32 *)(rec + 0x14) & 2)
+    {
+        sprite_printf((char *)(str + 0xB0), rec[0x1C8], rec[0x1C9], rec[0x1CA]);
+    }
+    else
+    {
+        sprite_printf((char *)(str + 0x13C));
+    }
+}
+#pragma peephole on
+void lbl_0000EC20(s16 idx)
+{
+    struct Ball *ball = &ballInfo[idx];
+    u8 *cfg = lbl_00013C48;
+    u8 *base = lbl_10000028;
+    struct RaceBallSub *bc = (struct RaceBallSub *)ball->unk144;
+    struct Sprite *sprite;
+    f32 x;
+    f32 y;
+
+    if (*(u16 *)(base + 4) == bc->unk22 + 1)
+        u_play_sound_0(0x1E4);
+    else if (modeCtrl.unk30 == 1)
+        u_play_sound_0(0x1E6);
+    else
+        u_play_sound_0(0x1E1);
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    sprite->tag = idx + 0x67;
+    switch (modeCtrl.unk30)
+    {
+    case 1:
+        x = *(f32 *)(cfg + 0x1F0);
+        y = *(f32 *)(cfg + 0x1F4);
+        break;
+    case 2:
+        x = *(f32 *)(cfg + 0x1F8);
+        y = *(f32 *)(cfg + 0xCC) + *(f32 *)(cfg + 0x4) * idx;
+        break;
+    case 3:
+        if (modeCtrl.splitscreenMode != 3)
+        {
+            if (idx == modeCtrl.splitscreenMode)
+            {
+                x = *(f32 *)(cfg + 0x1F8);
+                y = *(f32 *)(cfg + 0xCC);
+                if (modeCtrl.splitscreenMode == 2)
+                    sprite->y += *(f32 *)(cfg + 0x4);
+            }
+            else
+            {
+                x = *(f32 *)(cfg + 0x174);
+                y = *(f32 *)(cfg + 0x1FC);
+                if (idx != 0 && (modeCtrl.splitscreenMode != 0 || idx != 1))
+                    x += *(f32 *)(cfg + 0x0);
+                if (modeCtrl.splitscreenMode != 2)
+                    y += *(f32 *)(cfg + 0x4);
+            }
+            break;
+        }
+        /* fall through */
+    case 4:
+        x = *(f32 *)(cfg + 0x174) + *(f32 *)(cfg + 0x0) * (idx % 2);
+        y = *(f32 *)(cfg + 0x1FC) + *(f32 *)(cfg + 0x4) * (idx / 2);
+        break;
+    }
+    sprite->x = x;
+    sprite->y = y;
+    sprite->textAlign = 4;
+    sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000F084;
+    sprite->drawFunc = (void (*)(struct Sprite *))lbl_0000F174;
+    sprite->counter = 0x78;
+    sprite->userVar = idx;
+    if (*(u16 *)(base + 4) == bc->unk22 + 1)
+    {
+        sprite = create_sprite();
+        if (sprite == NULL)
+            return;
+        switch (modeCtrl.unk30)
+        {
+        case 1:
+            x = *(f32 *)(cfg + 0x0);
+            y = *(f32 *)(cfg + 0x200);
+            break;
+        case 2:
+            x = *(f32 *)(cfg + 0x0);
+            y = *(f32 *)(cfg + 0x204) + *(f32 *)(cfg + 0x4) * idx;
+            break;
+        case 3:
+            if (modeCtrl.splitscreenMode != 3)
+            {
+                if (idx == modeCtrl.splitscreenMode)
+                {
+                    x = *(f32 *)(cfg + 0x0);
+                    y = *(f32 *)(cfg + 0x204);
+                    if (modeCtrl.splitscreenMode == 2)
+                        y += *(f32 *)(cfg + 0x4);
+                }
+                else
+                {
+                    x = *(f32 *)(cfg + 0x54);
+                    y = *(f32 *)(cfg + 0x208);
+                    if (idx != 0 && (modeCtrl.splitscreenMode != 0 || idx != 1))
+                        x += *(f32 *)(cfg + 0x0);
+                    if (modeCtrl.splitscreenMode != 2)
+                        y += *(f32 *)(cfg + 0x4);
+                }
+                break;
+            }
+            /* fall through */
+        case 4:
+            x = *(f32 *)(cfg + 0x54) + *(f32 *)(cfg + 0x0) * (idx % 2);
+            y = *(f32 *)(cfg + 0x208) + *(f32 *)(cfg + 0x4) * (idx / 2);
+            break;
+        }
+        if (modeCtrl.unk30 == 1)
+        {
+            sprite->fontId = 9;
+            sprite->scaleX = *(f32 *)(cfg + 0x1C8);
+            sprite->scaleY = *(f32 *)(cfg + 0x1C8);
+            sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000F084;
+        }
+        else
+        {
+            sprite->fontId = 0x45;
+            sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000F118;
+        }
+        sprite->type = 0;
+        sprite->x = x;
+        sprite->y = y;
+        sprite->depth = *(f32 *)(cfg + 0xD8);
+        sprite->textAlign = 4;
+        sprite->flags = 0x200000;
+        sprite->counter = 0x78;
+        sprintf(sprite->text, (char *)lbl_00015D4C);
+    }
+}
+#pragma peephole on
+void lbl_0000F084(s8 *arg0, struct Sprite *sprite)
+{
+    int phase;
+
+    if (sprite->counter <= 0)
+    {
+        *arg0 = 0;
+    }
+    else
+    {
+        sprite->counter--;
+        phase = sprite->counter % 8;
+        if (phase > 4)
+            sprite->unk78 &= ~1;
+        else
+            sprite->unk78 |= 1;
+        if (sprite->counter >= 0x48 && phase == 7)
+            u_play_sound_0(0x3B134);
+    }
+}
+void lbl_0000F118(s8 *status, struct Sprite *sprite)
+{
+    s32 m;
+
+    if (sprite->counter <= 0)
+    {
+        *status = STAT_NULL;
+        return;
+    }
+    sprite->counter--;
+    m = sprite->counter % 16;
+    if (m > 8)
+        sprite->unk78 &= ~1;
+    else
+        sprite->unk78 |= 1;
+}
+#pragma peephole on
+void lbl_0000F174(struct Sprite *sprite)
+{
+    NLsprarg params;
+    u8 *cfg = lbl_00013C48;
+    struct RaceBallSub *st =
+        (struct RaceBallSub *)ballInfo[sprite->userVar].unk144;
+
+    if (modeCtrl.unk30 == 1)
+    {
+        params.zm_x = *(f64 *)(cfg + 0x210) * sprite->scaleX;
+        params.zm_y = *(f64 *)(cfg + 0x210) * sprite->scaleY;
+        params.u0 = params.v0 = *(f32 *)(cfg + 0x18);
+        params.u1 = params.v1 = *(f32 *)(cfg + 0x8);
+        params.ang = 0;
+        params.listType = -1;
+        params.attr = 5;
+        params.trnsl = sprite->opacity;
+        params.base_color = 0xFFFFFF;
+        params.offset_color = 0;
+        params.attr = 0xA;
+        params.sprno = 0x730;
+        params.x = *(f32 *)cfg;
+        params.y = sprite->y;
+        params.z = sprite->depth;
+        nlSprPut(&params);
+    }
+    else
+    {
+        struct RaceEnt *e = &st->ent[st->unk22 - 1];
+        int min;
+        int sec;
+        int ms;
+        int t;
+
+        reset_text_draw_settings();
+        func_80071B50(0x200000);
+        set_text_font(0x45);
+        t = e->unk0;
+        sec = t / 60;
+        min = sec / 60;
+        sec %= 60;
+        ms = *(f32 *)(cfg + 0xF4) * ((t % 60) + e->unk4) / *(f32 *)(cfg + 0x30);
+        sec += ms / 1000;
+        ms %= 1000;
+        set_text_pos(sprite->x - *(f32 *)(cfg + 0x218), sprite->y);
+        sprite_printf((char *)lbl_00015D58);
+        set_text_pos(sprite->x, *(f32 *)(cfg + 0x21C) + sprite->y);
+        sprite_printf((char *)lbl_00015CB8, min, sec, ms / 10);
+    }
+}
+asm void lbl_0000F3D4(int idx)
+{
+    nofralloc
+#include "../asm/nonmatchings/mini_race/lbl_0000F3D4.s"
+}
+#pragma peephole on
+void lbl_0000F90C(s8 *arg0, struct Sprite *sprite)
+{
+    u8 *cfg = lbl_00013C48;
+    struct RaceBallSub *st =
+        (struct RaceBallSub *)ballInfo[sprite->userVar].unk144;
+    f32 scx;
+    f32 scy;
+    f32 v;
+
+    if (sprite->counter > 0)
+        sprite->counter--;
+    switch (modeCtrl.unk30)
+    {
+    case 1:
+        scx = scy = *(f32 *)(cfg + 8);
+        break;
+    case 2:
+    case 3:
+    case 4:
+        scx = scy = *(f32 *)(cfg + 0x224);
+        break;
+    }
+    v = sprite->counter / *(f32 *)(cfg + 0xAC);
+    sprite->opacity = *(f64 *)(cfg + 0x1D8) - v;
+    v = *(f32 *)(cfg + 8) + *(f32 *)(cfg + 0xE8) * v;
+    sprite->scaleX = scx * v;
+    sprite->scaleY = scy * v;
+    if (st->unk1E == 1)
+        sprite->rotation = sprite->counter * sprite->counter * 0x96;
+}
+#pragma peephole on
+static void lbl_0000F9F4(struct Sprite *sprite)
+{
+    f32 *cfg = (f32 *)lbl_00013C48;
+    NLsprarg params;
+    struct RaceBallSub *st =
+        (struct RaceBallSub *)ballInfo[sprite->userVar].unk144;
+    struct RaceUVTbl tbl = *(struct RaceUVTbl *)((u8 *)cfg + 0x244);
+    struct RaceUV *e = &tbl.e[st->unk1E - 1];
+
+    params.zm_x = sprite->scaleX;
+    params.zm_y = sprite->scaleY;
+    params.u0 = params.v0 = cfg[6];
+    params.u1 = params.v1 = cfg[2];
+    params.ang = 0;
+    params.listType = NLSPR_LISTTYPE_AUTO;
+    params.attr = NLSPR_DISP_LT;
+    params.trnsl = sprite->opacity;
+    params.base_color = 0xFFFFFF;
+    params.offset_color = 0;
+    params.attr = NLSPR_DISP_CC;
+    params.u0 = e->u0;
+    params.v0 = e->v0;
+    params.u1 = e->u1;
+    params.v1 = e->v1;
+    params.zm_x = sprite->scaleX * (params.u1 - params.u0);
+    params.zm_y = sprite->scaleY * (params.v1 - params.v0);
+    params.ang = sprite->rotation;
+    params.sprno = 0x72F;
+    params.x = sprite->x;
+    params.y = sprite->y;
+    params.z = sprite->depth;
+    nlSprPut(&params);
+}
+#pragma peephole on
+void lbl_0000FBA4(s8 *arg0, struct Sprite *sprite)
+{
+    u8 *cfg = lbl_00013C48;
+    u8 *base = lbl_10000028;
+    struct Ball_child *bc = ballInfo[sprite->userVar].unk144;
+    f32 t;
+
+    if (sprite->counter >= 0)
+        sprite->counter--;
+    t = (f32)sprite->counter / *(f32 *)(cfg + 0xAC);
+    if (sprite->counter >= 0x14)
+    {
+        sprite->opacity = *(f32 *)(cfg + 0x18);
+    }
+    else if (sprite->counter >= 0)
+    {
+        sprite->opacity = *(f64 *)(cfg + 0x1D8) - t;
+        sprite->x -= *(f32 *)(cfg + 0x8);
+    }
+    if ((*(u16 *)(base + 2) & 8) && (bc->unk14 & 2) && sprite->counter < 0)
+    {
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000FC8C;
+        sprite->counter = 0x78;
+    }
+}
+#pragma peephole on
+void lbl_0000FC8C(u8 *arg0, struct RaceState *obj)
+{
+    int t = obj->unk10;
+    if (t >= 0)
+        obj->unk10 = t - 1;
+    if (obj->unk10 >= 0)
+        return;
+    obj->unk34 = (void *)lbl_0000FCC4;
+    obj->unk10 = 0x14;
+}
+void lbl_0000FCC4(s8 *arg0, struct Sprite *sprite)
+{
+    f32 t;
+
+    if (sprite->counter >= 0)
+        sprite->counter--;
+    t = (f32)sprite->counter / *(f32 *)lbl_00013CF4;
+    if (sprite->counter >= 0)
+    {
+        sprite->opacity = t;
+        sprite->x -= *(f32 *)lbl_00013C50;
+    }
+    if (sprite->counter < 0)
+        *arg0 = 0;
+}
+void lbl_0000FD48(s8 *arg0, struct Sprite *sprite)
+{
+    char unused[8];
+    u8 *cfg = lbl_00013C48;
+    f32 t;
+
+    if (sprite->counter >= 0)
+        sprite->counter--;
+    t = (f32)sprite->counter / *(f32 *)(cfg + 0xAC);
+    if (sprite->counter >= 0x14)
+    {
+        sprite->opacity = *(f32 *)(cfg + 0x18);
+    }
+    else if (sprite->counter >= 0)
+    {
+        sprite->opacity = *(f64 *)(cfg + 0x1D8) - t;
+        sprite->x -= *(f32 *)(cfg + 0x8);
+    }
+}
+#pragma peephole on
+void lbl_0000FDD8(void)
+{
+    /* the original frame reserves 8 bytes of locals here that the body
+       never touches; keeping the slot is what makes the prologue match. */
+    char unusedBuf[8];
+    u8 *cfg = lbl_00013C48;
+    struct Sprite *sprite = create_sprite();
+
+    if (sprite == NULL)
+        return;
+    sprite->type = 0;
+    sprite->fontId = 9;
+    sprite->x = *(f32 *)cfg;
+    sprite->y = *(f32 *)(cfg + 0x284);
+    sprite->depth = *(f32 *)(cfg + 0xD8);
+    sprite->scaleX = *(f32 *)(cfg + 0x180);
+    sprite->scaleY = *(f32 *)(cfg + 0x180);
+    sprite->textAlign = 4;
+    sprite->mulR = 0xFF;
+    sprite->mulG = 0xA0;
+    sprite->mulB = 0x55;
+    sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0000FE90;
+    sprite->counter = 0x14;
+    sprintf(sprite->text, (char *)lbl_00015D44);
+}
+void lbl_0000FE90(s8 *arg0, struct Sprite *sprite)
+{
+    u8 *cfg = lbl_00013C48;
+    f32 t = (f32)sprite->counter / *(f32 *)(cfg + 0xAC);
+
+    if (sprite->counter > 0)
+        sprite->counter--;
+    sprite->scaleY = *(f64 *)(cfg + 0x288) * (*(f64 *)(cfg + 0x1D8) - t);
+}
+void lbl_0000FEF8(s16 arg0)
+{
+    u8 *str = lbl_00015C08;
+    u8 *cfg = lbl_00013C48;
+    u8 *st = (u8 *)ballInfo[arg0].unk144;
+    struct Sprite *sprite;
+    int tag;
+
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    tag = arg0 + 0x67;
+    sprite->tag = tag;
+    sprite->type = 0;
+    sprite->fontId = 0x45;
+    sprite->x = *(f32 *)(cfg + 0x0);
+    sprite->y = *(f32 *)(cfg + 0x290);
+    sprite->depth = *(f32 *)(cfg + 0xD8);
+    sprite->textAlign = 4;
+    sprintf(sprite->text, (char *)(str + 0x16C));
+
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    sprite->tag = tag;
+    sprite->type = 0;
+    sprite->fontId = 0x45;
+    sprite->x = *(f32 *)(cfg + 0x0);
+    sprite->y = *(f32 *)(cfg + 0x220);
+    sprite->depth = *(f32 *)(cfg + 0xD8);
+    sprite->textAlign = 4;
+    sprintf(sprite->text, (char *)(str + 0xB0), st[0x1C8], st[0x1C9], st[0x1CA]);
+
+    if (*(s32 *)lbl_10001068 < 0)
+        return;
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    sprite->tag = tag;
+    sprite->type = 0;
+    sprite->fontId = 9;
+    sprite->x = *(f32 *)(cfg + 0x0);
+    sprite->y = *(f32 *)(cfg + 0x50);
+    sprite->depth = *(f32 *)(cfg + 0xD8);
+    sprite->scaleX = *(f32 *)(cfg + 0x294);
+    sprite->scaleY = *(f32 *)(cfg + 0x180);
+    sprite->mulR = 0xFF;
+    sprite->mulG = 0x80;
+    sprite->mulB = 0x20;
+    sprite->textAlign = 4;
+    sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_000100B4;
+    sprite->counter = 0x14;
+    if (*(s32 *)lbl_10001068 == 0)
+    {
+        sprintf(sprite->text, (char *)(str + 0x1B8));
+        u_play_sound_0(0x1E3);
+    }
+    else
+    {
+        sprintf(sprite->text, (char *)(str + 0x1CC));
+        u_play_sound_0(0x1E5);
+    }
+}
+
+void lbl_000100B4(s8 *arg0, struct Sprite *sprite)
+{
+    u8 *cfg = lbl_00013C48;
+    f32 e;
+    f32 t = (f32)sprite->counter / *(f32 *)(cfg + 0xAC);
+
+    if (sprite->counter > 0)
+        sprite->counter--;
+    sprite->scaleX = *(f32 *)(cfg + 0x294) + (e = *(f32 *)(cfg + 0xE8) * t);
+    sprite->scaleY = *(f32 *)(cfg + 0x180) + e;
+    sprite->opacity = *(f32 *)(cfg + 0x8) - t;
+}
+void lbl_00010130(s16 arg0, f32 x, f32 y)
+{
+    u8 *cfg = lbl_00013C48;
+    struct Sprite *sprite;
+    int tag;
+
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    tag = arg0 + 0x67;
+    sprite->tag = tag;
+    sprite->x = x;
+    sprite->y = y;
+    sprite->fontId = 0x45;
+    sprite->textAlign = 0;
+    sprite->depth = *(f32 *)(cfg + 0xD8);
+    sprite->flags = 0x200000;
+    sprintf(sprite->text, (char *)lbl_00015DE0);
+
+    sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    sprite->tag = tag;
+    sprite->x = x;
+    sprite->y = *(f32 *)(cfg + 0xAC) + y;
+    sprite->fontId = 0x45;
+    sprite->textAlign = 0;
+    sprite->depth = *(f32 *)(cfg + 0xD8);
+    sprite->flags = 0x200000;
+    sprintf(sprite->text, (char *)lbl_00015DE8);
+}
+void lbl_00010218(int idx)
+{
+    u8 *cfg = lbl_00013C48;
+    struct Sprite *sprite = create_sprite();
+    f64 depth;
+
+    if (sprite != NULL)
+    {
+        sprite->x = *(f32 *)(cfg + 0x0);
+        sprite->y = *(f32 *)(cfg + 0x4);
+        if (modeCtrl.unk30 == 1)
+            depth = *(f64 *)(cfg + 0x298);
+        else
+            depth = *(f64 *)(cfg + 0x2A0);
+        sprite->depth = depth;
+        sprite->fontId = 9;
+        sprite->textAlign = 4;
+        sprite->mulR = 0xFF;
+        sprite->mulG = 0xC8;
+        sprite->mulB = 0;
+        sprite->counter = (s16)idx;
+        sprite->userVar = idx;
+        sprite->flags |= 0x1000;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_000102FC;
+        sprintf(sprite->text, (char *)lbl_00015DF0);
+    }
+    u_play_sound_0(0x1E8);
+}
+#pragma peephole on
+void lbl_000102FC(s8 *arg0, struct Sprite *sprite)
+{
+    u8 *cfg = lbl_00013C48;
+    s16 n = sprite->counter;
+    int e = sprite->userVar - n;
+
+    if (e < 0x1E)
+    {
+        sprite->opacity = *(f64 *)(cfg + 0x2A8) * e;
+        sprite->scaleX = *(f32 *)(cfg + 0x8);
+        sprite->scaleY = mathutil_sin(e * 0x222);
+    }
+    else if (e < 0x3C)
+    {
+        sprite->opacity = *(f32 *)(cfg + 0x8);
+        sprite->scaleX = *(f32 *)(cfg + 0x8);
+        sprite->scaleY = *(f64 *)(cfg + 0x1D8) -
+                         *(f64 *)(cfg + 0x2B0) * mathutil_sin((e - 30) * 0x444);
+    }
+    else if (n <= 0xF)
+    {
+        sprite->opacity = *(f64 *)(cfg + 0x2B8) * n;
+        sprite->scaleX = *(f64 *)(cfg + 0x2B8) * sprite->counter;
+        sprite->scaleY = *(f32 *)(cfg + 0x8);
+    }
+    else
+    {
+        sprite->opacity = *(f32 *)(cfg + 0x8);
+        sprite->scaleX = *(f32 *)(cfg + 0x8);
+        sprite->scaleY = *(f32 *)(cfg + 0x8);
+    }
+    if (--sprite->counter <= 0)
+        *arg0 = 0;
+}
+#pragma peephole on
+void lbl_00010484(void)
+{
+    u8 *cfg = lbl_00013C48;
+    u8 *base = lbl_10000028;
+    struct Sprite *sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    sprite->type = 0;
+    sprite->fontId = 9;
+    sprite->x = *(f32 *)(cfg + 0);
+    sprite->y = *(f32 *)(cfg + 4);
+    sprite->depth = *(f32 *)(cfg + 0xd8);
+    sprite->textAlign = 4;
+    sprite->flags |= 0x1000;
+    sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0001053C;
+    sprite->counter = 0x7e;
+    sprite->userVar = 0x7e;
+    sprintf(sprite->text, (char *)lbl_00015DF8, *(u16 *)(base + 6) + 1);
+}
+#pragma peephole on
+void lbl_0001053C(s8 *arg0, struct Sprite *sprite)
+{
+    char unused[8];
+    u8 *cfg = lbl_00013C48;
+    s16 n = sprite->counter;
+    int e = sprite->userVar - n;
+
+    if (e < 0x1E)
+    {
+        sprite->opacity = *(f64 *)(cfg + 0x2A8) * e;
+        sprite->scaleX = mathutil_sin(e * 0x222);
+        sprite->scaleY = *(f32 *)(cfg + 0x8);
+    }
+    else if (e < 0x3C)
+    {
+        sprite->opacity = *(f32 *)(cfg + 0x8);
+        sprite->scaleX = *(f64 *)(cfg + 0x1D8) -
+                         *(f64 *)(cfg + 0x2B0) * mathutil_sin((e - 30) * 0x444);
+        sprite->scaleY = *(f32 *)(cfg + 0x8);
+    }
+    else if (n <= 0xF)
+    {
+        sprite->opacity = *(f64 *)(cfg + 0x2B8) * n;
+        sprite->scaleX = *(f32 *)(cfg + 0x8);
+        sprite->scaleY = *(f64 *)(cfg + 0x2B8) * sprite->counter;
+    }
+    else
+    {
+        sprite->opacity = *(f32 *)(cfg + 0x8);
+        sprite->scaleX = *(f32 *)(cfg + 0x8);
+        sprite->scaleY = *(f32 *)(cfg + 0x8);
+    }
+    if (--sprite->counter <= 0)
+        *arg0 = 0;
+}
+#pragma peephole on
+void lbl_000106C4(void)
+{
+    u8 *cfg = lbl_00013C48;
+    struct Sprite *sprite = create_sprite();
+    if (sprite == NULL)
+        return;
+    sprite->type = 1;
+    sprite->bmpId = 0x4b;
+    sprite->x = *(f32 *)(cfg + 0x18);
+    sprite->y = *(f32 *)(cfg + 0x18);
+    sprite->depth = *(f32 *)(cfg + 0xc);
+    sprite->scaleX = *(f32 *)(cfg + 0xcc);
+    sprite->scaleY = *(f32 *)(cfg + 0x30);
+    sprite->opacity = *(f32 *)(cfg + 0x18);
+    sprite->mulR = 0;
+    sprite->mulG = 0;
+    sprite->mulB = 0;
+    sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_0001075C;
+    sprite->userVar = 0;
+}
+void lbl_0001075C(u8 *arg0, struct RaceCfgObj *obj)
+{
+    u8 *cfg = lbl_00013C48;
+    obj->unk6c = obj->unk6c + *(f64 *)(cfg + 0x2c0);
+    if (obj->unk6c > *(f64 *)(cfg + 0x2c8))
+    {
+        obj->unk6c = *(f32 *)(cfg + 0x1c8);
+        if (obj->unk48 == 0)
+        {
+            lbl_000107D0();
+            obj->unk48 = -1;
+        }
+    }
+}
+#pragma peephole on
+void lbl_000107D0(void)
+{
+    char unused[16];
+    u8 *cfg = lbl_00013C48;
+    struct Sprite *sprite;
+    s16 i;
+
+    for (i = 0; i < 4; i++)
+    {
+        if (((u8 **)lbl_10001AE0)[i] == NULL)
+            return;
+        sprite = create_sprite();
+        if (sprite == NULL)
+            return;
+        sprite->type = 0;
+        sprite->x = *(f32 *)(cfg + 0x2D0) + i * 0x14;
+        sprite->y = *(f32 *)(cfg + 0x2D4) + i * 0x1C;
+        sprite->depth = *(f32 *)(cfg + 0x2D8);
+        sprite->fontId = 0x45;
+        sprite->textAlign = 0;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_000108E8;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_00010918;
+        sprite->userVar = i;
+        sprite->counter = i * 0x14 + 0x14;
+    }
+}
+#pragma peephole on
+void lbl_000108E8(s8 *str, struct Sprite *sprite)
+{
+    if (sprite->counter <= 0)
+        return;
+    sprite->x -= *(f32 *)lbl_00013C50;
+    sprite->counter--;
+}
+#pragma peephole on
+void lbl_00010918(struct Sprite *sprite)
+{
+    NLsprarg params;
+    u8 *str = lbl_00015C08;
+    u8 *cfg = lbl_00013C48;
+    u8 *rec = ((u8 **)lbl_10001AE0)[sprite->userVar];
+    f32 v;
+    f32 y;
+
+    if (sprite->counter > 0x14)
+        return;
+    v = *(f64 *)(cfg + 0x1D8) - (f32)sprite->counter / *(f32 *)(cfg + 0xAC);
+    reset_text_draw_settings();
+    func_80071B50(0x200000);
+    set_text_opacity(v);
+    y = sprite->y;
+    params.zm_x = *(f32 *)(cfg + 0x8);
+    params.zm_y = *(f32 *)(cfg + 0x8);
+    params.u0 = params.v0 = *(f32 *)(cfg + 0x18);
+    params.u1 = params.v1 = *(f32 *)(cfg + 0x8);
+    params.ang = 0;
+    params.listType = -1;
+    params.attr = 5;
+    params.trnsl = *(f32 *)(cfg + 0x8);
+    params.base_color = 0xFFFFFF;
+    params.offset_color = 0;
+    params.base_color = 0xFFFF0000;
+    params.sprno = 0x717;
+    params.x = sprite->x;
+    params.y = y;
+    params.z = sprite->depth;
+    nlSprPut(&params);
+    func_80071B1C(sprite->depth);
+    set_text_font(0x48);
+    set_text_pos(*(f32 *)(cfg + 0xE4) + sprite->x, *(f32 *)(cfg + 0xE4) + y);
+    sprite_printf((char *)(str + 0xA0), *(u16 *)(rec + 0x20));
+    set_text_font(0x45);
+    y = *(f32 *)(cfg + 0x1C) + y;
+    set_text_pos(*(f32 *)(cfg + 0xF0) + sprite->x, y);
+    if (*(u32 *)(rec + 0x14) & 0x20)
+    {
+        sprite_printf((char *)(str + 0x118), *(u16 *)rec + 1);
+    }
+    else
+    {
+        set_text_mul_color(((u32 *)str)[*(u16 *)rec]);
+        sprite_printf((char *)(str + 0x120), *(u16 *)rec + 1);
+    }
+    set_text_font(0x45);
+    set_text_pos(*(f32 *)(cfg + 0x1EC) + (*(f32 *)(cfg + 0xF0) + sprite->x), y);
+    sprite_printf((char *)(str + 0x12C), ((s16 *)lbl_10000048)[*(u16 *)rec]);
+    if (((s16 *)lbl_10000048)[*(u16 *)rec] != 1)
+        sprite_printf((char *)(str + 0x138));
 }
 #pragma force_active reset

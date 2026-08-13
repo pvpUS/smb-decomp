@@ -104,3 +104,11 @@ lbl_0000C370:
     .4byte 0x3FECCCCC
     .4byte 0xCCCCCCCD
 lbl_0000C380:
+
+# anchor: lbl_0000C4B0's 8 bytes are the unsigned int->float magic,
+# now emitted by src/option_30.c.o's literal pool.  A C object cannot
+# name a pool entry, and no asm object can define a symbol inside
+# another object's contiguous section -- so name it by offset from the
+# alias that ends THIS segment.  0xC4B0 - 0xC380 = 0x130.
+.global lbl_0000C4B0
+.set lbl_0000C4B0, lbl_0000C380 + 0x130

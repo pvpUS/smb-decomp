@@ -54,11 +54,20 @@ extern u8 lbl_00011C40[];
 extern u8 lbl_00011CB0[];
 extern u8 lbl_00011CB8[];
 extern u8 lbl_00011D00[];
-extern u8 lbl_00011D08[];
-extern u8 lbl_00011D44[];
-extern u8 lbl_00011E70[];
-extern u8 lbl_00011E7C[];
 extern u8 lbl_00011EC8[];
+extern const u32 lbl_00011D08[15];
+extern const u32 lbl_00011D44[75];
+extern const u8 *const lbl_00011E70[3];
+extern const u8 *const lbl_00011E7C[5];
+extern const u32 lbl_00011E7C_x[14];
+extern u8 lbl_000167D8[];
+extern u8 lbl_000167DC[];
+extern u8 lbl_000167E0[];
+extern u8 lbl_000167E4[];
+extern u8 lbl_000167EC[];
+extern u8 lbl_000167F4[];
+extern u8 lbl_000167FC[];
+extern u8 lbl_00016804[];
 extern u8 lbl_00012030[];
 extern u8 lbl_00012034[];
 extern u8 lbl_00012038[];
@@ -173,7 +182,7 @@ void lbl_0000A870();
 void lbl_0000A950(void);
 void lbl_0000B1C0(void);
 void lbl_0000B920(struct Sprite *sprite);
-void lbl_0000BEE8(struct Sprite *);
+void lbl_0000BEE8(struct Sprite *sprite);
 void lbl_0000C970(void);
 void lbl_0000D82C(struct Sprite *sprite);
 void lbl_0000DCA4(s8 *alive, struct Sprite *sprite);
@@ -188,9 +197,9 @@ void lbl_0000FF7C(s8 *alive, struct Sprite *sprite);
 void lbl_00010214(struct Sprite *sprite);
 void lbl_00010438(void);
 void lbl_00011330(void);
-void lbl_00011424(void);
+void lbl_00011424(u8 *out, u8 *e);
 void lbl_00011688(void);
-void lbl_00011728(void);
+void lbl_00011728(s8 *out, struct Sprite *sprite);
 void lbl_00011824(void);
 void lbl_000118E4(void);
 
@@ -1070,7 +1079,7 @@ void lbl_0000D5A8(struct Sprite *sprite)
 void lbl_0000D7C0(s8 *alive, struct Sprite *sprite)
 {
     u8 *tbl = lbl_000127B8;
-    u8 *k = lbl_00011D08;
+    u8 *k = (u8 *)lbl_00011D08;
 
     sprite->x = sprite->x
               + *(f64 *)k * (*(f32 *)(tbl + sprite->userVar * 8) - sprite->x);
@@ -1401,6 +1410,7 @@ asm void lbl_0000E778(void)
 }
 #pragma peephole on
 // build one of the numbered selection sprites.
+#pragma peephole on
 void lbl_0000EBD4(int index)
 {
     u8 *tbl = lbl_00012730;
@@ -1441,6 +1451,7 @@ asm void lbl_0000F788(void)
 }
 #pragma peephole on
 // build the mode banner sprite, then the four numbered course-slot sprites.
+#pragma peephole on
 void lbl_0000FE0C(void)
 {
     u8 *tbl = lbl_00012730;
@@ -1571,6 +1582,7 @@ asm void lbl_00010438(void)
 }
 #pragma peephole on
 // build the three mode-select bitmaps down the right-hand column.
+#pragma peephole on
 void lbl_00011330(void)
 {
     u8 *tbl = lbl_00011CB0;
@@ -1595,5 +1607,148 @@ void lbl_00011330(void)
         }
     }
 }
+/* asm/sel_ngc_rel_d1.s absorbed -- 448 bytes of .rodata that must sit
+ * BETWEEN this TU's signed magic (0x11D00) and its unsigned one
+ * (0x11EC8).  Run 34. */
+const u32 lbl_00011D08[15] = {
+    0x3FB33333, 0x33333333, 0xBFE00000, 0x00000000, 0x40786000, 0x00000000,
+    0x40400000, 0x43560000, 0x41980000, 0x3DE147AE, 0x41A00000, 0x3F19999A,
+    0x40333333, 0x33333333, 0x3F333333
+};
+const u32 lbl_00011D44[75] = {
+    0x41F00000, 0x3FE00000, 0x00000000, 0x40C00000, 0x43340000, 0x41700000,
+    0x41D00000, 0x406FE000, 0x00000000, 0x42600000, 0xC0800000, 0x43280000,
+    0xC1000000, 0x438C0000, 0xC0800000, 0x42600000, 0xC0800000, 0x43280000,
+    0xC1000000, 0x438C0000, 0xC0800000, 0x42880000, 0xC0800000, 0x42880000,
+    0xC0800000, 0x42880000, 0xC0800000, 0x00000418, 0x00000423, 0x00000424,
+    0x00000418, 0x00000423, 0x00000424, 0x00000419, 0x00000419, 0x00000419,
+    0x0000041C, 0x0000041E, 0x00000420, 0x00000401, 0x00000403, 0x00000426,
+    0x00000421, 0x00000421, 0x00000421, 0x0000041B, 0x0000041D, 0x0000041F,
+    0x00000400, 0x00000402, 0x00000425, 0x00000421, 0x00000421, 0x00000421,
+    0x43280000, 0x42B00000, 0x00000000, 0xBFA99999, 0x9999999A, 0x3FC33333,
+    0x33333333, 0x40000000, 0x00000000, 0x3F847AE1, 0x47AE147B, 0x40600000,
+    0x00000000, 0x3F000000, 0x41400000, 0x41600000, 0x41100000, 0x3FA99999,
+    0x9999999A, 0x3FB0A3D7, 0x3FCCCCCD
+};
+const u8 *const lbl_00011E70[3] = {
+    lbl_000167D8, lbl_000167DC, lbl_000167E0
+};
+const u8 *const lbl_00011E7C[5] = {
+    lbl_000167E4, lbl_000167EC, lbl_000167F4,
+    lbl_000167FC, lbl_00016804
+};
+const u32 lbl_00011E7C_x[14] = {
+    0x3F50624D, 0xD2F1A9FC, 0x00000000, 0x00000000, 0x406CC000, 0x00000000,
+    0x41200000, 0x40666666, 0x3DB851EC, 0x41800000, 0x42900000, 0x43060000,
+    0x42440000, 0x00000000
+};
+
 #pragma peephole on
+void lbl_00011424(u8 *out, u8 *e)
+{
+    u8 *p = lbl_00011CB0;
+    u8 *t = lbl_00012730;
+    f32 cur = *(f32 *)(e + 4);
+    s32 idx = *(s8 *)(e + 0xF) - 5;
+    if (cur > *(f32 *)(p + 0x498) ||
+        (cur < *(f32 *)(p + 0x49C) && *(s32 *)(e + 0x48) == 5))
+    {
+        *out = 0;
+        return;
+    }
+
+    switch (*(s32 *)(e + 0x48))
+    {
+    case 4:
+        *(f32 *)(e + 4) += *(f64 *)(p + 0x330) * (((f32 **)(t + 0x4D30))[idx][*(s32 *)(e + 0x48)] - cur);
+        break;
+    case 5:
+        *(f32 *)(e + 4) += *(f64 *)(p + 0x58) * (((f32 **)(t + 0x4D30))[idx][*(s32 *)(e + 0x48)] - cur);
+        break;
+    default:
+        *(f32 *)(e + 4) += *(f64 *)(p + 0x180) * (((f32 **)(t + 0x4D30))[idx][*(s32 *)(e + 0x48)] - cur);
+        break;
+    }
+
+    *(s16 *)(e + 0x68) = *(f32 *)(p + 0x358) *
+        (((f32 **)(t + 0x4D30))[idx][1] - *(f32 *)(e + 4));
+
+    switch (*(s32 *)(e + 0x48))
+    {
+    case 1:
+        *(e + 0xC) = 0x80;
+        break;
+    default:
+        *(e + 0xC) = 0xFF;
+        break;
+    }
+    *(e + 0xD) = *(e + 0xC);
+    *(e + 0xE) = *(e + 0xC);
+
+    switch (*(s32 *)(e + 0x48))
+    {
+    case 2:
+        *(e + 0x70) = *(f64 *)(p + 0x198) *
+            (*(f64 *)(p + 0x30) - __fabs(mathutil_sin(globalAnimTimer << 9)));
+        break;
+    case 3:
+        *(e + 0x70) = *(f64 *)(p + 0x198) *
+            (*(f64 *)(p + 0x30) - (f64)((globalAnimTimer >> 2) & 1));
+        break;
+    default:
+        *(e + 0x70) = 0;
+        break;
+    }
+    *(e + 0x71) = *(e + 0x70);
+    *(e + 0x72) = *(e + 0x70);
+
+    if (*(s32 *)(e + 0x48) == 3)
+        *(f32 *)(e + 0x4C) = *(f32 *)(p + 0x200);
+}
+void lbl_00011688(void)
+{
+    u8 *tbl = lbl_00011CB0;
+    struct Sprite *sprite;
+
+    sprite = create_sprite();
+    if (sprite != NULL)
+    {
+        sprite->tag = 9;
+        sprite->x = *(f32 *)(tbl + 0x410);
+        sprite->y = *(f32 *)(tbl + 0x4A0);
+        sprite->scaleX = *(f32 *)(tbl + 0x90);
+        sprite->scaleY = *(f32 *)(tbl + 0xC);
+        sprite->opacity = *(f32 *)(tbl + 0xC);
+        sprite->userVar = 3;
+        sprite->counter = 15;
+        sprite->mainFunc = (void (*)(s8 *, struct Sprite *))lbl_00011728;
+        sprite->drawFunc = (void (*)(struct Sprite *))lbl_00011824;
+        strcpy(sprite->text, (char *)lbl_00017478);
+    }
+}
+void lbl_00011728(s8 *out, struct Sprite *sprite)
+{
+    u8 *tbl = lbl_00011CB0;
+
+    if (sprite->counter > 0)
+        sprite->counter--;
+
+    switch (sprite->userVar)
+    {
+    case 1:
+        sprite->counter = 15;
+        sprite->userVar = 2;
+        break;
+    case 2:
+        sprite->opacity = sprite->counter / *(f32 *)(tbl + 0xA8);
+        if (sprite->counter == 0)
+            *out = 0;
+        break;
+    case 3:
+        sprite->opacity = *(f64 *)(tbl + 0x30) - sprite->counter / *(f32 *)(tbl + 0xA8);
+        if (sprite->counter == 0)
+            sprite->userVar = 0;
+        break;
+    }
+}
 #pragma force_active reset

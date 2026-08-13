@@ -168,3 +168,11 @@ lbl_00011CB8:
     .4byte 0x3F666666
     .4byte 0x00000000
 lbl_00011D00:
+
+# RUN 34: asm/sel_ngc_rel_d1.s was absorbed into src/sel_ngc_rel_29.c, so the
+# zero-size alias that used to name the unsigned magic is gone.  lbl_00011D00
+# is this object's last .rodata offset (0x198); the unsigned magic is 0x1C8
+# further on, INSIDE the merged C object.  A .set anchor needs no section
+# contribution, so it can name an address another object supplies the bytes for.
+.global lbl_00011EC8
+.set lbl_00011EC8, lbl_00011D00 + 0x1C8

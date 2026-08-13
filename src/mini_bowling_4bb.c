@@ -232,7 +232,7 @@ s16 lbl_0000AD8C(u8 *);
 void lbl_0000AF18(void);
 void lbl_0000AFEC(void);
 void lbl_0000B0AC(f32);
-void lbl_0000B1BC(void);
+void lbl_0000B1BC(f32);
 int lbl_0000B344(void);
 void lbl_0000B460(int);
 void lbl_0000B654(int);
@@ -253,11 +253,11 @@ void lbl_0000DA0C(void);
 void lbl_0000DAF4(int, void *);
 void lbl_0000DD4C(int, void *);
 void lbl_0000DFA4(int, int);
-void lbl_0000E22C(void);
-void lbl_0000E3A0(void);
+void lbl_0000E22C(int);
+void lbl_0000E3A0(int);
 void lbl_0000E510(void);
 void lbl_0000E5D4(void);
-void lbl_0000E7B0(void);
+void lbl_0000E7B0(int);
 void lbl_0000E870(void);
 void lbl_0000E894(void);
 void lbl_0000EC38(void);
@@ -533,11 +533,77 @@ void lbl_000021B4(void)
         }
     }
 }
-asm void lbl_00002454(void)
+#pragma opt_propagation off
+void lbl_00002454(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00002454.s"
+    u8 *w = lbl_10000000;
+    u8 *cfg = lbl_0000F020;
+    u8 *p = lbl_00014F20;
+    struct Ball *ball = currentBall;
+    s32 t;
+    f32 z;
+    f32 m;
+    f64 zd;
+    f64 u;
+    Vec sp;
+
+    *(f32 *)(w + 0x170) = *(f32 *)(w + 0x170) + *(f64 *)(cfg + 0x1e78)
+        * (controllerInfo[playerControllerIDs[ball->playerId]].held.triggerRight
+         - controllerInfo[playerControllerIDs[ball->playerId]].held.triggerLeft);
+    if (*(f32 *)(w + 0x170) > *(f64 *)(cfg + 0x1d28))
+        *(f32 *)(w + 0x170) = *(f32 *)(cfg + 0x1c9c);
+    if (*(f32 *)(w + 0x170) < *(f64 *)(cfg + 0x1e80))
+        *(f32 *)(w + 0x170) = *(f32 *)(cfg + 0x1e88);
+
+    ball->vel.z = *(f64 *)(cfg + 0x1e90)
+        / (f32)(*(f64 *)(cfg + 0x1e70) + *(f64 *)(cfg + 0x1e48)
+                * (*(f64 *)(cfg + 0x1d28) - *(f32 *)(w + 0x16c)));
+    currentBall->unk60 = -1000;
+    lbl_00007518();
+    t = *(s32 *)w;
+    if (t < 0xc)
+        *(s32 *)(p + 4) &= ~0x4000;
+    if (t < 0) {
+        SoundIcsReq(currentBall->playerId, 0, 0);
+        zd = *(f64 *)(cfg + 0x1e98) + *(f64 *)(cfg + 0x1ea0) * (m = *(f32 *)(w + 0x16c));
+        z = zd;
+        sp.x = *(f32 *)(cfg + 0x1c98);
+        sp.y = currentBall->accel
+             * (*(f64 *)(cfg + 0x1ea8) + *(f64 *)(cfg + 0x1eb0) * m);
+        sp.z = -z;
+        mathutil_mtxA_from_rotate_y(*(f32 *)(cfg + 0x1d08) * *(f32 *)(w + 0x168));
+        mathutil_mtxA_tf_point(&sp, &sp);
+        u = *(f64 *)(cfg + 0x1eb0) * (*(f32 *)(cfg + 0x1eb8) * z);
+        BALL_FOREACH(
+            ball->state = 0x19;
+            currentBall->unk148 = 1;
+            currentBall->pos.y = *(f32 *)(cfg + 0x1c98);
+            currentBall->pos.z = *(f32 *)(cfg + 0x1d00);
+            currentBall->vel = sp;
+            currentBall->rotX = 0;
+            currentBall->rotY = *(f32 *)(cfg + 0x1ebc) * *(f32 *)(w + 0x170);
+            currentBall->rotZ = 0;
+            currentBall->unk60 = u;
+            currentBall->unk62 = 0;
+            currentBall->unk64 = 0;
+        )
+        *(s32 *)w = 0x384;
+        *(s32 *)p = 0x40;
+        *(s32 *)(p + 4) = 0x79;
+        {
+            struct Camera *camera;
+            struct Camera *cameraBackup = currentCamera;
+            int i;
+            camera = &cameraInfo[0];
+            for (i = 0; i < 4; i++, camera++) {
+                currentCamera = camera;
+                camera->subState = 1;
+            }
+            currentCamera = cameraBackup;
+        }
+    }
 }
+#pragma opt_propagation reset
 // lbl_10000000 + 0xc is an array of four 0x4c-byte per-player records; the rest
 // of the work area resumes at +0x13c (== 0xc + 4*0x4c).  Indexing it AS AN
 // ARRAY OF STRUCTS is load-bearing: it is the only spelling that emits
@@ -800,10 +866,118 @@ void lbl_00004410(void)
     *(s32 *)p = 0x2000;
     *(s32 *)(p + 4) = 0x60;
 }
-asm void lbl_000045E8(void)
+void lbl_000045E8(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_000045E8.s"
+    u8 *st = lbl_10000000;
+    u8 *cfg = lbl_0000F020;
+    u8 *p = lbl_00014F20;
+    int tm;
+    f32 v;
+    int go;
+
+    if (!(currentBall->flags & 0x1000))
+    {
+        if (*(f64 *)(cfg + 0x1f38) == *(s32 *)st)
+            u_play_sound_0(0xc);
+    }
+    if (stageInfo.unk0 < 0x2ee0)
+        stageInfo.unk0 += 0x14;
+    if (stageInfo.unk0 == 0x2580)
+        lbl_00004D10();
+    if (stageInfo.unk0 >= 0x2580 && stageInfo.unk0 < 0x2a30)
+    {
+        if (stageInfo.unk0 < 0x27d8)
+            v = animGroups[1].pos.y - *(f64 *)(cfg + 0x1f40)
+                + (0x27d8 - stageInfo.unk0) / *(f64 *)(cfg + 0x1f48);
+        else
+            v = animGroups[1].pos.y - *(f64 *)(cfg + 0x1f40);
+        lbl_0000B0AC(v);
+    }
+    if (stageInfo.unk0 == 0x1c20)
+        lbl_0000AF18();
+    if (stageInfo.unk0 > 0x1c20 && stageInfo.unk0 < 0x2328)
+        lbl_0000B1BC(animGroups[2].pos.z - *(f64 *)(cfg + 0x1f50));
+
+    tm = *(s32 *)st;
+    if (tm < 0)
+        go = 1;
+    else if (!(controllerInfo[playerControllerIDs[currentBall->playerId]]
+                   .pressed.button & PAD_BUTTON_A))
+        go = 0;
+    else if (currentBall->flags & 0x1000)
+    {
+        if (tm < *(f64 *)(cfg + 0x1f58))
+            go = 1;
+        else
+            go = 0;
+    }
+    else
+    {
+        if (tm < *(f64 *)(cfg + 0x1f60))
+            go = 1;
+        else
+            go = 0;
+    }
+
+    if (go)
+    {
+        lbl_00007740();
+        event_finish(0x12);
+        *(s32 *)(p + 0xc) = -1;
+        event_start(0x12);
+        if (*(s8 *)(st + 0x13e) == 0)
+        {
+            *(u16 *)(st + 4) |= 1 << *(s8 *)(st + 7);
+            *(s8 *)(st + 6) += 1;
+        }
+        *(s32 *)(st + 0x144) = 0;
+        destroy_sprite_with_tag(0x6b);
+        if ((u32) * (s8 *)(st + 6) >= 0xa)
+        {
+            lbl_0000E3A0(0xe10);
+            lbl_0000E7B0(0xe10);
+            *(s32 *)st = 0xe10;
+            *(s32 *)p = 0x100;
+            *(s32 *)(p + 4) = 0x20000;
+        }
+        else
+        {
+            *(s8 *)(st + 8) -= 1;
+            if (*(s8 *)(st + 8) < 0)
+            {
+                lbl_0000E22C(0xe10);
+                lbl_0000E7B0(0xe10);
+                *(s32 *)st = 0xe10;
+                *(s32 *)p = 0x100;
+                *(s32 *)(p + 4) = 0x10000;
+            }
+            else
+            {
+                *(s32 *)st = 0x2710;
+                *(s32 *)p = 0x800;
+                *(s32 *)(p + 4) = 0x8000;
+            }
+        }
+        BALL_FOREACH(
+            ball->state = 1;
+        )
+        WORLD_FOREACH(
+            world->state = 1;
+        )
+        {
+            struct Camera *camera;
+            struct Camera *cameraBackup = currentCamera;
+            int i;
+            camera = &cameraInfo[0];
+            for (i = 0; i < 4; i++, camera++)
+            {
+                currentCamera = camera;
+                camera->subState = 0;
+                currentCamera->unk26 = 9;
+            }
+            currentCamera = cameraBackup;
+        }
+    }
 }
 #pragma peephole on
 void lbl_00004A80(void)

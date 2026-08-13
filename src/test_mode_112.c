@@ -274,7 +274,7 @@ void lbl_0000EEF4(void);
 void lbl_0000F6F0(void);
 void lbl_0000F7BC(void);
 void lbl_0000F940(void);
-void lbl_0000FBA8(void);
+static inline int u_take(u8 *p) { s32 t = *(s32 *)(p + 0x54); *(s32 *)(p + 0x54) = 0; return t; } s32 lbl_0000FBA8(void);
 void lbl_0000FD8C(void);
 
 
@@ -538,9 +538,52 @@ asm void lbl_0000F940(void)
     nofralloc
 #include "../asm/nonmatchings/test_mode/lbl_0000F940.s"
 }
-asm void lbl_0000FBA8(void)
+#pragma peephole on
+#pragma opt_propagation off
+s32 lbl_0000FBA8(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/test_mode/lbl_0000FBA8.s"
+    u8 *p = lbl_10003BF8;
+    void (*fn)(s32);
+    s32 ok;
+    u16 press = controllerInfo[0].pressed.button;
+    u16 hold;
+    s32 pad[4];
+
+    *(s32 *)(p + 0x54) = press & PAD_BUTTON_A;
+    *(s32 *)(p + 0x58) = press & PAD_BUTTON_B;
+    hold = controllerInfo[0].held.button;
+    *(s32 *)(p + 0x5C) = hold & PAD_BUTTON_Y;
+    *(s32 *)(p + 0x60) = hold & PAD_BUTTON_X;
+    lbl_0000D844();
+    mathutil_mtxA_from_identity();
+    *(float *)(p + 0xC) = *(float *)(p + 0xC) + controllerInfo[0].held.substickX * 10;
+    mathutil_mtxA_rotate_y(*(float *)(p + 0xC));
+    mathutil_mtxA_to_quat(&(*(struct Ape **)(p + 4))->unk60);
+    (*(struct Ape **)(p + 4))->unk0->u_someDeltaTime =
+        (*(struct SomeMotInfoStruct **)(p + 0xAC))->u_maybeSpeed;
+    *(s32 *)(p + 0x9C) = 3;
+    *(s32 *)(p + 0xA0) = 2;
+    if (*(void **)(p + 0x88) != NULL)
+        (*(void (**)(void))(p + 0x88))();
+    else
+        *(s32 *)(p + 0x78) = 0;
+    lbl_0000D3C0();
+    if (controllerInfo[0].pressed.button & PAD_BUTTON_LEFT)
+    {
+        if (--(*(struct Ape **)(p + 4))->colorId < 0)
+            (*(struct Ape **)(p + 4))->colorId = 3;
+    }
+    else if (controllerInfo[0].pressed.button & PAD_BUTTON_RIGHT)
+    {
+        if (++(*(struct Ape **)(p + 4))->colorId > 3)
+            (*(struct Ape **)(p + 4))->colorId = 0;
+    }
+    ape_skel_anim_main(*(struct Ape **)(p + 4));
+    fn = *(void (**)(s32))(lbl_000156F0 + *(s32 *)(p + 0x64) * 8);
+    fn((ok = (fn != NULL && *(void **)(p + 0x88) == NULL)) &&
+       u_take(p));
+    lbl_0000F7BC();
+    return *(s32 *)(p + 0x68);
 }
+#pragma opt_propagation reset
 #pragma force_active reset

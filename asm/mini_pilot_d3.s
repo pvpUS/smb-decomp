@@ -1,155 +1,16 @@
-# mini_pilot data segment 3 -- rodata up to the CARVED HOLE at 0xC6D8 (the signed
+# mini_pilot data segment 3 -- rodata from 0xC5C0 up to the CARVED HOLE at 0xC6D8.
+# RUN 34: the 496 bytes 0xC3C8..0xC5B7 and the unsigned int->float magic at
+# 0xC5B8 are now supplied by src/mini_pilot_32b.c.o's own literal pool (the signed
 # int->float magic).  src/mini_pilot_50b.c.o supplies the 8 bytes; the rest of
 # the original segment continues in mini_pilot_d4.s.  Same mechanism as the
 # module's existing carve at 0xBEE0 (mini_pilot.s / mini_pilot_9.c.o / mini_pilot_d1.s).
 .include "macros.inc"
-.global lbl_0000C3C8
-.global lbl_0000C3CC
-.global lbl_0000C430
-.global lbl_0000C548
-.global lbl_0000C5B8
 .global lbl_0000C5C0
 .global lbl_0000C690
 .global lbl_0000C6D8
 
 .section .rodata
 .balign 8
-lbl_0000C3C8:
-    # 0xC3C8
-    .4byte 0x43480000
-lbl_0000C3CC:
-    # 0xC3CC
-    .4byte 0x432A0000
-    .4byte 0x40320000
-    .4byte 0x00000000
-    .4byte 0x40420000
-    .4byte 0x00000000
-    .4byte 0x40440000
-    .4byte 0x00000000
-    .4byte 0x40200000
-    .4byte 0x00000000
-    .4byte 0x40520000
-    .4byte 0x00000000
-    .4byte 0x00000000
-    .4byte 0x3DCCCCCD
-    .4byte 0x402E0000
-    .4byte 0x00000000
-    .4byte 0x404B8000
-    .4byte 0x00000000
-    .4byte 0x4060C708
-    .4byte 0xFCDDC046
-    .4byte 0x3FF00000
-    .4byte 0x00000000
-    .4byte 0x3FD00000
-    .4byte 0x00000000
-    .4byte 0x3E800000
-    .4byte 0x00000000
-lbl_0000C430:
-    # 0xC430
-    .4byte 0x40000000
-    .4byte 0x00000000
-    .4byte 0x40330000
-    .4byte 0x00000000
-    .4byte 0x0B250B23
-    .4byte 0x0B260B24
-    .4byte 0x40340000
-    .4byte 0x00000000
-    .4byte 0x3DF5C28F
-    .4byte 0x00000000
-    .4byte 0x4061A000
-    .4byte 0x00000000
-    .4byte 0x3FE68F5C
-    .4byte 0x28F5C28F
-    .4byte 0xC0100000
-    .4byte 0x00000000
-    .4byte 0xC0800000
-    .4byte 0x00000000
-    .4byte 0x40220000
-    .4byte 0x00000000
-    .4byte 0x41980000
-    .4byte 0x00000000
-    .4byte 0x40490000
-    .4byte 0x00000000
-    .4byte 0x40080000
-    .4byte 0x00000000
-    .4byte 0x3E266666
-    .4byte 0x41100000
-    .4byte 0x40400000
-    .4byte 0x00000000
-    .4byte 0x40140000
-    .4byte 0x00000000
-    .4byte 0x40530000
-    .4byte 0x00000000
-    .4byte 0x40626000
-    .4byte 0x00000000
-    .4byte 0x40508000
-    .4byte 0x00000000
-    .4byte 0x40300000
-    .4byte 0x00000000
-    .4byte 0x40612000
-    .4byte 0x00000000
-    .4byte 0x404D0000
-    .4byte 0x00000000
-    .4byte 0x408F4000
-    .4byte 0x00000000
-    .4byte 0x3F9EB851
-    .4byte 0xEB851EB8
-    .4byte 0x40260000
-    .4byte 0x00000000
-    .4byte 0x40504000
-    .4byte 0x00000000
-    .4byte 0x40100000
-    .4byte 0x00000000
-    .4byte 0x40400000
-    .4byte 0x00000000
-    .4byte 0x3F59999A
-    .4byte 0x00000000
-    .4byte 0x404B0000
-    .4byte 0x00000000
-    .4byte 0x404E0000
-    .4byte 0x00000000
-    .4byte 0x40418000
-    .4byte 0x00000000
-    .4byte 0x406FE000
-    .4byte 0x00000000
-    .4byte 0x42F00000
-    .4byte 0x00000000
-    .4byte 0x40540000
-    .4byte 0x00000000
-lbl_0000C548:
-    # 0xC548
-    .4byte 0x43A00000
-    .4byte 0x43C40000
-    .4byte 0x424C0000
-    .4byte 0x40B00000
-    .4byte 0x43080000
-    .4byte 0x43BE0000
-    .4byte 0x3FB55555
-    .asciz "UUUU@x@"
-    .balign 4
-    .4byte 0x00000000
-    .4byte 0xC0372AAA
-    .4byte 0xAAAAAAAB
-    .4byte 0x40280000
-    .4byte 0x00000000
-    .4byte 0x4016AAAA
-    .4byte 0xAAAAAAAB
-    .4byte 0x40480000
-    .4byte 0x00000000
-    .4byte 0x3FA00000
-    .4byte 0x00000000
-    .4byte 0x3FE00000
-    .4byte 0x00000000
-    .4byte 0x40604000
-    .4byte 0x00000000
-    .4byte 0x405F4000
-    .4byte 0x00000000
-    .4byte 0x437F0000
-    .4byte 0x3D8F5C29
-lbl_0000C5B8:
-    # 0xC5B8
-    .4byte 0x43300000
-    .4byte 0x00000000
 lbl_0000C5C0:
     # 0xC5C0
     .4byte 0x43700000

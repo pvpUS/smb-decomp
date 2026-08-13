@@ -430,10 +430,6 @@ SOURCES := \
 	src/sel_ngc_rel_28.c \
 	asm/sel_ngc_rel_d2a.s \
 	src/sel_ngc_rel_29.c \
-	asm/sel_ngc_rel_d1.s \
-	src/sel_ngc_rel_52.c \
-	src/sel_ngc_rel_53.c \
-	src/sel_ngc_rel_54.c \
 	src/sel_ngc_rel_55.c \
 	asm/sel_ngc_rel_d2.s \
 	src/sel_ngc_rel_56.c
@@ -561,15 +557,6 @@ SOURCES := \
 	src/mini_race_80.c \
 	src/mini_race_81.c \
 	src/mini_race_82.c \
-	src/mini_race_83.c \
-	src/mini_race_84.c \
-	src/mini_race_85.c \
-	src/mini_race_86.c \
-	src/mini_race_87.c \
-	src/mini_race_88.c \
-	src/mini_race_89.c \
-	src/mini_race_90.c \
-	src/mini_race_91.c \
 	src/mini_race_113.c \
 	src/mini_race_114.c \
 	src/mini_race_115.c \

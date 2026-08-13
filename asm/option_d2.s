@@ -1,8 +1,5 @@
 # option data segment 2 -- rodata, data continuation after a carved hole
 .include "macros.inc"
-.global lbl_0000C388
-.global lbl_0000C394
-.global lbl_0000C4B0
 .global lbl_0000CA30
 .global lbl_0000CC6C
 .global lbl_0000CF10
@@ -14,88 +11,6 @@
 
 .section .rodata
 .balign 8
-lbl_0000C388:
-    # 0xC388
-    .4byte 0x00000000
-    .4byte 0x00000000
-    .4byte 0xC4688000
-lbl_0000C394:
-    # 0xC394
-    .4byte 0x44688000
-    .4byte 0x3FB99999
-    .4byte 0x9999999A
-    .4byte 0x40000000
-    .4byte 0x00000000
-    .4byte 0x40180000
-    .4byte 0x00000000
-    .4byte 0x3FF00000
-    .4byte 0x00000000
-    .4byte 0x40280000
-    .4byte 0x00000000
-    .4byte 0x40080000
-    .4byte 0x00000000
-    .4byte 0x3FE00000
-    .4byte 0x00000000
-    .4byte 0x3F800000
-    .4byte 0x43A00000
-    .4byte 0x4370199A
-    .4byte 0x461C4000
-    .4byte 0x40200000
-    .4byte 0x00000000
-    .4byte 0x405E0000
-    .4byte 0x00000000
-    .4byte 0x40400000
-    .4byte 0x00000000
-    .4byte 0x3DCCCCCD
-    .4byte 0x43820000
-    .4byte 0x42380000
-    .4byte 0x43A80000
-    .4byte 0x43300000
-    .4byte 0x43500000
-    .4byte 0x43810000
-    .4byte 0x3F4CCCCD
-    .4byte 0x40740000
-    .4byte 0x00000000
-    .4byte 0x4078A000
-    .4byte 0x00000000
-    .4byte 0x40300000
-    .4byte 0x00000000
-    .4byte 0x40600000
-    .4byte 0x00000000
-    .4byte 0x43640000
-    .4byte 0x44430000
-    .4byte 0x435C0000
-    .4byte 0x43F80000
-    .4byte 0x44610000
-    .4byte 0x43D80000
-    .4byte 0x40400000
-    .4byte 0x00000000
-    .4byte 0x4057C000
-    .4byte 0x00000000
-    .4byte 0x40754000
-    .4byte 0x00000000
-    .4byte 0x40550000
-    .4byte 0x00000000
-    .4byte 0x405E8000
-    .4byte 0x00000000
-    .4byte 0x40240000
-    .4byte 0x00000000
-    .4byte 0x40606000
-    .4byte 0x00000000
-    .4byte 0x4070E000
-    .4byte 0x00000000
-    .4byte 0x43BD0000
-    .4byte 0x43CF0000
-    .4byte 0x43660000
-    .4byte 0x43870000
-    .4byte 0x42CC0000
-    .4byte 0x43BB0000
-    .4byte 0x42C00000
-    .4byte 0x42880000
-lbl_0000C4B0:
-    # 0xC4B0
-    .4byte 0x43300000
-    .4byte 0x00000000
     .4byte 0x43D00000
     .4byte 0x42A00000
     .4byte 0x4060E000

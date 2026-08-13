@@ -60,8 +60,12 @@ extern u8 lbl_0000C348[];
 extern u8 lbl_0000C368[];
 extern u8 lbl_0000C370[];
 extern u8 lbl_0000C380[];
-extern u8 lbl_0000C388[];
-extern u8 lbl_0000C394[];
+/* CARVED into this TU (run 34): the 296 rodata bytes 0xC388..0xC4B0 that sit
+ * between this file's signed int->float magic (@132, 0xC380) and the unsigned
+ * magic (0xC4B0).  Forward-declared here, DEFINED further down -- mwcc 1.1
+ * places file-scope data at its DEFINITION point in .rodata source order. */
+extern const u32 lbl_0000C388[3];
+extern const u32 lbl_0000C394[71];
 extern u8 lbl_0000C4B0[];
 extern u8 lbl_0000C640[];
 extern u8 lbl_0000C6A4[];
@@ -173,7 +177,7 @@ void lbl_00009BB4(s8 *arg0, struct Sprite *sprite);
 void lbl_00009C3C(struct Sprite *sprite, int u1, int u2);
 void lbl_0000A534(void);
 void lbl_0000A600(s8 *, struct Sprite *);
-void lbl_0000A688(void);
+void lbl_0000A688(struct Sprite *sprite, int u1, int u2);
 void lbl_0000B040(void);
 void lbl_0000B10C(s8 *, struct Sprite *);
 void lbl_0000B218(void);
@@ -584,6 +588,35 @@ asm void lbl_00005020(void)
 #include "../asm/nonmatchings/option/lbl_00005020.s"
 }
 #pragma peephole on
+
+/* ---- carved from asm/option_d2.s: .rodata 0xC388..0xC4B0, 296 bytes ----
+ * These 296 bytes sit BETWEEN option_30.c's signed int->float magic (@132,
+ * 0xC380) and the unsigned magic (0xC4B0).  mwcc 1.1 lays .rodata out in
+ * source order, so declaring them here places them exactly between the two.
+ * They are read as a blob through lbl_0000C370 by matched C in this file. */
+const u32 lbl_0000C388[3] = {
+    0x00000000, 0x00000000, 0xC4688000
+};
+const u32 lbl_0000C394[71] = {
+    0x44688000, 0x3FB99999, 0x9999999A, 0x40000000,
+    0x00000000, 0x40180000, 0x00000000, 0x3FF00000,
+    0x00000000, 0x40280000, 0x00000000, 0x40080000,
+    0x00000000, 0x3FE00000, 0x00000000, 0x3F800000,
+    0x43A00000, 0x4370199A, 0x461C4000, 0x40200000,
+    0x00000000, 0x405E0000, 0x00000000, 0x40400000,
+    0x00000000, 0x3DCCCCCD, 0x43820000, 0x42380000,
+    0x43A80000, 0x43300000, 0x43500000, 0x43810000,
+    0x3F4CCCCD, 0x40740000, 0x00000000, 0x4078A000,
+    0x00000000, 0x40300000, 0x00000000, 0x40600000,
+    0x00000000, 0x43640000, 0x44430000, 0x435C0000,
+    0x43F80000, 0x44610000, 0x43D80000, 0x40400000,
+    0x00000000, 0x4057C000, 0x00000000, 0x40754000,
+    0x00000000, 0x40550000, 0x00000000, 0x405E8000,
+    0x00000000, 0x40240000, 0x00000000, 0x40606000,
+    0x00000000, 0x4070E000, 0x00000000, 0x43BD0000,
+    0x43CF0000, 0x43660000, 0x43870000, 0x42CC0000,
+    0x43BB0000, 0x42C00000, 0x42880000
+};
 
 asm void lbl_00005340(void)
 {
@@ -1352,11 +1385,157 @@ void lbl_0000A600(s8 *arg0, struct Sprite *sprite)
     *x = *x + c[11] * ((c[66] + c[16] * (f64)*(s32 *)(lbl_10000000 + 0x174)) - *x);
 }
 #pragma peephole on
-asm void lbl_0000A688(void)
+void lbl_0000A688(struct Sprite *sprite, int u1, int u2)
 {
-    nofralloc
-#include "../asm/nonmatchings/option/lbl_0000A688.s"
+    u8 *c = lbl_0000C370;
+    struct OptPage *t;
+    int i;
+    struct Sprite sp;
+    s8 *p;
+    f32 tw;
+    u32 col;
+
+    p = lbl_00003F6C(sprite->tag);
+    if (p != NULL)
+    {
+        mathutil_mtxA_from_translate_xyz(*(f32 *)(p + 4) + *(f32 *)(p + 8),
+                                         *(f32 *)c, *(f32 *)c);
+        mathutil_mtxA_to_mtx((void *)(lbl_10000000 + 0x184));
+        GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
+    }
+    nlSprPut((NLsprarg *)lbl_0000C8F0);
+
+    sp.depth = *(f32 *)(c + 0x88);
+    sp.scaleX = *(f32 *)(c + 0x60);
+    sp.scaleY = *(f32 *)(c + 0x60);
+    sp.fontId = 0xB3;
+    sp.addR = 0;
+    sp.addG = 0;
+    sp.addB = 0;
+    sp.flags = 0x200000;
+    strcpy(sp.text, (char *)(lbl_0000C8F0 + 0x1174));
+
+    u_txt_setup(&sp);
+    func_80071B1C(sp.depth);
+    set_text_mul_color(RGBA(sp.mulR, sp.mulG, sp.mulB, 0));
+    set_text_add_color(RGBA(sp.addR, sp.addG, sp.addB, 0));
+    tw = u_get_text_width(sp.text);
+    sp.x = *(f64 *)(c + 0xA8) - *(f64 *)(c + 0x58) * tw;
+    sp.y = *(f32 *)(c + 0x90);
+    sp.mulR = 0xFF;
+    sp.mulG = 0xFF;
+    sp.mulB = 0;
+    u_txt_shadow(&sp, c);
+
+    ((NLsprarg *)(lbl_0000C8F0 + 0x128C))->x = *(f32 *)(c + 0x64);
+    ((NLsprarg *)(lbl_0000C8F0 + 0x128C))->y = *(f32 *)(c + 0x238);
+    ((NLsprarg *)(lbl_0000C8F0 + 0x128C))->zm_x = *(f32 *)(c + 0x23C);
+    ((NLsprarg *)(lbl_0000C8F0 + 0x128C))->zm_y = *(f32 *)(c + 0x15C);
+    lbl_000042BC((NLsprarg *)(lbl_0000C8F0 + 0x128C), *(f32 *)(c + 0x148),
+                 *(f32 *)(c + 0x9C));
+
+    if (*(s32 *)(lbl_10000000 + 0x178) == 1)
+    {
+        sp.mulR = 0xEF;
+        sp.mulG = 0x9A;
+        sp.mulB = 0;
+    }
+    else
+    {
+        sp.mulR = 0xFF;
+        sp.mulG = 0xFF;
+        sp.mulB = 0;
+    }
+    sp.scaleX = *(f32 *)(c + 0xA4);
+    t = &((struct OptPage *)(lbl_0000C8F0 + 0x14E4))[*(s32 *)(lbl_10000000 + 0x178)];
+    for (i = 0; i < t->count; i++)
+    {
+        strcpy(sp.text, t->items[i].text);
+        u_txt_setup(&sp);
+        func_80071B1C(sp.depth);
+        set_text_mul_color(RGBA(sp.mulR, sp.mulG, sp.mulB, 0));
+        set_text_add_color(RGBA(sp.addR, sp.addG, sp.addB, 0));
+        tw = u_get_text_width(sp.text);
+        sp.x = *(f64 *)(c + 0xA8) - *(f64 *)(c + 0x58) * tw;
+        sp.y = (*(f64 *)(c + 0xB0) - *(f64 *)(c + 0xB8) * (f64)(t->count - 1))
+               + *(f64 *)(c + 0x80) * (f64)i;
+        u_txt_shadow(&sp, c);
+    }
+
+    if (t->items == (struct OptItem *)(lbl_0000C8F0 + 0x135C))
+    {
+        sp.mulR = 0xFF;
+        sp.mulG = 0xFF;
+        sp.mulB = 0xFF;
+        t = (struct OptPage *)(lbl_0000C8F0 + 0x1398);
+        for (i = 0; i < t->count; i++)
+        {
+            sp.x = *(f32 *)(c + 0x240);
+            sp.y = (*(f64 *)(c + 0xB0) - *(f64 *)(c + 0xB8) * (f64)(t->count - 1))
+                   + *(f64 *)(c + 0x80) * (f64)i;
+            strcpy(sp.text, t->items[i].text);
+            u_txt_shadow(&sp, c);
+        }
+    }
+
+    sp.scaleX = *(f32 *)(c + 0x60);
+    if (*(s32 *)(lbl_10000000 + 0x178) == 1)
+    {
+        col = *(f64 *)(c + 0x248)
+              * ((f32)abs((s32)((f64)(s32)(f32)(globalAnimTimer % 60)
+                                - *(f64 *)(c + 0x250)))
+                 / *(f64 *)(c + 0x250));
+        sp.x = *(f32 *)(c + 0x258);
+        sp.y = *(f32 *)(c + 0x1CC);
+        if (*(s32 *)(lbl_10000000 + 0x174) == 0)
+        {
+            sp.mulR = 0x8F;
+            sp.mulG = 0x8F;
+            sp.mulB = 0;
+            sp.addR = 0;
+            sp.addG = 0;
+            sp.addB = 0;
+        }
+        else
+        {
+            sp.mulR = 0xFF;
+            sp.mulG = 0xFF;
+            sp.mulB = 0;
+            sp.addR = col;
+            sp.addG = col;
+            sp.addB = col;
+        }
+        strcpy(sp.text, (char *)(lbl_0000C8F0 + 0x3C8));
+        u_txt_shadow(&sp, c);
+
+        sp.x = *(f32 *)(c + 0x25C);
+        sp.y = *(f32 *)(c + 0x1CC);
+        if (*(s32 *)(lbl_10000000 + 0x174) == 0)
+        {
+            sp.mulR = 0xFF;
+            sp.mulG = 0xFF;
+            sp.mulB = 0;
+            sp.addR = col;
+            sp.addG = col;
+            sp.addB = col;
+        }
+        else
+        {
+            sp.mulR = 0x8F;
+            sp.mulG = 0x8F;
+            sp.mulB = 0;
+            sp.addR = 0;
+            sp.addG = 0;
+            sp.addB = 0;
+        }
+        strcpy(sp.text, (char *)(lbl_0000C8F0 + 0x3D0));
+        u_txt_shadow(&sp, c);
+    }
+
+    mathutil_mtxA_from_identity();
+    GXLoadPosMtxImm(mathutilData->mtxA, GX_PNMTX0);
 }
+
 #pragma peephole on
 void lbl_0000B040(void)
 {
