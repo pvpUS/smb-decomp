@@ -216,7 +216,285 @@ it. `_scratch_<MOD>/run<N>/pristine/` is the convention.**
 
 ---
 
-## 0.39 — RUN 33 DONE (2026-08-12): +6,614 insn, 48.82% -> 52.29%. **PAST HALFWAY.** START HERE.
+## 0.40 — RUN 34 DONE (2026-08-12): +1,609 insn, 52.29% -> 53.14%. **SIX OF NINE GAINED.** START HERE.
+
+Nine module agents plus three read-only corpus agents. **TWENTY-SECOND
+consecutive run with no module agent spawning anything.** **Six of nine gained —
+the most in the project's history.**
+
+| module | still-asm | insn | % | gained |
+|---|---|---|---|---|
+| **mini_pilot** | 5 fns | 11204/12137 | **92.31%** | **+205 / +1** |
+| **mini_race** | 28 fns | 14999/19817 | **75.69%** | **+89 / +1** |
+| **test_mode** | 15 fns | 12182/16231 | **75.05%** | **+121 / +1** |
+| **mini_bowling** | 10 fns | 11275/15313 | **73.63%** | **+509 / +2** |
+| **option** | 11 fns | 6027/12375 | **48.70%** | **+622 / +1** |
+| **sel_ngc** | 8 fns | 7789/18084 | **43.07%** | **+63 / +1** |
+| mini_golf | 16 fns | 17189/38919 | 44.17% | 0 |
+| mini_billiards | 17 fns | 10714/28793 | 37.21% | 0 |
+| mini_fight | 70 fns | 9723/28588 | 34.01% | 0 |
+| **TOTAL** | **180 fns** | **101099/190254** | **53.14%** | **+1,609 / +7** |
+
+**Verified in the main tree, not taken on report**: nine trees diffed before
+merging (**seven changed paths, two changed nothing** — no `tools/` line in any);
+hygiene **1 problem found and fixed, then 0**; all nine `--gate` **GOLDEN from
+deleted objects with every hash matching its agent's**, including the two that
+changed nothing; all nine `rel_structcheck` **CLEAN, orchestrator-run**; clean
+build from **0 objects** gives `sha1sum -c` **12/12 OK including the DOL**;
+census **re-measured in the merged tree matches the results table row for row**.
+Reconciles three ways: 190,254 − 89,155 = **101,099**, 187 − 7 = **180**,
+90,764 − 89,155 = **1,609**.
+
+> ### ⚠⚠ A CARRIED BOOKKEEPING ERROR, FOUND WHILE VERIFYING THIS TABLE — 3 INSTRUCTIONS
+>
+> **The nine per-module DENOMINATORS above sum to 190,257, not 190,254.** Every
+> row is internally consistent (`denominator − still-asm = converted`, checked
+> for all nine), and the project total **190,254 / 89,155 / 101,099 is MEASURED
+> and reconciles three ways** — so this run's result is unaffected. But the
+> per-module denominators are **carried figures**, they have been identical
+> since at least run 32, and **their sum has disagreed with the project total by
+> 3 the whole time.** Nobody has ever added that column up.
+>
+> **Nothing in `tools/` prints a per-module denominator** — `rel_census` and
+> `rel_rowcount` both report still-asm only, which is why the column went
+> unchecked. **Run 35: find the 3, or replace the column with a measured one.**
+> It is small, but it is exactly the shape of defect this project keeps paying
+> for: a figure carried because no instrument ever recomputed it.
+
+**Object metrics 859 / 1,029 / 862 → 846 / 1,016 / 850** (785 `.c` + 65 `.s`).
+⚠ **Objects moved −13 against −12 source files and the difference is real**: 12
+deleted `.c` (mini_race 9, sel_ngc 3) **plus `asm/sel_ngc_rel_d1.s` dropped from
+SOURCES**, its 448 `.rodata` bytes absorbed into C. **That `.s` is still on disk,
+documented in two places by sel_ngc, and is now BUILT BY NOTHING** — deliberate,
+declared here so nobody rediscovers it as an anomaly.
+
+### ★★★ 1. THE LAYOUT-PLUS-CONVERSION PATTERN WORKS — AND THE ORDER MATTERS
+
+Run 33 left **11,732 instructions priced but unbanked**. **Four modules landed a
+layout change AND its conversion in the same run**: option (a carve, +622),
+mini_pilot (a 496-byte carve, atomically, +205), mini_race (a 10-object TU
+merge, +89), sel_ngc (a four-object TU merge, +63). A fifth, test_mode, **cut,
+built, measured and correctly reverted** its 13-file merge.
+
+> **The instruction that made the difference: DRAFT THE READER FIRST, CUT THE
+> LAYOUT LAST.** option's 3,092-instruction row sat on paper through all of run
+> 33 because its readers had **never been drafted**.
+> **Corpus C measured the general form: 71,631 of 90,764 remaining instructions
+> (78.9%), across 124 of 187 targets, had never had a line of C written.
+> LAYOUT IS THE CHEAP HALF.**
+
+★★ **THE ANCHOR `.set` DISSOLVES ATOMIC PACKAGES — two golden builds.** option
+measured both failure modes (install alone → magic emitted **twice**, `.rodata`
+0x130→0x138, NOT GOLDEN; delete the label → `could not find symbol` ×7); one
+line in the **preceding** segment turned a **four-way atomic package of 3,719
+instructions into three INDEPENDENT conversions**, reachability 1,418 → **4,515
+(71%)**. sel_ngc absorbed a `.rodata`-only blob's **448 bytes as C file-scope
+`const` data** and anchored it from a *different* asm file. **sel_ngc says four
+other modules have merges of this shape.**
+
+★ **PRICE A MERGE BY ITS CHEAPEST READER, NOT ITS FILE COUNT** (sel_ngc). Its
+two-file merge's cheapest reader was 417; going to **four** files — the two extra
+emit nothing in `.rodata`/`.data`/`.bss`, so they are **free** — brought in a
+**63-instruction** reader that banked **first draft**.
+
+### ★★★ 2. A SIXTH FICTIONAL-MATCH MODE, IN THE INSTRUMENT ALL NINE ARE TOLD TO USE
+
+**mini_bowling: `rel_tuprobe`/`rel_relscore` silently compiled a spliced body
+with the PEEPHOLE OPTIMISER OFF whenever the stub follows an asm block.** mwcc
+1.1's deopt is post-asm-block only and the splice lands in that window.
+
+- Worth **+17 on `lbl_00003A10`** and **+29 on `lbl_00003574`** — two stored,
+  previously-verified figures that **read as garbage** until `#pragma peephole
+  on` is prepended, whereupon **both reproduce exactly.**
+- ⚠⚠ **A TU MERGE MANUFACTURES THE CONFIGURATION**, so **every merged module
+  inherited it**; **1,784 of mini_bowling's own 4,038 remaining instructions**
+  sit at an affected splice point.
+- Bisected in **six probes**, diagnosed, handed over. **Fixed in `rel_tuprobe`
+  and re-gated by the orchestrator FROM THE MAIN TREE** on three functions
+  banked this run, including one **in a merged TU**.
+- ⚠ **ANY post-merge `rel_tuprobe` figure recorded before run 35 may be in the
+  wrong régime. The project-wide blast radius is UNKNOWN** — it is the first
+  assignment in `RUN35_CORPUS_BRIEF.md`.
+
+**Six fictional-match modes in 34 runs, every one found by GATING rather than
+selftesting — and this one by a module running real links, not by the corpus
+phase, which has now twice failed to audit the instruments.**
+
+### ★★★ 3. THE MAGIC-ORDER RULE IS FALSE — five measurements, one a REAL LINK
+
+The run-33 and run-34 briefs stated in **four sections** that within one TU mwcc
+emits signed-low/unsigned-high with source order inert.
+
+> **DECLARATION ORDER IS INERT. CODEGEN FIRST-USE ORDER DECIDES.**
+
+**mini_billiards** (7 compiles, **with the control row**: reversing declarations
+does *not* move them, changing which magic is *used first* does), **corpus C** (7
+objects), **mini_golf** (6 compiles), **corpus B** (16 objects, `q5`/`q6` and
+`q12a`/`q12b` as the control), and ★ **mini_pilot — which re-tested its OWN
+run-33 claim, found its probes had permuted the live axis all along, and
+RETRACTED THE RULE IT HAD AUTHORED.**
+
+★★ **test_mode WITHDREW its 840-instruction retirement** — "the cheapest
+four-figure retirement in the project" — then **built the merge**: the linked
+object's `.rodata` is **unsigned-low / signed-high, golden's order, in a REAL
+LINK**, `.text` exactly the sum of all 13, `rel_fnhash` 134/134 identical. It
+missed GOLDEN by **26 bytes, all the same field, all −8** (a SOURCES-position
+conflict) and was correctly reverted.
+
+**"A U+S pair cannot be produced by merging its two owners" is VOID.**
+⚠ **Two relayed refinements were falsified — do not carry them**: "ordinary
+literals precede both magics" (test_mode's `us_gap` has `2.5f` between them) and
+"probe with two functions" (**position within the TU** is what matters).
+★ **mini_billiards' probe stopped it retiring `lbl_0000E8D0`'s 2,496 on this
+exact claim**, and it **retracted its own 1,879 adjacency decline** as well.
+
+### ★★★ 4. RUN-22 IDIOM 17 IS ANSWERED — the project's longest-open question
+
+**test_mode.** Run 24's scanner searched the `mr` encoding with `rD >= 5`; the
+residual was `addi r4,r3,0`. **Both filters excluded the actual case.** A
+corrected DOL census (59 sites, 35 matched functions) found the exemplar in
+**`func_8004C70C`, `recplay_cmpr.c`** — a two-line function.
+
+> **The constant copy appears when an inner boolean is materialised INSIDE the
+> outer expression's tree.** `-inline auto` is in CFLAGS, so an inlined call's
+> `&&` return value is one.
+
+★ **And the deciding factor was `static` vs `static inline`**: with plain
+`static`, mwcc **inlined the helper AND emitted it out-of-line** (+0x14 `.text`).
+**`rel_tuprobe` scored `0 in 0` in BOTH cases; only `--gate` caught it.**
+
+### ★★ 5. SIX TOOL FIXES LANDED — commit `665565a`, after the twelfth agent closed
+
+**Fourteenth consecutive clean run**: all nine reported `diff -rq tools` **0
+lines at start AND end**, and **no module patched a tool — eight diagnosed a
+defect and handed it over.**
+
+- **`rel_census.py:576` — the one-line default, UNMADE FOR THREE RUNS.**
+  REACHABLE is now **BY ADDRESS from the `.map`** and sums to **33,730 across the
+  nine, exactly equal to `rel_ledger`'s REACH — the two instruments agree for the
+  first time.** Old rule preserved behind `--asm-only`. Gate: 72 rows, 10 trees ×
+  4 cwds on both drives.
+- **`rel_magicscan` / `rel_ledger` / `rel_mergeprice`** — the falsified
+  contiguity predicate; `MAGIC_BLOCK_GAP=8` deleted. **16 fns / 9,923 insn out
+  of DEAD, nothing into it, and the DEAD column is now 0 IN EVERY MODULE.**
+  Orientation is printed as an **observation**, never a verdict.
+- **`rel_tuprobe`** — the peephole régime (§2), `//@DROPRE`, `//@SUB` escapes,
+  unknown directives now **refuse**, both silent truncations fixed.
+- **`rel_merge_tu`** — `void`→`void *` (cost a build in runs 33 *and* 34).
+
+⚠ **Corpus B truncated `rel_ledger.py` to 0 bytes mid-run** with an edit script
+that raised after opening for write; it recovered deterministically.
+**Orchestrator verified `tools/` intact: 51 files, 0 diff lines against all nine
+warm copies.** The truncation never left its scratch.
+
+### ⚠⚠ ORCHESTRATOR NOTE — THE RELAY PAID FOUR TIMES AND I GOT IT WRONG TWICE
+
+Run 33's standing act says **relay the measurement and the sample size, never
+the corollary.** **Run 34 tested that rule on the orchestrator and it failed
+twice.**
+
+1. **I relayed corpus C's clearance to option as "no pool-slot conflict ⇒ safe
+   to install a reader alone."** option: *"the relay's clearance was right but
+   its mechanism was incomplete"* — **that rule alone would have produced a
+   NOT-GOLDEN build.**
+2. **I relayed mini_pilot's refinement "ordinary literals precede BOTH magics"
+   without a second source**, and passed on mini_golf's "probe with two
+   functions" diagnosis. **test_mode falsified both.**
+
+**Where it paid**: mini_billiards' order probe reached four live modules and a
+rule stated in four brief sections was falsified, reconciled and settled **in one
+run instead of five**; corpus C's overturn reached mini_golf, which re-derived
+it, **confirmed it, and then found the cheap landing FAILS**; corpus A's finding
+reached option before it spent another sweep; a **pragma-list correction I
+measured at launch** reached two modules and mini_race confirmed it from its own
+bytes.
+
+> **THE RULE FOR RUN 35, and it is about the orchestrator, not the agents:
+> forward the measurement, its object count, and who measured it — and NEVER the
+> sentence that generalises it.** Every module that re-derived a relay from its
+> own bytes was right to, and three did so unprompted.
+
+### ⚠ HAZARDS AND CORRECTIONS
+
+- ⚠⚠ **A GOLDEN GATE DOES NOT PROVE YOUR CONVERSION IS STILL INSTALLED.**
+  sel_ngc's snapshot revert fired on a snapshot taken **today from its own tree**
+  that predated its conversion by one step; it **silently un-banked 63
+  instructions and the tree STILL GATED GOLDEN** — a reverted tree is golden by
+  construction. **Only `rel_census --detail` caught it.**
+- **A TU MERGE RE-SCORES STORED DRAFTS of still-asm functions in the span**
+  (mini_race): both `F3D4` drafts lost an instruction (334→333, 29 in 18 → 43 in
+  29). `static` linkage, `avdisp.h` and struct forms ruled out by measurement.
+- **mwcc lays `.rodata` in STRICT SOURCE ORDER, interleaving file-scope objects
+  with its own literal pool** (option and mini_pilot independently). ⚠ **This
+  FALSIFIES run 24's "a file-scope array lands ahead of the compiler table"** —
+  mini_pilot's carve was **NOT GOLDEN** with the arrays declared at the top.
+- **`stmw rN` WITH A LOW N IS NOT A STOP SIGN**: mini_pilot's banked `9C18` is
+  **`stmw r18` (14 callee-saved)** and the **first blind draft reproduced the
+  frame byte-exact.** ⚠ **`lbl_00004570` (212) is retired on exactly that
+  arithmetic and deserves one probe** — mini_pilot's own top recommendation.
+- **A SEMANTIC BUG CAN COMPILE AND SCORE** (mini_billiards): `*(s8 *)lbl_802F1C32`
+  against `extern s8 lbl_802F1C32` sign-extends a byte **into an address**, at 4
+  sites. **Nothing in `tools/` catches it**; `symcheck.py` (40 lines) does.
+- **"This draft does not compile" is 0-for-166.** ⚠ **`rel_vsplice` implements
+  neither `//@SUB` nor `//@PROTO`**, so it *manufactures* the verdict.
+- **mini_fight OVERTURNED ITS OWN "settled, do not re-derive" 1,401 verdict** —
+  it is the same three map rows as the 1,303, and **1,401 − 1,303 = 98 =
+  `lbl_000177C8`**, banked in run 33.
+- **§11 omitted mini_golf's two closest targets** (`22610` 3 in 2 and `109CC`
+  2 in 2, both at exact length) and **mini_billiards' `lbl_000025B0`** — a
+  **layout-free 359 with a `14 in 6` draft on disk**.
+- **Still open, diagnosed**: `rel_merge_tu:445-446` (head/body cut at the
+  `force_active` marker → 8 silent mis-bindings, **detection-only by choice**),
+  `rel_scanpair`'s def-use mode (**deliberately not shipped ungated**;
+  `lmw`/`stmw` def `rN..r31` gave corpus A a **fictional 521/521**),
+  `rel_census`/`rel_rowcount`, `rel_ascore`/`rel_sdiff` region counts,
+  `d3.py:149` (a missing `elif` worth **1,878 instructions**).
+
+### RUN-35 PREP — DONE. What is on disk, and what run 35 should do.
+
+- **`C:/tmp/smbm/RUN34_RESULTS.md`** — all nine reports (5,527 lines), each under
+  an **ORCHESTRATOR VERIFIED** block written from tree measurements.
+- **`C:/tmp/smbm/RUN34_PLAYBOOK.md`** — the corpus phase with the module
+  corrections folded in, **including the one where the corpus BRIEF was wrong.**
+- **`C:/tmp/smbm/_harvest_run34/`** — **105 scripts**, README-indexed, plus
+  `DRAFT_INDEX.md` copied in (`copied == on-disk` asserted).
+- **`C:/tmp/smbm/_corpus_run34/`** — `A.md`, `B.md`, `C.md`, **`DRAFT_INDEX.md`
+  (235 pairs / 4,235 files, twelve runs deep, score direction on every row)**,
+  and **`Ascratch/bandshape.py`**, the one-second go/no-go for option's 719.
+- **`C:/tmp/smbm/_orch_run35/`** — all scripts rebased on **180 fns / 89,155
+  insn / 53.14% / 846-1016-850**, every substitution asserted to have fired.
+  ⚠ **`assemble_results.py` REFUSES TO RUN** until its run-34 table and headline
+  are rewritten. ⚠ **The optimiser-pragma list is RE-MEASURED, 13 → 16** — the
+  three merged owners absorbed pragma-carrying files, **so a TU merge GROWS it.**
+- **`C:/tmp/smbm/_brief35/`** — `sec1.md` and `sec11.md` written.
+- **`C:/tmp/smbm/RUN35_CORPUS_BRIEF.md`** — written, and it **opens by telling
+  the agents a line in it may be false**, because one was in run 34.
+- **All nine warm copies reset and re-gated GOLDEN from deleted objects**
+  (`fail=0`); `diff -rq tools`/`src`/`asm` **0 lines in all nine**, `Makefile`
+  identical in all nine, the six changed tools **6/6 identical** in every copy
+  checked.
+
+**THE RUN-35 RECOMMENDATION:**
+
+1. **LAND THE TWO FINISHED MATCHES.** mini_golf's `lbl_00011DAC` (**TRUE
+   144-of-144**, behind a four-object merge — and the cheap carve-only landing
+   was tested and **FAILS**) and mini_race's `lbl_0000BC58` + `lbl_0000C03C`
+   (**98 insn, both `0 in 0`**, behind a 21-object merge with **five enumerated
+   blockers**). **Nothing else on the board is this close.**
+2. **RE-SCORE EVERY POST-MERGE FIGURE** with the fixed `rel_tuprobe` before
+   trusting it, and **compute the project-wide blast radius** — nobody has.
+3. **TAKE `lbl_00004498` (543) AT ZERO LAYOUT COST** — six words, owner emits
+   `.text` only — and **option's three readers** (1,498 + 972 + 627), now
+   independent.
+4. **GIVE `lbl_00004570` (212) ONE PROBE**: it is retired on saved-GPR
+   arithmetic that mini_pilot's own banked `stmw r18` body just falsified.
+5. **ASK THE CORPUS FOR THE BAND-SIZE PARTITION** (option's 719, with `X10` as a
+   worked example) and **the `lis`/`addi` pair-completion rule** (one answer,
+   three mini_golf functions).
+
+---
+
+## 0.39 — RUN 33 DONE (2026-08-12): +6,614 insn, 48.82% -> 52.29%. **PAST HALFWAY.** Superseded by §0.40.
 
 Nine module agents plus three read-only corpus agents. **TWENTY-FIRST
 consecutive run with no module agent spawning anything.** Three of nine gained.
