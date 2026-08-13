@@ -15,9 +15,9 @@ A run is **exactly nine agents, one per REL module.** A module agent must **not*
 spawn subagents, workers, or helper agents of any kind. Its module is its own
 work, done directly in its own warm copy.
 
-This is permanent, not a run-13 experiment. **Runs 13 through 33 all ran this
+This is permanent, not a run-13 experiment. **Runs 13 through 35 all ran this
 way: zero stranding, zero worktree-merge hazards, zero lost matches,
-TWENTY-ONE times running.** The evidence:
+TWENTY-THREE times running.** The evidence:
 
 - **The concurrency cap is 20 project-wide.** With nine module agents live only
   11 workers can exist at any moment, first-come — so worker plans are plans
@@ -66,7 +66,24 @@ justifications applies to them**:
 They write only to `C:/tmp/smbm/_corpus_run<N>/` and may not touch `tools/`,
 any warm copy, or the main tree.
 
-**RETAINED AFTER RUN 33 — and this is now the strongest evidence yet, because
+**RETAINED AFTER RUN 35 — AND THE CONDITION IS NOW MET BY A DIFFERENT KIND OF
+OUTPUT.** Run 35's corpus phase **landed no tool at all**, and was still worth
+running, because **two of the three agents retracted their own headline mid-run
+and one of those retractions is the most useful thing it produced.** Corpus B
+published 43 targets / 17,905 insn for the peephole radius, **caught its own
+regex overrun with its own gate**, corrected to 29 / 14,158, and then recorded a
+*second* trap in its own work so a later agent could not re-derive it. Corpus A
+falsified the `lis`/`addi` claim **the corpus brief itself had told it to
+pursue**. Corpus C caught its own extractor bug (78.1% → 83.2%) rather than
+publishing a contradiction.
+
+⚠⚠ **And the modules corrected the corpus in BOTH directions**: mini_golf
+falsified corpus A's adjacency corollary **in its stated direction, in four real
+links**, and mini_pilot found two PEEPHOLE-OFF figures inside a module corpus B
+had declared "entirely clear". **The rule stands: a corpus finding is a lead
+until the module holding the bytes tests it.**
+
+**RETAINED AFTER RUN 33 — the strongest evidence of the banking kind, because
 a corpus agent's output BANKED.** Corpus A found the saved-GPR rule the run was
 built on, took mini_golf's `lbl_00015520` to within 28 instructions in its own
 read-only scratch, and **mini_golf banked all 6,182 the same hour** — the
@@ -116,7 +133,22 @@ since run 21.
 If a future corpus phase produces neither a landed tool nor a correction a
 build confirms, it comes out and the rule reverts to nine and nothing else.
 
-### DO NOT MODIFY `tools/` WHILE AGENTS ARE LIVE. (New in run 21 — my own error.)
+### DO NOT MODIFY `tools/` WHILE AGENTS ARE LIVE — AND DO NOT LAND A FIX YOU CANNOT GATE. (New in run 21 — my own error. Widened in run 35 — also my own.)
+
+> ⚠⚠ **RUN 35 TESTED THE SECOND HALF OF THIS ON THE ORCHESTRATOR AND IT ONLY
+> JUST HELD.** After the twelfth agent closed — so the timing rule was
+> observed — the orchestrator drafted corpus B's peephole-detector fix and
+> **could not gate it**: `peep_fix.py --gate` reads `src/mini_golf_58.c` and 34
+> other files that **this run's own merges had deleted**. Its narrower
+> replacement fix then **changed the `_ASM_BLOCK` match count from 137 to 166**
+> across 105 owner files (the old greedy scan had been *merging several stubs
+> into one match*), with 8 overruns still surviving. **It was REVERTED.**
+>
+> **A half-understood change to the tool all nine agents depend on is exactly
+> what this project forbids modules from doing. It applies to the orchestrator
+> too, and "the corpus agent gated it last week" is not a gate — a merge can
+> delete a gate's inputs.** Rebuild the gate against the post-merge tree, or hand
+> the fix to the next run with the measurement attached.
 
 A run's toolbox is supposed to be **frozen** for its duration. In run 21 the
 orchestrator committed two tool fixes to the main tree's `tools/` while all nine
@@ -216,7 +248,221 @@ it. `_scratch_<MOD>/run<N>/pristine/` is the convention.**
 
 ---
 
-## 0.40 — RUN 34 DONE (2026-08-12): +1,609 insn, 52.29% -> 53.14%. **SIX OF NINE GAINED.** START HERE.
+## 0.41 — RUN 35 DONE (2026-08-12): +2,691 insn, 53.14% -> 54.55%. **SIX OF NINE, AND BOTH FINISHED MATCHES LANDED.** START HERE.
+
+Nine module agents plus three read-only corpus agents. **TWENTY-THIRD
+consecutive run with no module agent spawning anything.**
+
+Run 34 named this run's failure condition itself: *"if the two finished MATCHES
+are still unlanded at the end of run 35, the project should stop treating 'the
+merge is the module's own job' as workable."* **Both landed. So did a third merge
+nobody had asked for.**
+
+| module | still-asm | insn | % | gained |
+|---|---|---|---|---|
+| **mini_pilot** | 5 fns | 11204/12137 | **92.31%** | 0 |
+| **mini_race** | 24 fns | 15355/19817 | **77.48%** | **+356 / +4** |
+| **mini_bowling** | 9 fns | 11760/15313 | **76.80%** | **+485 / +1** |
+| **test_mode** | 14 fns | 12270/16231 | **75.60%** | **+88 / +1** |
+| **option** | 10 fns | 6999/12375 | **56.56%** | **+972 / +1** |
+| mini_golf | 15 fns | 17333/38919 | 44.54% | **+144 / +1** |
+| sel_ngc | 8 fns | 7789/18084 | 43.07% | 0 |
+| mini_billiards | 16 fns | 11360/28793 | **39.45%** | **+646 / +1** |
+| mini_fight | 70 fns | 9720/28585 | 34.00% | 0 |
+| **TOTAL** | **171 fns** | **103790/190254** | **54.55%** | **+2,691 / +9** |
+
+**Verified in the main tree, not taken on report**: nine trees diffed before
+merging (**seven changed paths, two changed nothing** — no `tools/` line in any);
+hygiene **0 problems**, line endings judged against each file's OWN prior state;
+all nine `--gate` **GOLDEN from deleted objects with every hash matching its
+agent's**; all nine `rel_structcheck` **CLEAN, orchestrator-run**; clean build
+from **0 objects** gives `sha1sum -c` **12/12 OK including the DOL**; census
+**re-measured in the merged tree matches all nine agent rows.**
+Reconciles three ways: 190,254 − 86,464 = **103,790**, 180 − 9 = **171**,
+89,155 − 86,464 = **2,691**.
+
+> ### ✔ THE CARRIED 3-INSTRUCTION ERROR IS FOUND — AND §0.40's DIAGNOSIS OF IT WAS ITSELF WRONG
+>
+> §0.40 said *"nothing in `tools/` prints a per-module denominator."*
+> **`tools/rel_rowcount.py --all-rows` does, and its PROJECT TOTAL is exactly
+> 190,254.** The flag existed the whole time; the note generalised from
+> `rel_rowcount`'s DEFAULT mode without running the tool — **the same defect it
+> was chasing.**
+>
+> **The entire 3 was mini_fight's: carried 28,588, measured 28,585.** The other
+> eight rows were right. mini_fight's row moves 34.01% → 34.00%; the project
+> total was never affected, as §0.40 predicted. **`assemble_results.py` now
+> carries the measured column and REFUSES to write unless the nine denominators
+> sum to `TOTAL_INSN`.** See `_orch_run36/DENOM.md`.
+
+**Object metrics 846 / 1,016 / 850 → 810 / 980 / 815** (750 `.c` + 65 `.s`).
+**Sources −35 = exactly the three merges' deletions** (golf 3, race 20, test_mode
+12). ⚠ **Objects −36, one MORE**, because mini_golf **dropped
+`asm/mini_golf_d6.s` from SOURCES** after absorbing its 80 `.rodata` bytes as a C
+`const u32[]`. **THREE `.s` FILES ARE NOW ANOMALOUS BY DESIGN**: `d6.s` and
+run 34's `sel_ngc_rel_d1.s` are on disk and built by nothing; `test_mode_dA.s` is
+still in SOURCES but emits nothing at all. **Do not rediscover any of them.**
+
+### ★★★ 1. THREE TU MERGES IN ONE RUN, EVERY ONE WITH ITS READER — AND 1,457 CAME FROM NO LAYOUT AT ALL
+
+mini_race cut the 21-object merge run 34 enumerated five blockers for (**+356 /
++4**); mini_golf cut the four-object merge and banked the TRUE 144-of-144
+(**+144**); test_mode cut the 13-file merge and **closed the 26-byte residual**
+(**+88**). **No merge banked zero.**
+
+> **But the larger half of the run needed no layout whatever.** option's **+972**
+> was a **blank page** taken to `0 in 0` in ~65 probe compiles with **zero real
+> links until the install**; mini_billiards' **+646** and mini_bowling's **+485**
+> likewise. **The layout question is answered. The reader is the job now.**
+
+★★ **THE ANCHOR `.set` IS CONFIRMED IN A THIRD MODULE, WITH A GOLDEN LINK.**
+test_mode is the sharpest case because **run 34's diagnosis was right and its
+PRESCRIPTION was the wrong shape**: both prescribed SOURCES-position moves are
+*impossible*, because the zero-size marker `lbl_0000FED0` sits **8 bytes INSIDE**
+the merged object's own `.rodata` span. One line — `.set lbl_0000FED0,
+lbl_0000FEC8 + 0x8` — **GOLDEN first build.** An anchor may point **past the end
+of the naming object's own section** (`.rodata` 0x50, anchor resolves to 0x58).
+
+### ★★★ 2. FIVE MODULES CONVERGED INDEPENDENTLY ON ONE COMPILER QUESTION — ~2,500 INSTRUCTIONS
+
+option `6C54` (719), sel_ngc `E778`+`F788` (696), mini_bowling `3A10`+`3574`+
+`42A4` (583), mini_pilot `4570`+`97C8` (331), mini_golf `11A6C` (208). **None of
+them knew about the others.**
+
+★★ **sel_ngc got half the answer: `#pragma scheduling off` collapses the prologue
+to golden's SERIAL one-scratch form**, so the two-scratch shape is a **scheduler
+HOIST, not an allocator choice — the register count is the CONSEQUENCE, not the
+cause.** ⚠ **And the axis everyone keeps sweeping is DEAD**: nine declaration
+orders byte-identical (sel_ngc), 25 spellings inert (mini_pilot), 25 inert
+(option). **It is agent A's whole assignment in `RUN36_CORPUS_BRIEF.md`.**
+
+### ★★★ 3. RUN-22 IDIOM 17's ANSWER DID NOT REPRODUCE ON ITS OWN EXEMPLAR
+
+mini_billiards **disassembled `func_8004C70C` rather than trusting run 34's
+sentence about it — the exemplar contains no `mr` at all.** The real rule: mwcc
+reuses a constant-holding register only when **both constants are materialised by
+boolean operators inside ONE expression tree**, `&&` nested inside `||`.
+**+646, first try**, on a `1 in 1` draft that had sat on disk since run 24.
+⚠ **Not copy propagation** — `opt_propagation off` still gives `1 in 1`, which
+narrows run 31's `A7FC` finding.
+
+### ★★ 4. THE PEEPHOLE MECHANISM IS 88.0%, AND THE MEMBERSHIP LIST IS WRONG IN BOTH DIRECTIONS
+
+Corpus B, over **290 banked C functions that already byte-match golden**: control
+(no preceding asm block) **ZERO affected**; treatment **216 of 231 broken,
+31,275 of 35,551 insn destroyed = 88.0%**, median body losing **80.7%**.
+**Run 34's "+17 and +29" understated it by two orders of magnitude.**
+
+⚠⚠ **But nobody settled WHICH targets.** corpus B says 29 / 14,158 (after
+retracting its own 43 / 17,905); corpus C says **67 of 180 / 37,181 (41.7%)**;
+**mini_pilot found 2 of its own 5 at OFF inside a module corpus B declared
+"entirely clear"**, and corpus B had flagged `mini_golf lbl_00011DAC`, which
+mini_golf **landed GOLDEN** after reporting `PEEPHOLE ON` on every row.
+**QUOTE THE MECHANISM, NEVER THE COUNT.** See `_orch_run36/REGIME_DISCREPANCY.md`.
+✔ **`rel_relscore` still has the bug** — it contains the string `peephole` **zero
+times**.
+
+### ★★ 5. NO TOOL LANDED — AND THE ORCHESTRATOR IS THE ONE WHO HELD THE LINE
+
+**Fifteenth consecutive clean run.** All nine agents reported `diff -rq tools`
+**0 lines at start AND end**; **eight diagnosed a defect and handed it over.**
+
+⚠⚠ **The orchestrator tried to land corpus B's peephole-detector fix after the
+twelfth agent closed and REVERTED IT.** `peep_fix.py --gate` **cannot run** —
+this run's merges deleted `src/mini_golf_58.c` and 34 other inputs — and its own
+narrower fix **changed the `_ASM_BLOCK` match count from 137 to 166** across 105
+owner files (the old greedy scan had been *merging several stubs into one
+match*), with 8 overruns surviving. **A half-understood change to the tool all
+nine depend on is exactly what the standing rule forbids modules from doing; it
+applies to the orchestrator too.** Run 36 must rebuild the gate first.
+
+### ⚠ HAZARDS AND CORRECTIONS
+
+- **A TU MERGE RE-SCORES STORED DRAFTS ONLY WHEN IT RECONCILES DECLARATORS.**
+  mini_race (n=21): **both** stored `0 in 0` drafts BROKE (21 files each invented
+  their own declarator width). test_mode (n=13, 3 drafts): **nothing moved** (7
+  struct tags, all distinct). ⚠ **A third mode (mini_golf): a merge can break a
+  stored draft's `//@SUB`, not its score.**
+- ⚠⚠ **AND THE ORCHESTRATOR'S RELAY WAS THE NEAR-MISS.** It forwarded corpus B's
+  peephole clearance to mini_race as *"needs no re-scoring"* with a closing
+  sentence saying re-score anyway. mini_race: **"the closing sentence is the one
+  that paid; the sentence before it is wrong for a different reason than the one
+  being cleared."** **A NARROW CLEARANCE READS AS A BROAD ONE UNLESS YOU SAY WHAT
+  IT DOES NOT COVER.**
+- **mini_golf FALSIFIED CORPUS A'S COROLLARY IN ITS STATED DIRECTION**, in four
+  real links, **before the relay arrived**: more adjacency bought golden's serial
+  prologue; corpus A's own prescription (reduce adjacency) lost it.
+- **DEAD BOILERPLATE IS THE REAL "TYPE CONFLICT"** (corpus C, confirmed by
+  address in two modules): a cross-file conflict is **one real declaration
+  against 19-32 dead copies.** ★ **An asm stub's declarator is FREE CURRENCY** —
+  retyping one costs zero instructions.
+- **"THIS DRAFT DOES NOT COMPILE" IS 0-FOR-175**, and ⚠ **the harness now
+  manufactures it**: mwcc rejects a long output filename and `rel_tuprobe` names
+  the object after the candidate's basename, so **every descriptively-named
+  stored draft re-scores as a fake `COMPILE FAILED`.**
+- **A wrong LENGTH can absorb a whole-function register permutation into a
+  flattering score** (mini_fight `4D14`: `+1 LONG` scores `4 in 3`; at exact
+  length it is `49 in 39`). **Fourth proven mechanism.**
+- **§11 was wrong in four modules** — mini_billiards' 646 called "unopened" with
+  a draft on disk since run 24; mini_fight's `4D14` (438) omitted; **option's
+  `1598` + `0C94` (1,299) never mentioned in any run**; mini_fight's "1,362 in
+  three rows" is **1,685 in four**.
+- **Still open, diagnosed, not patched**: `rel_relscore` peephole; `rel_vsplice`
+  directives (**152 of 2,664 drafts need one**); `rel_pcmp` directives (the
+  seventh instance); `rel_ascore`/`rel_sdiff` **97% `SequenceMatcher` argument
+  order**; `rel_merge_tu:445-446` and its dropped `#define`s; `rel_carve` refuses
+  an already-carved module (**sixth run**); `rel_ledger`'s non-minimal MERGE span
+  and its `--module` flag; `d3.py`'s missing `elif` (**1,859 insn**).
+- ✔ **A BRIEF LINE FALSIFIED**: `rel_census` and `rel_rowcount` now **agree on
+  all nine modules.**
+
+### RUN-36 PREP — DONE. What is on disk.
+
+- **`C:/tmp/smbm/RUN35_RESULTS.md`** — all nine reports (1,332 lines), each under
+  an **ORCHESTRATOR VERIFIED** block written from tree measurements.
+- **`C:/tmp/smbm/RUN35_PLAYBOOK.md`** — the corpus phase with the module
+  corrections folded in, **including the two where a module falsified a corpus
+  row and the one where the corpus brief itself was wrong.**
+- **`C:/tmp/smbm/_harvest_run35/`** — **67 scripts**, README-indexed, `copied ==
+  on-disk` asserted, plus `DRAFT_INDEX.md` copied in.
+- **`C:/tmp/smbm/_corpus_run35/`** — `A.md`, `B.md` (585 lines), `C.md`, and
+  **`DRAFT_INDEX.md` (243 pairs / 4,307 files, WITH the LEN and RÉGIME columns
+  the modules asked for)**.
+- **`C:/tmp/smbm/_orch_run36/`** — all scripts rebased on **171 fns / 86,464
+  insn / 54.55% / 810-980-815**, 17/18 substitutions asserted to have fired (the
+  eighteenth reported as dead weight). ⚠ **`assemble_results.py` REFUSES TO RUN**
+  until its run-35 table and headline are rewritten, **and now also refuses
+  unless the nine denominators sum to 190,254.** `BASELINE.md`, `DENOM.md` and
+  `REGIME_DISCREPANCY.md` carried in.
+- **`C:/tmp/smbm/_brief36/`** — `sec1.md` and `sec11.md` written.
+- **`C:/tmp/smbm/RUN36_CORPUS_BRIEF.md`** — written; it opens by telling the
+  agents a line in it may be false, **because one was in each of the last two
+  runs and both times the orchestrator wrote it.**
+- **All nine warm copies reset and re-gated GOLDEN from deleted objects**
+  (`fail=0`); `diff -rq tools`/`src`/`asm` **0 lines in all nine**, `Makefile`
+  identical in all nine.
+
+**THE RUN-36 RECOMMENDATION:**
+
+1. **ANSWER THE PROLOGUE-WINDOW QUESTION.** Five modules, ~2,500 instructions,
+   and sel_ngc has already proven it is a **scheduler** decision and that
+   declaration order cannot reach it. Nothing else on the board is worth this
+   much for one answer.
+2. **DRAFT THE NAMED BLANK PAGES.** sel_ngc `10438` (958, already read),
+   mini_golf `12EEC` (478, newly unblocked at zero cost), mini_fight's four rows
+   (1,685), mini_bowling `09EC` (363, decoded), option `8068` (627, drafted
+   at +4).
+3. **SETTLE THE PEEPHOLE MEMBERSHIP LIST WITH ONE INSTRUMENT**, then land the
+   detector fix **with a gate rebuilt against the post-merge tree.**
+4. **SPEND THE K&R UNBLOCK**: 15,845 dead stubs in mini_fight alone, 7,000 in
+   mini_race, 3,634 in test_mode. It banks zero and gates GOLDEN, and it is what
+   turns "does not compile" into a real figure.
+5. **CUT test_mode's NEXT MERGE (752)** — fully priced, structurally clean,
+   blocked only on a 225-instruction blank page.
+
+---
+
+## 0.40 — RUN 34 DONE (2026-08-12): +1,609 insn, 52.29% -> 53.14%. **SIX OF NINE GAINED.** Superseded by §0.41.
 
 Nine module agents plus three read-only corpus agents. **TWENTY-SECOND
 consecutive run with no module agent spawning anything.** **Six of nine gained —
