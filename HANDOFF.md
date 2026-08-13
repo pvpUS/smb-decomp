@@ -212,6 +212,35 @@ rather than the tool**, declared it, and handed over the workaround — which is
 better than the run-23 pattern of patching the warm tool, and is what got the
 defect fixed properly at the source (§0.30).
 
+### ★★★ NEW STANDING RULE (run 36): THE CRASH DISCIPLINE. IT WAS TESTED FOR REAL AND IT HELD.
+
+**Run 36's machine was powered off with seven of twelve agents live.** Five
+module agents and a corpus agent lost their final reports. **Not one instruction
+of banked work was lost**, and every reason is a rule already in this section:
+
+- **Every module had taken its `run36/pristine/` snapshot before anything
+  installed.** None needed it — but every one *could* have been restored.
+- **Every module wrote its report incrementally to disk.** The substance of five
+  reports survived in `notes.txt` / `REPORT.md` / partial deliverables. **The
+  agents that wrote only to their final message lost everything they had not
+  already banked.**
+- **ONE AGENT PER MODULE, NO WORKERS** — nothing was stranded in a worktree.
+- **Warm copies are separate trees**, so a crash mid-experiment could not reach
+  the main tree, which stayed clean at its last commit throughout.
+
+**What was lost is the agents' own residual readings and decline pricings.** A
+tree can be re-measured; a judgement cannot. **So: write the finding down when
+you make it, not when you finish.**
+
+> ⚠⚠ **AND THE RECOVERY GATE ITSELF PRODUCED A FICTION, WHICH IS THE OTHER HALF
+> OF THIS RULE.** The orchestrator deleted every `.o`, ran the WRONG `make`
+> invocation (dead at the first assembly step, `powerpc-eabi-as: No such file or
+> directory`), **and `sha1sum -c` still printed 12/12 OK** — because the
+> `.rel`/`.dol` artifacts are not `.o` files and had survived from the
+> merge-back. **A clean build must delete the ARTIFACTS as well as the objects**
+> (`rm -f *.rel *.dol *.plf *.elf *.map`), and must use the msys2 recipe in
+> `memory/build-recipe.md`. **"The hash passed" is not "it built."**
+
 ### SNAPSHOT THE OWNER ONCE. RESTORE FROM THE SNAPSHOT, NEVER FROM DISK.
 
 **Every installer in this project has now been bitten by the same defect**, and
@@ -248,7 +277,282 @@ it. `_scratch_<MOD>/run<N>/pristine/` is the convention.**
 
 ---
 
-## 0.41 — RUN 35 DONE (2026-08-12): +2,691 insn, 53.14% -> 54.55%. **SIX OF NINE, AND BOTH FINISHED MATCHES LANDED.** START HERE.
+## 0.42 — RUN 36 DONE (2026-08-13): +1,398 insn, 54.55% -> 55.29%. **POWER LOSS MID-RUN; NOTHING BANKED WAS LOST.** START HERE.
+
+Nine module agents plus three read-only corpus agents. **TWENTY-FOURTH
+consecutive run with no module agent spawning anything.**
+
+> ### ⚠⚠⚠ THE MACHINE WAS POWERED OFF WITH SEVEN OF TWELVE AGENTS STILL LIVE.
+>
+> Five module agents (option, mini_billiards, mini_golf, mini_race, mini_bowling,
+> test_mode) and corpus B lost their final reports. **No banked work was lost,
+> and the reason is entirely the standing rules:**
+>
+> - **Every module took its `run36/pristine/` snapshot at start of run.** None
+>   needed restoring — but every one *could* have been.
+> - **Every module wrote incrementally** (`notes.txt` / `REPORT.md` / a partial
+>   deliverable), so the substance of five reports survives on disk.
+> - **ONE AGENT PER MODULE, NO WORKERS** — nothing stranded in a worktree.
+> - **Warm copies are separate trees**, so a crash mid-experiment could not touch
+>   the main tree, which stayed clean at `b53f1b6` throughout.
+>
+> **What WAS lost: the agents' own residual readings and decline pricings**,
+> except where a notes file recorded them. Every figure in this section is an
+> ORCHESTRATOR re-measurement taken after the crash. See
+> `_orch_run36/RECOVERY.md`.
+
+| module | still-asm | insn | % | gained |
+|---|---|---|---|---|
+| **mini_pilot** | 5 fns | 11204/12137 | **92.31%** | 0 |
+| **mini_race** | 22 fns | 15687/19817 | **79.16%** | **+332 / +2** |
+| **mini_bowling** | 8 fns | 12123/15313 | **79.17%** | **+363 / +1** |
+| **test_mode** | 13 fns | 12495/16231 | **76.98%** | **+225 / +1** |
+| **option** | 10 fns | 6999/12375 | 56.56% | 0 |
+| mini_golf | 14 fns | 17811/38919 | **45.76%** | **+478 / +1** |
+| sel_ngc | 8 fns | 7789/18084 | 43.07% | 0 |
+| mini_billiards | 16 fns | 11360/28793 | 39.45% | 0 |
+| mini_fight | 70 fns | 9720/28585 | 34.00% | 0 |
+| **TOTAL** | **166 fns** | **105188/190254** | **55.29%** | **+1,398 / +5** |
+
+**Verified in the main tree, not taken on report**: five trees **gated GOLDEN
+from deleted objects AFTER the crash** (mini_race's and mini_bowling's hashes
+match their own surviving notes); all nine `rel_structcheck` **CLEAN**,
+orchestrator-run; **clean build from 0 objects AND 0 ARTIFACTS** gives
+`sha1sum -c` **12/12 OK including the DOL**; census re-measured in the merged
+tree. Reconciles three ways: 190,254 − 85,066 = **105,188**, 171 − 5 = **166**,
+86,464 − 85,066 = **1,398**.
+
+> ⚠⚠ **AND THE FIRST CLEAN BUILD WAS A FICTION THE ORCHESTRATOR CAUGHT ITSELF.**
+> It deleted every `.o` and ran plain `make` from git-bash — **the wrong
+> invocation** (`powerpc-eabi-as: No such file or directory`, build dead at the
+> first assembly step) — **and `sha1sum -c` still printed 12/12 OK**, because the
+> `.rel`/`.dol` artifacts from the merge-back are not `.o` files and were never
+> deleted. **The documented "a golden hash proves nothing" mode, live.**
+> **DELETE THE ARTIFACTS TOO, not just the objects**, and use the msys2 recipe in
+> `memory/build-recipe.md`. The 12/12 above was taken with `*.rel *.dol *.plf
+> *.elf *.map` deleted first.
+
+**Object metrics 810 / 980 / 815 → 791 / 961 / 796** (731 `.c` + 65 `.s`).
+**All three moved by exactly −19 = the two merges' deletions** — no anomaly this
+run, unlike run 35's extra −1. The three deliberately-anomalous `.s` files
+(`mini_golf_d6.s`, `sel_ngc_rel_d1.s` on disk but out of SOURCES;
+`test_mode_dA.s` in SOURCES emitting nothing) are unchanged.
+
+### ★★★ 1. FOUR CONVERSIONS, AND THE TWO BIGGEST WERE BLANK PAGES A MERGE HAD ALREADY PAID FOR
+
+- **mini_golf +478**: `lbl_00012EEC`, the blank page **its own run-35 merge
+  unblocked at zero further layout cost.** Run 35 predicted this row would be the
+  cheapest large one on its board; it was.
+- **mini_bowling +363**: `lbl_000009EC`, `0 in 0`, positional 363/363, relocs
+  115/115 MISMATCHED 0 — **its own top recommendation, decoded last run and
+  drafted this one.** Ladder: `362 (−1) 18 in 9` → `+s8 stat hoist` `6 in 5` →
+  `!(h<=K)` `2 in 1` → `!(w>K)||!(h>K) return;` **`0 in 0`.**
+- **mini_race +332 / +2**: `lbl_000065A0` (210) + `lbl_00005DDC` (122).
+- **test_mode +225**: `lbl_000065F0`, and it **cut the 13-file merge it had
+  priced last run** — the blank page was that merge's only blocker.
+
+### ★★★ 2. THE MERGE §11 AND `rel_ledger` BOTH PRICED AT 24 OBJECTS IS NOT MINIMAL — mini_race, MEASURED
+
+> **The magic at `0x137B8` is owned by `mini_race_37.c.o`, so a reader needs only
+> ITS OWN object merged with `_37`. Minimal span = *[reader's file .. _37]*.**
+> `65A0` lives in `_35.c` → **3 objects**; `5DDC` in `_30.c` → **8**. Only `3A90`
+> (`_26.c`) needs the big one. **It cut 8 and got BOTH cheap readers.**
+
+REACH **1,345 → 1,677**; merge bucket 728 → 396; remaining span 24 → 17 objects.
+★ **Tag survey, MEASURED**: `RaceSub` has **14 distinct bodies across
+`_27.._29`**, while `_32.._37` share ONE identical 810-byte body and `_30`/`_31`
+define none — **`_30.._37` is tag-clean; `_26.._29` is where the real cost is.**
+⚠ **And §11 named ONE of seven reachable functions**: `3474` (391), `F3D4` (334),
+`E1CC` (213), `6CF0` (193), `5C20` (51), `D41C` (50) — **1,232 instructions §11
+has never mentioned.**
+
+### ★★★ 3. CORPUS B SETTLED THE PEEPHOLE MEMBERSHIP QUESTION — AND FOUND A SECOND, WORSE DEFECT
+
+Its partial file survived the crash and is the most valuable thing in it.
+
+1. ⚠⚠ **EVERY WARM COPY AND THE MAIN TREE RUN THE UNFIXED DETECTOR** —
+   `md5(rel_tuprobe.py) = 878c3306` in all ten. **There is no fixed
+   `rel_tuprobe` on this machine**, so every `PEEPHOLE OFF` any module saw this
+   run came from the buggy detector.
+2. ★★★ **THE THREE FIGURES ARE RECONCILED — THEY COUNT THREE DIFFERENT THINGS.**
+   corpus C = *population at risk* (`≥1 asm include earlier in the owner .c`,
+   **pragma never consulted**, `mkindex35.py:123`) = **62 of 171 / 35,292**.
+   corpus B = *actually mis-compiled* = **26 / 13,647 (15.8%)**, in five modules.
+   mini_pilot's 2 = **the shipped detector's FALSE `OFF`.**
+3. ⚠⚠ **mini_pilot's TWO OFF FIGURES ARE FALSE, AND §1/§5 AND
+   `REGIME_DISCREPANCY.md` WERE WRONG TO SAY IT MEASURED THEM "WITH THE FIXED
+   TOOL".** ★ **mini_pilot's own report contained the confirmation and it did not
+   notice**: it re-scored both with the pragma injected and *"neither figure
+   moved"* — **injecting a pragma already in force is a no-op, so a no-move is
+   the signature of a FALSE `OFF`.** **mini_pilot, option, sel_ngc and test_mode
+   have ZERO contaminated targets.**
+4. ⚠⚠ **A SECOND DEFECT, NEW, IN THE DANGEROUS DIRECTION: FALSE `ON`.** The
+   third alternative is anchored `^\s*asm`, so **`static asm void ...` is not
+   matched at all** — the detector walks past a real asm block, reports `ON`,
+   and **injects nothing and says nothing.** Nine owner files named.
+   ★ **Run 35's gate COULD NOT have found this**: it filtered to files
+   *containing* a `#pragma peephole on` — **the complement of the affected
+   population** — and used *"byte-matches golden therefore ON"* as ground truth,
+   **which assumes the answer.**
+5. ★ **Corpus A's headline `option 6C54` (719) is a FALSE ALARM — régime ON.**
+   So are `mini_golf 22610` (189), `sel_ngc ECB0` (694), `mini_fight 16CC8` (268).
+6. ★ **The régime is a property of the owner file AS IT IS IN THAT TREE** —
+   mini_race's live copy read 42/27/65 vs the main tree's 39/26/62.
+
+### ★★★ 4. CORPUS A: THE ~2,500-INSTRUCTION LEVER IS ~280, AND IT NAMED THE MECHANISM
+
+**Condition 1 fired on six of the nine named targets.** Comparing golden's `stwu`
+index against each module's own printed diff span: **if `span_start > stwu@`, the
+window is byte-identical and cannot be the residual.** Only **sel_ngc `E778`**
+and **mini_pilot `97C8`** are genuine window cases. ⚠ **mini_golf `11A6C`'s
+prologue is already BYTE-EXACT** — the run-31 trap verbatim.
+
+> ## THE MECHANISM, 30 standalone `mwcc 1.1` compiles, stated bidirectionally
+> **Two symbol addresses in one entry block share ONE scratch — serial, `gap2`
+> empty — IFF the source gives one an EXTRA CONSUMER before the next `lis`**: a
+> third local *derived* from it, an early read into a local, or its address
+> passed to a call. The consumer retires the scratch, which lets the next `lis`
+> reuse it, which creates the anti-dependence that pins it below `stwu`.
+> **7 of 7 with a consumer → SERIAL. 12 of 12 without → BATCHED**, including one
+> carrying golden `E778`'s exact save block. **Save shape, frame size, `stmw` vs
+> `stw`, FPR count and use order are ALL INERT.**
+
+★ `S2_intbr1` reproduces golden `E778`'s window **word for word with the
+scheduler ON.** Named matched-C sites both ways **in one file over the same two
+symbols**: `src/memcard.c` — `load_sequence:2550`/`ev_memcard_main:3107` serial,
+`init_gamedata_file:682`/`ev_memcard_init:3037` batched.
+★ **It mechanises mini_golf's run-35 falsification**: `q = tbl+0x370` is not a
+third materialisation, it is a **CONSUMER**. *Counting materialisations was the
+wrong count.*
+
+⚠⚠ **THREE MORE FALSE BRIEF LINES, ALL MEASURED:**
+- **"gap1 holds exactly one `lis` in 1,682 of 1,682" is FALSE.** DOL-wide
+  (n=2,414): gap1 is **EMPTY in 39.6%**, only **51.0%** hold a `lis`.
+  ★ **The cap is on the SLOT, not on `lis`** — 0 of 2,414 hold two instructions,
+  and 226 occupants are `li`/`cmpwi`/`mr`/`mulli`. It is the `mflr`→`stw r0`
+  latency bubble. **Nobody should tune "get a `lis` into gap1".**
+- **"declaration order is a DEAD axis"** — dead on the *window*, **alive on the
+  post-`stwu` batch** (mini_golf: five distinct scores from six permutations).
+- **"`scheduling off` collapses the prologue to golden's form"** — right about
+  the scratch count, **wrong about the window**: it empties `gap1` too, so for
+  the **82 of 102** that hoist, it is structurally incapable. **A canary, never
+  a fix.**
+
+★ **Corpus A RETRACTED its own polarity table mid-run after mini_pilot caught
+it**, re-derived per adjacent pair, and the corrected result is stronger:
+**POLARITY IS A PROPERTY OF EACH ADJACENT PAIR, not of a function, a group, or
+mwcc.** `42A4` = `P S S P S`; `A690`'s 23-wide group = `SPPPPPPPPPPPPSSSSSPPPS`.
+
+### ★★ 5. CORPUS C: THE K&R QUESTION IS ANSWERED AND THE PROJECT WAS AIMING AT THE WRONG DECLARATION
+
+**`void X(void);` + an argumented call is a HARD ERROR; true K&R `void X();`
+compiles fine.** Project-wide: **62,328 of the first form, 37 of the second.**
+**61,590 dead ones are harmless.** What blocks is **17 live rows / 181 draft
+files**, **11 of them needing exactly ONE declaration fixed.**
+★ **sel_ngc gets three rows from one declaration** — ⚠ **but sel_ngc then proved
+that row WRONG in its own tree**: `sel_ngc_rel_29.c:181` already reads
+`void lbl_0000A870();`, and the owner itself calls it with an argument in banked
+code. **Corpus C read a NON-OWNER split file.** ✔ **The orchestrator verified the
+other six modules' rows against their owner files and all six hold.**
+★ **option's `3240` unblocked to `410 == 410 EXACT, 20 in 15`.**
+
+⚠⚠ **AND THE BRIEF OVERSTATED THE LONG-FILENAME DEFECT — corpus C measured it.**
+*"Every descriptively-named stored draft re-scores as a fake `COMPILE FAILED`"*
+is **false**: it is **18 of 4,346 files (0.42%)**, 3 live drafts, 329 insn, **all
+test_mode's**. Threshold **basename ≤ 63 chars** on both input and `-o`;
+directory depth irrelevant. **Workaround needing no tool change: `cp <draft>
+C:/tmp/x.c`.** The orchestrator wrote that line and redirected corpus B off it
+mid-run. **Second consecutive run where a corpus agent falsified a line the
+orchestrator wrote into its brief.**
+
+★ **Corpus C also built run 35's #1 unfinished item**: the cross-file sibling
+oracle takes template coverage **63 targets / 33,690 insn → 169 / 76,745**
+(mini_fight **8 → all 70**), characterised **all 18 `bctr` targets** for the
+first time, and rebuilt `DRAFT_INDEX.md` so it is **no longer a filename-claim
+index** — 90 MEASURED figures scraped back out of module reports, 62 on live
+targets, four ranking defects closed.
+⚠ **Two of run 35's nine "cheapest reader" picks are JUMP TABLES and neither row
+said so** — sel_ngc `ECB0` (12-case) and mini_billiards `8EC0` (14-case). They
+were priced cheap for showing 0 loops and 0 callees, **which is true precisely
+because the work is in the table.**
+
+### ⚠ HAZARDS AND CORRECTIONS
+
+- ⚠⚠ **sel_ngc OVERTURNED §11's "`ECB0`: cost 0, gain 694" ON GEOMETRY.**
+  `_29.c.o`'s `.data` is **ONE contiguous section, 0x28 bytes at 0x4698**; golden's
+  table `lbl_00016B48` is at **0x49C8**, with **776 bytes of `d2.s.o` `.data`
+  between them.** One object's `.data` is contiguous in the link, so `_29.c.o`
+  cannot own both. A split does not rescue it: **ECB0 makes 32 references to
+  `lbl_00011D00` and 30 to `lbl_00011EC8`**, both owned by `_29.c.o`'s `.rodata`.
+  **True price: re-home ~17 labelled objects out of `d2.s` PLUS the 694-insn
+  reader, atomically.** ★ **One 2-second mwcc probe decides whether the route
+  exists at all** — does mwcc lay compiler-generated `.data` jump tables in
+  source order among file-scope data, or all tables last? **Run it first.**
+- ⚠⚠ **option: `1598` and `0C94` CANNOT BOTH BE CARVED** — both want the same new
+  8-byte signed hole at `0xC270` in **different TUs**; `38A8` wants 256B at the
+  same address, a **third claimant.** §11 and option's own run-35 report were
+  both wrong.
+- **sel_ngc drafted `lbl_00010438` (958) blind → `956 (−2), 570 in 204`.** Class
+  is **FRAME + callee-saved rank, not structural.** ★ **The whole 8-byte frame
+  gap is the OUTGOING PARAMETER AREA**: golden 8 bytes, draft 4, and `0x0C(r1)`
+  is **never referenced in golden**. Control in the same TU (`lbl_0000E068`,
+  same two 1-arg callees) starts locals at `0x0C`. **Same signature as `C970`'s
+  −2 — one answer probably moves both.** ⚠ **Corpus A's `E778` prescription
+  arrived AFTER sel_ngc closed** — the run-32 lesson repeating.
+- **mini_fight: a fifth "better ALIGNED score, worse draft"** — `A690`'s store
+  order fix removes all `stb` diffs and the score goes `9 in 3` → **`12 in 8`**.
+  **The 9-in-3 is wrong in two ways that partially cancel. Grind the 12-in-8.**
+- **mini_fight `lbl_00004498` (543) is at TWO WORDS** — `541 of 543`, FICTION 0,
+  zero layout. And ⚠ **`lbl_00004314`'s draft-index row claims MATCHED; both
+  stored drafts are the wrong length.**
+- ⚠ **`rel_tuprobe`'s BUILT column prints the UNRELOCATED immediate**, so every
+  `@l` reads as `,0` and looks like a missing relocation. mini_fight nearly filed
+  a fiction; `rel_relscore` refuted it (35/35, FICTION 0).
+- **`//@DROP` is not implemented** (`rel_tuprobe.py:443`); **336 instructions
+  were unscoreable for a missing three-line branch.** *"This draft does not
+  compile" is now 0-for-177.*
+- **`rel_tuprobe` injects its pragma BELOW a candidate's own pragmas**, so a
+  candidate's `#pragma peephole off` is silently overridden while still printing
+  `INJECTED`. **Use the `--peephole off` FLAG as the canary.**
+- **Still open**: `rel_relscore` peephole (**zero occurrences of the string**);
+  `rel_vsplice`/`rel_pcmp` directives; `rel_ascore`/`rel_sdiff` 97%
+  `SequenceMatcher` argument order; `rel_merge_tu:445-446` + dropped `#define`s;
+  `rel_carve` refuses an already-carved module (**seventh run**); `rel_ledger`'s
+  non-minimal MERGE span (**now MEASURED by mini_race**) and its `--module` flag;
+  `d3.py`'s missing `elif`.
+
+### RUN-37 PREP — DONE. What is on disk.
+
+- **`C:/tmp/smbm/_orch_run36/RECOVERY.md`** — the full post-crash reconstruction,
+  every figure orchestrator-measured, with what was NOT recovered named.
+- **`C:/tmp/smbm/_orch_run36/TOOL_QUEUE.md`** — the run's tool defects with gate
+  specs. **Nothing landed; `tools/` is what `665565a` left.**
+- **`C:/tmp/smbm/_corpus_run36/`** — `A.md` (613 lines), `B.md` (partial but the
+  membership table is complete), `C.md`, **`DRAFT_INDEX.md` regenerated**, and
+  `Bscratch/regime_main.csv` (both verdicts on all 171 rows).
+- **`C:/tmp/smbm/_scratch_<MOD>/run36/`** — five modules' surviving notes and
+  drafts; `_scratch_mini_pilot/run36/gapcensus.py` is a **promotion candidate**.
+- **All nine warm copies reset from `dc709b5` and re-gated GOLDEN from deleted
+  objects.**
+
+**THE RUN-37 RECOMMENDATION:**
+
+1. **LAND THE PEEPHOLE DETECTOR FIX — BOTH DIRECTIONS, WITH A GATE THAT RUNS.**
+   Corpus B has the false-`OFF` and false-`ON` diagnoses and the CSV. **This is
+   the third run it has been queued.** Ground truth must NOT be "byte-matches
+   golden therefore ON."
+2. **SPEND CORPUS A'S MECHANISM ON `E778` (279) AND `97C8` (119).** The
+   prescription is written and named per target; it never reached sel_ngc.
+3. **DRAFT THE NAMED BLANK PAGES.** sel_ngc `10438` is at `956 (−2)`;
+   mini_fight's four rows (1,685) and `6A40`'s oracle are confirmed;
+   mini_race's **1,232 instructions in six functions §11 never mentioned.**
+4. **CUT mini_race's MINIMAL MERGES.** Its own rule — *[reader's file .. the
+   magic's owner]* — makes `3A90` (396) a bounded cut, not a 24-object one.
+5. **RUN sel_ngc's 2-SECOND `.data` PROBE** before anyone prices `ECB0` again.
+
+---
+
+## 0.41 — RUN 35 DONE (2026-08-12): +2,691 insn, 53.14% -> 54.55%. **SIX OF NINE, AND BOTH FINISHED MATCHES LANDED.** Superseded by §0.42.
 
 Nine module agents plus three read-only corpus agents. **TWENTY-THIRD
 consecutive run with no module agent spawning anything.**
