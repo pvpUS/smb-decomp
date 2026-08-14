@@ -15,9 +15,9 @@ A run is **exactly nine agents, one per REL module.** A module agent must **not*
 spawn subagents, workers, or helper agents of any kind. Its module is its own
 work, done directly in its own warm copy.
 
-This is permanent, not a run-13 experiment. **Runs 13 through 35 all ran this
+This is permanent, not a run-13 experiment. **Runs 13 through 39 all ran this
 way: zero stranding, zero worktree-merge hazards, zero lost matches,
-TWENTY-THREE times running.** The evidence:
+TWENTY-SEVEN times running.** The evidence:
 
 - **The concurrency cap is 20 project-wide.** With nine module agents live only
   11 workers can exist at any moment, first-come — so worker plans are plans
@@ -368,9 +368,543 @@ it. `_scratch_<MOD>/run<N>/pristine/` is the convention.**
 > **A snapshot is only as good as the day it was taken. Verify it against the
 > MAIN TREE, and restore only from the one you took today.**
 
+### ★★★ NEW STANDING RULE (run 39): RELAY A **MEASUREMENT**, NOT AN **ATTRIBUTION**.
+
+**Run 39 ran the relay chain at volume for the first time — seven relays across
+nine live modules — and the result is that the relay is now the project's most
+productive instrument AND its most reliable source of orchestrator error.**
+
+**FOUR OF THE SEVEN RELAYS CAME BACK FALSIFIED OR INVERTED, and every one of
+those closed an axis:** sel_ngc's consumer rule was **inverted** by option
+(symbol 2, not symbol 1) and generalised past its stated domain by mini_pilot;
+mini_race's `stmw` constraint was **vacuous** in option; mini_pilot's
+list-scheduler renaming was **falsified as general** by mini_fight and
+mini_bowling; mini_fight's reverse-declaration-order rank rule was **falsified**
+by mini_bowling, which found **its own** prior claim too strong in the same
+breath. **Not one relay was wasted. Relaying is right; believing is not.**
+
+> ⚠⚠ **AND THE ORCHESTRATOR'S OWN ERROR THIS RUN WAS A NEW SHAPE: I FORWARDED A
+> CLAIM *ABOUT* AN AGENT INSTEAD OF THE AGENT'S OWN MEASUREMENT.** Corpus C
+> wrote *"one disagreement stated loudly — sel_ngc's FICTION 2 vs my FICTION
+> 0"*. I passed that to sel_ngc as a reason to distrust a lead. **There was no
+> disagreement.** The `FICTION 2` was **§11's** figure for an *older* draft,
+> which sel_ngc had already corrected at T+17 of its own run. Corpus C had
+> compared itself against **§11** and attached sel_ngc's name to it; I forwarded
+> the name without opening sel_ngc's report.
+>
+> ### **IF AGENT X SAYS "Y DISAGREES WITH ME", READ Y'S OWN REPORT BEFORE TELLING Y SO.**
+>
+> **This is the same failure class as a table built by grepping split files —
+> reading a claim about a source instead of the source — and that class was
+> reproduced FOUR separate times this run** (mini_race, sel_ngc and
+> mini_bowling all hit the whole-tree-vs-owner anchor sweep; mini_bowling's
+> directive census was polluted by another module's files sitting in its warm
+> copy). **It is the most durable error in this project. Read the source.**
+
+**What to relay, unchanged from run 37 and reconfirmed:** the measurement, its
+**n**, and **the site it was measured on** — never the corollary, never the
+class you think it belongs to, and now never the attribution.
+
 ---
 
-## 0.44 — RUN 38 DONE (2026-08-13): +321 insn, 55.98% -> 56.15%. **ONE CONVERSION, AND THE RUN'S REAL OUTPUT IS ELEVEN CORRECTIONS.** START HERE.
+## 0.45 — RUN 39 DONE (2026-08-13): +787 insn, 56.15% -> 56.57%. **TWO CONVERSIONS, AND THE RUN'S SIGNATURE IS THAT FOUR AGENTS FALSIFIED THE THING THEY WERE SENT TO CONFIRM.** START HERE.
+
+Nine module agents plus three read-only corpus agents. **TWENTY-SEVENTH
+consecutive run with no module agent spawning anything.**
+
+| module | still-asm | insn | % | gained |
+|---|---|---|---|---|
+| mini_pilot | 5 fns | 11204/12137 | **92.31%** | 0 |
+| **mini_bowling** | **6 fns** | **12872/15313** | **84.06%** | **+387 / +1** |
+| mini_race | 22 fns | 15687/19817 | 79.16% | 0 |
+| test_mode | 13 fns | 12495/16231 | 76.98% | 0 |
+| option | 10 fns | 6999/12375 | 56.56% | 0 |
+| mini_golf | 13 fns | 18291/38919 | 47.00% | 0 |
+| sel_ngc | 8 fns | 7789/18084 | 43.07% | 0 |
+| mini_billiards | 16 fns | 11360/28793 | 39.45% | 0 |
+| **mini_fight** | **67 fns** | **10921/28585** | **38.20%** | **+400 / +1** |
+| **TOTAL** | **160 fns** | **107618/190254** | **56.57%** | **+787 / +2** |
+
+> ### ★★★ READ THIS FIRST: THE RELAY CHAIN RAN SEVEN TIMES AND **FOUR OF THE SEVEN CAME BACK FALSIFIED OR INVERTED.** THAT IS THE RUN'S REAL OUTPUT.
+>
+> Run 33 established that the orchestrator may relay a finding to a **live**
+> agent. Run 37 added *relay the measurement and its n, never its corollary.*
+> **Run 39 is the first run where the relay was tested at volume — seven relays
+> across nine modules — and the failure rate is the finding:**
+>
+> | relay | outcome |
+> |---|---|
+> | stale `//@SUB` anchors after a landed fix | ✔ **reproduced in 4 modules** — and **corrected**: the sweep must be per-OWNER |
+> | sel_ngc's consumer rule (symbol 1 closes the window) | ⚠ **INVERTED by option** (symbol 2), **and by mini_pilot** (both, in a 3-symbol block) |
+> | mini_race's "callee-saved cannot precede `stmw`" | ⚠ **VACUOUS in option** — no window on either side writes a callee-saved register |
+> | mini_pilot's list-scheduler register renaming | ⚠ **FALSIFIED as general** — mini_fight n=2 negative, mini_bowling n=1 negative against mini_pilot's n=2 positive |
+> | mini_fight's reverse-declaration-order rank rule | ⚠ **FALSIFIED by mini_bowling**, which also found **its own** run-38 claim too strong |
+> | run-38 idiom 5 (two regions, two local sets) | ⚠ **FALSIFIED TWICE, IN OPPOSITE SHAPES** (test_mode ladder vs sel_ngc ladder) |
+> | corpus C's "disjoint spans ⇒ hybrid candidate" on `E778` | ⚠ **FALSIFIED by sel_ngc with a printed reason** |
+>
+> **Not one relay was wasted, because every falsification closed an axis.** But
+> the standing rule needs its next clause, and four agents wrote it
+> independently this run: **a finding travels with its n AND its site, and the
+> receiving module's job is to test it, not to apply it.**
+
+### ★★★ 1. THE TWO CONVERSIONS ARE BOTH REACHABLE BLANK PAGES WITH AN ADJACENT MATCHED SIBLING — THE SECOND AND THIRD FROM THAT FILTER IN TWO RUNS
+
+**mini_fight `lbl_000135DC` (400)** — `b-POOL`, reachable, **never drafted,
+never named in any §11 before run 38.** `0 in 0` on words **and** relocations,
+TRUE positional 400 of 400, refs 26/26 (sound — exact length), MISMATCHED 0,
+FICTION 0. `objdump -h` gives **`.text 0x0a58` and nothing else**;
+0xa58 = (119+143+400)×4 **exactly** — zero layout cost proved by section report
+*and* by arithmetic. 14 real compiles. Splice point is `off`/`asm`, so the
+conversion carries `#pragma peephole on` (peephole lines 216 → 217).
+
+**mini_bowling `lbl_00006F0C` (387)** — `387 == 387 EXACT`, `0 in 0` on words
+**and** relocations, TRUE 387 of 387, refs 65/65, MISMATCHED 0, FICTION 0,
+régime PEEPHOLE ON. `objdump -h`: `.text 0x6ce4`, `.rodata 0x0010` (the two
+magics, **unchanged**), `.data 0x0020`.
+
+★★★ **THE IDIOM THAT BOUGHT THE SECOND ONE, AND IT HAS A HARD BOUNDARY MEASURED
+BOTH WAYS: DELETE THE SOURCE LOCALS.** Naming sub-terms pins them into
+callee-saved registers whose numbering mwcc chooses differently from golden.
+Ladder: `6 in 5` → **`3 in 2`** (delete one temp, write it inline) → **`0 in 0`**
+(delete the other two):
+`col = ((s&0xff)<<16) + ((s&0xff)<<8) + (s&0xff)`.
+⚠⚠ **The same move on a BASE POINTER cost +124 instructions** (`5B0C`'s `w`
+inlined: 844) and was **negative on a third row** (+6/+4/+10).
+⚠ **mini_golf bounded it a third way**: its `vv` temp **added** a local and
+gained 2 words — **discriminator: the value was stored to an address-taken
+aggregate and re-read.**
+★ One such temp swept through **all 26 declaration slots — every one
+byte-identical.** If a value is going to be a temp, where you declare it does
+not matter.
+
+### ★★★ 2. THREE PRECONDITIONS LANDED THAT BANK ZERO — AND ONE OF THEM OVERTURNED A DECLINE **THIS HANDOFF PUBLISHED AS CLOSED**
+
+**mini_billiards found a SIXTH declarator class:**
+
+> **A still-asm function whose GOLDEN SIGNATURE TAKES A PROMOTABLE (NARROW)
+> PARAMETER, declared `(void)` in its own owner.**
+
+⚠⚠ **AND THE REASON IT SURVIVED 38 RUNS IS THE FINDING: THE COMPILER DIAGNOSTIC
+NAMES THE DRAFT, NOT THE OWNER.**
+```
+0A054()' redeclared / was declared as: 'void ()' / now declared as: 'void (signed char)'
+   -> cascade: "undefined identifier 'arg0'" at draft lines 493 and 906
+```
+**It reads as a bad draft.** It blocked **both** stored drafts of
+`lbl_0000A054` — **2,094 instructions**, the module's largest reachable row.
+
+★ **The type came off golden's BYTES**: `stb r3,0x18c(r1)` homes the argument as
+a byte and both reloads are followed by **`extsb.`** ⇒ signed char.
+★ **Both lines moved, DIFFERENTLY**: `:197` → `void lbl_0000A054(s8);`,
+`:230` → `asm void lbl_0000A054(s8 arg0)`. **mwcc 1.1 accepts an `asm`
+declarator with a parameter** over a `nofralloc` + `.s` include.
+⚠ **A caller census could not have found it** — the one matched caller passes a
+constant `0`, `li r3,0` under either prototype.
+★★ **ZERO-BUILD DETECTOR SHIPPED: `_scratch_mini_billiards/run39/argscan.py`**,
+**validated on a second module** (mini_fight ran it over all 67 rows; its own
+crude cross-check produced 10 false positives and **argscan's liveness guard was
+the correct one**). ⚠ **Scope limit, mini_bowling: it scans `r3..r10` only and
+is structurally blind to FPR parameters** — `5B0C` takes `(f32,f32)` and it
+reports nothing. One-line fix suggested, not applied.
+
+⚠⚠ **AND §11/§1/§12 OF THE RUN-38 HANDOFF WERE WRONG ABOUT THIS ROW IN BOTH
+DIRECTIONS — MY TEXT.** §11 said `A054` *"compiles with zero directives"*;
+§1/§12 recorded mini_billiards as having **priced the declarator precondition
+and declined it, unblocking exactly zero drafts.** Both false: it unblocks
+2,094 instructions. **A decline made against a different question is not a
+closed row.**
+
+**mini_golf landed 7 lines in `src/mini_golf_53.c`** (both occurrences per
+symbol, each moved differently), unblocking **three measured drafts**, all now
+compiling with **zero directives**. `rel_objsect --compare` **0 section(s)
+differ** — **fourth consecutive run.**
+
+### ★★★ 3. A CORPUS CLAIM WAS REFUTED **BY BUILD**, AND THE RULE IT PRODUCES IS NEW
+
+Corpus A told mini_golf that `src/mini_golf_53.c:257` declares
+`int lbl_00009404(void);` where the matched definition (`mini_golf_16.c:326`) is
+`u8`, with a hand-written `(u8)` cast at `:630` as the smoking gun.
+**mini_golf built it and isolated the line:**
+
+> **`int → u8` ⇒ NOT GOLDEN. `int` ⇒ GOLDEN.**
+> **The disagreement IS golden — golden compiled this caller TU against `int`,
+> and the hand-written casts are correct source, not a workaround.**
+
+> ★★★ **A DECLARATION DISAGREEING WITH ITS DEFINITION IS NOT AUTOMATICALLY A
+> DEFECT. GATE IT.** With six declarator classes now live, this is the
+> counter-rule that keeps the sixth from becoming a deletion campaign.
+
+⚠ Corpus A's other signature was also wrong in detail: the matched definition is
+`int lbl_00009880(u8 a)`, not `u8 (u8)`.
+
+### ★★★ 4. THE STALE-ANCHOR MECHANISM: A NINTH WAY THE HARNESS MANUFACTURES A COMPILE FAILURE, FOUND INDEPENDENTLY BY **FOUR** MODULES
+
+> **A landed declarator fix DELETES the `//@SUB`/`//@PROTO` anchor that every
+> draft written against the old declarator depends on.** `rel_tuprobe` prints
+> `ANCHOR MISSING`, skips the body, `rc=2` — the run-38 multi-body abort working
+> exactly as designed. **A whole draft family reads unscoreable for the OPPOSITE
+> reason to a broken draft: the blocker they work around is already fixed.**
+
+Found independently by **test_mode (n=41 drafts, one label), sel_ngc (n=5, one
+LIVE label), mini_race (n=3), mini_golf (T+2, before the relay arrived)** and
+confirmed by **mini_bowling (2 of 731 directive instances)**.
+
+⚠⚠ **AND THE SWEEP MUST BE PER-OWNER — THE NAIVE FORM IS 0-FOR-3.** mini_race
+swept 1,815 drafts / 47 directives against all of `src/*.c` and got **ZERO
+stale anchors. That answer is wrong**; resolved to owner files it is **three.**
+The old `void X(void);` boilerplate survives in non-owner split files — **one
+label in 101 of them.** sel_ngc hit the identical false negative and caught it;
+mini_bowling hit it too. **Corpus C's run-36 error and run 38's `mini_fight
+4498` §11 error, reproduced three more times in one run.**
+
+★★ **GENERALISATION (mini_bowling): the trigger is any owner edit that removes
+an anchor line, and A LANDED CONVERSION IS THE BIGGEST ONE.** **133 stored
+drafts anchor on `asm void lbl_00005B0C(void)`** — the moment that row converts,
+all 133 die. ⚠ **mini_golf's exposure is 264 directive instances / 263 files,
+the largest measured, and it caused the breakage itself mid-run.**
+★ **Whoever lands a row must strip its dependent anchors in the same run.**
+★ **Workarounds on disk**: `_scratch_test_mode/run39/f940/strip38.py`,
+`_scratch_sel_ngc/run39/subcensus2.py` (the generalisable per-owner census),
+`_scratch_mini_bowling/run39/anchorsweep.py`.
+
+★ **A related rule, MEASURED by sel_ngc: A LANDED PRECONDITION RE-SCORES STORED
+DRAFTS — it does not merely unblock them.** Two of its five rescued `F788`
+drafts **no longer reproduce their filename claims**, because the fix changed a
+callee signature `void()` → `int(int)`; two are now **literally the same
+program.** Same shape as run 34's "a TU merge re-scores the drafts in its span."
+
+### ★★★ 5. CORPUS C COMPILED THE WHOLE BOARD — T2 IS EMPTY FOR THE FIRST TIME
+
+Told to record 14 missing lengths, it noticed **a compile costs 0.28 s** and
+compiled **every distinct stored body of every live row: 471 compiles / 67 rows
+in ~2 minutes** (`rel_relscore fa37bff0`, MAIN tree, `--peephole auto`).
+
+- **Best body EXACT on 54 rows (17,042 insn)**, wrong-length on 6, **nothing
+  compiles on 7.**
+- **T2 — "reachable, has a draft, never measured" — is EMPTY for the first
+  time.** T0 went **22 → 33 rows. 29 of 162 rows changed tier.**
+- **The rule the run existed to protect, quantified: median TRUE/n is 0.931 for
+  exact-length bodies and 0.103 for wrong-length ones** (n=156/61).
+- ⚠⚠ **AND A BIGGER BLIND SPOT THAN THE ONE WE WERE CHASING: FICTION > 0 on 9
+  of 156 exact bodies (5.8%), but MISMATCHED RELOCATIONS on 58 (37.2%).**
+
+⚠⚠ **ROOT CAUSE FOUND FOR THE MIS-TIERING mini_fight CAUGHT: the report scraper
+read a `TRUE N / M` positional figure as a LENGTH pair.** That one bug is why
+two exact-length near-misses (`D9E0` 145, `DCA0` 191 — both `+0`) were carried
+as blank pages while §11 named the *repaired* files and quoted the
+*unrepaired* figures.
+
+★ **Index defects found and fixed in its own scratch**: `NOT_MATCHED` ranked as
+a claimed MATCH; **the tier sorted behind the kind, so a filename word beat
+`☠ COMPILE FAILED`**; basename-vs-path matching; unreadable length spellings;
+script/generator indexing; `files / distinct bodies`; **TRUE-first ranking**.
+⚠ **It retracted five of its own findings**, one falsified by mini_bowling
+inside the hour (it had re-sorted by aligned diffs; `19 in 17` at TRUE 701 beats
+`12 in 8` at TRUE 695).
+
+**`_corpus_run39/DRAFT_INDEX.md`: 255 pairs / 4,466 files / 162 live / 67 with a
+draft / 95 blank pages**, with a new **`★★ COMPILED r39`** column.
+**Ranking: `_corpus_run39/Cscratch/table39.md` + `table39.json`.**
+
+### ★★★ 6. **C2 WAS VACUOUS, AND SO WAS THE HEADLINE I GAVE mini_fight** — the régime is a property of the BODY
+
+I told five modules to re-score their `rel_relscore` figures on the 23
+régime-contaminated rows, and told mini_fight (14 of the 23) it was **"the
+cheapest act on your board."** **Two agents independently proved it empty:**
+
+- **mini_fight**: all 14 of its rows have **`ndraft=0` and `meas=''`** — zero
+  stored drafts, zero stored figures; **13 of 14 are unreachable.**
+- **corpus C, project-wide**: of the 23, **20 have no stored draft at all**, and
+  **2 of the 3 that do carry `#pragma peephole on` INSIDE THE BODY.**
+  **Exactly ONE stored figure in the project was ever taken in the wrong
+  régime** (`mini_golf 24A40`, and it is +1 long). **Zero figures change, zero
+  tiers change.**
+
+> ★★★ **THE INSIGHT THAT MAKES IT VACUOUS IS WORTH MORE THAN THE RE-SCORE WOULD
+> HAVE BEEN: THE PEEPHOLE RÉGIME IS A PROPERTY OF THE BODY, NOT ONLY THE
+> OWNER.** A body carrying its own `#pragma peephole on` is immune to the
+> owner's splice-point régime. **The 23-row contamination figure is real and
+> the actionable population is ONE.**
+
+⚠ **My 14-row missing-LEN list is also not reproducible** (corpus C: 11 by its
+derivation, **6 of the 14 already had a length**, 3 qualifying rows missing, and
+the "five live modules" clause vacuous).
+
+### ★★★ 7. CORPUS B FIXED `build_flat` IN **BOTH** TOOLS — AND THE FIX THE LAST HANDOFF LOCATED WAS WRONG
+
+**This is the third consecutive run in which a queued fix was wrong when it
+arrived.** §0.44 located it as *"hoist `:851-854` above `:850`, pass `own` into
+`score()`, `m = min(n, own)`"*.
+
+1. ⚠⚠ **That fix is WRONG on exactly the population run 38 worried about.**
+   **MEASURED, n=1,160 golden rows: 8 are genuinely multi-function**, all named
+   — four in mini_fight plus mini_pilot / mini_race×2 / test_mode; **five
+   modules have zero.** On `mini_fight lbl_00010B98` the located fix **truncates
+   309 golden instructions to 28.**
+2. ⚠ **Run 38's reason for declining it is FALSE.** *"The tool cannot tell the
+   two cases apart"* — **golden's own local-label set, which `gold_rows()`
+   already returns, separates them exactly: 8/8 and 1,152/1,152.**
+3. ⚠⚠ **THE DEFECT IS IN `rel_tuprobe` TOO** (`:1145-1155`). **Patching only
+   `rel_relscore`, as the brief instructed, makes the two tools disagree on 32
+   of 224 rows** (ARM X) — **re-opening in a new column the by-construction
+   disagreement run 38 closed in the peephole column. LAND BOTH OR NEITHER.**
+
+★ **Live and actionable**: on all 8 multi-function rows **both tools tell
+authors that a byte-perfect, already-shipping conversion is `WRONG LENGTH`.**
+
+**Two retractions of inherited claims, both MEASURED:**
+- ⚠ **The `//@SUB` "SILENT PARTIAL APPLICATION" IS HARMLESS ON 146/146 measured
+  live rows** — the surviving occurrence sits **inside the span the tool splices
+  away**, proven by compiling it. **The `//@PROTO` two-anchor case is 0 of 162.**
+  **Run 38 published this as the most dangerous open defect; it has no live
+  population.**
+- ⚠ **`mini_billiards 23B0`'s "17 vs 16" could NOT be reproduced** — and
+  mini_billiards independently measured it as **16/16 at exact length.**
+
+★ **Also proven both arms: mini_billiards should DELETE its
+`//@PRELUDE`/`//@ENDPRELUDE` markers** — the content already lands at file
+scope and the markers cost a refusal. 501 files.
+
+### ★★ 8. THE CONSUMER RULE: THREE MODULES, THREE DIFFERENT DISCRIMINATORS, ONE SHARED RULE
+
+Corpus A's consumer prescription was tested on real golden bytes by three
+modules this run and **each found a different discriminator. All three are right
+about their own function.**
+
+| module | what closes the entry window |
+|---|---|
+| sel_ngc `E778` | a live consumer of **symbol 1** (span 1-10 → 12) |
+| option `6AD0` | **symbol 2** (span 3-89 → 5-89); **symbol 1 does nothing** |
+| mini_pilot `97C8` | **either — byte-identical in every column**, and in a **3-SYMBOL** block, outside the rule's stated 2-symbol domain |
+
+> ★★★ **THE RULE THAT SURVIVES ALL THREE: THE CONSUMER MUST BE LIVE.** A dead
+> derived local is **eliminated** and is not a consumer at all (measured 3× in
+> sel_ngc, independently in mini_pilot). ★ **The cheapest known form is
+> `if (sym == 0) return;` at +1 instruction** — mwcc folds the compare into the
+> already-present `addi` as **`addic.` (record form)**, so only the `beq` costs.
+
+⚠ **The "address passed to a call" arm is now falsified a THIRD independent
+time** (mini_golf, mini_race, sel_ngc). **Do not re-open it.**
+⚠ **`volatile` does NOT pin the hoist and is NOT a scheduling barrier in mwcc
+1.1** (mini_pilot, 3 forms byte-identical) — **second module to measure it**, and
+it was the obvious answer to sel_ngc's handed-on question.
+★★ **mini_golf shipped a clean two-arm instrument for the SERIAL/BATCHED axis on
+real golden bytes**: `22610`'s `q = tbl+0x370` buys golden's serial window
+byte-exactly; removing it gives batched (`8 in 6`, span 1-15, **nothing else
+moving**).
+
+> ⚠⚠ **AND THE OPEN QUESTION IS NOW A PRICED CONSTRAINT, NOT A SEARCH**
+> (sel_ngc, 28 probes this run + 38 stored from run 37). The needed consumer
+> must be **simultaneously (a) LIVE**, **(b) NOT callee-saved-resident** — a
+> derived local claims `r26` and permutes the tail — **and (c) ZERO-COST.**
+> **That intersection is empty across everything tried in runs 37 and 39.**
+
+### ★★ 9. FOUR MECHANISMS FOR REGISTER RANK, AND THE ONE THAT SETTLED IT
+
+**mini_bowling settled the run's live contradiction on its own bytes, n=4
+orders, registers read out of the object:**
+
+> **mini_fight's REVERSE-declaration-order claim is FALSIFIED. And
+> mini_bowling's OWN run-38 claim is TOO STRONG** — one local holds the same
+> register in every order, including one where it is declared second.
+>
+> ### **DECLARATION ORDER IS A TIE-BREAK. ALLOCATION WEIGHT OUTRANKS IT. THE DIRECTION IS FORWARD.**
+
+✔ **And it confirmed mini_fight's finer statement from a second module, WITH A
+CONTROL**: under `#pragma scheduling off` the **assignment is unchanged** while
+the **emission order** flips from first-use to declaration order.
+★★★ **EMISSION IS SCHEDULING; ASSIGNMENT IS THE INVARIANT.** That one sentence
+reconciles run-38 idiom 8 with mini_fight's mirror of it.
+
+⚠⚠ **AND mini_pilot's LIST-SCHEDULER RENAMING IS REAL BUT NOT GENERAL, n=2+2+1**:
+
+> **mwcc 1.1's list scheduler RENAMES the destination register when it hoists an
+> address materialisation past a live range** — under `scheduling off`
+> mini_pilot's build emits golden's register *and* golden's adjacency. **The
+> register is an OUTPUT of the schedule, not an input**, so a source lever aimed
+> at making the allocator pick a register is provably incapable **there**.
+
+⚠ **mini_fight ran the same link on two register-choice residuals: `4D14`
+rearranges 208 words and `B03C` 77, and IN BOTH THE REGISTER PAIR DOES NOT
+MOVE.** ⚠ **mini_bowling's `F98`: `scheduling off` gives 572 EXACT and the copy
+is still there.** **Two negatives against one positive — the diagnostic is
+sound, the generalisation is not. Run the link; both outcomes are informative.**
+
+### ★★ 10. TEN "BETTER ALIGNED, WORSE DRAFT" INSTANCES — AND THE FIRST ONE IN REVERSE
+
+- ★★★ **mini_bowling `5B0C`: `19 in 17` at TRUE 701/720 BEATS `12 in 8` at TRUE
+  695/720.** **Corpus C had re-sorted its ranking by aligned diffs and
+  mini_bowling falsified it inside the hour; the ranking is now
+  TRUE-positional-first.**
+- **sel_ngc `E_KLATE2`**: `6 in 3` vs the base's `6 in 4` while TRUE drops
+  **271 → 261**, MISMATCHED 11, 1 FICTION.
+- **mini_bowling `F98`'s `572 == 572 EXACT` is FOUR ERRORS CANCELLING** (+1
+  constant copy at idx 9/11, −1 missing `addi r27,r29,8`). **Second four-term
+  instance in two runs**, after option's `1498 EXACT`.
+- **mini_fight `A690`: the `9 in 3` is better than the `12 in 8` on BOTH
+  columns** (176/185 vs 173/185) — §11 said grind the wrong one.
+
+### ⚠⚠ 11. §11 ERRORS — TWENTY-THIRD CONSECUTIVE RUN. **SIX ARE MINE, AND THE DOMINANT SHAPE CHANGED.**
+
+Run 38's dominant shape was *"a row called unopened that had drafts on disk"*.
+**This run's is different and worse: a figure quoted from the WRONG FILE.**
+
+- ⚠⚠ **`mini_fight D9E0` / `DCA0` called "blank pages (LEN −16 and −9)" while
+  NAMING the repaired `_DROPRE_FIXED_` bodies** — which build at **exactly 145
+  and exactly 191 (+0)**. ★ **Corpus C found the root cause: the report scraper
+  read a `TRUE N / M` positional figure as a LENGTH pair.** One bug, two rows
+  mis-tiered for two runs.
+- ⚠⚠ **`mini_billiards A054` "compiles with zero directives" and "the declarator
+  precondition unblocks exactly zero drafts"** — **both false**, and the second
+  was published as a *closed decline*. It unblocks **2,094 instructions**.
+- ⚠ **`mini_bowling 6F0C` "T0 with a `14 in 11` from run 34"** — the stored
+  run-34 BEST is **`6 in 5`, 387 EXACT, TRUE 380/387.** (It converted anyway.)
+- ⚠ **`mini_race E1CC` is the module's cheapest row and §11 never named its
+  figure**: `213 == 213, 1 in 1, TRUE 212/213, refs 16/16, FICTION 0`. §11 called
+  a different row "the cheapest finish on your board".
+- ⚠ **`mini_race F3D4` carried as a `29 in 18` near-miss with NO LEN** — it is
+  **333 (−1 SHORT), TRUE 249/334, a BLANK PAGE.**
+- ⚠ **`mini_fight`'s 14 régime rows called "the cheapest act on your board"** —
+  **vacuous**, all 14 have zero stored drafts (§6).
+- ⚠ **`test_mode AD30` called a blank page (LEN −2)** — its best draft is
+  **47 == 47, 3 in 3, TRUE 41/47**, on two files that agree. **47 insn move
+  T3 → T0.** ★ **And "cheap `c-FREE` rows nobody has opened" was wrong 4-of-4** —
+  13/14/14/14 stored drafts, all exact length.
+- ⚠ **The 14-row missing-LEN list is not reproducible** (§6).
+- ⚠ **`sel_ngc F788` — §11 never mentioned the module's best near-miss exists**:
+  `417 == 417 EXACT, 6 in 2, TRUE 411/417, refs 43/43, MISMATCHED 0`.
+- ✔ **AND ONE §11 LINE WAS CONFIRMED RATHER THAN CORRECTED**, worth recording:
+  the stored `E778` base **does** dominate `T1AFTERK` on every axis.
+
+### ⚠⚠ 11b. ORCHESTRATOR PROCESS: THE ROSTER RULE HELD, AND A RELAY ERROR IS MINE
+
+✔ **The run-38 rule worked.** I wrote `_orch_run39/AGENT_ROSTER.md` at launch
+with all twelve agents named, ticked each off as it closed, and **ran no merge
+command until all twelve rows were ticked.** sel_ngc closed **four times**
+(resumed three times for relays, re-gating to the **same hash** every time) and
+mini_bowling closed while three others were still live — exactly the conditions
+that broke run 38. **Enumerate by name; do not count notifications.**
+
+⚠⚠ **BUT I RELAYED AN ATTRIBUTION INSTEAD OF A MEASUREMENT, AND sel_ngc CAUGHT
+IT.** Corpus C reported *"one disagreement stated loudly — sel_ngc's FICTION 2
+vs my FICTION 0"*. I passed that to sel_ngc as a reason to distrust a lead.
+**There was no disagreement**: the `FICTION 2` was **§11's** figure for an
+*older* draft, which sel_ngc had already corrected at T+17. **Corpus C compared
+itself against §11 and named sel_ngc; I forwarded the name without checking it
+against sel_ngc's own report.**
+
+> ### ★★★ THE RELAY RULE'S NEXT CLAUSE: **RELAY A MEASUREMENT, NOT AN ATTRIBUTION.**
+> **If agent X says "Y disagrees with me", read Y's own report before telling Y
+> so.** This is the same failure class as a table built by grepping split
+> files — reading a claim *about* a source instead of the source.
+
+### ⚠ 12. HAZARDS, TOOL CLEARANCES AND CORRECTIONS
+
+- ⚠⚠ **THE STALE-ANCHOR SWEEP MUST BE PER-OWNER — THE NAIVE FORM IS 0-FOR-3**
+  and it is the **third** reproduction of corpus C's run-36 error (§4).
+- ⚠⚠ **A LANDED CONVERSION IS THE BIGGEST ANCHOR-KILLER**: 133 drafts anchor on
+  `asm void lbl_00005B0C(void)`; **mini_golf's exposure is 264 directive
+  instances / 263 files** and it caused the breakage itself mid-run.
+- ⚠ **`table38`'s `loops` column is the `bdnz` count and its `callees` column is
+  the CALL-SITE count** — not real loops and not distinct callees. Measured
+  independently by mini_billiards (`1A18C`: bdnz 3 / back-edges 14 / bl 27 /
+  callees 8) and corpus A (`1B5B8`: 251 / 281 / 454 / 19). **Corpus C split both
+  columns four ways in `table39`.**
+- ⚠ **`DRAFT_INDEX` counted FILES, not DISTINCT PROGRAMS**: `5B0C`'s eleven
+  drafts are **six bodies**, five of them byte-identical, **and not one of the
+  five `3in2` filename claims reproduces.** ★ **And the inverse**: a `gen_*.py`
+  in `_harvest_run*/` stands for a whole swept family the index cannot see —
+  sel_ngc re-derived nine consumer variants its own run-37 generator already
+  produced. **Both directions in one column; corpus C fixed both.**
+- ⚠ **`#pragma opt_` MISSES `#pragma global_optimizer`** (test_mode, confirmed by
+  mini_fight): **17 REL files carry an optimiser pragma, not 15.** The two extra
+  are `src/mini_fight_13d.c` and `src/mini_fight_66c.c` — **both balanced, and
+  `_13d.c` is where run 38's conversion landed.** Correct grep:
+  `#pragma \\(opt_\\|global_optimizer\\)`.
+- ⚠ **`argscan.py` scans `r3..r10` only and is blind to FPR parameters**
+  (mini_bowling: `5B0C` takes `(f32,f32)` and it reports nothing). One-line fix
+  suggested, not applied. ✔ **Otherwise validated on a second module.**
+- ⚠ **`optimize_for_size on` is INERT** — second module (mini_golf after
+  mini_bowling). **Not a delivery canary.**
+- ⚠ **The long-filename trap is NOT "all test_mode's"** — it fired on a
+  **sel_ngc** file (65-char basename). The ≤63 threshold itself holds.
+- ⚠ **A THIRD "not module-scoped" trap**: mini_bowling's first directive census
+  was polluted by **option's** 14 malformed `//@SUB` lines sitting in its warm
+  copy.
+- ✔ **`rel_tuprobe`'s multi-body abort worked exactly as specified** in three
+  modules — printed, skipped the body, `rc=2`, run continued.
+- ⚠ **An unreferenced local is NOT free — FOURTH confirmation**, and the
+  magnitudes differ wildly: option **8 bytes of frame**, test_mode **8 bytes**,
+  sel_ngc **69 aligned words**, mini_bowling **a 4-byte home with the frame size
+  unchanged.** ★ **sel_ngc adds that the dead local's TYPE is irrelevant; only
+  its existence costs.**
+- **Still open**: the `raw` cap in `rel_sdiff`/`rel_pcmp` (**staged and gated as
+  Q1, not landed — independent of the pair**); `rel_vsplice`/`rel_pcmp`
+  directives; `rel_merge_tu:445-446`; `rel_carve` refuses an already-carved
+  module (**tenth run**); `d3.py`'s missing `elif`; `rel_blindtable` scoring the
+  still-asm stub; `gapcensus.py --label`; `rel_arity.py`/`rel_ledger.py` stale
+  docstrings; `rel_ledger` drops 7 `.rodata`-only asm objects.
+
+### THE RUN-40 RECOMMENDATION
+
+1. ★★★ **TAKE THE BLANK PAGES WITH AN ADJACENT MATCHED SIBLING. THE FILTER IS
+   NOW 3-FOR-3 ACROSS TWO RUNS** — mini_fight's `6A40` (+321, run 38),
+   mini_fight's `135DC` (+400) and mini_bowling's `6F0C` (+387) were all
+   reachable blank pages with a matched sibling immediately adjacent, all three
+   `0 in 0` on words **and** relocations, all three with zero layout cost proved
+   by `objdump -h`. **mini_fight named two more of its own that nobody is
+   holding: `1199C` (484) and `165B4` (374)** — and it priced both declines
+   (`1199C`: frame 0x158, 20 saved regs, 18 labels, 12 calls; `165B4`: no matched
+   `nlSprPut` call exists anywhere in mini_fight, cross-module exemplars named).
+2. ★★★ **THE CHEAPEST FINISHES ARE NOW *MEASURED*, NOT GUESSED — CORPUS C
+   COMPILED ALL 67 ROWS THAT HAVE A DRAFT.** `T0` is **33 rows** and `table39`
+   sorts by **TRUE positional**, not aligned diffs. Named rows at ≤ 4 diffs and
+   exact length, each with both halves printed:
+   **`mini_race E1CC` (213) `1 in 1` TRUE 212/213** ·
+   **`mini_pilot 11CC` (219) `1 in 1` TRUE 218/219** ·
+   **`mini_pilot 3BDC` (274) `2 in 1` TRUE 272/274** ·
+   **`mini_pilot 15D8` (109) `2 in 2`** · **`test_mode AD30` (47) `3 in 3`** ·
+   **`mini_golf 22610` (189) `3 in 2`** · **`test_mode 6974` (63) `2 in 2`** ·
+   **`mini_bowling C1D0` (566) `4 in 4`** · **`mini_race D41C` (50) `4 in 3`**.
+   ⚠ **Four of these carry a PRICED DECLINE from this run** (`E1CC` coupled
+   `fmuls` slots; `C1D0` the list scheduler; `3BDC` 31 spellings; `D41C` a
+   falsified declarator route). **Read the decline before you re-open the row.**
+3. ★★ **`option 5340` (1,498) IS THE LARGEST NEAR-MISS ON THE BOARD AND ITS AXIS
+   IS NOW CLOSED FROM THE OTHER SIDE.** `139 in 66`, TRUE 1123/1498, after
+   option bought the eighteenth callee-saved register. **The "respell the two
+   symbol locals" axis is CLOSED at 25 spellings over runs 38+39**, and
+   `scheduling off` proves the residual is **register allocation, not schedule**.
+   ★ **What option says to buy: a matched-C exemplar with two symbol-initialised
+   pointer locals surviving a control-flow join with direct materialisation. It
+   scanned and says 37 candidates exist — READ THEM, DO NOT SWEEP.** Its
+   `scanbad.py`/`scangood.py` pair answers *"does matched code ever emit this
+   shape, and where"* in ~20 s tree-wide and is a promotion candidate.
+4. ★★ **`mini_golf 230E4` (628) WENT BLANK PAGE → `63 in 51` AT EXACT LENGTH,
+   TRUE 563/628 (89.6%), IN ONE RUN.** Residual is **56 register-number diffs
+   (47 FPR, 9 GPR) plus exactly ONE structural word** (index 541). Eight
+   declaration orders, four retypes, fourteen pragmas and the `+=` axis are all
+   **byte-identical** — measured. **The FPR-numbering cluster is the buy.**
+5. ⚠⚠ **`mini_golf 1B5B8` (7,131) WAS DECLINED WITH THE MEASUREMENT, AND THE
+   DECLINE IS THE USEFUL OUTPUT.** 1,117 basic blocks, **555 branch targets**,
+   454 calls over **19 distinct callees** (19/19 already matched C, signatures
+   resolved by corpus A), 30/30 loops resolved with bounds, **94.4% of
+   instructions in repeated-shape blocks.** ★ **All 251 copies are written out as
+   C** at `_scratch_mini_golf/run38/lbl_0001B5B8_COPIES_AS_C.txt`, and corpus A's
+   callee table and control-flow skeleton are at
+   `_corpus_run39/A_1B5B8_LIVE.md`. **A partial draft scores nothing and two
+   agents have now declined it on budget. It needs a whole run, or it needs
+   splitting into a precondition run and a drafting run — say which.**
+   ⚠ **And whoever lands it must strip the dependent `//@SUB` anchors in the same
+   run** (§4); mini_golf's exposure is **264 directive instances / 263 files**.
+6. ★ **THREE ZERO-BUILD SWEEPS ARE NOW ON DISK AND SHOULD BE RUN BEFORE ANY
+   DRAFTING**: `argscan.py` (the sixth declarator class, validated on two
+   modules, ⚠ blind to FPR params), the per-owner anchor census
+   (`subcensus2.py` / `anchorsweep.py`), and corpus C's `table39.json`.
+   **All three answer questions that used to cost builds.**
+
+---
+
+## 0.44 — RUN 38 DONE (2026-08-13): +321 insn, 55.98% -> 56.15%. **ONE CONVERSION, AND THE RUN'S REAL OUTPUT IS ELEVEN CORRECTIONS.** Superseded by §0.45.
 
 Nine module agents plus three read-only corpus agents. **TWENTY-SIXTH
 consecutive run with no module agent spawning anything.**
