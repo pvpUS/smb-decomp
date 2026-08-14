@@ -43,6 +43,51 @@ import os
 import re
 import sys
 
+
+# ** RUN 39 -- THE `raw` CAP.  rel_ascore's run-10 fix, which never
+# propagated. **
+#
+# A plain difflib cost can EXCEED the positional cost: difflib latches onto a
+# long matching block OFF the diagonal when the words repeat -- and PPC repeats
+# heavily -- then pays an insert AND a delete for everything around it.  On a
+# pure register renaming rel_ascore reported raw 101 as 387.  When the two
+# sequences are the SAME LENGTH the identity alignment costs exactly `raw`
+# substitutions, so the true edit cost can never exceed raw, and
+# rel_tuprobe.aligned() takes the smaller of the two.
+#
+# MEASURED run 38 on 1,009 real golden functions: the cap bites on 3.9%, worst
+# case 163 reported against a true 39 on a 276-instruction function.  MEASURED
+# run 39: only 3 of 10 SequenceMatcher sites in tools/ have the cap, and this
+# file was not one of them.
+#
+# IMPORTED, NOT COPIED.  A second hand-written copy of a scorer is a second
+# thing to drift, and two hand-written ports in this project both shipped
+# normaliser defects that ate matching instructions.
+#
+# ⚠ The resolver is rel_relscore._tools_dir()'s, in intent and in order, and it
+# is not decoration: the first draft of this patch did
+# `sys.path.insert(0, dirname(__file__))` and nothing else, which works in
+# tools/ and DIES ANYWHERE ELSE -- including in the staging directory it was
+# written in.  Its gate passed only because the gate had already put tools/ on
+# sys.path itself.  A resolver that can only succeed in one location is a
+# resolver whose gate cannot fail.
+def _pk39_tools_dir():
+    _here = os.path.dirname(os.path.abspath(__file__))
+    for _c in (_here, os.environ.get('RELSCORE_TOOLS') or '',
+               os.path.join(os.getcwd(), 'tools')):
+        if _c and os.path.exists(os.path.join(_c, 'rel_tuprobe.py')):
+            return _c
+    sys.stderr.write(
+        'cannot find rel_tuprobe.py (looked in %s).  This tool imports it so\n'
+        'that the difflib cap has ONE definition.  Set RELSCORE_TOOLS.\n'
+        % ', '.join(repr(_c) for _c in (_here, os.environ.get(
+            'RELSCORE_TOOLS') or '', os.path.join(os.getcwd(), 'tools')) if _c))
+    sys.exit(2)
+
+
+sys.path.insert(0, _pk39_tools_dir())
+import rel_tuprobe as _T                                        # noqa: E402
+
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Keep these three identical to rel_census.py's.  A module has three names and
@@ -206,9 +251,12 @@ def main():
              'EXACT' if delta == 0 else
              '%+d -- WRONG LENGTH, this is not a near-miss' % delta))
 
-    sm = difflib.SequenceMatcher(None, gold, built, autojunk=False)
-    ops = [o for o in sm.get_opcodes() if o[0] != 'equal']
-    aligned = sum(max(o[2] - o[1], o[4] - o[3]) for o in ops)
+    # RUN 39: capped.  ⚠ ON A ROW WHERE THE CAP BITES THE PRINTED REGIONS
+    # BELOW CHANGE SHAPE TOO -- they become positional `replace` runs instead
+    # of difflib's off-diagonal blocks.  That is the point (the block was the
+    # artefact) but it is a visible change to this tool's edit script, not
+    # only to its total.
+    aligned, ops = _T.aligned(gold, built)
     print('ALIGNED %d in %d region(s)%s'
           % (aligned, len(ops),
              '   span %d-%d' % (ops[0][1], ops[-1][2]) if ops else ''))

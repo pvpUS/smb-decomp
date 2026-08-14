@@ -17,6 +17,51 @@ import re
 import subprocess
 import sys
 
+
+# ** RUN 39 -- THE `raw` CAP.  rel_ascore's run-10 fix, which never
+# propagated. **
+#
+# A plain difflib cost can EXCEED the positional cost: difflib latches onto a
+# long matching block OFF the diagonal when the words repeat -- and PPC repeats
+# heavily -- then pays an insert AND a delete for everything around it.  On a
+# pure register renaming rel_ascore reported raw 101 as 387.  When the two
+# sequences are the SAME LENGTH the identity alignment costs exactly `raw`
+# substitutions, so the true edit cost can never exceed raw, and
+# rel_tuprobe.aligned() takes the smaller of the two.
+#
+# MEASURED run 38 on 1,009 real golden functions: the cap bites on 3.9%, worst
+# case 163 reported against a true 39 on a 276-instruction function.  MEASURED
+# run 39: only 3 of 10 SequenceMatcher sites in tools/ have the cap, and this
+# file was not one of them.
+#
+# IMPORTED, NOT COPIED.  A second hand-written copy of a scorer is a second
+# thing to drift, and two hand-written ports in this project both shipped
+# normaliser defects that ate matching instructions.
+#
+# ⚠ The resolver is rel_relscore._tools_dir()'s, in intent and in order, and it
+# is not decoration: the first draft of this patch did
+# `sys.path.insert(0, dirname(__file__))` and nothing else, which works in
+# tools/ and DIES ANYWHERE ELSE -- including in the staging directory it was
+# written in.  Its gate passed only because the gate had already put tools/ on
+# sys.path itself.  A resolver that can only succeed in one location is a
+# resolver whose gate cannot fail.
+def _pk39_tools_dir():
+    _here = os.path.dirname(os.path.abspath(__file__))
+    for _c in (_here, os.environ.get('RELSCORE_TOOLS') or '',
+               os.path.join(os.getcwd(), 'tools')):
+        if _c and os.path.exists(os.path.join(_c, 'rel_tuprobe.py')):
+            return _c
+    sys.stderr.write(
+        'cannot find rel_tuprobe.py (looked in %s).  This tool imports it so\n'
+        'that the difflib cap has ONE definition.  Set RELSCORE_TOOLS.\n'
+        % ', '.join(repr(_c) for _c in (_here, os.environ.get(
+            'RELSCORE_TOOLS') or '', os.path.join(os.getcwd(), 'tools')) if _c))
+    sys.exit(2)
+
+
+sys.path.insert(0, _pk39_tools_dir())
+import rel_tuprobe as _T                                        # noqa: E402
+
 TREE = os.getcwd()
 
 # ------------------------------------------------------------ canonicalisation
@@ -313,18 +358,14 @@ def to_words(seq):
 def score(exp, got):
     exp = to_words(exp)
     got = to_words(got)
-    sm = difflib.SequenceMatcher(None, exp, got, autojunk=False)
-    n = 0
-    regions = 0
-    lo = hi = None
-    for tag, i1, i2, j1, j2 in sm.get_opcodes():
-        if tag == 'equal':
-            continue
-        regions += 1
-        n += max(i2 - i1, j2 - j1)
-        if lo is None:
-            lo = i1
-        hi = i2
+    # RUN 39: capped -- see the import block at the top of this file.
+    # rel_tuprobe.aligned() already filters `equal` out of the ops it returns,
+    # so `regions` is len(ops) and lo/hi come off the same list this used to
+    # build by hand.  Same three numbers, from one definition.
+    n, ops = _T.aligned(exp, got)
+    regions = len(ops)
+    lo = ops[0][1] if ops else None
+    hi = ops[-1][2] if ops else None
     return n, regions, lo, hi
 
 

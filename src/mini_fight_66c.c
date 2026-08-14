@@ -172,8 +172,8 @@ extern void func_8006AD3C();
 extern void func_8006B3E8();
 extern void item_create();
 extern void item_replace_type_funcs();
-extern void mathutil_atan2();
-extern void mathutil_mtxA_from_rotate_y();
+s16 mathutil_atan2(double a, float b);
+void mathutil_mtxA_from_rotate_y(s16 angle);
 extern void mathutil_mtxA_from_translate();
 extern void mathutil_mtxA_pop();
 extern void mathutil_mtxA_rotate_y();
@@ -183,7 +183,7 @@ extern void mathutil_mtxA_tf_vec_xyz();
 extern void mathutil_mtxA_to_mtx();
 extern void mathutil_mtxA_to_quat();
 extern void mathutil_mtxA_translate_xyz();
-extern void mathutil_sin();
+float mathutil_sin(int angle);
 extern void mathutil_tan();
 extern void mathutil_vec_normalize_len();
 extern void mathutil_vec_set_len();
@@ -208,7 +208,7 @@ extern void mathutil_mtxA_rotate_x();
 extern void mathutil_mtxA_rotate_z();
 extern void mathutil_mtxA_to_euler();
 extern void mathutil_mtxA_translate();
-extern void mathutil_sqrt();
+float mathutil_sqrt(double n);
 extern void mathutil_vec_to_euler();
 extern void mathutil_vec_to_euler_xy();
 extern void new_ape_stat_motion();
@@ -363,7 +363,7 @@ void lbl_00012248(void);
 void lbl_000122C8(void);
 void lbl_00012E00(void);
 void lbl_000131C4(void);
-void lbl_000135DC(void);
+void lbl_000135DC(struct Camera *camera, struct Ball *ball);
 void lbl_00013C1C(void);
 void lbl_00013C6C(void);
 void lbl_00015300(void);
@@ -398,6 +398,36 @@ void lbl_0001BA8C(void);
 void lbl_00012A48(void);
 void lbl_000133A0(void);
 void lbl_000130AC(void);
+static inline float mathutil_sum_of_sq_2(register float a, register float b)
+{
+    asm
+    {
+        fmuls a, a, a
+        fmadds a, b, b, a
+    }
+    return a;
+}
+static inline float mathutil_vec_distance(register Vec *a, register Vec *b)
+{
+    register float x1, y1, z1, x2, y2, z2;
+    register float result;
+    asm
+    {
+        lfs x1, a->x
+        lfs x2, b->x
+        lfs y1, a->y
+        lfs y2, b->y
+        lfs z1, a->z
+        lfs z2, b->z
+        fsubs x1, x1, x2
+        fsubs y1, y1, y2
+        fsubs z1, z1, z2
+        fmuls result, x1, x1
+        fmadds result, y1, y1, result
+        fmadds result, z1, z1, result
+    }
+    return mathutil_sqrt(result);
+}
 #pragma force_active on
 asm void lbl_000131C4(void)
 {
@@ -409,10 +439,138 @@ asm void lbl_000133A0(void)
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_000133A0.s"
 }
-asm void lbl_000135DC(void)
+#pragma peephole on
+void lbl_000135DC(struct Camera *camera, struct Ball *ball)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_000135DC.s"
+    Vec v;
+    Vec ctr;
+    Vec acc;
+    Vec vmin;
+    Vec vmax;
+    f32 *k = (f32 *)lbl_0001C430;
+
+    if (!(debugFlags & 0xA))
+    {
+        if ((s32)camera->unk204 != 0)
+        {
+            camera->rotY = cameraInfo[0].rotY;
+            camera->rotX = cameraInfo[0].rotX;
+            camera->rotZ = cameraInfo[0].rotZ;
+            camera->eye = cameraInfo[0].eye;
+            camera->eyeVel = cameraInfo[0].eyeVel;
+            camera->lookAt = cameraInfo[0].lookAt;
+            camera->lookAtVel = cameraInfo[0].lookAtVel;
+        }
+        else
+        {
+            f32 r;
+            f32 t;
+            int i;
+            int flag;
+            u8 *p;
+            s8 *status;
+            struct Ball *bp;
+
+            acc.x = k[6];
+            acc.y = k[6];
+            acc.z = k[6];
+            vmin.x = k[37];
+            vmin.y = k[37];
+            vmin.z = k[37];
+            vmax.x = k[38];
+            vmax.y = k[38];
+            vmax.z = k[38];
+
+            status = g_poolInfo.playerPool.statusList;
+            p = lbl_10017664 + 8;
+            bp = ballInfo;
+            flag = 1;
+            for (i = g_poolInfo.playerPool.count; i > 0; i--, bp++, p += 0x18, status++)
+            {
+                if (*status == 0)
+                    continue;
+                if (*(s16 *)(p + 0x10) != 0)
+                    continue;
+                if (bp->flags & BALL_FLAG_REVERSE_GRAVITY)
+                {
+                    flag = 0;
+                }
+                else
+                {
+                    mathutil_mtxA_from_rotate_y(bp->unk92);
+                    mathutil_mtxA_tf_vec_xyz(&v, k[6], k[6], k[39]);
+                    acc.x += v.x;
+                    acc.y += v.y;
+                    acc.z += v.z;
+                }
+                v = bp->pos;
+                if (vmax.x < v.x)
+                    vmax.x = v.x;
+                if (vmax.y < v.y)
+                    vmax.y = v.y;
+                if (vmax.z < v.z)
+                    vmax.z = v.z;
+                if (vmin.x > v.x)
+                    vmin.x = v.x;
+                if (vmin.y > v.y)
+                    vmin.y = v.y;
+                if (vmin.z > v.z)
+                    vmin.z = v.z;
+            }
+
+            ctr.x = k[10] * (vmax.x + vmin.x);
+            ctr.y = k[10] * (vmax.y + vmin.y);
+            ctr.z = k[10] * (vmax.z + vmin.z);
+            r = k[6];
+            status = g_poolInfo.playerPool.statusList;
+            p = lbl_10017664 + 8;
+            bp = ballInfo;
+            for (i = g_poolInfo.playerPool.count; i > 0; i--, bp++, p += 0x18, status++)
+            {
+                if (*status == 0)
+                    continue;
+                if (*(s16 *)(p + 0x10) != 0)
+                    continue;
+                t = k[40] * bp->currRadius + mathutil_vec_distance(&bp->pos, &ctr);
+                if (r < t)
+                    r = t;
+            }
+
+            v.x = acc.x + (camera->eye.x - ctr.x);
+            v.y = acc.y + (camera->eye.y - ctr.y);
+            v.z = acc.z + (camera->eye.z - ctr.z);
+            mathutil_vec_set_len(&v, &v, r / mathutil_sin(camera->sub28.fov >> 1));
+            v.x += ctr.x;
+            v.y += ctr.y;
+            v.z += ctr.z;
+            if (flag == 0)
+                v.y = camera->eye.y;
+            camera->eyeVel.x *= k[41];
+            camera->eyeVel.y *= k[41];
+            camera->eyeVel.z *= k[41];
+            camera->eyeVel.x += (k[8] * (v.x - camera->eye.x) - camera->eyeVel.x) * k[42];
+            camera->eyeVel.y += (k[8] * (v.y - camera->eye.y) - camera->eyeVel.y) * k[42];
+            camera->eyeVel.z += (k[8] * (v.z - camera->eye.z) - camera->eyeVel.z) * k[42];
+            camera->eye.x += camera->eyeVel.x;
+            camera->eye.y += camera->eyeVel.y;
+            camera->eye.z += camera->eyeVel.z;
+            camera->lookAtVel.x *= k[43];
+            camera->lookAtVel.y *= k[43];
+            camera->lookAtVel.z *= k[43];
+            camera->lookAtVel.x += (k[8] * (ctr.x - camera->lookAt.x) - camera->lookAtVel.x) * k[8];
+            camera->lookAtVel.y += (k[8] * (ctr.y - camera->lookAt.y) - camera->lookAtVel.y) * k[44];
+            camera->lookAtVel.z += (k[8] * (ctr.z - camera->lookAt.z) - camera->lookAtVel.z) * k[8];
+            camera->lookAt.x += camera->lookAtVel.x;
+            camera->lookAt.y += camera->lookAtVel.y;
+            camera->lookAt.z += camera->lookAtVel.z;
+            v.x = camera->lookAt.x - camera->eye.x;
+            v.y = camera->lookAt.y - camera->eye.y;
+            v.z = camera->lookAt.z - camera->eye.z;
+            camera->rotY = mathutil_atan2(v.x, v.z) - 0x8000;
+            camera->rotX = mathutil_atan2(v.y, mathutil_sqrt(mathutil_sum_of_sq_2(v.x, v.z)));
+            camera->rotZ = 0;
+        }
+    }
 }
 
 #pragma force_active reset

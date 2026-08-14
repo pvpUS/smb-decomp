@@ -1984,10 +1984,146 @@ void lbl_00006E64(u32 color, char *str, float x, float y)
     set_text_mul_color(color);
     sprite_puts(str);
 }
-asm void lbl_00006F0C(void)
+struct BowlRow {  // 10 consecutive f32 lane offsets, copied whole off the config
+    f32 v[10];
+};
+
+struct BowlName {  // 8-byte record in the table at *(p + 0x100)
+    char *unk0;
+    char *name;
+};
+
+void lbl_00006F0C(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_bowling/lbl_00006F0C.s"
+    u8 *w = lbl_0000F020;
+    u8 *st = lbl_10000000;
+    u8 *p = lbl_00014F20;
+    s8 *q;
+    s8 *q2;
+    struct BowlRow row1;
+    struct BowlRow row2;
+    NLsprarg params;
+    u32 i;
+    u32 k;
+    f32 v;
+    f32 rr;
+    f32 py;
+    f32 ax;
+    f32 px;
+    f32 ay;
+    s16 sa;
+    s16 sb;
+    int ang;
+    int s;
+    int col;
+    int j;
+    int n;
+    NLsprarg arr[8];
+
+    row1 = *(struct BowlRow *)(w + 0x216c);
+    row2 = *(struct BowlRow *)(w + 0x2194);
+    v = (f32)(*(f64 *)(w + 0x21c0)
+              + *(f64 *)(w + 0x1f50)
+                    * mathutil_sin((int)(*(f64 *)(w + 0x1da0) * globalAnimTimer)));
+    s = (int)(*(f32 *)(w + 0x21c8) * v);
+    col = ((s & 0xff) << 16) + ((s & 0xff) << 8) + (s & 0xff);
+    nlSprPut((NLsprarg *)lbl_0000F020);
+
+    for (i = 0; i < 10; i++)
+    {
+        params = *(NLsprarg *)(w + 0xfa0);
+        params.x += row1.v[i];
+        params.y += row2.v[i];
+        if (*(u16 *)(st + 4) & (1 << i))
+            params.base_color = 0x606060;
+        else if (*(s8 *)(st + 7) == (s32)i)
+            params.base_color = col;
+        nlSprPut(&params);
+        for (k = 0; k < 10; k++)
+        {
+            if ((1 << k) & ((u16 *)(*(u8 **)(p + 0x100)))[i * 4])
+            {
+                params = ((NLsprarg *)(w + 0xff0))[k];
+                params.x += row1.v[i];
+                params.y += row2.v[i];
+                if (*(u16 *)(st + 4) & (1 << i))
+                    params.base_color = 0x606060;
+                else if (*(s8 *)(st + 7) == (s32)i)
+                    params.base_color = col;
+                nlSprPut(&params);
+            }
+        }
+    }
+
+    for (j = 0; j < 8; j++)
+    {
+        arr[j] = ((NLsprarg *)(w + 0xd20))[j];
+        q = (s8 *)(st + 7);
+        arr[j].x += row1.v[*q] - *(f32 *)(w + 0x2118);
+        arr[j].y += row2.v[*q] - *(f32 *)(w + 0x20ec);
+        arr[j].trnsl = v;
+        arr[j].base_color = 0xff0000 + ((s & 0xff) << 8) + (s & 0xff);
+        nlSprPut(&arr[j]);
+    }
+
+    reset_text_draw_settings();
+    set_text_font(0xb1);
+    if (!(debugFlags & 8))
+        func_80071B50(0x200000);
+
+    func_80071B1C(*(f32 *)(w + 0x2168));
+    set_text_pos(*(f32 *)(w + 0x2134), *(f32 *)(w + 0x21cc));
+    set_text_mul_color(0);
+    q2 = (s8 *)(st + 7);
+    sprite_printf((char *)(p + 0x488), *q2 + 1);
+    sprite_puts((*(struct BowlName **)(p + 0x100))[*q2].name);
+    func_80071B1C(*(f32 *)(w + 0x1cfc));
+    set_text_pos(*(f32 *)(w + 0x1d48), *(f32 *)(w + 0x21d0));
+    set_text_mul_color(0xf0c0c0);
+    sprite_printf((char *)(p + 0x488), *q2 + 1);
+    sprite_puts((*(struct BowlName **)(p + 0x100))[*q2].name);
+
+    n = 10 - *(s8 *)(st + 6);
+    set_text_pos(*(f32 *)(w + 0x21d4), *(f32 *)(w + 0x21cc));
+    set_text_mul_color(0);
+    func_80071B1C(*(f32 *)(w + 0x2168));
+    sprite_printf((char *)(p + 0x1c8), n);
+    sprite_puts((char *)(p + 0x494));
+    set_text_pos(*(f32 *)(w + 0x21d8), *(f32 *)(w + 0x21d0));
+    set_text_mul_color(0xf0c0c0);
+    func_80071B1C(*(f32 *)(w + 0x1cfc));
+    sprite_printf((char *)(p + 0x1c8), n);
+    sprite_puts((char *)(p + 0x494));
+
+    nlSprPut((NLsprarg *)(w + 0x50));
+    func_80071B1C(*(f32 *)(w + 0x2168));
+    set_text_pos(*(f32 *)(w + 0x21dc), *(f32 *)(w + 0x21e0));
+    set_text_mul_color(0);
+    sprite_puts((char *)(p + 0x4a0));
+    func_80071B1C(*(f32 *)(w + 0x1cfc));
+    set_text_pos(*(f32 *)(w + 0x21e4), *(f32 *)(w + 0x1df0));
+    set_text_mul_color(0xffff00);
+    sprite_puts((char *)(p + 0x4a0));
+
+    sa = *(f32 *)(w + 0x21f0)
+         * mathutil_sin((int)(*(f64 *)(w + 0x21e8) * *(s32 *)st));
+    sb = mathutil_atan(*(f32 *)(w + 0x1f68));
+    rr = mathutil_sqrt(*(f32 *)(w + 0x21f4));
+    ang = sa + sb;
+    ax = *(f32 *)(w + 0x2138) - rr * mathutil_sin(ang);
+    ay = *(f32 *)(w + 0x21f8) - rr * mathutil_sin(ang + 0x4000);
+    func_80071B08((s16)sa);
+
+    func_80071B1C(*(f32 *)(w + 0x2168));
+    px = *(f32 *)(w + 0x1dac) + ax;
+    py = *(f32 *)(w + 0x1df0) + ay;
+    set_text_pos(*(f32 *)(w + 0x2100) + px, *(f32 *)(w + 0x2100) + py);
+    set_text_mul_color(0);
+    sprite_puts((char *)(p + 0x4bc));
+    func_80071B1C(*(f32 *)(w + 0x1cfc));
+    set_text_pos(px, py);
+    set_text_mul_color(0xffff00);
+    sprite_puts((char *)(p + 0x4bc));
 }
 #pragma peephole on
 void lbl_00007518(void)

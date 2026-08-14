@@ -178,7 +178,7 @@ f32 lbl_00009538(void);
 f32 lbl_000095C4(void);
 u8 lbl_000097D8(void);
 void lbl_0000982C(void);
-void lbl_00009880(void);
+int lbl_00009880(u8 a);
 u8 lbl_00009968(u8 a);
 void lbl_000099B4(void);
 void lbl_000099E0(void);
@@ -226,11 +226,11 @@ void lbl_00013664(f32 a, f32 b, f32 c);
 void lbl_00015520(void);
 void lbl_0001B5B8(void);
 void lbl_00022524(void);
-void lbl_00022610(void);
+void lbl_00022610(s16 *p, f32 scale);
 void lbl_00022904(s16 *p, f32 scale, f32 t);
 void lbl_00022D4C(s16 *p, float f);
-void lbl_000230E4(void);
-void lbl_00023AB4(void);
+void lbl_000230E4(s16 *p);
+void lbl_00023AB4(u8 a);
 void lbl_00023C68(void);
 void lbl_00023DC4(void);
 void lbl_00023DD4(void);
@@ -2561,7 +2561,7 @@ void lbl_00022524(void)
     nlSprPut((NLsprarg *)(tbl + 0xa50));
     nlSprPut((NLsprarg *)(tbl + 0xaa0));
 }
-asm void lbl_00022610(void)
+asm void lbl_00022610(s16 *p, f32 scale)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_golf/lbl_00022610.s"
@@ -2679,12 +2679,12 @@ void lbl_00022D4C(s16 *p, float f)
     nlSprPut(&a);
 }
 #pragma opt_propagation reset
-asm void lbl_000230E4(void)
+asm void lbl_000230E4(s16 *p)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_golf/lbl_000230E4.s"
 }
-asm void lbl_00023AB4(void)
+asm void lbl_00023AB4(u8 a)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_golf/lbl_00023AB4.s"

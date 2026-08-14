@@ -81,6 +81,10 @@ usage -- RUN IT FROM THE MODULE TREE, like rel_ablind and rel_blindtable:
                 `off` scores in the deoptimised one.  The regime is printed on
                 every run either way -- see peephole_regime().  MEASURED run 34
                 (mini_bowling): worth +17 and +29 instructions on two labels.
+  --quiet       RUN 39: exact alias for `--show 0`.  rel_relscore has had it
+                since it was written; this tool refused it with exit 2, which
+                is how a gate that drove both tools read "no object" as "the
+                two tools disagree" on 25 rows.
   --keep        do not delete the spliced .c/.o afterwards (they are kept
                 anyway; this flag exists so scripts can say what they mean)
   --selftest    run the internal parser/splicer checks and exit
@@ -204,6 +208,20 @@ def aligned(e, g):
                     i += 1
             return raw, pops
     return tot, ops
+
+
+_LOCAL_RE = re.compile(r'^([A-Za-z_.$][\w.$]*):', re.M)
+
+
+def gold_locals(path):
+    """every `^name:` LABEL DEFINITION in the golden `.s`.
+
+    RUN 39.  Definitions only -- a call target `bl lbl_X` is not a definition
+    and never lands in this set.  It is the bound on the read-forward below;
+    rel_relscore.gold_rows() computes the identical set with the identical
+    regex, and the two must not drift.
+    """
+    return set(_LOCAL_RE.findall(open(path, errors='ignore').read()))
 
 
 def read_gold(path):
@@ -863,6 +881,22 @@ def main():
             k, v = a.split('=', 1)
             argv[i:i + 1] = [k, v]
             continue
+        if a == '--quiet':
+            # ** RUN 39: `--quiet` EXISTS IN rel_relscore AND DID NOT EXIST
+            # HERE, AND A SCRIPT THAT DRIVES BOTH HITS IT. **
+            #
+            # It is an EXACT ALIAS for `--show 0` -- not a new mode, so there
+            # is nothing new to be wrong: gate_quiet.py asserts the two
+            # produce BYTE-IDENTICAL stdout.
+            #
+            # It cost run 38's corpus agent a 25/25 FALSE POSITIVE inside its
+            # own gate: the gate passed `--quiet`, this tool refused with
+            # exit 2 and built nothing, and "no object" was read as "the two
+            # tools disagree" on all 25 rows.  The refusal was CORRECT and it
+            # was still the most expensive thing in that session.
+            show = 0
+            i += 1
+            continue
         if a == '--keep':
             i += 1
             continue
@@ -918,6 +952,7 @@ def main():
         die('no golden asm at %s\n  -- wrong module (%s -> stem %s), wrong '
             'label, or you are not in a module tree.' % (goldp, mod, stem))
     gold = read_gold(goldp)
+    glocals = gold_locals(goldp)
     if not gold:
         die('%s parsed to 0 instructions -- not a `/* ADDR HEX */ insn` file?'
             % goldp)
@@ -1142,16 +1177,33 @@ def main():
                 % (c, label, ', '.join(order[:12]) or '(none)',
                    '  ... and %d more' % (len(order) - 12)
                    if len(order) > 12 else ''))
-        # Read forward from the label through the rest of .text, exactly as
-        # rel_ablind reads n words at the label's address in the .plf: a `.s`
-        # ROW can hold more than one function and golden covers the whole row.
+        # ** RUN 39 -- THE READ-FORWARD IS BOUNDED BY GOLDEN'S OWN ROW. **
+        #
+        # This read from the label to the END OF .text, and score() truncated
+        # to golden's length, so a SHORT draft was scored against the NEXT
+        # FUNCTION'S code.  The comment that used to sit here -- "a `.s` ROW
+        # can hold more than one function and golden covers the whole row" --
+        # is TRUE and was MEASURED for the first time in run 39: it is true of
+        # EIGHT of 1,160 golden rows (mini_fight lbl_000074DC lbl_00010ADC
+        # lbl_00010B98 lbl_00012248, mini_pilot lbl_00008134, mini_race
+        # lbl_000044AC lbl_00004634, test_mode lbl_000007AC) and false of the
+        # other 1,152.  Bounding the walk by golden's own LOCAL-LABEL
+        # DEFINITIONS covers 8/8 of the first population and over-reads on
+        # 0/1,152 of the second (_corpus_run39/Bscratch/census_localsep.py).
+        #
+        # `own` is therefore the ROW's length, not `len(syms[label])`: on those
+        # eight rows a byte-perfect conversion used to print WRONG LENGTH.
+        # rel_relscore.build_flat() does the identical walk; if you change one,
+        # change both and re-run _corpus_run39/Bscratch/gate_overrun.py.
         flat, seen = [], False
         for k in order:
             if k == label:
                 seen = True
+            elif seen and k not in glocals:
+                break
             if seen:
                 flat.extend(syms[k])
-        own = len(syms[label])
+        own = len(flat)
         same, n, tot, regions, lo, hi, diffs, lines = score(flat, gold, show)
         span_s = '  span %d-%d' % (lo, hi) if regions else ''
         print('%-24s insn %-4d (golden %d, %+d)   ALIGNED %d in %d%s   '

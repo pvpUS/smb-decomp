@@ -82,6 +82,13 @@ usage -- RUN IT FROM THE MODULE TREE, like rel_ablind/rel_tuprobe:
                  and rel_relscore's was the wrong one.  Semantics are
                  rel_tuprobe's, verbatim, so the two agree row-for-row.
   --quiet        one summary line per body, no rows
+  ** RUN 39: build_flat() no longer reads to the END OF THE OBJECT.  It reads
+     GOLDEN'S ROW -- the label's symbol plus any following symbol golden's own
+     `.s` defines a label for -- so a SHORT draft is no longer scored against
+     the next function's prologue and no longer inherits its relocations.
+     MEASURED n = 1,160 golden rows: 8 are genuinely multi-function (all in
+     mini_fight/mini_pilot/mini_race/test_mode) and the local-label bound
+     covers 8/8 of them and over-reads on 0/1,152 of the rest. **
   --allow-stub   score a body that is still an `#include`d asm stub.  OFF by
                  default: a stub is assembled from GOLDEN ITSELF, so it scores
                  100% words AND 100% relocs against itself.  That was one of
@@ -661,19 +668,70 @@ def not_inside(work, tree):
     return not (a == b or a.startswith(b + os.sep) or a.startswith(b + '/'))
 
 
-def build_flat(objpath, label, extra=()):
-    """Object/plf -> the flat [(word,text,ref)] stream starting at `label`."""
+def build_flat(objpath, label, extra=(), locals_=None):
+    """Object/plf -> the [(word,text,ref)] stream for GOLDEN'S ROW at `label`.
+
+    ** RUN 39 -- THIS USED TO READ TO THE END OF THE OBJECT. **
+
+    It concatenated EVERY symbol from `label` onward and score() then truncated
+    to GOLDEN'S length, so a SHORT draft was scored against THE NEXT FUNCTION'S
+    PROLOGUE and the next function's relocations were counted as this draft's.
+    PROVEN by sel_ngc in run 38, not argued: `lbl_00010438`'s stream[957] is
+    the first `lis` of `lbl_00011330`; per row the ref count is 99/99, read
+    forward it is 102/104.  THREE published "structural leads" died to it --
+    sel_ngc's two and mini_billiards' `23B0` 17-vs-16.
+
+    THE READ-FORWARD IS NOT REMOVED, BECAUSE IT IS LOAD-BEARING -- but on far
+    less than it was doing.  MEASURED run 39 over every golden `.s` in all nine
+    modules against each module's own `.map` .text layout (n = 1,160 rows):
+    EIGHT rows genuinely hold more than one function and golden covers the
+    whole row --
+
+        mini_fight lbl_000074DC lbl_00010ADC lbl_00010B98 lbl_00012248
+        mini_pilot lbl_00008134
+        mini_race  lbl_000044AC lbl_00004634
+        test_mode  lbl_000007AC
+
+    -- and mini_billiards, mini_bowling, mini_golf, option and sel_ngc have
+    NONE, so for those five the read-forward has never been anything but the
+    defect.  (_corpus_run39/Bscratch/census_multifunc.py.)
+
+    ** So it is BOUNDED by GOLDEN'S OWN LOCAL-LABEL SET **, which gold_rows()
+    already returns and which is `^name:` DEFINITIONS only, never call targets.
+    Read forward across a following symbol only while golden's `.s` DEFINES a
+    label of that name; STOP at the first one it does not.  A golden row's
+    local labels all sit INSIDE that row and every other function's entry sits
+    outside it, so the two populations cannot collide.  MEASURED BOTH WAYS on
+    all 1,160 rows: 8/8 multi-function rows fully covered, 1,152/1,152
+    single-function rows stopped at the very first following symbol.
+    (_corpus_run39/Bscratch/census_localsep.py.)
+
+    ⚠ `m = min(n, own)` with `own = len(syms[label])` -- the fix as it was
+    located -- is WRONG on exactly those eight rows: it would truncate
+    lbl_00010B98 to 28 of golden's 309 and report a byte-perfect
+    three-function conversion as a 281-instruction residual.
+
+    `locals_=None` keeps the label-symbol-only reading for a caller with no
+    golden `.s` to hand.
+
+    -> (flat, names, own).  `own` == len(flat) == the ROW's instruction count,
+    which is also the number `insn` must print: `len(syms[label])` reported a
+    byte-perfect draft of those eight rows as WRONG LENGTH (-281 on
+    lbl_00010B98).
+    """
     syms, _ = disasm_dr(objpath, extra)
     names = [k for k, _ in syms]
     if label not in names:
-        return None, names
+        return None, names, 0
     flat, seen = [], False
     for k, v in syms:
         if k == label:
             seen = True
+        elif seen and not (locals_ and k in locals_):
+            break
         if seen:
             flat.extend(v)
-    return flat, names
+    return flat, names, len(flat)
 
 
 def main():
@@ -816,8 +874,20 @@ def main():
         # length instead prints a confident wrong number (`insn 209` on a
         # 193-instruction function) -- and a wrong length is the one condition
         # under which every other number here is meaningless.
-        later = sorted(a for a in set(addrs.values()) if a > base)
-        nbuilt = (later[0] - base) // 4 if later else None
+        # ** RUN 39: THE ROW, NOT THE SYMBOL. **  On the eight golden rows
+        # that genuinely hold more than one function (see build_flat), the
+        # next map symbol is INSIDE this row, so the distance to it reported a
+        # byte-perfect LINK as WRONG LENGTH -- e.g. mini_fight lbl_00010B98,
+        # 28 against golden's 309.  Walk forward across map symbols that are
+        # LOCAL LABELS OF THIS GOLDEN `.s`, exactly as build_flat does on the
+        # object side, and stop at the first that is not.
+        _later = sorted((a, k) for k, a in addrs.items() if a > base)
+        _end = None
+        for _a, _k in _later:
+            if _k not in locals_:
+                _end = _a
+                break
+        nbuilt = (_end - base) // 4 if _end is not None else None
         span = len(gold) * 4 + 64
         syms, _ = disasm_dr(plf, ['--section=.text',
                                   '--start-address=%s' % hex(base),
@@ -837,14 +907,18 @@ def main():
             die('--object %s does not exist' % objarg)
         refuse_stub('object', label, stem, stubbed(tree, stem, label),
                     allow_stub)
-        flat, names = build_flat(objarg, label, ['--section=.text'])
+        flat, names, own = build_flat(objarg, label, ['--section=.text'],
+                                      locals_)
         if flat is None:
             die('%s has no <%s> in .text.  Symbols: %s'
                 % (objarg, label, ', '.join(names[:12]) or '(none)'))
         print('module %s   OBJECT %s   golden %s: %d insn (%d reloc refs)'
               % (mod, objarg, label, len(gold), len(grefs)))
         s = score(flat, gold, grefs, 0 if quiet else show)
-        _emit('OBJECT', s, len(flat), quiet)
+        # RUN 39: `len(gold)` is passed now, so --object gets the SAME
+        # WRONG-LENGTH determination the compile path has always had.  It was
+        # the one mode that scored a short artifact and said nothing.
+        _emit('OBJECT', s, own, quiet, len(gold))
         return 0
 
     # ------------------------------------------------------- compile the owner
@@ -1026,7 +1100,7 @@ def main():
             print('%-24s COMPILE FAILED\n%s' % (tag, tail))
             rc = rc or 1
             continue
-        flat, names = build_flat(o, label, ['--section=.text'])
+        flat, names, own = build_flat(o, label, ['--section=.text'], locals_)
         if flat is None:
             die('%s compiled but its .text has no <%s>.  Symbols: %s'
                 % (c, label, ', '.join(names[:12]) or '(none)'))
@@ -1068,11 +1142,11 @@ def main():
             print('%-24s !! NEW .text SYMBOL(S) vs %s: %s'
                   % (tag, _base_tag, ', '.join(_newsyms[:8])))
         s = score(flat, gold, grefs, 0 if quiet else show)
-        own = None
-        syms, _ = disasm_dr(o, ['--section=.text'])
-        for k, v in syms:
-            if k == label:
-                own = len(v)
+        # RUN 39: `own` comes back from build_flat, which now knows where
+        # golden's ROW ends.  The second `disasm_dr(o)` that used to live here
+        # measured `len(syms[label])` -- the label's symbol ALONE -- which is
+        # the wrong length on the eight multi-function rows, and it cost a
+        # second objdump on every body.
         _emit(tag, s, own, quiet, len(gold))
     return rc
 
@@ -1080,9 +1154,27 @@ def main():
 def _emit(tag, s, own, quiet, ngold=None):
     bt, bo = s['blind']
     at, ao = s['aligned']
-    print('%-24s insn %-4s   ALIGNED(words only) %d in %-3d -> '
-          'ALIGNED(+relocs) %d in %-3d  span %d-%d'
-          % (tag, own if own is not None else '?', bt, bo, at, ao,
+    # ** RUN 39 -- THE ALIGNED NUMBER IS PRINTED FIRST AND IT IS A COUNT OF
+    # DIFFERENCES, AND NOTHING ON THE LINE SAID SO. **
+    #
+    # mini_billiards `lbl_0000A054` prints `608 in 290` and is TRUE 67 of
+    # 2,094.  `608 in 290` reads as a near-miss to anyone who has just read
+    # `of 2094` on the next line; it is 608 DIFFERING INSTRUCTIONS in 290
+    # REGIONS, i.e. the opposite polarity from every other number this tool
+    # prints.  Run 38 measured that trap at 3x-300x the FICTION column and
+    # called it the project's biggest.  This is PRINT ONLY: the gate for it
+    # (_corpus_run39/Bscratch/gate_print.py) asserts that NOT ONE NUMBER
+    # MOVES between the two versions on any row.
+    #
+    # Golden's length now sits beside the built one, in rel_tuprobe's own
+    # `insn N (golden M, +-d)` form, so the two tools' first lines read alike
+    # and the length is on the line the reader is already looking at instead
+    # of in the header four lines up.
+    _gl = ('' if ngold is None or own is None
+           else ' (golden %d, %+d)' % (ngold, own - ngold))
+    print('%-24s insn %-4s%s   ALIGNED(words only) %d DIFF in %-3d -> '
+          'ALIGNED(+relocs) %d DIFF in %-3d  span %d-%d'
+          % (tag, own if own is not None else '?', _gl, bt, bo, at, ao,
              s['span'][0], s['span'][1]))
     # ** RUN 38 -- `words` USED TO COME FIRST AND `words` IS WHAT PEOPLE
     # QUOTE. **  mini_bowling's 42A4 printed `words 86 of 91` before
@@ -1094,12 +1186,27 @@ def _emit(tag, s, own, quiet, ngold=None):
     # finding and you cannot see a delta with one number, but it is labelled
     # as the inflated one whenever the two disagree.
     _fic = s['words'] - s['true']
+    # ** RUN 39: AT A WRONG LENGTH, `quote TRUE` IS ITSELF BAD ADVICE. **
+    # Every positional number is meaningless when the count is wrong -- TRUE
+    # included -- so the line says which number IS meaningful (ALIGNED)
+    # instead of promoting one meaningless one over another.
+    #
+    # ⚠ The brief asked for `words` to be SUPPRESSED at a wrong length.  I
+    # RELABEL IT INSTEAD, deliberately: the wrong-length branch RETURNS before
+    # the `!! N WORD-EQUAL POSITION(S) ARE FICTIONS` line is reached, so
+    # `words` is the ONLY place the fiction count survives on exactly the rows
+    # where it would be suppressed.  Suppressing it destroys evidence; saying
+    # it is meaningless does not.
+    _wl = (ngold is not None and own is not None and own != ngold)
+    _pos = (('   [words %d of %d -- INFLATED by %d fiction(s); quote TRUE]'
+             % (s['words'], s['n'], _fic)) if _fic else
+            ('   (words agree: %d of %d)' % (s['words'], s['n'])))
+    if _wl:
+        _pos = ('   (words %d of %d, %d fiction(s)) -- BOTH MEANINGLESS AT '
+                'THIS LENGTH; quote ALIGNED' % (s['words'], s['n'], _fic))
     print('%-24s positional: TRUE %d of %d%s   '
           'refs built %d / golden %d, MISMATCHED %d %s'
-          % ('', s['true'], s['n'],
-             ('   [words %d of %d -- INFLATED by %d fiction(s); quote TRUE]'
-              % (s['words'], s['n'], _fic)) if _fic else
-             ('   (words agree: %d of %d)' % (s['words'], s['n'])),
+          % ('', s['true'], s['n'], _pos,
              s['refs_built'], s['refs_gold'], s['refbad'],
              '(' + ', '.join('%s %d' % kv for kv in sorted(s['kinds'].items()))
              + ')' if s['kinds'] else ''))
@@ -1121,43 +1228,41 @@ def _emit(tag, s, own, quiet, ngold=None):
               'draft -- an insertion shifts every\n%-24s   later word AND '
               'every later relocation.  Fix the count first.'
               % ('', own - ngold, '', ''))
-        # ** RUN 38, sel_ngc -- AND THE REF COLUMN IS WORSE THAN MEANINGLESS
-        # HERE, IT IS SOMEBODY ELSE'S. **
+        # ** RUN 39 -- THE OVERRUN THIS USED TO WARN ABOUT IS FIXED, SO THE
+        # WARNING HAD TO CHANGE OR IT WOULD BE THE FALSE STATEMENT. **
         #
-        # build_flat() concatenates EVERY symbol from the label to the end of
-        # the object (deliberately: a golden `.s` ROW may hold more than one
-        # function, and golden covers the whole row).  score() then truncates
-        # to GOLDEN'S length.  So when the draft is SHORT, the tail of that
-        # window is the NEXT FUNCTION'S CODE, and the next function's
-        # relocations are counted as this draft's.
+        # Until run 39 build_flat() concatenated EVERY symbol from the label to
+        # the end of the object and score() truncated to GOLDEN'S length, so a
+        # SHORT draft was scored against the NEXT FUNCTION'S code and that
+        # function's relocations were counted as this draft's.  Run 38 reported
+        # it here rather than fixing it, on the grounds that the read-forward
+        # was load-bearing for a multi-function golden row and could not be
+        # separated.  IT CAN: golden's own local-label set separates the two
+        # populations exactly, 1,160 of 1,160 rows (see build_flat).
         #
-        # PROVEN by sel_ngc, not argued: `lbl_00010438`'s stream[957] is
-        # `3C800000 lis r4,0 [HA lbl_00011CB0]` -- the FIRST `lis` of
-        # `lbl_00011330`.  Truncated per symbol the count is 99/99 and THE
-        # ANOMALY DOES NOT EXIST.  `lbl_0000C970`'s stream[649] is
-        # `lbl_0000D39C`'s `lis`; the true figure is 102/104, delta -2 not -1.
-        # Two run-37 headlines died to this, and mini_billiards' `23B0`
-        # "17 relocations vs golden's 16" has the identical signature.
-        #
-        # NOT SILENTLY TRUNCATED HERE, because the read-forward is load-bearing
-        # for a genuine multi-function row and this tool cannot tell the two
-        # cases apart from the object alone.  It is REPORTED instead, which is
-        # the same contract the rest of this file keeps: hiding evidence is
-        # allowed, hiding the fact that you are hiding it is not.
+        # So the columns above are now THIS ROW'S, whatever the length.  What a
+        # short draft still means is that golden's tail has NO COUNTERPART: the
+        # missing instructions are counted as diffs, `refs built` is genuinely
+        # smaller than `refs golden`, and the positional score is a score over
+        # a PREFIX.  That is a real result and not a borrowed one.
         if own < ngold:
-            print('%-24s ^^ AND THE RELOCATION COLUMNS ABOVE ARE READING PAST '
-                  'THIS FUNCTION.\n'
-                  '%-24s   The draft is %d instruction(s) SHORT, so the last '
-                  '%d word(s) of the\n'
-                  '%-24s   window belong to WHATEVER FOLLOWS THIS FUNCTION, '
-                  'and their\n'
-                  '%-24s   relocations are counted above as this draft\'s.  '
-                  'DO NOT QUOTE `refs built`\n'
-                  '%-24s   OR `MISMATCHED` UNTIL `insn` EQUALS GOLDEN.  '
-                  '(sel_ngc, run 38: two headline\n'
-                  '%-24s   "extra relocation" anomalies were this, and both '
-                  'vanished per-symbol.)'
-                  % ('', '', ngold - own, ngold - own, '', '', '', ''))
+            print('%-24s ^^ The columns above cover the %d instruction(s) this '
+                  'draft ACTUALLY EMITTED\n'
+                  '%-24s   for this row.  Golden\'s remaining %d have no '
+                  'counterpart and are counted\n'
+                  '%-24s   as diffs -- a positional score over a PREFIX, not a '
+                  'near-miss.\n'
+                  '%-24s   RUN 39: before this these %d word(s) were scored '
+                  'against WHATEVER\n'
+                  '%-24s   FOLLOWS THIS FUNCTION in the object, and that '
+                  'function\'s relocations\n'
+                  '%-24s   were counted as this draft\'s.  (sel_ngc run 38: '
+                  '`lbl_00010438` read\n'
+                  '%-24s   102/104 that way and 99/99 per row; two headline '
+                  '"extra relocation"\n'
+                  '%-24s   anomalies were that, and both vanished.)'
+                  % ('', own, '', ngold - own, '', '', ngold - own, '', '',
+                     '', '', ''))
         if not quiet:
             for l in s['lines']:
                 print(l)
