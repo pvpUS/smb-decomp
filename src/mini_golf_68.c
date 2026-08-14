@@ -185,7 +185,7 @@ void lbl_00009800(void);
 void lbl_0000982C(void);
 void lbl_00009880(void);
 void lbl_00009968(void);
-void lbl_000099B4(void);
+void lbl_000099B4(Mtx m);
 void lbl_000099E0(void);
 void lbl_00009B68(void);
 void lbl_00009C10(void);

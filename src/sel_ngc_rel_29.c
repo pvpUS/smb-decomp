@@ -127,7 +127,7 @@ extern void floor_to_stage_id();
 extern void func_8009F4C4();
 extern void func_80067310();
 extern int is_floor_visited(int, int, u32);
-extern void is_minigame_unlocked();
+extern int is_minigame_unlocked(int id);
 extern void item_draw();
 extern void lens_flare_draw();
 extern void lens_flare_draw_mask();

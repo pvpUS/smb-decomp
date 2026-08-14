@@ -271,7 +271,7 @@ void lbl_0000E3E8(void);
 void lbl_0000E628(void);
 void lbl_0000ECB4(void);
 void lbl_0000EEF4(void);
-void lbl_0000F6F0(void);
+void lbl_0000F6F0(struct Ape *, int);
 void lbl_0000F7BC(void);
 void lbl_0000F940(void);
 static inline int u_take(u8 *p) { s32 t = *(s32 *)(p + 0x54); *(s32 *)(p + 0x54) = 0; return t; } s32 lbl_0000FBA8(void);
@@ -482,7 +482,7 @@ static void lbl_0000F4D8(int arg)
     func_800A7440(h, motInfo, 0x4E000);
     func_800A7314(h);
 }
-asm void lbl_0000F6F0(void)
+asm void lbl_0000F6F0(struct Ape *ape, int arg)
 {
     nofralloc
 #include "../asm/nonmatchings/test_mode/lbl_0000F6F0.s"

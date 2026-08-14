@@ -138,7 +138,7 @@ extern void mini_commend_free_data();
 
 // Forward declarations so mwcc accepts `<fn>@ha/@l` and cross-function
 // branches before each function is defined below.
-void lbl_000000C8(void);
+struct GMAModel* lbl_000000C8(struct GMA* gma, char* name);
 void _prolog(void);
 void _epilog(void);
 void _unresolved(void);

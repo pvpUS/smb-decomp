@@ -999,11 +999,27 @@ def main():
         src, ow = base, base
         if bf is not None:
             body = open(bf, errors='ignore').read().replace('\r\n', '\n')
-            ow, body = apply_directives(base, body, bf)
+            # ** RUN 38 -- THE SAME MULTI-BODY ABORT THIS FILE GIVES
+            # rel_relscore. **  apply_directives() refuses by calling die(),
+            # which is sys.exit(2), so ONE bad body in a list of six killed the
+            # other five -- silently, because the output of "aborted after body
+            # 1" and "was only asked for body 1" are identical.
+            # Fixed in BOTH body loops at once, deliberately: making
+            # apply_directives raise a custom exception instead would have left
+            # rel_relscore -- which imports it -- with an uncaught traceback.
+            try:
+                ow, body = apply_directives(base, body, bf)
+            except SystemExit:
+                print('%-24s DIRECTIVE REFUSED -- THIS BODY WAS SKIPPED and '
+                      'the run CONTINUES.  Details on stderr.' % tag)
+                rc = 2
+                continue
             sp = find_def(ow, label)
             if sp is None:
-                die('after //@SUB///@PROTO, %s no longer defines %s'
-                    % (owner, label))
+                print('%-24s AFTER //@SUB///@PROTO, %s NO LONGER DEFINES %s '
+                      '-- SKIPPED, run continues.' % (tag, owner, label))
+                rc = 2
+                continue
             src = ow[:sp[0]] + body.rstrip('\n') + '\n' + ow[sp[1]:]
         # ** THE PEEPHOLE REGIME, DECIDED AND PRINTED ON EVERY RUN. **
         # See peephole_regime().  `auto` (the default) restores the regime

@@ -296,7 +296,7 @@ struct BowlConfig
     u8 pad0[0x1fcc];
     struct PatEntry arr2[27];
 };
-int lbl_0000664C(u8 *p, s8 i8);
+s8 lbl_0000664C(u8 *p, s8 i8);
 void u_play_sound_0(int arg0);
 void u_play_music(u32 arg0, s8 arg1);
 
@@ -1723,7 +1723,7 @@ asm void lbl_00005B0C(void)
 }
 
 #pragma peephole on
-int lbl_0000664C(u8 *p, s8 i8)
+s8 lbl_0000664C(u8 *p, s8 i8)
 {
     u8 *q;
     int i;

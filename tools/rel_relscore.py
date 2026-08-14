@@ -70,6 +70,17 @@ usage -- RUN IT FROM THE MODULE TREE, like rel_ablind/rel_tuprobe:
                  mode that scores a REAL LINK
   --work DIR     scratch dir (default C:/tmp/rel_relscore_<module>_<pid>)
   --show N       print up to N differing rows (default 12; 0 for none)
+  --peephole X   `auto` (default) restores GOLDEN'S regime by prepending
+                 `#pragma peephole on` when an asm FUNCTION earlier in the
+                 owner has deoptimised the rest of the TU; `off` FORCES the
+                 deoptimised regime.  ** RUN 38: this flag did not exist and
+                 the regime was not consulted at all, while this tool IMPORTS
+                 rel_tuprobe -- which does consult it -- for the splice. **
+                 The two tools therefore compiled DIFFERENT PROGRAMS from the
+                 same body on 23 of the project's 163 live rows (mini_fight 14,
+                 mini_golf 4, mini_race 3, mini_billiards 1, mini_bowling 1),
+                 and rel_relscore's was the wrong one.  Semantics are
+                 rel_tuprobe's, verbatim, so the two agree row-for-row.
   --quiet        one summary line per body, no rows
   --allow-stub   score a body that is still an `#include`d asm stub.  OFF by
                  default: a stub is assembled from GOLDEN ITSELF, so it scores
@@ -87,6 +98,10 @@ EXIT CODES ARE A CONTRACT:
      `.s`, missing mwcc/objdump, splice anchor missing, a body that produced no
      such function, or a still-asm stub without --allow-stub.  A mistyped flag
      is ALWAYS 2, never 1.
+     ** RUN 38: a per-body REFUSAL (a malformed or unanchored directive) no
+     longer aborts the run.  The offending body is skipped, EVERY OTHER BODY IS
+     STILL SCORED, and the exit code is 2. **  Before this, a well-formed body
+     listed AFTER a bad one was never scored and nothing said so.
 """
 import difflib
 import glob
@@ -531,7 +546,37 @@ def selftest():
         ('CALL', 'lbl_x', 8)
     assert annot_call(0x48000009, 'bl 8 <callee>', 0, 10) == \
         ('CALL', 'callee', 0)
-    print('rel_relscore selftest: 18 checks OK')
+    # RUN 38: the regime this tool now consults must be rel_tuprobe's, not a
+    # second copy of it.  These are rel_tuprobe's own seven cases, asserted
+    # THROUGH THE IMPORT, so a drift in either file fails here.
+    _P = [('asm void a(void)\n{\n#include "x.s"\n}\n#pragma peephole on\n'
+           'void HERE(int a, int b)\n{\n}\n', 'on', 'pragma'),
+          ('static asm void a(void)\n{\n#include "x.s"\n}\n'
+           '#pragma force_active reset\nvoid HERE(void)\n{\n}\n',
+           'off', 'asm'),
+          ('void f(void)\n{\n    asm\n    {\n        nop\n    }\n}\n'
+           'void HERE(void)\n{\n}\n', 'on', 'default'),
+          ('asm void a(void);\nvoid HERE(void)\n{\n}\n', 'on', 'default'),
+          ('asm void a(void)\n{\n#include "x.s"\n}\n#pragma peephole on\n'
+           '#pragma peephole reset\nvoid HERE(void)\n{\n}\n',
+           'off', 'pragma'),
+          ('asm void a(void)\n{\n#include "x.s"\n}\n'
+           '#pragma peephole reset\nvoid HERE(void)\n{\n}\n',
+           'on', 'pragma'),
+          ('/* asm void a(void)\n{\n} */\nvoid HERE(void)\n{\n}\n',
+           'on', 'default')]
+    for _t, _e, _ec in _P:
+        _o = _t.index('void HERE')
+        _g, _w, _c = T.peephole_regime_ex(_t, _o)
+        assert _g == _e and _c == _ec, (
+            'peephole case %r: expected %s/%s got %s/%s (%s)'
+            % (_t[:28], _e, _ec, _g, _c, _w))
+    # AND THE RULE THIS TOOL ADDS ON TOP: an `off` caused by a HUMAN pragma is
+    # never overridden.  (rel_tuprobe RUN 37 DEFECT 3; if this tool overrode it
+    # the two would disagree on mini_fight_68.c's two rows.)
+    assert T.peephole_regime_ex(_P[4][0], _P[4][0].index('void HERE'))[2] \
+        == 'pragma'
+    print('rel_relscore selftest: 18 checks + 7 peephole cases OK')
     print('A SELFTEST IS NOT A GATE.  The gate is control rows on ALREADY-'
           'MATCHED\nlabels across all nine modules (they must report 0 '
           'fictions and 0 word diffs),\nplus a refusal on every still-asm '
@@ -578,6 +623,34 @@ def refuse_stub(where, label, stem, path, allow):
         'or your objdump are broken).' % (label, path, stem, label, where))
 
 
+def _sections(objpath):
+    """-> {name: size} for every section of an object, from `objdump -h`.
+
+    RUN 38.  `.text` is the only thing this tool ever read, and a body can
+    change an object without changing its `.text` at all.
+    """
+    r = subprocess.run([OBJDUMP, '-h', objpath], capture_output=True,
+                       text=True)
+    out = {}
+    for ln in r.stdout.splitlines():
+        m = re.match(r'\s*\d+\s+(\S+)\s+([0-9a-f]{8})\s', ln)
+        if m:
+            out[m.group(1)] = int(m.group(2), 16)
+    return out
+
+
+def _sect_delta(base, now):
+    """-> ['.rodata 0 -> 16', ...] for every NON-.text section that moved."""
+    out = []
+    for k in sorted(set(base) | set(now)):
+        if k == '.text':
+            continue
+        a, b = base.get(k, 0), now.get(k, 0)
+        if a != b:
+            out.append('%s %d -> %d (%+d)' % (k, a, b, b - a))
+    return out
+
+
 def not_inside(work, tree):
     """`os.path.commonpath` RAISES on two drives -- it does not return a
     mismatch -- and that crashed rel_tuprobe on its first run outside a warm
@@ -610,15 +683,17 @@ def main():
         return 0
     mod = owner = work = objarg = plfarg = None
     show, quiet, allow_stub, use_plf = 12, False, False, False
+    peep = 'auto'
     rest, i = [], 0
     while i < len(argv):
         a = argv[i]
         if a.startswith(('--module=', '--owner=', '--work=', '--show=',
-                         '--object=', '--plf=')):
+                         '--object=', '--plf=', '--peephole=')):
             k, v = a.split('=', 1)
             argv[i:i + 1] = [k, v]
             continue
-        if a in ('--module', '--owner', '--work', '--show', '--object'):
+        if a in ('--module', '--owner', '--work', '--show', '--object',
+                 '--peephole'):
             if i + 1 >= len(argv):
                 die('%s needs a value' % a)
             v = argv[i + 1]
@@ -631,6 +706,12 @@ def main():
                 work = v
             elif a == '--object':
                 objarg = v
+            elif a == '--peephole':
+                # SAME two values rel_tuprobe accepts, and the same refusal.
+                if v not in ('auto', 'off'):
+                    die('--peephole takes `auto` (default: restore golden\'s '
+                        'regime) or `off` (score in the deoptimised one)')
+                peep = v
             else:
                 if not v.isdigit():
                     die('--show needs a number, got %r' % v)
@@ -673,6 +754,11 @@ def main():
     if bodies and (objarg or use_plf):
         die('--object/--plf score a BUILT artifact; they cannot also splice a '
             'body.  Drop the body files, or drop the flag.')
+    if peep != 'auto' and (objarg or use_plf):
+        die('--peephole only means something when this tool COMPILES.  '
+            '--object/--plf score an artifact somebody else built, in whatever '
+            'regime they built it in.  Silently accepting the flag there would '
+            'report a regime this tool did not choose.')
     for b in bodies:
         if not os.path.exists(b):
             die('body file %s does not exist.  (Checked before any compile so '
@@ -811,16 +897,113 @@ def main():
     jobs = [(None, 'CONTROL')] if not bodies else \
            [(b, os.path.splitext(os.path.basename(b))[0]) for b in bodies]
     rc = 0
+    # RUN 38: the section/symbol baseline is the FIRST object this run builds.
+    _base_sect = _base_syms = _base_tag = None
     for bf, tag in jobs:
         src, ow = base_src, base_src
         if bf is not None:
             body = open(bf, errors='ignore').read().replace('\r\n', '\n')
-            ow, body = T.apply_directives(base_src, body, bf)
+            # ** RUN 38 -- A BAD BODY USED TO KILL THE WHOLE RUN. **
+            #
+            # T.apply_directives() reports a malformed or unanchored directive
+            # by calling rel_tuprobe's die(), i.e. sys.exit(2).  Nothing caught
+            # it, so `rel_relscore L a.c b.c` with a bad `a.c` produced NO
+            # SCORE FOR b.c AT ALL -- and the damage is invisible, because the
+            # output looks exactly like a run that was asked for one body.
+            # MEASURED run 38 (Bscratch/gate_abort.py): a body that scores
+            # `16 of 16` on its own produces nothing at all when it is listed
+            # behind a body with one bad directive.
+            #
+            # It is caught PER BODY here so the remaining bodies are still
+            # scored, and the exit code still reports the refusal.  The
+            # message rel_tuprobe already wrote to stderr is left as it is --
+            # it names the file and the line -- but it is prefixed
+            # `rel_tuprobe:` even though you ran this tool, so say so.
+            try:
+                ow, body = T.apply_directives(base_src, body, bf)
+            except SystemExit:
+                print('%-24s DIRECTIVE REFUSED -- THIS BODY WAS SKIPPED and '
+                      'the run CONTINUES.\n'
+                      '%-24s   Details on stderr (prefixed `rel_tuprobe:` -- '
+                      'that is the imported directive parser, not a different '
+                      'tool).' % (tag, ''))
+                rc = 2
+                continue
             sp = T.find_def(ow, label)
             if sp is None:
-                die('after //@SUB///@PROTO, %s no longer defines %s'
-                    % (owner, label))
+                # Same rule: one body's failure is not the run's.
+                print('%-24s AFTER //@SUB///@PROTO, %s NO LONGER DEFINES %s '
+                      '-- SKIPPED, run continues.' % (tag, owner, label))
+                rc = 2
+                continue
             src = ow[:sp[0]] + body.rstrip('\n') + '\n' + ow[sp[1]:]
+        # ** THE PEEPHOLE REGIME, DECIDED AND PRINTED ON EVERY RUN -- RUN 38.
+        #
+        # THIS TOOL HAD NO REGIME HANDLING AT ALL.  The string `peephole` did
+        # not appear in this file, while rel_tuprobe -- IMPORTED, four lines
+        # above, for the splice itself -- restores golden's regime before it
+        # compiles.  So the two tools compiled different programs from the same
+        # body and their numbers could not be read side by side, which is the
+        # one thing this tool's own `score()` docstring promises.
+        #
+        # MEASURED run 38, over EVERY still-asm label in all nine warm copies
+        # (n = 163 with a resolvable owner, Bscratch/census_regime.py): the
+        # splice point sits in an `off` regime caused by an ASM BLOCK on 23 of
+        # them, which is exactly the set where rel_tuprobe injects and this
+        # tool did not.  Two further rows (mini_fight lbl_0001415C and
+        # lbl_00014478, both in mini_fight_68.c) are `off` by an EXPLICIT
+        # `#pragma peephole off`; rel_tuprobe REFUSES to override those, so
+        # this must refuse too or the fix trades one disagreement for another.
+        #
+        # The three rules are rel_tuprobe.py's, verbatim in intent and in
+        # order (see its RUN 37 DEFECT 3 and DEFECT 5 comments):
+        #   --peephole off  -> FORCE the deoptimised regime (inject `off` when
+        #                      the regime is on; do nothing when it is off)
+        #   regime off by an ASM BLOCK   -> inject `#pragma peephole on`
+        #   regime off by a HUMAN PRAGMA -> REFUSE, loudly, and score as-is
+        # ⚠ IF YOU CHANGE EITHER TOOL, RE-RUN
+        # _corpus_run38/Bscratch/gate_regime.py: it compiles the same body
+        # through BOTH tools on all 23 rows and fails if any row disagrees.
+        sp3 = T.find_def(src, label)
+        regime, rwhy, rcause = T.peephole_regime_ex(
+            src, sp3[0] if sp3 else len(src))
+        injected = refused = deopted = False
+        if sp3 is not None and peep == 'off':
+            if regime == 'on':
+                src = src[:sp3[0]] + '#pragma peephole off\n' + src[sp3[0]:]
+                deopted = True
+        elif sp3 is not None and regime == 'off':
+            if rcause == 'pragma':
+                refused = True
+            else:
+                src = src[:sp3[0]] + '#pragma peephole on\n' + src[sp3[0]:]
+                injected = True
+        print('%-24s PEEPHOLE %s -- %s' % (tag, regime.upper(), rwhy))
+        if injected:
+            print('%-24s   INJECTED `#pragma peephole on` before the body, so '
+                  'this score is in GOLDEN\'S regime.\n'
+                  '%-24s   Your real conversion MUST carry that pragma too or '
+                  'the link will not match (--peephole off to score without '
+                  'it).' % ('', ''))
+        elif refused:
+            print('%-24s   NOT INJECTING.  That `off` is an explicit '
+                  '`#pragma peephole`, not an asm-block deopt, so it was '
+                  'written\n'
+                  '%-24s   on purpose (by the owner or by your body) and '
+                  'overriding it would score a program you did not write.\n'
+                  '%-24s   Remove the pragma, or pass --peephole off to say '
+                  'you meant it.' % ('', '', ''))
+        elif deopted:
+            print('%-24s   --peephole off: INJECTED `#pragma peephole off`.  '
+                  'This score is in the DEOPTIMISED regime,\n'
+                  '%-24s   which is NOT golden\'s.  It is the second arm of a '
+                  'two-arm comparison, not a result on its own.'
+                  % ('', ''))
+        elif peep == 'off':
+            print('%-24s   --peephole off: the regime was already OFF here, so '
+                  'nothing was injected.\n'
+                  '%-24s   This IS the deoptimised regime, and it is NOT '
+                  'golden\'s.' % ('', ''))
         sp2 = T.find_def(src, label)
         if sp2 is not None and stub_inc in src[sp2[0]:sp2[1]] \
                 and not allow_stub:
@@ -847,6 +1030,43 @@ def main():
         if flat is None:
             die('%s compiled but its .text has no <%s>.  Symbols: %s'
                 % (c, label, ', '.join(names[:12]) or '(none)'))
+        # ** RUN 38 -- THE NON-.text SIDE EFFECT, WHICH BOTH THIS TOOL AND
+        # rel_tuprobe WERE STRUCTURALLY BLIND TO. **
+        #
+        # Every number these tools print is computed from `.text` alone, so a
+        # body that adds `#include <math.h>` (16 bytes of .rodata) or reaches
+        # for `fabs` (a library function, i.e. a new .text symbol) scores
+        # exactly as before -- `0 in 0`, a perfect row -- and then FAILS THE
+        # LINK, because the module's carve/merge budget is a SECTION-SIZE
+        # budget.  Two modules hit that identical pair independently and only
+        # `--gate` caught either.
+        #
+        # This cannot decide whether the change is fatal; the ledger owns that.
+        # It CAN say the object is no longer shaped like the CONTROL object,
+        # which is the one thing you cannot see from a .text score.  The
+        # baseline is the CONTROL run of this same invocation, so it costs one
+        # extra objdump and needs nothing recorded anywhere.
+        _sect = _sections(o)
+        if _base_sect is None:
+            _base_sect = _sect
+            _base_tag = tag
+        else:
+            _delta = _sect_delta(_base_sect, _sect)
+            if _delta:
+                print('%-24s !! NON-.text SECTIONS DIFFER from %s: %s'
+                      % (tag, _base_tag, ', '.join(_delta)))
+                print('%-24s   No score above can see this.  A new or grown '
+                      '.rodata/.data spends the module\'s CARVE/MERGE budget '
+                      'and\n'
+                      '%-24s   is how a `0 in 0` row still fails --gate.  '
+                      '(`#include <math.h>` costs 16 bytes; `fabs` costs a '
+                      'library .text symbol.)' % ('', ''))
+        _newsyms = sorted(set(names) - set(_base_syms or names))
+        if _base_syms is None:
+            _base_syms = names
+        elif _newsyms:
+            print('%-24s !! NEW .text SYMBOL(S) vs %s: %s'
+                  % (tag, _base_tag, ', '.join(_newsyms[:8])))
         s = score(flat, gold, grefs, 0 if quiet else show)
         own = None
         syms, _ = disasm_dr(o, ['--section=.text'])
@@ -864,9 +1084,22 @@ def _emit(tag, s, own, quiet, ngold=None):
           'ALIGNED(+relocs) %d in %-3d  span %d-%d'
           % (tag, own if own is not None else '?', bt, bo, at, ao,
              s['span'][0], s['span'][1]))
-    print('%-24s positional: words %d of %d, TRUE %d of %d   '
+    # ** RUN 38 -- `words` USED TO COME FIRST AND `words` IS WHAT PEOPLE
+    # QUOTE. **  mini_bowling's 42A4 printed `words 86 of 91` before
+    # `TRUE 85 of 91`, and THE DELTA IS THE WHOLE FINDING: the missing one is a
+    # word that is equal only because a relocated field is zero on both sides.
+    # A reader who quotes the first number quotes the fiction-carrying one --
+    # which is the exact failure this tool was written to end.
+    # TRUE now leads.  `words` is still printed, because the DELTA is the
+    # finding and you cannot see a delta with one number, but it is labelled
+    # as the inflated one whenever the two disagree.
+    _fic = s['words'] - s['true']
+    print('%-24s positional: TRUE %d of %d%s   '
           'refs built %d / golden %d, MISMATCHED %d %s'
-          % ('', s['words'], s['n'], s['true'], s['n'],
+          % ('', s['true'], s['n'],
+             ('   [words %d of %d -- INFLATED by %d fiction(s); quote TRUE]'
+              % (s['words'], s['n'], _fic)) if _fic else
+             ('   (words agree: %d of %d)' % (s['words'], s['n'])),
              s['refs_built'], s['refs_gold'], s['refbad'],
              '(' + ', '.join('%s %d' % kv for kv in sorted(s['kinds'].items()))
              + ')' if s['kinds'] else ''))
@@ -888,6 +1121,43 @@ def _emit(tag, s, own, quiet, ngold=None):
               'draft -- an insertion shifts every\n%-24s   later word AND '
               'every later relocation.  Fix the count first.'
               % ('', own - ngold, '', ''))
+        # ** RUN 38, sel_ngc -- AND THE REF COLUMN IS WORSE THAN MEANINGLESS
+        # HERE, IT IS SOMEBODY ELSE'S. **
+        #
+        # build_flat() concatenates EVERY symbol from the label to the end of
+        # the object (deliberately: a golden `.s` ROW may hold more than one
+        # function, and golden covers the whole row).  score() then truncates
+        # to GOLDEN'S length.  So when the draft is SHORT, the tail of that
+        # window is the NEXT FUNCTION'S CODE, and the next function's
+        # relocations are counted as this draft's.
+        #
+        # PROVEN by sel_ngc, not argued: `lbl_00010438`'s stream[957] is
+        # `3C800000 lis r4,0 [HA lbl_00011CB0]` -- the FIRST `lis` of
+        # `lbl_00011330`.  Truncated per symbol the count is 99/99 and THE
+        # ANOMALY DOES NOT EXIST.  `lbl_0000C970`'s stream[649] is
+        # `lbl_0000D39C`'s `lis`; the true figure is 102/104, delta -2 not -1.
+        # Two run-37 headlines died to this, and mini_billiards' `23B0`
+        # "17 relocations vs golden's 16" has the identical signature.
+        #
+        # NOT SILENTLY TRUNCATED HERE, because the read-forward is load-bearing
+        # for a genuine multi-function row and this tool cannot tell the two
+        # cases apart from the object alone.  It is REPORTED instead, which is
+        # the same contract the rest of this file keeps: hiding evidence is
+        # allowed, hiding the fact that you are hiding it is not.
+        if own < ngold:
+            print('%-24s ^^ AND THE RELOCATION COLUMNS ABOVE ARE READING PAST '
+                  'THIS FUNCTION.\n'
+                  '%-24s   The draft is %d instruction(s) SHORT, so the last '
+                  '%d word(s) of the\n'
+                  '%-24s   window belong to WHATEVER FOLLOWS THIS FUNCTION, '
+                  'and their\n'
+                  '%-24s   relocations are counted above as this draft\'s.  '
+                  'DO NOT QUOTE `refs built`\n'
+                  '%-24s   OR `MISMATCHED` UNTIL `insn` EQUALS GOLDEN.  '
+                  '(sel_ngc, run 38: two headline\n'
+                  '%-24s   "extra relocation" anomalies were this, and both '
+                  'vanished per-symbol.)'
+                  % ('', '', ngold - own, ngold - own, '', '', '', ''))
         if not quiet:
             for l in s['lines']:
                 print(l)

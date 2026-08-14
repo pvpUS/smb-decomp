@@ -386,9 +386,9 @@ void lbl_00005428(void);
 void lbl_0000568C(void);
 void lbl_00005884(void);
 void lbl_00005998(void);
-void lbl_00005C20(void);
+void lbl_00005C20(struct Ball *ball);
 #pragma force_active on
-asm void lbl_00005C20(void)
+asm void lbl_00005C20(struct Ball *ball)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_race/lbl_00005C20.s"
