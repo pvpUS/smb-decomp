@@ -112,6 +112,80 @@ def score(label, owner):
     return "?", out
 
 
+_TOOL = "vsplice"
+
+# --------------------------------------------------------------------------- #
+# RUN 40 -- THE DIRECTIVE GAP.  `//@SUB` / `//@PROTO` / `//@DROPRE` are
+# implemented in `rel_tuprobe.py` ONLY.  This tool has never implemented them
+# and never warned: a directive line is spliced/compiled as a C comment, so the
+# owner-level retype it asks for silently does not happen and the figure that
+# comes back is a score of a DIFFERENT PROGRAM.
+#
+# It REFUSES rather than implementing them, deliberately.  Implementing a second
+# copy of the directive engine is how two tools drift, and this project has the
+# scar: rel_tuprobe's own directive handling took three runs and two escaping
+# fixes to settle.  One implementation, one place.
+#
+# ⚠ SCOPE, STATED SO IT CANNOT BE MISREAD AS MORE: this guard detects `//@`
+# MARKER LINES and nothing else.  It makes NO claim about a draft whose own
+# signature CONTRADICTS a landed declarator -- MEASURED by test_mode in run 40
+# on `lbl_0000F6F0`, where the run-24/26/31 body family carries ZERO `//@`
+# lines and still fails, with `identifier redeclared / was declared as
+# 'void (struct Ape *, int)' / now declared as 'void (long, long)'` cascading
+# to "undefined identifier" at DRAFT line numbers.  That is a fourth failure
+# mode, no directive is present, and NO directive fix can reach it.  Do not
+# read a clean pass here as "the draft's declarators are healthy".
+#
+# ⚠⚠ AND IT DOES NOT TELL YOU TO "ADD THE THIRD PIPE".  MEASURED by option in
+# run 40, n = 14/14 stale directives across 9 owner files: every one was a
+# malformed single-pipe `//@SUB` AND every one also had a DEAD OLD ANCHOR, so
+# repairing the separator only converts `MALFORMED DIRECTIVE` into `ANCHOR
+# MISSING` -- same rc=2, different message, no draft rescued.  The repair that
+# works is to NEUTRALISE the line (the owner already carries the declarator the
+# directive was asking for).
+_DIRECTIVES = ('//@SUB', '//@PROTO', '//@DROPRE', '//@SUBST', '//@DROP')
+
+
+def _check_directives(paths):
+    """Refuse any input file carrying a directive this tool cannot apply."""
+    hits = []
+    for p in paths:
+        try:
+            fh = open(p, encoding='utf-8', errors='replace')
+        except OSError:
+            continue
+        with fh:
+            for i, line in enumerate(fh, 1):
+                s = line.strip()
+                for d in _DIRECTIVES:
+                    if s.startswith(d):
+                        hits.append((p, i, s[:96]))
+                        break
+    if not hits:
+        return
+    sys.stderr.write(
+        'rel_%s: %d DIRECTIVE LINE(S) THIS TOOL CANNOT APPLY.\n' % (_TOOL, len(hits)))
+    for p, i, s in hits:
+        sys.stderr.write('    %s:%d  %s\n' % (p, i, s))
+    sys.stderr.write(
+        '\n`//@SUB` / `//@PROTO` / `//@DROPRE` are implemented in\n'
+        'tools/rel_tuprobe.py and NOWHERE ELSE.  Passed through here they are\n'
+        'C comments: they do nothing, and the score you would get back is a\n'
+        'score of a DIFFERENT PROGRAM than the draft describes.  Refusing\n'
+        'instead of reporting that number.\n\n'
+        'Do ONE of:\n'
+        '  * score it with rel_tuprobe.py, which applies the directives; or\n'
+        '  * NEUTRALISE the line and re-run here -- if the owner already\n'
+        '    carries the declarator the directive asks for, the directive is\n'
+        '    stale and deleting it is the whole fix.\n'
+        '⚠ DO NOT "repair" a single-pipe `//@SUB` to three pipes and retry.\n'
+        '  MEASURED, option run 40, n=14/14: all fourteen stale directives were\n'
+        '  single-pipe AND had a dead old anchor, so fixing the separator only\n'
+        '  turns MALFORMED DIRECTIVE into ANCHOR MISSING -- same rc=2, no draft\n'
+        '  rescued.\n')
+    raise SystemExit(2)
+
+
 MODULES = ("mini_bowling", "mini_race", "mini_fight", "mini_pilot",
            "mini_golf", "mini_billiards", "sel_ngc", "option", "test_mode")
 
@@ -134,6 +208,18 @@ def main():
                  "\nusage: rel_vsplice.py <label> <owner-src-relpath> "
                  "<variant-dir> [--module M] [--tree T]")
     label, owner, vdir = argv[0], argv[1], argv[2]
+
+    # RUN 40 -- refuse a directive-bearing variant BEFORE the owner is read.
+    # An earlier draft put this check after `find_def()`, so a variant carrying
+    # `//@SUB` was only refused once the owner had already been parsed -- and
+    # never at all if the owner parse failed first.  Bad input is rejected
+    # before anything is opened for writing.
+    import glob as _glob
+    if os.path.isdir(vdir):
+        _check_directives(sorted(
+            _glob.glob(os.path.join(vdir, '*.txt')) +
+            _glob.glob(os.path.join(vdir, '*.c')) +
+            _glob.glob(os.path.join(vdir, '*.frag'))))
 
     if TREE is None:
         TREE = os.getcwd()

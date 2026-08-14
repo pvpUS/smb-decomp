@@ -377,6 +377,81 @@ def score(exp, got):
 # whole run without the tool.  Keep the two names apart.
 STEM = {'sel_ngc': 'sel_ngc_rel'}
 
+_TOOL = "pcmp"
+
+
+# --------------------------------------------------------------------------- #
+# RUN 40 -- THE DIRECTIVE GAP.  `//@SUB` / `//@PROTO` / `//@DROPRE` are
+# implemented in `rel_tuprobe.py` ONLY.  This tool has never implemented them
+# and never warned: a directive line is spliced/compiled as a C comment, so the
+# owner-level retype it asks for silently does not happen and the figure that
+# comes back is a score of a DIFFERENT PROGRAM.
+#
+# It REFUSES rather than implementing them, deliberately.  Implementing a second
+# copy of the directive engine is how two tools drift, and this project has the
+# scar: rel_tuprobe's own directive handling took three runs and two escaping
+# fixes to settle.  One implementation, one place.
+#
+# ⚠ SCOPE, STATED SO IT CANNOT BE MISREAD AS MORE: this guard detects `//@`
+# MARKER LINES and nothing else.  It makes NO claim about a draft whose own
+# signature CONTRADICTS a landed declarator -- MEASURED by test_mode in run 40
+# on `lbl_0000F6F0`, where the run-24/26/31 body family carries ZERO `//@`
+# lines and still fails, with `identifier redeclared / was declared as
+# 'void (struct Ape *, int)' / now declared as 'void (long, long)'` cascading
+# to "undefined identifier" at DRAFT line numbers.  That is a fourth failure
+# mode, no directive is present, and NO directive fix can reach it.  Do not
+# read a clean pass here as "the draft's declarators are healthy".
+#
+# ⚠⚠ AND IT DOES NOT TELL YOU TO "ADD THE THIRD PIPE".  MEASURED by option in
+# run 40, n = 14/14 stale directives across 9 owner files: every one was a
+# malformed single-pipe `//@SUB` AND every one also had a DEAD OLD ANCHOR, so
+# repairing the separator only converts `MALFORMED DIRECTIVE` into `ANCHOR
+# MISSING` -- same rc=2, different message, no draft rescued.  The repair that
+# works is to NEUTRALISE the line (the owner already carries the declarator the
+# directive was asking for).
+_DIRECTIVES = ('//@SUB', '//@PROTO', '//@DROPRE', '//@SUBST', '//@DROP')
+
+
+def _check_directives(paths):
+    """Refuse any input file carrying a directive this tool cannot apply."""
+    hits = []
+    for p in paths:
+        try:
+            fh = open(p, encoding='utf-8', errors='replace')
+        except OSError:
+            continue
+        with fh:
+            for i, line in enumerate(fh, 1):
+                s = line.strip()
+                for d in _DIRECTIVES:
+                    if s.startswith(d):
+                        hits.append((p, i, s[:96]))
+                        break
+    if not hits:
+        return
+    sys.stderr.write(
+        'rel_%s: %d DIRECTIVE LINE(S) THIS TOOL CANNOT APPLY.\n' % (_TOOL, len(hits)))
+    for p, i, s in hits:
+        sys.stderr.write('    %s:%d  %s\n' % (p, i, s))
+    sys.stderr.write(
+        '\n`//@SUB` / `//@PROTO` / `//@DROPRE` are implemented in\n'
+        'tools/rel_tuprobe.py and NOWHERE ELSE.  Passed through here they are\n'
+        'C comments: they do nothing, and the score you would get back is a\n'
+        'score of a DIFFERENT PROGRAM than the draft describes.  Refusing\n'
+        'instead of reporting that number.\n\n'
+        'Do ONE of:\n'
+        '  * score it with rel_tuprobe.py, which applies the directives; or\n'
+        '  * NEUTRALISE the line and re-run here -- if the owner already\n'
+        '    carries the declarator the directive asks for, the directive is\n'
+        '    stale and deleting it is the whole fix.\n'
+        '⚠ DO NOT "repair" a single-pipe `//@SUB` to three pipes and retry.\n'
+        '  MEASURED, option run 40, n=14/14: all fourteen stale directives were\n'
+        '  single-pipe AND had a dead old anchor, so fixing the separator only\n'
+        '  turns MALFORMED DIRECTIVE into ANCHOR MISSING -- same rc=2, no draft\n'
+        '  rescued.\n')
+    raise SystemExit(2)
+
+
 
 def probe_module():
     """The MODULE name, i.e. what rel_probe.py's `choices` will accept.
@@ -409,8 +484,28 @@ def module():
 
 
 def main():
-    label = sys.argv[1]
-    d = sys.argv[2]
+    # RUN 40 -- ARGUMENT VALIDATION.  Until now `rel_pcmp.py` with no arguments
+    # raised `IndexError: list index out of range` from `sys.argv[1]` and exited
+    # 1, which is indistinguishable from a real scoring failure.  Pre-existing
+    # and verified against HEAD -- not a regression from run 39's landing.
+    # Exit 2 for a usage error, as rel_blindtable and rel_ablind do.
+    argv = sys.argv[1:]
+    if not argv or argv[0] in ('-h', '--help'):
+        print(__doc__.strip(), file=sys.stderr)
+        raise SystemExit(2)
+    if len(argv) < 2:
+        print('rel_pcmp: need <label> and <probedir>.\n'
+              'usage: python tools/rel_pcmp.py <label> <probedir> [funcname]\n'
+              'Run from the module tree root.', file=sys.stderr)
+        raise SystemExit(2)
+    label = argv[0]
+    d = argv[1]
+    if not os.path.isdir(d):
+        print('rel_pcmp: %r is not a directory.  <probedir> holds the probe\n'
+              '.c files to score; pass the DIRECTORY, not a file.' % d,
+              file=sys.stderr)
+        raise SystemExit(2)
+    _check_directives(sorted(glob.glob(os.path.join(d, '*.c'))))
     # RUN 17 -- argv[3] used to default to 'pf' with no fallback, so a draft
     # that defines the REAL label (i.e. a whole-file variant rather than a
     # rel_probe micro-probe) scored FAIL on every row, indistinguishable from a
@@ -419,7 +514,7 @@ def main():
     # already 200-insn-exact and was read as broken -- and _harvest_run16/pd.py
     # defaults to the label instead, so the two tools disagreed.
     # Now: try both names, and say which failure it actually was.
-    cands = [sys.argv[3]] if len(sys.argv) > 3 else ['pf', label]
+    cands = [argv[2]] if len(argv) > 2 else ['pf', label]
     mod = probe_module()
     spath = os.path.join(TREE, 'asm', 'nonmatchings', asm_stem(mod), label + '.s')
     exp = parse_s(spath)

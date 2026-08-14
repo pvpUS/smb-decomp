@@ -115,7 +115,7 @@ static void lbl_00002DA4(void);
 static void lbl_00002F14(void);
 static void lbl_00003240(void);
 void lbl_000038A8(void);
-//@SUB void lbl_00003B90(void);|void lbl_00003B90(int);
+// [applied] void lbl_00003B90(void);|void lbl_00003B90(int);
 void lbl_00003B90(int);
 void lbl_00003F10(void);
 void lbl_00003F6C(void);

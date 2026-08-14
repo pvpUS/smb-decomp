@@ -197,8 +197,8 @@ void lbl_0000B8A8(struct Camera *camera, struct Ball *ball);
 void lbl_0000BDEC(struct Camera *camera, struct Ball *ball);
 void lbl_0000C128(struct Camera *camera);
 void lbl_0000C230(struct Camera *camera);
-void lbl_0000C33C(void);
-void lbl_0000D64C(void);
+void lbl_0000C33C(struct Camera *camera);
+void lbl_0000D64C(struct Camera *camera, struct Ball *ball);
 void lbl_0000E8AC(struct Camera *camera);
 void lbl_0000E998(void);
 void lbl_0000E99C(struct Camera *camera);
@@ -533,12 +533,12 @@ void lbl_0000C230(struct Camera *camera)
                                            camera->lookAt.z - camera->eye.z)));
     camera->rotZ = 0;
 }
-asm void lbl_0000C33C(void)
+asm void lbl_0000C33C(struct Camera *camera)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_golf/lbl_0000C33C.s"
 }
-asm void lbl_0000D64C(void)
+asm void lbl_0000D64C(struct Camera *camera, struct Ball *ball)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_golf/lbl_0000D64C.s"

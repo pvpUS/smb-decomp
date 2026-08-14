@@ -1543,10 +1543,126 @@ void lbl_00003B6C(void)
         break;
     }
 }
-asm void lbl_00003BDC(void)
+void lbl_00003BDC(void)
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_pilot/lbl_00003BDC.s"
+    u8 *k = (u8 *)lbl_0000BE80;
+    int i;
+    struct Ball *ballBackup = currentBall;
+
+    for (i = 0; i < 4; i++)
+    {
+        if (cameraInfo[i].sub28.vp.width > *(f32 *)(k + 0x30)
+         && cameraInfo[i].sub28.vp.height > *(f32 *)(k + 0x30)
+         && g_poolInfo.playerPool.statusList[i] != 0
+         && g_poolInfo.playerPool.statusList[i] != 4)
+        {
+            currentBall = &ballInfo[i];
+            change_current_camera(i);
+            u_draw_ball_shadow();
+            background_light_assign();
+            reset_light_group(i);
+            if (eventInfo[EVENT_REND_EFC].state == EV_STATE_RUNNING)
+                rend_efc_draw(4);
+            if (currentCamera->eye.y < *(f32 *)(k + 0x30))
+            {
+                avdisp_set_fog_params(2, *(f32 *)(k + 0x1C0), *(f32 *)(k + 0x1C4));
+                avdisp_set_fog_color(0, 100, 150);
+                u_gxutil_set_fog_enabled(1);
+            }
+            {
+                s8 st = eventInfo[EVENT_STAGE].state;
+
+                eventInfo[EVENT_STAGE].state = st;
+                if (st == EV_STATE_RUNNING || st == EV_STATE_SUSPENDED)
+                    stage_draw();
+            }
+            poly_shadow_draw();
+            if (eventInfo[EVENT_BACKGROUND].state == EV_STATE_RUNNING)
+            {
+                ord_tbl_set_depth_offset(*(f32 *)(k + 0x1C8));
+                background_draw();
+                ord_tbl_set_depth_offset(*(f32 *)(k + 0x30));
+            }
+            switch (lbl_802F1FF6)
+            {
+            case 0x18:
+            case 0x1A:
+            case 0x1C:
+                break;
+            default:
+                lbl_00004450();
+                lbl_00004570();
+                lbl_00004024();
+                lbl_000048C0();
+                break;
+            }
+            draw_monkey();
+            if (eventInfo[EVENT_REND_EFC].state == EV_STATE_RUNNING)
+                rend_efc_draw(16);
+            if (eventInfo[EVENT_ITEM].state == EV_STATE_RUNNING)
+                item_draw();
+            if (eventInfo[EVENT_BALL].state == EV_STATE_RUNNING)
+            {
+                ball_draw();
+                if (currentBall->pos.y < *(f32 *)(k + 0x30))
+                {
+                    Vec sp40;
+
+                    mathutil_mtxA_push();
+                    mathutil_mtxA_from_quat(&currentBall->ape->unk60);
+                    mathutil_mtxA_mult_right((float (*)[4])((u8 *)currentBall->ape->unk0 + 0x8EC8));
+                    mathutil_mtxA_tf_point_xyz(&sp40, *(f32 *)(k + 0x1CC),
+                                               *(f32 *)(k + 0x30), *(f32 *)(k + 0x1D0));
+                    sp40.x += currentBall->pos.x;
+                    sp40.y += currentBall->pos.y;
+                    sp40.z += currentBall->pos.z;
+                    lbl_0000B130(&sp40, &currentBall->vel, *(struct PilotSpray **)lbl_10000038);
+                    mathutil_mtxA_pop();
+                }
+            }
+            if (eventInfo[EVENT_STOBJ].state == EV_STATE_RUNNING)
+                stobj_draw();
+            if (eventInfo[EVENT_EFFECT].state == EV_STATE_RUNNING)
+                effect_draw();
+            if (backgroundInfo.unk8 & 1)
+                lens_flare_draw_mask(i);
+            draw_test_camera_target();
+            ord_tbl_draw_nodes();
+            if (eventInfo[EVENT_BALL].state == EV_STATE_RUNNING
+             && currentBall->pos.y < *(f32 *)(k + 0x1D4)
+             && currentBall->pos.y > *(f32 *)(k + 0x30)
+             && mathutil_vec_len(&currentBall->vel) > *(f64 *)(k + 0x1D8))
+            {
+                struct RaycastHit hit;
+                Vec pos;
+                Quaternion q;
+
+                if ((u32)0 == (u32)raycast_stage_down(&currentBall->pos, &hit, NULL))
+                {
+                    pos.x = currentBall->pos.x;
+                    pos.y = *(f32 *)(k + 0x30);
+                    mathutil_mtxA_push();
+                    pos.z = currentBall->pos.z;
+                    lbl_0000B624(&pos, &currentBall->vel, *(struct PilotSpray **)lbl_1000003C);
+                    q = currentBall->ape->unk60;
+                    q.x = *(f32 *)(k + 0x30);
+                    q.z = *(f32 *)(k + 0x30);
+                    mathutil_quat_normalize(&q);
+                    mathutil_mtxA_from_quat(&q);
+                    mathutil_mtxA_set_translate(&pos);
+                    lbl_0000BACC(&pos, &currentBall->vel, globalAnimTimer);
+                    mathutil_mtxA_pop();
+                }
+            }
+            u_gxutil_fog_something_2();
+            if (backgroundInfo.unk8 & 1)
+                lens_flare_draw(i);
+            if (eventInfo[EVENT_REND_EFC].state == EV_STATE_RUNNING)
+                rend_efc_draw(8);
+        }
+    }
+    currentBall = ballBackup;
+    default_camera_env();
 }
 
 #pragma peephole on

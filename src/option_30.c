@@ -153,7 +153,7 @@ void lbl_00004204(int arg0);
 void lbl_00004260(int arg0);
 void lbl_000042BC(NLsprarg *sp, f32 w, f32 h);
 void lbl_000047D0(void);
-//@SUB void lbl_00004858(void);|void lbl_00004858(s8 *, struct Sprite *);
+// [applied] void lbl_00004858(void);|void lbl_00004858(s8 *, struct Sprite *);
 void lbl_00004858(s8 *arg0, struct Sprite *sprite);
 void lbl_00004EB4(void);
 void lbl_00005020(void);
@@ -183,8 +183,8 @@ void lbl_0000B10C(s8 *, struct Sprite *);
 void lbl_0000B218(struct Sprite *sprite, int u1, int u2, int u3);
 void lbl_0000C148(void);
 
-//@SUB void lbl_00003FF0(void);|void lbl_00003FF0(s8 *, struct Sprite *);
-//@SUB void lbl_00003F6C(void);|s8 *lbl_00003F6C(int);
+// [applied] void lbl_00003FF0(void);|void lbl_00003FF0(s8 *, struct Sprite *);
+// [applied] void lbl_00003F6C(void);|s8 *lbl_00003F6C(int);
 
 // Carried over from the heads of the absorbed files (merged by
 // tools/rel_merge_tu.py -- these are what the tool used to drop).

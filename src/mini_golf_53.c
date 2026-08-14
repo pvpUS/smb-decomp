@@ -215,7 +215,7 @@ void lbl_00010E74(s32 idx, u8 mode, f32 x, f32 y);
 void lbl_00011254(s32 idx, u8 mode, f32 x, f32 y);
 void lbl_000115F8(s32 idx, u8 mode, f32 x, f32 y);
 void lbl_0001199C(void);
-void lbl_00011A6C(void);
+void lbl_00011A6C(s32 t);
 void lbl_00011DAC(s32 x, s32 y, s32 n, char *s);
 void lbl_00011FEC(u32 t);
 void lbl_000123B4(s16 a, u32 b);
@@ -521,7 +521,7 @@ const u32 lbl_000266A8[20] = {
     0x40040000, 0x00000000, 0x42000000, 0x00000000,
     0x401C0000, 0x00000000, 0x3FD33333, 0x33333333,
 };
-asm void lbl_00011A6C(void)
+asm void lbl_00011A6C(s32 t)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_golf/lbl_00011A6C.s"

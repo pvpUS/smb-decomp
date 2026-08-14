@@ -117,7 +117,7 @@ void lbl_00003B90(void);
 void lbl_00003F10(void);
 void lbl_00003F6C(void);
 void lbl_00003FF0(void);
-//@SUB void lbl_00004204(void);|void lbl_00004204(int);
+// [applied] void lbl_00004204(void);|void lbl_00004204(int);
 void lbl_00004204(int);
 void lbl_00004260(void);
 void lbl_000042BC(void);

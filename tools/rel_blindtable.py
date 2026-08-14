@@ -68,6 +68,38 @@ NOTINMAP = re.compile(r'^(\S+)\s+NOT IN MAP\s*$')
 DEFAULT_BLINDS = ['', 'f', 'g', 'gf', 'F', 'G', 'GF']
 
 
+def still_asm(labels):
+    """-> {label: 'src/<owner>.c'} for every label the TREE says is STILL ASM.
+
+    RUN 40 -- THIS TOOL SILENTLY SCORED THE STUB.  With no body installed,
+    `rel_ablind` disassembles the `asm` stub and compares it against the very
+    `.s` the stub `#include`s, so EVERY blind reads `0 in 0` and the positional
+    row reads `N of N words byte-identical`.  Both are true and both are
+    vacuous.  The caveat for it existed, but it printed BELOW the table --
+    after a reader had already seen a column of zeroes.
+
+    The authority is the tree, not the score: a label is still asm iff some
+    `src/*.c` carries `#include "../asm/nonmatchings/<stem>/<label>.s"`.  The
+    stem is deliberately not required -- this must work without --module.
+    """
+    import glob as _glob
+    import re as _re
+    want = set(labels)
+    out = {}
+    pat = _re.compile(r'#include\s+"\.\./asm/nonmatchings/[^/"]+/(\w+)\.s"')
+    for p in sorted(_glob.glob(os.path.join('src', '*.c'))):
+        try:
+            fh = open(p, encoding='utf-8', errors='replace')
+        except OSError:
+            continue
+        with fh:
+            for line in fh:
+                m = pat.search(line)
+                if m and m.group(1) in want:
+                    out[m.group(1)] = p.replace(os.sep, '/')
+    return out
+
+
 def die(msg):
     """Exit 2, never 1 -- this tool's docstring has always said 0 / 2.
 
@@ -199,6 +231,23 @@ def main():
                  ' && python tools/rel_blindtable.py <label> [label ...]')
 
     bad = 0
+    # RUN 40 -- THE CAVEAT GOES FIRST, NOT LAST.  See still_asm().
+    stubs = still_asm(labels)
+    if stubs:
+        print('!! %d OF %d REQUESTED LABEL(S) ARE STILL ASM IN THIS TREE.'
+              % (len(stubs), len(labels)))
+        for lb in labels:
+            if lb in stubs:
+                print('     %-16s asm stub in %s' % (lb, stubs[lb]))
+        print('   NOTHING IS INSTALLED FOR THEM, so rel_ablind will compare the')
+        print('   stub against the very .s the stub #includes.  EVERY blind row')
+        print('   below will read `0 in 0` and the positional row `N of N`, and')
+        print('   BOTH ARE VACUOUS -- they measure the .s against itself, not a')
+        print('   draft against golden.  Install a body first, then re-run.')
+        print('   (This is the canary use of the tool: on an unmodified tree it')
+        print('   is the EXPECTED result, and anything else means the tree is')
+        print('   not golden.)')
+        print()
     table = {}      # label -> {blind: row}
     order = []
     for bl in blinds:

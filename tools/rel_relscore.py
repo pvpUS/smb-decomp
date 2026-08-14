@@ -1262,7 +1262,7 @@ def _emit(tag, s, own, quiet, ngold=None):
                   '"extra relocation"\n'
                   '%-24s   anomalies were that, and both vanished.)'
                   % ('', own, '', ngold - own, '', '', ngold - own, '', '',
-                     '', '', ''))
+                     '', ''))
         if not quiet:
             for l in s['lines']:
                 print(l)

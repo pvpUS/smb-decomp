@@ -150,8 +150,8 @@ void lbl_0000B10C(void);
 void lbl_0000B218(void);
 void lbl_0000C148(void);
 
-//@SUB void lbl_00004204(void);|void lbl_00004204(int);
-//@SUB void lbl_00004260(void);|void lbl_00004260(int);
+// [applied] void lbl_00004204(void);|void lbl_00004204(int);
+// [applied] void lbl_00004260(void);|void lbl_00004260(int);
 #pragma force_active on
 void lbl_00003C6C(void)
 {
