@@ -1094,6 +1094,58 @@ failing arm** — and **one mutation was dropped as unfireable.**
    used a native binary. **`tools/rel_dirsweep.py` now ships and is gated**; its
    arm Z asserts a zero result is a failure, not a pass.
 
+### RUN-42 PREP — DONE, AND THE RESET WAS **RUN**. What is on disk.
+
+**The one thing run 41 got wrong is the one thing this prep did first.**
+`warm_reset_run42.sh` was **executed**, three times, the last at **22:22-22:27**,
+and it now **writes its own run-stamped log** — `warmreset_run42.log` — instead
+of relying on the caller to `tee` a generic filename. **The stale generic
+`warmreset.log` is renamed `warmreset_run40_STALE.log`** so it cannot impersonate
+a fresh one again.
+
+⚠ **And the log was still not trusted.** Every launch figure below was
+**re-measured directly against the nine trees** afterwards:
+
+| assertion | measured |
+|---|---|
+| main tree clean at `a640f50` | ✔ `git status` empty |
+| `diff -rq tools` | ✔ **0 lines in all nine** (excluding `__pycache__`) |
+| `diff -rq src` | ✔ **0 lines in all nine** (excluding `.o`) |
+| `asm/` sources | ✔ identical in all nine — the 51 diffs are `.o` objects only |
+| tool md5s | ✔ **10/10 in all nine** |
+| gates from DELETED objects | ✔ **NINE GOLDEN, `fail=0`** |
+
+★ **The reset's own label was corrected too**: it checked ten tools while
+printing `9/9`, which is the same class of stale label that caused the run-41
+failure. It now prints **`10/10 tool md5s OK`**.
+
+**On disk:**
+- **`C:/tmp/smbm/_orch_run42/`** — `BASELINE.md` (**158 fns / 82,270 insn /
+  56.76% / REACH 29,269**, stamped `a640f50`), `AGENT_ROSTER.md` (twelve rows,
+  launch state measured from the trees), plus `mkbaseline.py`, `hygiene.py`
+  (self-test PASSES), `predmerge_diff.sh` and `postmerge_verify.sh` **rebased to
+  the run-42 launch constants**.
+- **`C:/tmp/smbm/RUN42_BRIEF.md`** — 5,352 lines, assembled by
+  `_brief42/assemble.py` with **every gate passing**. ★ **The section-7 cut moved
+  to the run-40 block**, because `sec7head` now carries run 41 — cutting at run
+  39 would have deleted a whole run of idioms, which is the error run 38's
+  assembler made.
+- **Nine per-module slices**, `RUN42_BRIEF_<mod>.md`, ~3,355 lines each, each
+  gated to carry its own §11 block and **no other module's**.
+- **`C:/tmp/smbm/RUN42_CORPUS_BRIEF.md`** — three assignments: **fill HALF 1 and
+  HALF 2's tail comes nearly free**; **shape A + the landability column + the
+  CORRECTED `PLUS_TEXT` pairing**; **regenerate the board with the sweep defect
+  known.**
+- **`_orch_run41/`** keeps this run's record: `TOOLSYNC.md` (the launch-state
+  failure), `RESULTS_SOFAR.md` (written incrementally as agents closed),
+  `AGENT_ROSTER.md` (four re-opens, all un-ticked and re-ticked), `premerge41.txt`.
+
+★ **New assembler gates worth keeping**: the tool table must carry
+`CHECK YOUR OWN COPY` (the warning that run 41 proved the table can be false),
+the bracketed `^[/][/]@` pattern must be present, `table40` must be **absent**
+(corpus C shipped no `table41`, so a renumbered reference would point at a file
+that does not exist), and **`9/9 tool md5s OK` must be absent.**
+
 ---
 
 ## 0.46 — RUN 40 DONE (2026-08-14): +274 insn, 56.57% -> 56.71%. **ONE CONVERSION, AND IT WAS BANKED BY A RELAY — THE SECOND TIME IN THE PROJECT'S HISTORY.** Superseded by §0.47.
