@@ -437,9 +437,666 @@ from the other side.** ★ **Three agents were re-opened this run and all three
 paid** — the third corrected a standing artifact that run 41 inherits.
 **A resumed agent counts as OPEN again; un-tick its roster row.**
 
+### ★★★ NEW STANDING RULE (run 41): RUNNING THE PREP IS NOT WRITING THE PREP. READ THE LOG'S TIMESTAMP BEFORE YOU QUOTE IT.
+
+**Run 41 opened with a launch state that was false in three assertions, and
+SEVEN of the twelve agents found it independently inside fifteen minutes.**
+`warm_reset_run41.sh` was **authored at 20:01 and never executed.** The warm
+copies were last synced at **18:22 — 85 minutes before run 40's tool landings
+reached the main tree at 19:47** — so all nine carried the pre-run-40 `tools/`,
+with `rel_argscan`, `rel_shapescan` and `rel_gapcensus` **absent entirely** and
+`rel_relscore` at the crashing `0fdc2f6e`.
+
+**The orchestrator read `warmreset.log`, saw nine `GOLDEN` gates and a tools line
+reading `OK`, and published it. That log was RUN 40's.** It verifies **four**
+tools at the **pre-run-40** md5s — which is precisely the stale set.
+
+> ### **AN UNCHANGED LOG AFTER A PREP STEP IS EVIDENCE THE STEP DID NOT HAPPEN — NOT EVIDENCE IT PASSED.**
+> `warmreset.log` is overwritten by whichever run last executed it. **Check its
+> mtime and read its own tool table before quoting a single figure out of it.**
+>
+> **THE PREP SEQUENCE IS: merge -> land tools -> commit -> THEN warm reset ->
+> THEN write the briefs that quote its output.** Run 41's prep wrote the briefs'
+> tool table from the main tree (correct) and the reset's assertions from the
+> script's *source* (never executed). **Those are two different sources of truth
+> and only one of them had run.**
+
+✔ **What the agents did with it is the model, and it cost the run about twenty
+minutes instead of a whole run of uncomparable figures**: seven reported before
+spending a build; four diagnosed it to the mtime; **not one patched `tools/`
+without a ruling**; three independently pointed out that the full reset
+`rm -rf $d/src` and **must never be run against a live agent**; and **test_mode
+bounded the blast radius by diffing the tools rather than assuming it** —
+`rel_relscore`'s entire diff is one line inside `if own < ngold:`, so it **cannot
+fire at exact length**, and `rel_pcmp`/`rel_vsplice`/`rel_blindtable` are
+**purely additive guards.** option then **confirmed that bound by build** on a
+second module: byte-identical figure before and after the fix.
+★ **The fix was tools-only, into all nine copies, announced to every agent by
+name with before/after md5s.** Full record in `_orch_run41/TOOLSYNC.md`.
+
 ---
 
-## 0.46 — RUN 40 DONE (2026-08-14): +274 insn, 56.57% -> 56.71%. **ONE CONVERSION, AND IT WAS BANKED BY A RELAY — THE SECOND TIME IN THE PROJECT'S HISTORY.** START HERE.
+
+## 0.47 — RUN 41 DONE (2026-08-14): +92 insn, 56.71% -> 56.76%. **ONE CONVERSION — AND THE RUN'S REAL OUTPUT IS A RULE THAT ABSORBED SIX DISAGREEING SITES.** START HERE.
+
+Nine module agents plus three read-only corpus agents. **TWENTY-NINTH
+consecutive run with no module agent spawning anything.**
+
+| module | still-asm | insn | % | gained |
+|---|---|---|---|---|
+| mini_pilot | 4 fns | 11478/12137 | 94.57% | 0 |
+| mini_bowling | 6 fns | 12872/15313 | 84.06% | 0 |
+| mini_race | 22 fns | 15687/19817 | 79.16% | 0 |
+| test_mode | 13 fns | 12495/16231 | 76.98% | 0 |
+| option | 10 fns | 6999/12375 | 56.56% | 0 |
+| mini_golf | 13 fns | 18291/38919 | 47.00% | 0 |
+| sel_ngc | 8 fns | 7789/18084 | 43.07% | 0 |
+| mini_billiards | 16 fns | 11360/28793 | 39.45% | 0 |
+| **mini_fight** | **66 fns** | **11013/28585** | **38.53%** | **+92 / +1** |
+| **TOTAL** | **158 fns** | **107984/190254** | **56.76%** | **+92 / +1** |
+
+> ### ★★★ READ THIS FIRST: RUN 40's SIGNATURE WAS THAT A RELAY BANKED. RUN 41's IS THAT RELAYS WERE FALSIFIED FASTER THAN THEY COULD BE ACTED ON — AND THAT IS THE SYSTEM WORKING.
+>
+> The run's own headline lever was published, relayed to seven modules, tested by
+> four, **falsified by three, and retracted by its author inside the hour** —
+> before it could waste a second module's run. **Six of ten relays came back
+> falsified or bounded and not one was wasted.**
+>
+> | relay | outcome |
+> |---|---|
+> | the stale-`tools/` launch state | ⚠⚠ **MINE. Found independently by SEVEN agents in fifteen minutes**, diagnosed to the mtime by four |
+> | test_mode's blast-radius bound | ✔ **CONFIRMED BY BUILD** on a second module — byte-identical figure before and after |
+> | option's "argscan 14-for-14 already handled" | ⚠⚠ **OVERTURNED BY BUILD** — it measured the DRAFT; the tool reports on the OWNER |
+> | mini_fight's split-declaration lever | ⚠⚠ **1 positive / 2 inert / 5 negative, n=4 modules — RETRACTED BY ITS AUTHOR** |
+> | mini_billiards' volatile-rank direction | ⚠ **INVERTED at mini_fight `A690`** |
+> | mini_billiards' `scheduling off` negative | ⚠ **OPPOSITE ANSWER at mini_fight `A690`**, and the discriminator is named |
+> | mini_pilot's dead-store mechanism | ✔ **CORROBORATED by mini_golf and test_mode**, ⚠ **qualified by mini_bowling** |
+> | mini_pilot's EXTRA/MISSING test | ⚠ **FALSE-NEGATIVES ON 56 OF 103 ROWS as stated**; corpus C's exact form is **106/106** |
+> | sel_ngc's short-length discriminator | ✔ **CONFIRMED on a third row**, ⚠ **sized at n=150 — its case is the MAJORITY at 78%** |
+> | mini_pilot's window-vs-batch reconciliation | ⚠ **FALSIFIED by mini_race, then SUBSUMED by mini_race's own better rule** |
+
+### ★★★ 1. THE CONVERSION — AND THE INSTRUMENT MATTERS MORE THAN THE FIX
+
+**mini_fight `lbl_0000CE28` (92)**, owner `src/mini_fight_18d.c`. `92 == 92`,
+**`0 in 0` on words AND on relocations**, TRUE 92/92, refs 13/13, MISMATCHED 0,
+FICTION 0. Zero layout cost: `objdump -h` gives `.text 0x170` and nothing else,
+and `0x170 = 92 x 4` exactly.
+
+★★★ **THE `FICTION` COLUMN NAMED A FIX FOR THE FIRST TIME IN THE PROJECT'S
+HISTORY.** It has always been a devaluation signal; here it was the diagnosis:
+
+```
+idx 3 FICTION-SYMBOL  gold `lis r4, lbl_10017520@ha`  [HA lbl_10017520]
+                      blt  `lis r4,0`                 [HA g_poolInfo]
+```
+
+> **The two 32-bit WORDS are equal and only the RELOCATION differs, so
+> `rel_tuprobe` reported first-diff 4 and is STRUCTURALLY BLIND to index 3.**
+> **A WORD-LEVEL FIRST-DIFF CANNOT SEE A SYMBOL EXCHANGE. ONLY THE RELOCATION
+> SCORER CAN.**
+
+That is run 37's lesson — *a word scorer structurally credits a symbol exchange
+as a match* — with a **conversion** attached instead of a false headline.
+
+### ⚠⚠ 2. THE LEVER THAT CONVERTED IT IS NOT A LEVER, AND ITS AUTHOR SAID SO FIRST
+
+The fix was *split the declaration from the initialiser so the first statement
+comes first* — an initialised declaration is a **use**, and C89 cannot schedule
+one after a statement. `21 in 3` / TRUE 70 -> `0 in 0` / TRUE 92, one move.
+
+- **mini_golf, n=7 at `22610`**: split alone **byte-identical**; assignment moved
+  after any statement **negative and it breaks the prologue** (span 14-22 ->
+  1-22, TRUE 181 -> 173/170).
+- **test_mode at `F6F0`**: **passed the zero-build screen and came out
+  byte-identical.** Its added condition is the transferable half:
+  > **The syntactic test is not sufficient. The rule only bites when the EMITTED
+  > order actually follows the declaration.**
+- **sel_ngc, n=9, exact length throughout**: **the declaration-vs-statement split
+  is INERT — three byte-identical bodies.** What moves is **purely which symbol
+  is materialised first**: two different edits putting the other symbol first
+  **both collapsed to exactly 251**. The relay's literal form was **negative**
+  (266 vs 271) and **the optimum was already its own run-35 body.**
+- **mini_bowling**: split byte-identical (n=2); order change **-38 TRUE**. Same
+  sentence as mini_golf's, reached independently: **the lever is the ORDER, not
+  the split.**
+- **mini_race**: withdrew half its own contribution — mini_golf's inert arm
+  reproduces exactly on its bytes, **and test_mode is right that the screen was
+  oversold: the precondition is NECESSARY, NOT SUFFICIENT.** Its `F3D4` is a
+  **positive control** for test_mode's added condition (all 11 entry-window diffs
+  went golden), not a counter-example.
+
+> ### **NET: 1 POSITIVE / 2 INERT / 5 NEGATIVE, n=4 MODULES. DO NOT SWEEP IT.**
+> mini_fight's own words: *"I overstated it as a lever… the corrected trigger is
+> **the FICTION row itself, not the source shape.**"*
+
+⚠⚠ **THE METHOD WARNING IS WORTH MORE THAN THE LEVER**: mini_fight also swept all
+six declaration SLOTS (n=10 orders, 4 distinct scores) and **golden's own
+first-use order scored TRUE 60 — ELEVEN WORSE than the draft's order at 71.**
+**A declaration-order sweep is structurally incapable of finding that fix and
+would have retired the row.**
+
+### ★★★ 3. THE HOME-OWNERSHIP RULE — SIX DISAGREEING SITES, ONE RULE, BOUGHT WITH 52 COMPILES
+
+mini_race was re-opened holding six contradictory readings of the
+declaration-order axis. **It ran the experiment instead of adding a seventh
+opinion**, reading register homes out of `mini_race_62.c.o` with `objdump` at
+zero build cost (`r24=rec, r25=raw param LATER REUSED for tag, r26=i, r27=str,
+r28=cfg, r29=base`), turning that into a falsifiable prediction, and running it.
+
+> ### **DECLARATION ORDER RANKS ONLY VALUES THAT OWN AN INDEPENDENT CALLEE-SAVED HOME.**
+> **A value in the temp pool, COALESCED onto another value's home, or
+> rematerialised HAS NO RANK — its slot is structurally inert. And rank is
+> RELATIVE, so the effect is PAIRWISE, not positional.**
+
+- **A — home-owners** (str/cfg/base): 6 permutations -> **FIVE DISTINCT SCORES**
+  (29/18, 62/46, 68/47, 70/49, 70/49, 39/24), control best. **Reproduces
+  mini_golf's "6 permutations of three SYMBOL locals -> 6 distinct scores" in a
+  second module on the identical shape.**
+- **B — `tag`, COALESCED onto r25** (golden literally reuses it:
+  `addi r25,r5,0x67`): moving it is **byte-identical.**
+- **C — `i` at three different ABSOLUTE slots, identical RELATIVE rank**: **all
+  three byte-identical** at `70 in 56`. **That is test_mode's pairwise result,
+  independently derived.**
+
+**IT ABSORBS ALL SIX SITES.** mini_race's own n=15 is **two pools** — volatile
+window, first-use ordered; callee-saved file, declaration ordered — hence the
+opposite pulls. mini_pilot's `s16`-live/`s32`-inert becomes **a zero-build check:
+read the two registers.** Every inert reading on record (option's 25 slots,
+sel_ngc's 9, test_mode's `tr` in 19 slots) is a **no-home value.** ★ **test_mode
+already stated this mechanism in run 26 for the FPR temp pool**; it generalises
+to the GPR file, to coalescing, and to an operand slot.
+
+★★ **AND IT DISSOLVED A CONFLICT RATHER THAN PICKING A WINNER**: mini_bowling's
+*"declaration order is a tie-break; allocation weight outranks it"* was never a
+competing claim — **they are the two STAGES. Weight decides who gets a home;
+declaration order ranks the ones that do.** mini_pilot's window/batch proposal is
+**subsumed, not contradicted** — the window is mostly volatile work and the batch
+mostly the callee-saved file, which is why it looked right, **but the cause is
+OWNERSHIP, not position**, and that is why `F3D4` falsifies the positional form:
+a declaration edit moved **pre-`stwu` words** (idx 1,3,4, `stwu@`=5) because
+those words materialise values whose homes are callee-saved.
+
+> ### ★★★ THE SCREEN, AND IT IS RUN 42's CHEAPEST INSTRUMENT
+> **`objdump -d` the owner object, classify every local as home-owner /
+> temp-pool / coalesced / rematerialised, and permute ONLY home-owners, ONLY
+> their relative order.** On `F3D4` that cuts a 12-local factorial space to
+> **3 locals / 6 orders** and **correctly predicts every inert result measured
+> this run.**
+
+★ **mini_pilot's contribution to the same axis, n=3: ORDER DOMINATES TYPE.** Swap
+i/j -> `19 in 8`; types equalised with order golden's -> `9 in 4`; swap AND types
+equalised -> **identical to the swap alone.** **The second induction local's TYPE
+is live while the ORDER is golden's, and goes INERT once the order is wrong.**
+⚠ And **6 of 6 INERT at its other row** — including **the pair SPLIT by the base
+pointers**, the sharpest test of "pairwise not positional" — because **that row's
+residual words contain no register the pair can reach.** ★ **It falsified its own
+first explanation before sending it** (it supposed those counters were
+temp-pool-resident; **checked, FALSE** — both pairs are callee-saved).
+
+### ★★★ 4. A VERDICT ABOUT THE DRAFT IS NOT A VERDICT ABOUT THE OWNER — OVERTURNED BY BUILD
+
+Run 40 published `rel_argscan` with **70 LEADs**, and three modules read their own
+rows as "already handled". **sel_ngc proved by build that the criterion was
+reading the wrong file.** Six of its seven best drafts carried
+`//@PROTO void lbl_X(struct Sprite *);`, so by that criterion it would have
+scored **7-for-7 handled.** It held `lbl_00009868` back as a control:
+
+```
+owner landed, directive stripped ....... 6 of 6 COMPILE AND SCORE
+owner NOT landed, directive stripped ... 1 of 1 COMPILE FAILED
+```
+then landed the control and it scored **`6 in 6`, positional 197/203**.
+
+> ### **A `//@PROTO` IN THE DRAFT IS EVIDENCE THE LEAD IS LIVE, NOT EVIDENCE IT IS HANDLED.** Satisfied = **the OWNER declares it and the draft needs NO directive.** Test: strip the directives and compile.
+> ⚠⚠ **AND IT IS NOT COSMETIC: a `//@PROTO` cannot exist in a real build, so such a row is a conversion that CANNOT LAND however good its score gets.**
+
+✔ **The orchestrator verified it at source before carrying it** — option's four
+are still `(void)` at both sites (`src/option_30.c:159/160/164/170` and
+`:585/621/642/808`), and mini_fight's six reachable flagged rows likewise
+(`mini_fight_10.c:241,257,322,324`, `_57.c:405`, `_68h.c:398`). ★ **And the
+arithmetic was wrong twice over**: `B_LIVE.md`'s own table gives **mini_billiards
+LEADs = 0**, so those four were never in the class.
+
+**`rel_argscan` is now measured wrong in THREE directions, by four modules:**
+
+| module | verdict |
+|---|---|
+| mini_golf | **3 of 3 FALSE POSITIVES** — the list quoted the `(void)` text of **NON-OWNER split files** while citing the **OWNER files' line numbers**. The tool on its own tree prints **`0 LEAD(s)`** |
+| mini_fight | **FALSE NEGATIVE** — `lbl_00016CC8` is not in the LEAD list at all, and it is real: landed and **proved by build** |
+| mini_race | **WIDTH-BLIND** — flags only `(void)` owners, so it cannot see `int idx` where golden's bytes say `s16` (`addi r25,r3,0` + per-use `extsh`). **10 LEADs in mini_race** |
+| mini_bowling | **CORRECT IN BOTH DIRECTIONS, n=6** — its own independent uses-before-def scan reproduces the tool exactly |
+
+### ★★★ 5. THE CALLER-SIDE ORACLE: SOUND FOR ARITY, UNSOUND FOR TYPE IN A WAY NOTHING CAN FIX
+
+mini_fight offered a better oracle than the tool — **matched banked C in the
+owner file itself CASTS the labels** (`src/mini_fight_68c.c:539`, `:779`),
+*"not a lead — the compiler already agreeing"* — and it caught the row
+`rel_argscan` misses. **mini_bowling then bounded it, in its own banked,
+byte-matching code:**
+
+```
+src/mini_bowling_65.c   (MATCHED, BANKED, BYTE-MATCHING)
+  :226  void lbl_0000C1D0(void *, int);
+  :303  lbl_0000C1D0(pin, a);
+golden lbl_0000C1D0
+   10  addi r25, r4, 0
+   20  lfs  f27, 0x68(r4)      <- DEREFERENCED
+```
+
+> **Matched banked C declares that parameter `int`; golden DEREFERENCES it at
+> `0x68`. On PPC EABI a 32-bit `int` and a 32-bit pointer occupy r4 identically,
+> so the caller TU byte-matches under EITHER declaration.**
+> **"The compiler already agreeing" is agreement about the REGISTER, never the
+> TYPE — and unlike a WIDTH error, which surfaces in the caller, NO caller-side
+> evidence of any kind can catch this one.**
+> ### **USE THE ORACLE FOR ARITY. READ GOLDEN'S DEREFERENCES FOR TYPE.**
+
+★ **Third instance of run 39's counter-rule**: that declaration disagrees with
+its definition, **is GOLDEN, and must not be "fixed".**
+
+### ★★ 6. PRECONDITIONS LANDED THAT BANK ZERO — FOUR MODULES, 657 INSTRUCTIONS PROVED BY BUILD
+
+- **sel_ngc: 14 declarator sites** across `src/sel_ngc_rel_29.c` and
+  `src/sel_ngc_rel_17x5.c`; **`rel_argscan` now prints `0 LEAD(s)`** where it
+  printed 7 — *the largest untested block on the board.* Types fixed from **four
+  independent sources**, none guessed: the casts in matched code; argscan's
+  register readings (**agreeing on arity on both 2-parameter rows**, including one
+  reading r4 because its `s8 *` first parameter is unused); the owner's own
+  prototype block (**the `(void)` rows are exactly and only the still-asm ones
+  among 15 contiguous siblings**); and **all seven stored drafts having
+  independently derived the same signatures three runs before the tool existed.**
+- ★★★ **mini_fight: two declarators in `src/mini_fight_68c.c`, AND IT PROVED THE
+  UNBLOCK BY BUILD, which a declarator landing usually skips.** Both stored drafts
+  now score with **no directive at all**: `16CC8` **`268 == 268`, `8 in 7`, span
+  28-231, TRUE 257/268** (reproduces §11 exactly); `15E00` **`389 == 389`,
+  `82 in 4`, span 12-113, TRUE 307/389**. **657 reachable instructions moved from
+  "cannot land" to "can land."**
+- **mini_pilot: one byte-neutral declarator** in `src/mini_pilot_32b.c` —
+  **identical REL sha1 before and after.** Gated rather than trusted: golden
+  `97C8` reads `lfs f31,4(r3)` at index 15 with **r3 never defined in 0-14.**
+  ★ **It confirmed the anchor-synthesis contract by running the tool**: the fix
+  **kills the anchor `rel_tuprobe` SYNTHESISES from the function name**
+  (`ANCHOR MISSING`, body skipped; re-scoring stripped gave an identical
+  `3 in 3`).
+
+★★ **THE ANCHOR-KILLER TRIGGER IS NOW MEASURED FROM BOTH ENDS, INVERTING RUN 40's
+READING.** mini_fight, per-owner sweep over **27,103 files**: **its CONVERSION
+killed 0 anchors; its DECLARATOR FIX killed 208.**
+> **The trigger is *did the forward declaration change*, not *did something land*.**
+
+### ★★ 7. TWO STANDING DECLINES OVERTURNED — ONE PRICED ON THE WRONG OBJECT BY 70 TRUE WORDS
+
+- ⚠⚠ **mini_bowling `lbl_0000C1D0`**: the board records *"`4 in 4` — decline
+  unchanged"*. **Both stored objects re-scored, both exact length: the
+  `4in4_ONEWORD_run38` object is TRUE 481/566; the `14in3_STRUCTURAL` object is
+  TRUE 551/566** — **70 TRUE instructions better, residual in a 15-word span
+  against the other's 86.** **Run 38's celebrated word-for-word decline was priced
+  on the wrong object. That row is not closed.** Eleventh *"better ALIGNED = worse
+  draft"* and **the largest margin on record** — its own run-39 instance had a
+  6-word margin.
+  ⚠ **PREDICTED, one command to settle**: `scheduling off` on the `14 in 3` object
+  gives `386 in 40` — **the identical figure run 38 reported from the `4 in 4`
+  object** — suggesting the two converge and the 70-TRUE gap is entirely
+  schedule-sensitive. **It compared the printed figure, not the bytes, and tagged
+  it PREDICTED itself.**
+- ★★ **mini_race `lbl_0000E1CC`: run 40's decline is FALSE.** It declined idx 93
+  claiming mwcc never puts a dead operand in slot A. **DOL-wide census over 229
+  matched objects: 700 `fmuls` D-FRESH sites, and 245 of 773 put the recent
+  operand in A.** It then **emitted golden's exact word twice.** The rule,
+  MEASURED in three arms: both operands named-with-homes -> source order decides;
+  **exactly one anonymous -> the named one is canonicalised into A and source
+  order is INERT**; both anonymous -> the recent one takes A.
+  ⚠ **Not banked, and it says why**: it is a **two-word coupled problem** —
+  naming `u` buys its f9 home and loses the slot; inlining buys the slot and loses
+  the home; naming one level down costs **+8 frame**. **Needs a fourth mechanism,
+  not a fifth spelling. Do not send anyone to sweep spellings there.**
+
+### ★★ 8. CORPUS C REBUILT THE ONE-FIX BOARD AND CORRECTED ITS OWN BRIEF'S HEADLINE BY 2.4x
+
+⚠⚠ **"36 rows / 10,325 instructions" is 36 BODIES over 15 DISTINCT ROWS / 4,700
+instructions**, recomputed from run 40's own `mm40_all.json`. **`mini_fight
+16CC8` alone supplies 17 of the 36.** ★ **It is run 40's own
+files-vs-distinct-bodies defect reappearing one level up** — the same inflation
+that made `table39` print `drafts 0` on all 160 rows. ⚠ **And `mini_golf 109CC`,
+the row the brief held up as the model, IS NOT IN THE 36.**
+
+**C1 delivered 19 rows with the ONE fix in source terms**, replacing the metric
+with a single uniform test — *one contiguous block of golden's relocation stream,
+moved once* — which **automatically recovers exactly the rows run 40 had to
+hand-curate** and **drops three honestly.** **Gate 218/218; positional total
+97.2%, reproducing run 40 independently.**
+
+> ### ★★★ ALL 19 FIXES REDUCE TO FOUR SHAPES, AND **SHAPE A IS 5 ROWS / 1,363 INSTRUCTIONS ACROSS FOUR MODULES — ONE HABIT**: the draft binds an address to a local and reuses it where golden RECOMPUTES it.
+> ⚠ **It is the exact OPPOSITE of run 40's banked lever.**
+
+⚠ **Caveats it carried unprompted**: on **6 of 19 rows the one-fix body is NOT the
+row's best body** (`option 5340` one-fix TRUE 1014 vs best 1141) — the same trap
+mini_bowling found from the module side; and **a LANDABILITY column the ranking
+lacks: 12 of 19 one-fix bodies carry a `//@` directive and cannot land at any
+score.**
+
+✔ **AND IT RETRACTED A PUBLISHED CLAIM OF ITS OWN BEFORE CLOSE** — *"six blank
+pages stopped being blank, 5,002 instructions"* was **all artefact.** The
+underlying regression was real (`RUNDIR_NOW` is a single run directory, so each
+regeneration discards the prior run's bodies) but **its first fix was wrong — 23x
+inflation, 2 scoreable bodies of ~1,955, and zero of its own 19 rows** — so it
+shipped a bounded fix plus a stub guard instead.
+
+### ★★ 9. CORPUS A: HALF 2's TAIL IS A CLONE OF HALF 1's TAIL
+
+**928 of 985 instructions derivable by a <=7-token rename, n=10 region pairs,
+FIVE PAIRS AT RESIDUAL 0 (466 insn)**; `LOOP#17` == `LOOP#30` with **zero**
+renaming. The rename is `f25->f26` + one FPR move + a stack displacement of
+exactly `-0x1A0`, which **independently upgrades the manifest's PREDICTED
+half-exclusive slot pairing to MEASURED.**
+
+⚠⚠ **AND IT INVERTS mini_golf's OWN RECOMMENDATION, n=3**: LOOP#19 and LOOP#7 —
+the two mini_golf named — **get the LEAST clone discount.**
+
+✔ **It corrected its predecessor's headline guarantee**: the manifest claims *"all
+454 calls present… 454"*; **the skeleton actually emits 657 call expressions,
++203**, confined to the 7 value-returning callees. **Invisible to run 40's
+coverage assertion — the `bl` address is covered once; the EMISSION duplicates.**
+Exact fix: delete 195 bare placeholder lines. Build-backed, 60,832 -> 54,568
+bytes, both exit 0.
+✔ **It corrected the brief's carried float rule** — the `pool+0x158` accumulator
+goes into **`.x` 17/17 sites, `.y` at 0**; *"a fill writing `y +=` puts the
+advance on the wrong field with the instruction count still correct."*
+✔ **And the `r22` warning**: the compare is at `0001F990`, not `0001F994`, and
+**`r22` is three unrelated values over disjoint ranges.**
+
+**220 instructions filled, opcode AND immediate exact against golden**, build
+verified. ⚠ **Its sharpest trap: an opcode-only comparison PASSED a fill with
+wrong constants.** *"Compare immediates or the gate cannot fail."*
+⚠ **A2 was not reached and nothing is claimed about it.**
+
+### ★★★ 10. A PLATFORM DEFECT THAT SILENTLY ZEROES DIRECTIVE SWEEPS — AND IT IS INVISIBLE BY CONSTRUCTION
+
+**Corpus B, MEASURED, n=9 argument forms**: **MSYS2/Git Bash collapses a LEADING
+`//` to `/` when handing an argument to a NATIVE WINDOWS binary — and it does so
+THROUGH a leading regex anchor**, so `^//@SUB ` arrives as `^/@SUB `. A `//` that
+is not at the start is untouched. **GNU `grep` and `sed` are MSYS2-linked and
+EXEMPT** — *"which is exactly why this has never been caught: whoever wrote the
+sweep in `grep` got the right answer and whoever rewrote it in `rg` or `python`
+got a silent zero."*
+
+| sweep of one scratch dir | files found | time |
+|---|---|---|
+| `grep -rl "^//@SUB \|^//@PROTO "` (MSYS2) | **563** | 71 s |
+| `rg -l "^//@(SUB\|PROTO) "` (native) | **0** ✗ | 1.2 s |
+| `rg -l "^[/][/]@(SUB\|PROTO) "` (bracketed) | **563** ✓ | **0.96 s** |
+
+> ### **FIX: WRITE THE PATTERN AS `^[/][/]@`. A CHARACTER CLASS IS NOT MANGLED.** Control reproduces grep exactly (563 = 563) and is **74x faster.**
+> ⚠ **It is the brief's own gate arm in a new costume: A SWEEP THAT FINDS ZERO IS
+> BROKEN, NOT CLEAN.** Corpus B hit it in its first ten minutes and **only caught
+> it because it had a control number from a second tool.**
+
+### ★★ 11. THE DEAD-STORE LEVER IS PRICED ACROSS SIX MODULES AND HAS A MECHANISM
+
+**mini_pilot, n=12 at `lbl_000011CC`:**
+> **The free-iff-both-in-registers condition governs COST ONLY. The BENEFIT
+> requires the store to reach the register allocator, and a store mwcc can remove
+> EARLY never does. Those are two different eliminations and the tally had been
+> mixing them.**
+
+- **A dead assignment to a REGISTER-RESIDENT local is completely inert — n=7
+  placements, ALL BYTE-IDENTICAL**, including `i = i;`. *"It is not
+  self-assignment that does the work. It is the memory cell."* ✔ **Corroborated by
+  mini_golf** (two pure register self-assignments inert, second module).
+  ⚠⚠ **QUALIFIED BY mini_bowling: its `vis = vis;` is NOT inert** (TRUE 717 ->
+  711) — *"their `i` is `int`; my `vis` is `s8`, so **a self-assignment to a
+  narrow local is a truncation, not a no-op.** The rule needs the qualifier *of a
+  full-width type*."*
+- **A memory store meeting the free-iff condition AND provably overwritten still
+  costs +1** (printed): `*(s16*)(w+0x28) = ang;` emits `sth r25,40(r30)` even
+  though an `f32` store overwrites those bytes two statements later ⇒ **mwcc does
+  not DSE across a differently-typed overlapping store**, so the run-40 form is
+  specifically `X = load(X)`.
+- **PREDICTED predicate**: pays iff **(a)** through memory, **(b)** the
+  `X = load(X)` form, **(c)** the kept-live value **OVERLAPS** one the allocator
+  would otherwise pack into the same register.
+- ★ **test_mode found a PAID positive arm**: used to repair reorder damage it
+  recovered **14 TRUE points** (TRUE 20 -> 34, span 1-42 -> 3-24) **at the cost of
+  a third scratch register.** ⚠ **mini_pilot priced that arm as structurally
+  unavailable at its own site without a build** — `11CC`'s residual exists
+  *because* the register file is exactly full.
+
+**Board tally, six modules: 1 free positive / 1 paid partial / ~9 negative /
+~17 inert / 5 length-breaking. PRICED AND NOT SWEEPABLE** — and **four modules
+have now declined to sweep it further in those words.**
+
+### ★★ 12. PRICED DECLINES WITH THE MECHANISM NAMED
+
+- **mini_golf `109CC` (295), 175 variants, EVERY ONE `first-diff 97`.** ⚠
+  **Correction: `MISMATCHED 2` is NOT a second defect — both are the transposed
+  instructions' own relocations. One fix, not two.** Proved incapable: statement
+  order (14), **all 120 declaration permutations — 120/120 WORSE than control**,
+  the local set off the matched DOL twin (4), address spellings (6), dead stores
+  (3), dead locals (3), 12 pragmas; `scheduling off` gives `86 in 50` ⇒ **golden
+  is neither régime.** **Mechanism**: three identical branch-entry blocks; golden
+  **interleaves in branches 1 and 3 — reproduced byte-for-byte — and is tight only
+  in branch 2**, the one block with four materialisations and no filler. A
+  179-object scan found the TIGHT form **twice tree-wide**, and the only matched-C
+  instance is tight because **its two `lis`es share one scratch register.**
+  **Next run must buy: serial scratch allocation for the first two of four
+  materialisations.**
+- **option `3240` (410)**: `20 in 15` words and +relocs, TRUE 390/410, refs 99/99,
+  **MISMATCHED 0, FICTION 0** — all 20 diffs register numbering. ★★★ **GOLDEN
+  SPENDS THREE CALLEE-SAVED REGISTERS ON FOUR ROLES** (it re-takes `r24` at index
+  386 after freeing it at 343; the build spends a fourth): *"a 3-cycle cannot
+  express a 4-into-3 coalesce."* ⚠ **Routing both roles through one `s32 *q` was
+  byte-identical ⇒ source-level variable identity does not drive the coalesce.**
+- **mini_billiards `25B0` (359)** `14 in 6`, TRUE 345/359, MISMATCHED 0 — the 14
+  words decompose into **exactly two causes, 8 + 6**. **`189B4` (57)** `16 in 3`,
+  TRUE 41/57 — a hard two-state FPR partition where **golden is neither state**
+  (golden `f5 f6 f7 f8`; A `f5 f6 f7 f4`; B `f6 f7 f3 f5`; **golden needs A's
+  ranking with B's sum shape**).
+- **mini_bowling `F98` (572)** `21 in 16`, TRUE 494/572 — **the residual is ONE
+  instruction** (`addi r28,r3,sym@l` vs `addi r5,…` + `addi r28,r5,0`) which
+  dislocates the stream +1 and **is 13 of the 22 MISMATCHED.** ⚠ **Length stays
+  exact because the build also LACKS golden's `addi r27,r29,8` — two errors
+  cancelling, which is why `572 EXACT` once misled.** **`5B0C` (720)** `3 in 2`,
+  TRUE 717/720 — **mechanism named**: the sum at index 44 feeds `stb`, so only the
+  low byte survives and mwcc may narrow either addend; **golden narrows one and
+  not the other; the build narrows both.** ⚠ **An explicit widening cast is FOLDED
+  AWAY** — `(s32)vis` byte-identical.
+- **test_mode `F940` (154)** `4 in 2`, TRUE 150/154 — **class named for the first
+  time: CONSTANT REMATERIALISATION, not schedule.** Golden materialises 0 once
+  into `r5` and **copies** it (`addi r6,r5,0`); mwcc constant-propagates through
+  `so = m, dof = m` and emits **three independent `li`**, and the 96-97
+  transposition **follows from it**. **`opt_lifetimes` is the only pragma that
+  moves that region and it still emits three `li`.**
+- **mini_pilot `11CC` (219)** `1 in 1`, TRUE 218/219 — **6 of 7 callee-saved
+  assignments already golden's; the entire row is one packing decision for an
+  eighth value**, ceiling r25->r26 confirmed at n=6 where golden needs r28.
+  **`15D8` (109)** `2 in 2` — **one strength-reduction decision, pass named:
+  `opt_strength_reduction off` reproduces the alternative.** ★ **Golden's two
+  loops there use OPPOSITE conventions — do not unify them.**
+- **mini_fight `A690`, n=24 bodies**: floor `12 in 8`, TRUE 173/185. Golden needs
+  the pool `addi` **below the window and in place**; the two source orders are
+  **anti-correlated** and the diff between them is **one statement pair.**
+
+### ★★ 13. PRAGMA AND RÉGIME CLAIMS THAT CHANGED SIDES
+
+- ⚠⚠ **`optimize_for_size on` FLIPS INSIDE A SINGLE MODULE — that settles it as a
+  ROW property.** mini_bowling: `5B0C` **687 (-33)** LIVE, `C1D0` **560 (-6)**
+  LIVE, `4BD8` byte-identical (run 27). **Three rows, one module, one compiler,
+  two answers.** ✔ Also LIVE at mini_golf's `109CC` (`14 in 9`) **against
+  mini_golf's own run-40 "inert"**. **Third time it has changed sides.**
+- ⚠ **`opt_lifetimes off`: byte-identical inert at option's site, LIVE and
+  strongly negative at mini_bowling's** (TRUE 717 -> 636). **Per-site, n=2
+  modules.**
+- **`scheduling off` has BOTH answers on record this run.** mini_billiards and
+  option: registers **not** golden's ⇒ independent allocator decision. **mini_fight
+  `A690`: registers ARE golden's** — under `scheduling off` mwcc emits
+  `lis r3,@ha / addi r3,r3,@l` **in place**, golden's chaining shape, where the
+  default emits it **split**. ★ **A third positive for run 39's list-scheduler
+  renaming finding, and all three positives are the same sub-class — an
+  ADDRESS-MATERIALISATION HOIST**, exactly the sub-class mini_pilot preserved when
+  it falsified the generalisation. **The sub-class is the rule; the generalisation
+  stays false.**
+- ⚠ **mini_golf INVERTED run 39's *"emission is scheduling; assignment is the
+  invariant"* at its site, n=4** — order changes moved the **allocation** and never
+  the emission slot. ✔ **mini_pilot corroborated it as a third module at zero build
+  cost, then bounded it inside its own module** (at `4570` the same axis moved
+  emission too, spans 6-18 -> 6-184). ⇒ **Both are SITE statements; the
+  discriminator is whether the perturbed values are address materialisations or
+  already-resident packing candidates.**
+
+### ⚠⚠ 14. §11 ERRORS — TWENTY-FIFTH CONSECUTIVE RUN. **THE LARGEST IS MINE AND IT WAS THE LAUNCH STATE ITSELF.**
+
+- ⚠⚠⚠ **THE LAUNCH STATE WAS FALSE IN THREE ASSERTIONS AND SEVEN AGENTS FOUND IT.**
+  See the new standing rule above and `_orch_run41/TOOLSYNC.md`. **I read run 40's
+  `warmreset.log` without checking its date.**
+- ⚠⚠ **I CARRIED option's "argscan 14-for-14 already handled" TO FOUR MODULES AS A
+  MEASUREMENT.** It was a verdict about the **draft**; the tool reports on the
+  **owner**. sel_ngc overturned it with a build. ★ The relay itself was right — it
+  is what got the claim tested — **but I should have checked WHICH FILE the
+  criterion read before forwarding the arithmetic**, and the arithmetic itself
+  double-counted a module the tool had already cleared.
+- ⚠ **I TOLD CORPUS C TO RE-RESOLVE OWNER PATHS FROM "the tree's own `INCLUDE_ASM`
+  lines".** Corpus C: **those lines do not exist in this tree**, and owner paths
+  changed on **zero** rows.
+- ⚠ **THE RUN-41 CORPUS BRIEF SHIPPED TWO INHERITED FIGURES THAT DO NOT RECONCILE**,
+  and both were the assignment's own premise: **"36 rows / 10,325 insn" is 15 rows
+  / 4,700**, and **"205 of 242" cannot be right because the four classes sum to
+  220.** Corpus B: *"one is arithmetically impossible."*
+- ⚠⚠ **THE RUN-40 HANDOFF SAID `rel_relscore_PLUS_TEXT` WAS "VERIFIED AT SOURCE"
+  AND IT WAS NOT.** Corpus B **refused to land it**: it renames the *label* when
+  the defect is the *number*. Per `RUN39_BRIEF_sel_ngc.md:3612`, `10438` =
+  100/99 -> 99/99 and `C970` = 103/104 -> 102/104. **The correct fix is
+  `102/104` -> `100/99`, keeping the label.**
+- ⚠ **My launch message told option it had "five reachable" rows. BASELINE's own R
+  column says SIX** (6 rows summing to 3,543 = its REACH figure).
+- ⚠ **`table40`'s `//@PROTO` census is suspect wherever it was taken with a native
+  binary** — see §10. **A sweep that returned 0 may never have run.**
+- ✔ **AND THE MODULES FOUND FEW §11 ERRORS THIS RUN**: mini_golf, mini_billiards,
+  mini_pilot, mini_race and test_mode all reproduced their §11 figures exactly.
+  **The two real ones are mini_bowling's `C1D0` (priced on the wrong object) and
+  test_mode's `F940`/`E2E8` (absent from the prose while present in the ledger).**
+
+### ⚠ 15. HAZARDS, TOOL CLEARANCES AND CORRECTIONS
+
+- ⚠⚠ **`rel_relscore --show` DEFAULTS TO 12 AND TRUNCATES SILENTLY** — a 20-diff
+  row printed 12 of 20; confirmed at a second site (a 21-diff row printed 12).
+  **`nrows` is computed and returned but never printed. FIXED AND LANDED this run.**
+  ⚠ **Corpus B corrected the relay that came with it**: *"both scorers under-report"*
+  is **FALSE** — `rel_tuprobe` has two truncating sites and **both announce**;
+  **only `rel_relscore` was silent**, and it was a missing port of `rel_tuprobe`'s
+  own run-34 remedy.
+- ✔ **`//@PROTO` anchor SYNTHESIS is the intended CONTRACT, not a defect** — the
+  directive supplies the replacement, the tool derives the target, and **a text
+  sweep must find 0 by construction.** **The real defect was that it was
+  undocumented; that is now written into the tool and into its failure message.**
+- ⚠ **`rel_argscan` — three failure directions (§4). It is a LEAD generator, not a
+  precondition detector.**
+- ⚠ **`rel_argscan.py <module>` errors; the bare form is what scans.**
+- ⚠ **A `//@PROTO` naming symbol X, in a draft for row Y, substitutes in *Y's*
+  owner, not X's** (mini_bowling). Its first sweep flagged **181 stale anchors**;
+  it **scored a flagged draft rather than trusting the sweep**, the draft built
+  exactly to `table40`'s figure, **and the defect was its own.**
+- ⚠ **A fifth compile-failure mechanism**: a C89 **declaration-after-statement**
+  gives `expression syntax error` **plus cascading bogus `undefined identifier`
+  rows** (n=4 of 4) — **its cascade mimics mode 3.**
+- ⚠ **The brief's tool table is `md5`, not `git hash-object`** — the latter
+  disagrees on all nine and **would read as a nine-way tamper.**
+- ✔ **`twinfind.py` (mini_golf) — a validated zero-build TWIN FINDER.** `109CC` is
+  an adapted copy of the DOL's `stage_draw` (`src/stage.c:1988`); scoring matched C
+  by **referenced-symbol overlap** returns it at **0.87, top by a mile**, and it
+  supplied the exact local set. ⚠ Its own bound: **symbol sets of 6-8 are too small
+  to discriminate.** **By its author's argument it belongs to the corpus agent, not
+  a module.**
+- **Still open**: the `raw` cap in `rel_sdiff`/`rel_pcmp`; `rel_merge_tu:445-446`;
+  `d3.py`'s missing `elif`; `rel_arity.py`/`rel_ledger.py` stale docstrings;
+  `rel_ledger` drops 7 `.rodata`-only asm objects; **`rel_relscore_PLUS_TEXT` with
+  the CORRECTED pairing above.**
+
+### ✔ 16. VERIFICATION — WHAT WAS ACTUALLY PROVED, IN ORDER
+
+- **Roster**: twelve agents enumerated by name at launch; **four were re-opened and
+  UN-TICKED** (mini_pilot twice, mini_race, mini_bowling twice, sel_ngc) and every
+  one re-gated before closing; **no merge command ran until all twelve rows were
+  ticked.** ⚠ **The recorded launch state was CORRECTED IN FLIGHT** (§14).
+- **Pre-merge diff**: **5 own-module files across 3 modules**, exactly the three
+  that reported changes. **Zero `tools/` lines, zero `asm/` lines, `hygiene
+  problems: 0`**; endings preserved on all five (`mini_pilot_32b.c` LF-was-LF, the
+  sel_ngc pair CRLF-was-CRLF). All nine copies **724 `.c` + 65 `.s`.**
+- **Merge**: three modules rebuilt in the main tree, **all GOLDEN**; mini_fight
+  **67 -> 66 asm stubs.**
+- **Nine post-merge gates from DELETED objects: NINE GOLDEN**, and **every hash
+  equals the one its own agent reported** (`4ff9ee41`, `29ded647`, `233b6073`,
+  `fc70c4e8`, `cc2b2ef2`, `c600a0f4`, `63112a80`, `e8bbf307`, `23a47f77`).
+- **Nine structchecks: NINE CLEAN**, zero real failures (only the long-standing
+  run-8 mixed-TU NOTEs).
+- **Clean build**: **`artifacts before build: 0`**, **`make exit status: 0`**,
+  **`sha1sum -c` 12/12 OK including the DOL.** Object metrics **784 / 954 / 789
+  (724 `.c` + 65 `.s`) — all three UNCHANGED.** Both assertions are required: run
+  36's fiction passed `sha1sum` with a build that never ran.
+- **Census reconciles three ways**: 190,254 − 82,270 = **107,984 = 56.76%**;
+  **158 fns**; gained **+92 / +1 fn.**
+
+### ✔ 17. TOOLS LANDED — AFTER THE TWELFTH AGENT CLOSED, EVERY GATE RE-RUN AGAINST THE POST-MERGE TREE
+
+**Three files: `rel_tuprobe.py` (`5253c82c` -> `1e060caa`, CRLF preserved),
+`rel_relscore.py` (`9bf0c54d` -> `6566abd9`, LF), and one NEW —
+`rel_dirsweep.py` (`880585e9`, LF).** All three **byte-identical to the staged
+files their gates passed against**, all endings verified by byte count
+(`rel_tuprobe` 1306 CRLF / 0 bare LF; the other two 0 CRLF), all three parse,
+`tools/*.py` **54 -> 55**.
+
+**All three gates re-run against the POST-merge tree and all three PASSED:**
+```
+gate_tuprobe_applied.py   PASSED  (arms C, Z, T1, T2, N, D1, D2, W)
+gate_relscore_run41.py    PASSED  (arms L, P, A, B, T1, T2, T3, T0, D1, D2)
+gate_dirsweep.py          PASSED  (arms Z, E, F, S, P, M)
+```
+★ Arm **W** compares **19,325 emitted MACHINE WORDS from a wiped work dir**, and
+reads sections rather than whole objects because `-sym` embeds the filename twice.
+★ Arm **M** asserts the new sweeper **prints what it cannot see** (modes 3 and 4)
+rather than claiming to cover them.
+✔ **Corpus B's own discipline: four of its claims died at a gate arm** (whole-object
+compare vs machine words; hunk counting; a fixture that could not fail; a
+path-based module guess that produced 277 false rows) — **all recorded at the
+failing arm** — and **one mutation was dropped as unfireable.**
+
+### THE RUN-42 RECOMMENDATION
+
+1. ★★★ **RUN THE WARM RESET, AND READ ITS LOG'S TIMESTAMP.** This run's single
+   largest cost was a prep step that was written and never executed. **The
+   sequence is merge -> land tools -> commit -> warm reset -> write the briefs.**
+2. ★★★ **THE HOME-OWNERSHIP SCREEN IS THE CHEAPEST INSTRUMENT ON THE BOARD.**
+   `objdump -d` the owner object, classify every local as **home-owner /
+   temp-pool / coalesced / rematerialised**, permute **only home-owners, only
+   their relative order.** It **collapses six runs of contradictory
+   declaration-order readings into one rule** and **correctly predicts every inert
+   result measured this run** — on `F3D4` it cuts 12 locals to **3 locals / 6
+   orders.** **Put it in every module brief.**
+3. ★★★ **`mini_bowling C1D0` MUST BE RE-PRICED ON THE `14 in 3` OBJECT** — TRUE
+   **551/566**, residual **15 words wide**, against the `4 in 4` object's TRUE 481
+   and 86-word span that run 38's decline was built on. **One command settles the
+   PREDICTED half**: diff the two `scheduling off` objects; both print `386 in 40`.
+4. ★★ **657 REACHABLE INSTRUCTIONS ARE NEWLY LANDABLE** — mini_fight's `16CC8`
+   (**268 == 268, `8 in 7`, TRUE 257/268**) and `15E00` (389), both now scoring
+   **with no directive at all** after its declarator landing. **Nobody has ground
+   either.** sel_ngc's seven and mini_pilot's one are in the same state.
+5. ★★ **CORPUS C's SHAPE A IS ONE HABIT WORTH 1,363 INSTRUCTIONS ACROSS FOUR
+   MODULES**: *the draft binds an address to a local and reuses it where golden
+   RECOMPUTES it.* ⚠ **It is the opposite of run 40's banked lever**, and **12 of
+   19 one-fix bodies carry a `//@` directive and cannot land at any score** — fix
+   the owner first or the score is unbankable.
+6. ★★ **`mini_golf 1B5B8`: FILL HALF 1 AND HALF 2's TAIL COMES NEARLY FREE** —
+   **928 of 985 instructions by a <=7-token rename, five region pairs at residual
+   0.** ⚠ **Corpus A inverted mini_golf's own recommendation: LOOP#19 and LOOP#7
+   get the LEAST clone discount.** Start from `_corpus_run41/Ascratch/`, and
+   **compare immediates, not just opcodes — an opcode-only check passed a fill
+   with wrong constants.**
+7. ★ **REWRITE EVERY DIRECTIVE SWEEP AS `^[/][/]@`** and re-take any census that
+   used a native binary. **`tools/rel_dirsweep.py` now ships and is gated**; its
+   arm Z asserts a zero result is a failure, not a pass.
+
+---
+
+## 0.46 — RUN 40 DONE (2026-08-14): +274 insn, 56.57% -> 56.71%. **ONE CONVERSION, AND IT WAS BANKED BY A RELAY — THE SECOND TIME IN THE PROJECT'S HISTORY.** Superseded by §0.47.
 
 Nine module agents plus three read-only corpus agents. **TWENTY-EIGHTH
 consecutive run with no module agent spawning anything.**
