@@ -180,22 +180,22 @@ void lbl_0000A7D4(void);
 void lbl_0000A840(void);
 void lbl_0000A870();
 void lbl_0000A950(void);
-void lbl_0000B1C0(void);
+void lbl_0000B1C0(struct Sprite *sprite);
 void lbl_0000B920(struct Sprite *sprite);
 void lbl_0000BEE8(struct Sprite *sprite);
-void lbl_0000C970(void);
+void lbl_0000C970(struct Sprite *sprite);
 void lbl_0000D82C(struct Sprite *sprite);
 void lbl_0000DCA4(s8 *alive, struct Sprite *sprite);
 void lbl_0000DEC8(s8 *alive, struct Sprite *sprite);
 void lbl_0000E068(struct Sprite *sprite);
 void lbl_0000E368(s8 *alive, struct Sprite *sprite);
-void lbl_0000E778(void);
-void lbl_0000ECB0(void);
-void lbl_0000F788(void);
+void lbl_0000E778(struct Sprite *sprite);
+void lbl_0000ECB0(s8 *alive, struct Sprite *sprite);
+void lbl_0000F788(struct Sprite *sprite);
 void lbl_0000FE0C(void);
 void lbl_0000FF7C(s8 *alive, struct Sprite *sprite);
 void lbl_00010214(struct Sprite *sprite);
-void lbl_00010438(void);
+void lbl_00010438(struct Sprite *sprite);
 void lbl_00011330(void);
 void lbl_00011424(u8 *out, u8 *e);
 void lbl_00011688(void);
@@ -501,7 +501,7 @@ void lbl_0000B0FC(s8 *alive, struct Sprite *sprite)
 #pragma force_active reset
 
 #pragma force_active on
-asm void lbl_0000B1C0(void)
+asm void lbl_0000B1C0(struct Sprite *sprite)
 {
     nofralloc
 #include "../asm/nonmatchings/sel_ngc_rel/lbl_0000B1C0.s"
@@ -972,7 +972,7 @@ static void lbl_0000C518(int a, u8 *p)
     }
 }
 #pragma peephole on
-asm void lbl_0000C970(void)
+asm void lbl_0000C970(struct Sprite *sprite)
 {
     nofralloc
 #include "../asm/nonmatchings/sel_ngc_rel/lbl_0000C970.s"
@@ -1403,7 +1403,7 @@ void lbl_0000E620(struct Sprite *sprite)
     sp.y = sprite->y - tbl[0xE6];
     nlSprPut(&sp);
 }
-asm void lbl_0000E778(void)
+asm void lbl_0000E778(struct Sprite *sprite)
 {
     nofralloc
 #include "../asm/nonmatchings/sel_ngc_rel/lbl_0000E778.s"
@@ -1438,13 +1438,13 @@ void lbl_0000EBD4(int index)
         sprintf(sprite->text, (char *)(tbl + 0x43FC), index);
     }
 }
-asm void lbl_0000ECB0(void)
+asm void lbl_0000ECB0(s8 *alive, struct Sprite *sprite)
 {
     nofralloc
 #include "../asm/nonmatchings/sel_ngc_rel/lbl_0000ECB0.s"
 }
 #pragma peephole on
-asm void lbl_0000F788(void)
+asm void lbl_0000F788(struct Sprite *sprite)
 {
     nofralloc
 #include "../asm/nonmatchings/sel_ngc_rel/lbl_0000F788.s"
@@ -1575,7 +1575,7 @@ void lbl_00010214(struct Sprite *sprite)
     }
 }
 #pragma peephole on
-asm void lbl_00010438(void)
+asm void lbl_00010438(struct Sprite *sprite)
 {
     nofralloc
 #include "../asm/nonmatchings/sel_ngc_rel/lbl_00010438.s"

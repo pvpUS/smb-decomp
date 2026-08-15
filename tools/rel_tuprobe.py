@@ -702,6 +702,39 @@ def apply_directives(owner, body, where):
                 die('%s: //@SUB needs `old|||new`' % where)
             old, new = (_unescape(x) for x in arg.split('|||', 1))
             if old not in owner:
+                # ** RUN 41: THE ALREADY-APPLIED RULE. **  A stored draft's
+                # `//@SUB old|||new` asks the owner to be changed FROM `old`
+                # TO `new`.  When an earlier run has already LANDED that
+                # change, `old` is gone and `new` is present -- the owner is
+                # in exactly the state the directive asks for, and the
+                # directive is satisfied, not broken.  Dying there fails a
+                # draft for having been RIGHT TOO EARLY.
+                #
+                # MEASURED run 41, LIVE scope (the 159 still-asm rows in the
+                # main tree, 12,210 stored drafts naming one, classified
+                # against each row's own owner): 900 directive instances
+                # would die today; 626 of them (275 //@SUB + 351 //@PROTO)
+                # ask for a state the owner is ALREADY IN, and 274 are
+                # genuinely dead.  At ROW level -- the number that prices it
+                # -- 13 of the 159 live rows gain at least one rescued
+                # directive.
+                #
+                # WHY `new in owner` IS SAFE, and its bound: over those 275
+                # //@SUB instances there are only 9 distinct `new` texts; the
+                # SHORTEST is 19 characters and ALL NINE contain a specific
+                # identifier (`lbl_XXXXXXXX` or a named extern).  There is no
+                # short or generic `new` in the corpus for a coincidental
+                # substring hit to fire on.  SCOPE NOT TESTED: a draft whose
+                # `new` is a bare token such as `int` -- none exists today,
+                # and if one is written this rule can misfire, which is why
+                # it ANNOUNCES itself on stderr instead of staying silent.
+                if new and new in owner:
+                    sys.stderr.write(
+                        'rel_tuprobe: %s: //@SUB ALREADY APPLIED -- the '
+                        'owner already reads\n    %r\nand does not contain '
+                        'the `old` text.  Treating the directive as '
+                        'satisfied.\n' % (where, new[:120]))
+                    continue
                 die('%s: //@SUB ANCHOR MISSING in the owner:\n    %r\n'
                     'A silently-ignored substitution means you score a program '
                     'you did not write.' % (where, old))
@@ -739,9 +772,43 @@ def apply_directives(owner, body, where):
             m = re.search(r'\b(\w+)\s*\(', pr)
             if not m:
                 die('%s: //@PROTO %r has no function name' % (where, pr))
+            # ** THE ANCHOR IS SYNTHESISED, NOT PARSED -- AND THAT IS THE
+            # CONTRACT, NOT A DEFECT. **  RUN 41 verdict, recorded here
+            # because three modules have now written //@PROTO sweeps against
+            # the wrong assumption.  `//@PROTO <decl>` does not search the
+            # owner for `<decl>`; it searches for the DEFAULT declaration
+            # `void <name>(void);` that the owner is known to carry, and
+            # REPLACES it with `<decl>`.  The directive supplies the
+            # REPLACEMENT and the tool derives the TARGET.  Sweeping owners
+            # for the directive's own text therefore finds 0 by construction
+            # -- the owner never contains it until after the directive runs.
+            # MEASURED run 41: the correct sweep (synthesised anchor) resolves
+            # 2,464 PROTO-OK + 351 PROTO-ALREADY-APPLIED over the live scope.
             anchor = 'void %s(void);' % m.group(1)
             if anchor not in owner:
-                die('%s: //@PROTO ANCHOR MISSING: %r not in the owner'
+                # ** RUN 41: THE ALREADY-APPLIED RULE, //@PROTO half. **  If
+                # the owner no longer carries the default declaration but DOES
+                # carry the one this directive wants, the retyping has already
+                # been landed and the directive is satisfied.
+                #
+                # ★ THIS IS ALSO THE OWNER-SIDE DISCRIMINATOR sel_ngc proved
+                # with a build in run 41 (7 rows, gate GOLDEN): a `//@PROTO`
+                # in a DRAFT is evidence the lead is LIVE; SATISFIED means the
+                # OWNER declares it and the draft needs no directive.  Priced
+                # board-wide with ZERO builds, n=159 live rows: 35 rows carry
+                # a //@PROTO, of which 26 are LIVE LEADS and 9 are SATISFIED.
+                if pr in owner:
+                    sys.stderr.write(
+                        'rel_tuprobe: %s: //@PROTO ALREADY APPLIED -- the '
+                        'owner already declares\n    %r\nand no longer '
+                        'carries the default %r.  Treating the directive as '
+                        'satisfied.\n' % (where, pr[:120], anchor))
+                    continue
+                die('%s: //@PROTO ANCHOR MISSING: %r not in the owner\n'
+                    'The anchor is SYNTHESISED from the function name, not '
+                    'read from the directive: this tool looked for the '
+                    'DEFAULT declaration and the owner has neither it nor '
+                    'the one you asked for.'
                     % (where, anchor))
             owner = owner.replace(anchor, pr, 1)
         elif ln.startswith('//@'):

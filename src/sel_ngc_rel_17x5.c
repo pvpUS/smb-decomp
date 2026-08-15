@@ -160,7 +160,7 @@ void lbl_00002AA4(void);
 void lbl_00002D00(void);
 void lbl_00002EC0(void);
 void lbl_000030F4(void);
-void lbl_00009868(void);
+void lbl_00009868(struct Ape *ape, int status);
 void lbl_00009B94(void);
 void lbl_00009E40(void);
 void lbl_0000A154(void);
@@ -212,7 +212,7 @@ void lbl_00011824(void);
 void lbl_000118E4(void);
 
 #pragma force_active on
-asm void lbl_00009868(void)
+asm void lbl_00009868(struct Ape *ape, int status)
 {
     nofralloc
 #include "../asm/nonmatchings/sel_ngc_rel/lbl_00009868.s"

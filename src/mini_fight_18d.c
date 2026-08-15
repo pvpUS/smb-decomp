@@ -137,7 +137,6 @@ extern u8 lbl_10000000[];
 extern u8 lbl_1000008C[];
 extern u8 lbl_10000118[];
 extern u8 lbl_10017518[];
-extern u8 lbl_10017520[];
 extern u8 lbl_10017578[];
 extern u8 lbl_10017664[];
 extern u8 lbl_10017DC8[];
@@ -191,9 +190,9 @@ extern void mini_commend_free_data();
 extern void spawn_stobj();
 extern void u_math_unk15();
 extern void ape_skel_anim_main();
-extern void avdisp_draw_model_culled_sort_all();
-extern void avdisp_draw_model_culled_sort_translucent();
-extern void avdisp_set_post_mult_color();
+
+
+
 extern void func_8006A9B8();
 extern void func_8006AAEC();
 extern void func_8009D794();
@@ -216,11 +215,11 @@ extern void u_load_minigame_graphics();
 extern void unref_func_8003938C();
 extern void vibration_control();
 extern void GXSetNumTevStages_cached();
-extern void avdisp_draw_model_unculled_sort_all();
-extern void avdisp_draw_model_unculled_sort_translucent();
-extern void avdisp_set_bound_sphere_scale();
-extern void avdisp_set_post_add_color();
-extern void avdisp_set_z_mode();
+
+
+
+
+
 extern void func_8009DB40();
 extern void mathutil_atan();
 extern void mathutil_mtxA_from_mtx();
@@ -237,7 +236,7 @@ extern void unref_func_80039320();
 extern void unref_func_800393F8();
 extern void GXSetTevAlphaOp_cached();
 extern void ape_destroy();
-extern void avdisp_draw_model_unculled_sort_none();
+
 extern void mathutil_mtxA_from_mtxB();
 extern void mathutil_mtxA_from_translate_xyz();
 extern void mathutil_mtxA_rigid_inv_tf_tl();
@@ -249,15 +248,15 @@ extern void rend_efc_mirror_enable();
 extern void stobj_draw();
 extern void u_ball_init_1();
 extern void GXSetTevAlphaIn_cached();
-extern void avdisp_set_alpha();
+
 extern void background_draw();
 extern void light_init();
 extern void mathutil_mtxA_from_mtxB_translate_xyz();
 extern void set_bg_ambient();
-extern void u_avdisp_set_some_func_1();
+
 extern void GXSetTevColorOp_cached();
 extern void alloc_pool_light();
-extern void avdisp_draw_model_culled_sort_none();
+
 extern void func_8009CD5C();
 extern void mathutil_mtxA_scale_xyz();
 extern void ord_tbl_set_depth_offset();
@@ -395,10 +394,89 @@ void lbl_0001B910(void);
 void lbl_0001BA8C(void);
 
 #pragma force_active on
-asm void lbl_0000CE28(void)
+#include "avdisp.h"
+struct FightSlot
 {
-    nofralloc
-#include "../asm/nonmatchings/mini_fight/lbl_0000CE28.s"
+    /*0x00*/ s32 unk0;
+    /*0x04*/ f32 unk4;
+    /*0x08*/ u8 pad08[4];
+    /*0x0C*/ s32 unkC;
+    /*0x10*/ f32 unk10;
+    /*0x14*/ f32 unk14;
+    /*0x18*/ f32 unk18;
+    /*0x1C*/ f32 unk1C;
+    /*0x20*/ u8 unk20[0x10];
+    /*0x30*/ f32 unk30;
+    /*0x34*/ f32 unk34;
+};
+struct FightSub
+{
+    s32 unk0;
+    s16 unk4;
+    u8 unk6[0xA];
+    s16 unk10;
+    u16 unk12;
+    u8 unk14[4];
+};
+struct FightWork
+{
+    u8 unk0[0x58];
+    struct FightSlot slot[4];
+    u8 unk138[0x14C - 0x138];
+    struct FightSub sub[8];
+    u8 unk20C[0x894 - 0x20C];
+    struct GMAModel *unk894[4];
+    struct GMAModel *unk8A4;
+};
+extern struct FightWork lbl_10017520;
+#pragma force_active on
+void lbl_0000CE28(void)
+{
+    struct FightWork *w = &lbl_10017520;
+    f32 *k;
+    s8 *st;
+    struct GMAModel **m;
+    struct FightSub *sb;
+    u16 *tbl;
+    struct FightSlot *p;
+    int i;
+
+    w->unk8A4 = minigameGma->modelEntries[78].model;
+    k = (f32 *)lbl_0001C238;
+    st = g_poolInfo.playerPool.statusList;
+    m = w->unk894;
+    sb = w->sub;
+    tbl = (u16 *)lbl_0001CC94;
+    for (i = 0; i < g_poolInfo.playerPool.count; i++, st++, m++, tbl++, sb++)
+    {
+        if (*st != 0)
+        {
+            if (sb->unk12 & 1)
+                *m = commonGma->modelEntries[88].model;
+            else
+                *m = commonGma->modelEntries[*tbl].model;
+        }
+    }
+    st = g_poolInfo.playerPool.statusList;
+    p = w->slot;
+    for (i = 0; i < g_poolInfo.playerPool.count; i++, st++, p++)
+    {
+        if (*st != 0)
+        {
+            p->unk0 = 0;
+            p->unk4 = k[3];
+            p->unkC = 0;
+            p->unk10 = k[3];
+            p->unk14 = k[3];
+            p->unk18 = k[3];
+            p->unk1C = k[3];
+            memset(p->unk20, 0, 0x10);
+            p->unk30 = k[3];
+            p->unk34 = k[3];
+        }
+    }
 }
+#pragma force_active reset
+
 
 #pragma force_active reset

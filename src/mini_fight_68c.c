@@ -362,7 +362,7 @@ void lbl_00013C6C(void);
 void lbl_00015300(void);
 void lbl_000154B0(int x, int y, int idx);
 void lbl_00015C8C(int a, u8 *p);
-void lbl_00015E00(void);
+void lbl_00015E00(struct Sprite *);
 void lbl_00016414(s8 *, struct Sprite *);
 void lbl_000165B4(void);
 void lbl_00016B8C(void);
@@ -467,7 +467,7 @@ extern struct FightHud lbl_10018920;
 void lbl_00015B98(s8 *unused, struct Sprite *sp);
 void lbl_00015C4C(int a, u8 *p);
 void lbl_00016C08(void);
-void lbl_00016CC8(void);
+void lbl_00016CC8(s8 *, struct Sprite *);
 void lbl_000170F8(void);
 void lbl_0001745C(s8 *unused, struct Sprite *sp);
 void lbl_000175B8(s8 *unused, struct Sprite *sp);
@@ -709,7 +709,7 @@ void lbl_00015C8C(int a, u8 *p)
         *(s32 *)((u8 *)&lbl_10017664 + 0x748) |= 2;
 }
 #pragma peephole on
-asm void lbl_00015E00(void)
+asm void lbl_00015E00(struct Sprite *)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_00015E00.s"
@@ -805,7 +805,7 @@ void lbl_00016C08(void)
     w->unk334 = *(f32 *)(p + 0x78);
     w->unk338 = *(f32 *)(p + 0x78);
 }
-asm void lbl_00016CC8(void)
+asm void lbl_00016CC8(s8 *, struct Sprite *)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_fight/lbl_00016CC8.s"

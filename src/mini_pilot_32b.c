@@ -218,7 +218,7 @@ void lbl_000085B4(struct Sprite *sprite, int d1, int d2, int d3);
 void lbl_000089F8(struct Sprite *sprite);
 void lbl_00008C40(struct Sprite *sprite, int d1);
 void lbl_00009440(struct Sprite *sprite);
-void lbl_000097C8(void);
+void lbl_000097C8(struct Sprite *sprite);
 void lbl_000099A4(void);
 void lbl_00009C18(struct Sprite *sprite);
 void lbl_00009F4C(void);
@@ -865,7 +865,7 @@ void lbl_000097AC(u8 *p)
     if (lbl_802F1FF6 > 2)
         *p = 0;
 }
-asm void lbl_000097C8(void)
+asm void lbl_000097C8(struct Sprite *sprite)
 {
     nofralloc
 #include "../asm/nonmatchings/mini_pilot/lbl_000097C8.s"

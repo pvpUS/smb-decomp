@@ -734,6 +734,40 @@ def build_flat(objpath, label, extra=(), locals_=None):
     return flat, names, len(flat)
 
 
+
+def _show_trunc(s, show, quiet):
+    """Say when the listing was truncated.  RUN 41.
+
+    ** THIS TOOL HID ROWS AND HID THE FACT THAT IT WAS HIDING THEM. **
+    `score()` slices `rows[:show]` with `show` defaulting to 12, computes
+    `nrows=len(rows)` -- and NOTHING EVER READ IT.  MEASURED run 41:
+    `grep -rn "nrows" tools/*.py` returned EXACTLY ONE LINE, the assignment
+    itself, so every row with more than 12 differing entries has been
+    under-reported with no indication in every run that used the default.
+    option's site: `lbl_00003240` printed 12 of 20.
+
+    ** THE SIBLING TOOL FIXED THIS IN RUN 34 AND THE PORT NEVER HAPPENED. **
+    rel_tuprobe.py:280-288 carries the identical remedy, with mini_pilot's
+    finding recorded beside it ("12 rows of a 40-row diff with nothing to say
+    the other 28 existed") and the rule this restates: hiding evidence is
+    fine, hiding the fact that you are hiding it is not.  rel_tuprobe
+    announces at BOTH of its truncating sites (:284 and :1178); this tool
+    announced at neither.
+
+    ⚠ THE DEFAULT IS DELIBERATELY NOT CHANGED.  option asked for exactly that
+    restraint: moving 12 would silently re-scale every figure this project has
+    ranked on.  Printing the total is the smaller change.
+    ⚠ SCOPE: this truncates the LISTING ONLY.  mini_pilot bounded it, MEASURED
+    -- the HEADER counts stay sound (`MISMATCHED 9 (EXTRA 4, KIND 1,
+    MISSING 4)` printed correctly while showing 12 rows).
+    """
+    if quiet or not show:
+        return
+    n = s.get('nrows', 0)
+    if n > show:
+        print('    ... %d MORE differing row(s) not shown (%d total).  '
+              'Use --show %d for all of them.' % (n - show, n, n))
+
 def main():
     argv = sys.argv[1:]
     if '--selftest' in argv:
@@ -1258,7 +1292,7 @@ def _emit(tag, s, own, quiet, ngold=None):
                   'function\'s relocations\n'
                   '%-24s   were counted as this draft\'s.  (sel_ngc run 38: '
                   '`lbl_00010438` read\n'
-                  '%-24s   102/104 that way and 99/99 per row; two headline '
+                  '%-24s   100/99 that way and 99/99 per row; two headline '
                   '"extra relocation"\n'
                   '%-24s   anomalies were that, and both vanished.)'
                   % ('', own, '', ngold - own, '', '', ngold - own, '', '',
@@ -1266,6 +1300,7 @@ def _emit(tag, s, own, quiet, ngold=None):
         if not quiet:
             for l in s['lines']:
                 print(l)
+            _show_trunc(s, show, quiet)
         return
     if at > bt:
         print('%-24s !! RELOCATION-BLINDNESS WAS HIDING %d INSTRUCTION(S) OF '
@@ -1287,6 +1322,7 @@ def _emit(tag, s, own, quiet, ngold=None):
     if not quiet:
         for l in s['lines']:
             print(l)
+        _show_trunc(s, show, quiet)
 
 
 def _load_map(mapfile):
